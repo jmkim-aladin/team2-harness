@@ -1,0 +1,6 @@
+.DS_Store
+.playwright-mcp/
+
+# .claude 디렉토리 중 commands만 추적
+.claude/*
+!.claude/commands/

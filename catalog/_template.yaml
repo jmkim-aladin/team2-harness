@@ -1,0 +1,38 @@
+# 서비스 프로파일 템플릿
+# 이 파일을 복사하여 {서비스ID}.yaml로 저장하세요.
+
+service_id: ""
+name: ""
+type: ""  # legacy / new
+description: ""
+
+owners:
+  primary: ""
+  backup: ""
+
+runtime:
+  type: ""        # dotnet-framework / dotnet / spring-boot / nextjs 등
+  version: ""
+  language: ""    # C# / Kotlin / TypeScript 등
+  hosting: ""     # iis / kubernetes / vercel 등
+
+repo: ""          # GitHub 레포 URL
+
+youtrack:
+  project_key: ""
+
+data:
+  main_db: ""
+  shared_db: false
+  direct_sp_write: false
+
+risk:
+  change_frequency: ""   # high / medium / low
+  incident_impact: ""    # high / medium / low
+  data_coupling: ""      # high / medium / low
+
+modernization:
+  track: ""              # observe / wrap / extract / freeze
+  status: "not-started"  # not-started / in-progress / complete
+
+harness_status: "not-started"  # not-started / in-progress / complete

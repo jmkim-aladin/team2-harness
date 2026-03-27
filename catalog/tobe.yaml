@@ -1,0 +1,216 @@
+# 투비컨티뉴드 (ToBe) 서비스 프로파일
+# 소스: /Users/user/Documents/workspace/tobe-project
+
+service_id: tobe
+name: 투비컨티뉴드 (tobe)
+type: legacy
+description: "디지털 콘텐츠 크리에이터 플랫폼 — 노트/블로그/디지털 작품 발행, 멤버십, 정산 관리"
+
+owners:
+  primary: "jmkim@aladin.co.kr"      # 김정민
+  backup: "heum2@aladin.co.kr"       # 조은흠
+  additional: "heesoo@aladin.co.kr"  # 박희수
+
+components:
+  tobe-web:
+    description: "메인 웹 애플리케이션 (MVC + React SSR + API)"
+    runtime:
+      type: dotnet-framework
+      version: "4.8"
+      language: "C#"
+      hosting: iis
+    frontend:
+      type: "ReactJS.NET (서버사이드 렌더링)"
+      js_engine: "ClearScript.V8 7.1.5"
+      typescript: "4.3"
+      editor: "Froala Editor"
+    solution: "Aladin.Tobe.sln"
+    projects:
+      - "Aladin.Tobe.Core — 공통 유틸, 예외, 확장"
+      - "Aladin.Tobe.Models — DTO, 데이터 모델"
+      - "Aladin.Tobe.Bll — 비즈니스 로직 (15개 모듈)"
+      - "Aladin.Tobe.Dal — 데이터 액세스 (20+ Repository)"
+      - "Aladin.Tobe.Web — ASP.NET MVC + React + API"
+
+  tobe-batch:
+    description: "배치 작업 (SQL Server Agent)"
+    runtime:
+      type: sql-agent
+      language: "T-SQL + SSIS"
+    jobs:
+      - "TobeOrdersSettle_Job — 정산 처리"
+      - "Note_BookingPublish_Job — 예약 발행"
+      - "NoteReport_Grade_Job — 노트 등급 산정"
+      - "TobeOrdersMembershipSettle_Job — 멤버십 정산"
+      - "검색 인덱싱 및 실시간 업데이트 (SSIS)"
+      - "포인트/리워드 처리"
+      - "통계 집계"
+      - "검색 키워드 인기도 계산"
+    job_count: "40+"
+
+repos:
+  # 팀 관리 레포
+  tobe-web: "https://github.com/AladinCommunication/Tobe"
+  tobe-db-script: "https://github.com/AladinCommunication/tobe-db-script"
+
+  # 앱 (개발 4팀 관리)
+  tobe-android: "https://github.com/AladinCommunication/ToBeAndroid"  # 개발 4팀
+  tobe-ios: "https://github.com/AladinCommunication/ToBeIos"          # 개발 4팀
+
+youtrack:
+  project_key: DEV2
+  ticket_format: "DEV2-{number}"
+  branch_convention: "feature/{TICKET-ID}"
+  example: "feature/DEV2-4827"
+
+architecture:
+  pattern: "Layered Architecture (N-Tier)"
+  layers:
+    presentation: "Controllers (20+), Views (MVC), ViewsReact (React SSR)"
+    business: "Aladin.Tobe.Bll (Account, Auth, Editor, Event, Ground, Intra, Library, Main, Noti, Order, ReportCenter, Search, Space, Studio, Tobelog)"
+    data_access: "Aladin.Tobe.Dal (20+ Repository — AccountRepository, OrderProcessRepository, CreatorRepository 등)"
+    models: "Aladin.Tobe.Models (도메인별 DTO)"
+    core: "Aladin.Tobe.Core (공통 유틸)"
+    database: "MSSQL Stored Procedures, Functions, Views"
+  design_patterns:
+    - "Repository Pattern: 도메인별 Repository"
+    - "Dependency Injection: Unity Container"
+    - "Configuration Transform: 환경별 Web.config 변환"
+
+stack:
+  framework: "ASP.NET MVC (.NET Framework 4.8)"
+  language: "C#"
+  build_tool: "MSBuild (VS 2022)"
+  orm: "Dapper 2.0"
+  logging: "NLog 5.4.0 (Discord webhook 연동)"
+  serialization: "Newtonsoft.Json 13.0.3"
+  api: "ASP.NET Web API 5.2.7"
+  api_docs: "Swagger 5.6.0"
+  auth: "Microsoft.IdentityModel 6.19.0, jose-jwt 4.0.0"
+  security: "BouncyCastle 1.9.0, Aladdin.Encryption"
+  html: "HtmlAgilityPack 1.11.40"
+  excel: "EPPlus 4.5.3.3 / 6.0.0"
+  http_client: "RestSharp 107.1.2"
+  internal_frameworks:
+    - "Aladdin.AppBlock"
+    - "Aladdin.DataBlock"
+    - "Aladdin.FrameWork"
+    - "Aladdin.Encryption"
+
+data:
+  db_type: mssql
+  db_version: "SQL Server 2016 SP1+"
+  databases:
+    - name: Tobe
+      purpose: "메인 애플리케이션 DB"
+      used_by: [tobe-web, tobe-batch]
+      sp_count: "200+"
+      is_primary: true
+    - name: WebCatalog
+      purpose: "카탈로그/상품 데이터"
+      used_by: [tobe-web]
+      ownership: shared  # 알라딘 그룹 공유
+    - name: Alibaba
+      purpose: "서드파티 연동"
+      used_by: [tobe-web]
+      ownership: shared
+    - name: WebMarket
+      purpose: "마켓/커머스 데이터"
+      used_by: [tobe-web]
+      ownership: shared
+    - name: WebLog
+      purpose: "로깅"
+      used_by: [tobe-web]
+      ownership: shared
+  shared_db: true       # 4개 알라딘 공유 DB 참조
+  direct_sp_write: true  # SP 기반 write 집중적 사용 (200+ SP)
+  db_scripts: "tobe-db-script 별도 레포로 관리"
+
+controllers:
+  main:
+    - HomeController / HomeApiController
+    - TobelogController (블로그)
+    - SearchController
+    - LibraryController
+    - AuthController / LoginController / JoinController
+    - OrderController
+    - MypageController
+    - AppController
+    - NotificationController
+  intra:  # 내부 관리 도구
+    - AuthorCertifiedController
+    - DisplayBannerController
+    - OrderController (Intra)
+    - CurationController
+    - EditorController
+    - EventCommentController
+    - EtcController
+
+dependencies:
+  inbound:
+    - system: "사용자 (웹 브라우저)"
+      method: "HTTP"
+    - system: "앱 (모바일)"
+      method: "REST API"
+  outbound:
+    - system: "AI 검색 서비스 (TobeApiSearch)"
+      method: "REST"
+      url: "ai.search.dev.aladin.co.kr"
+    - system: "FAQ/몰 검색 (FaqApiSearch)"
+      method: "REST"
+      url: "ai.search.dev.aladin.co.kr"
+    - system: "에디터 파일 스토리지"
+      method: "UNC path (SMB)"
+    - system: "WebCatalog DB"
+      method: "MSSQL"
+    - system: "WebMarket DB"
+      method: "MSSQL"
+    - system: "WebLog DB"
+      method: "MSSQL"
+    - system: "Alibaba DB"
+      method: "MSSQL"
+
+build:
+  commands:
+    restore: "NuGet restore"
+    build: "MSBuild Aladin.Tobe.sln"
+    config_transform: "Web.config → Web.Release.config / Web.Production.config"
+  devops:
+    build_script: "build.ps1"
+    steps:
+      - "AWS Secrets Manager에서 시크릿 조회"
+      - "NuGet restore"
+      - "MSBuild 컴파일"
+      - "Web.config transform"
+      - "출력: D:\\github\\Tobe"
+  deploy:
+    tool: "AWS CodeDeploy"
+    config: "appspec.yml"
+    hooks:
+      - "BeforeInstall.ps1 — 파일 복사 (cp949 인코딩 이슈 주의)"
+      - "build.ps1 — 빌드 및 시크릿 주입"
+      - "ApplicationStart.ps1 — 서비스 시작"
+      - "ValidateService.ps1 — 헬스 검증"
+    os: "Windows Server"
+  secrets: "AWS Secrets Manager (sm-tobe-web-config-dev, sm-tobe-web-config)"
+  ci:
+    - "GitHub Actions: .github/workflows/code-review.yml (ChatGPT 코드리뷰)"
+  configurations: [Debug, Release, Production]
+
+risk:
+  change_frequency: ""    # TODO: high / medium / low
+  incident_impact: ""     # TODO: high / medium / low
+  data_coupling: high     # 5개 DB (1 자체 + 4 공유), 200+ SP, 40+ 배치
+
+modernization:
+  track: ""               # TODO: 분석 후 결정
+  status: "not-started"
+  notes: |
+    - .NET Framework 4.8 + IIS + Windows Server — max(만권당)과 유사한 레거시 구조
+    - SP 200+개, 배치 40+개 — 핵심 비즈니스 로직이 DB에 집중
+    - 4개 알라딘 공유 DB 참조 — 데이터 결합도 높음
+    - ReactJS.NET (서버사이드 렌더링) — 프론트엔드도 레거시
+    - Wrap 트랙 유력: adapter로 감싸고 SP 확산 방지 우선
+    - max와 WebCatalog, WebLog 등 공유 DB 겹침 — 현대화 시 함께 고려 필요
+
+harness_status: "not-started"

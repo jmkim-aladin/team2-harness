@@ -1,0 +1,178 @@
+# aasm (AWS S3 Asset Manager) 서비스 프로파일
+# 소스: /Users/user/Documents/workspace/s3manager
+
+service_id: aasm
+name: aasm
+type: new
+description: "AWS S3 기반 웹 파일 관리/배포 플랫폼 — Dev/Prod 환경 분리, 버전 관리, RBAC, 배포 큐 시스템"
+
+owners:
+  primary: "jmkim@aladin.co.kr"  # 김정민
+  backup: ""
+
+components:
+  web:
+    description: "파일 관리 웹 애플리케이션 (SSR + Server Actions)"
+    runtime:
+      type: nextjs
+      version: "16"
+      language: "TypeScript 5"
+      node: "18+"
+      hosting: "Docker (AWS ECS 예정)"
+    port: 3000
+
+repo: "https://github.com/AladinCommunication/AASM"
+
+youtrack:
+  project_key: DEV2
+
+architecture:
+  pattern: "Next.js App Router + Server Actions"
+  key_patterns:
+    - "Server-driven Security: Middleware JWT 검증, Server Action 권한 체크"
+    - "Queue-based Deployment: Dev → 큐 → 검증 → Prod 배포"
+    - "Environment Separation: Dev/Prod S3 버킷 분리"
+    - "RBAC: Admin/Developer/Editor 역할 + 서비스별 권한"
+    - "Presigned URL: 브라우저 → S3 직접 업로드/다운로드"
+    - "Audit Trail: Prod 변경 전체 감사 로그"
+
+stack:
+  framework: "Next.js 16 (App Router, Server Actions)"
+  language: "TypeScript 5"
+  runtime: "Node.js 18+"
+  frontend:
+    ui: "React 19 + shadcn/ui (Radix UI + Tailwind CSS 4)"
+    editor: "Monaco Editor 4.7.0 (코드 편집 + diff)"
+    icons: "Lucide React"
+    theme: "next-themes 0.4.6 (다크모드)"
+  auth: "NextAuth v5 (beta) + bcryptjs + JWT"
+  encryption: "AES-256-GCM (AWS 크레덴셜 암호화)"
+  aws:
+    - "@aws-sdk/client-s3 (v3)"
+    - "@aws-sdk/s3-request-presigner"
+    - "S3 versioning"
+    - "Secrets Manager (계획)"
+  orm: "Drizzle ORM 0.45.1"
+  testing: []  # TODO: 테스트 프레임워크 추가 예정
+  quality:
+    - "ESLint 9"
+
+data:
+  current:
+    db_type: sqlite
+    db_name: "s3-file-manager.db"
+    note: "PostgreSQL 마이그레이션 진행 중"
+  target:
+    db_type: postgresql
+    version: "16+"
+    db_name: s3manager
+    orm: "Drizzle ORM 0.45.1"
+    migration: "Drizzle Kit"
+  tables:
+    - services           # 서비스 정의 (Dev/Prod 버킷, 암호화된 AWS 크레덴셜)
+    - users              # 사용자 (admin/developer/editor)
+    - userServicePermissions  # 서비스별 사용자 권한
+    - events             # 릴리즈/기능 그룹
+    - deployQueue        # 배포 대기 큐
+    - deployBatches      # 배포 배치
+    - deployBatchItems   # 배치 내 개별 파일
+    - prodAuditLog       # Prod 감사 로그
+  shared_db: false
+  direct_sp_write: false
+  storage: "AWS S3 (서비스별 Dev/Prod 버킷)"
+
+pages:
+  - "/(auth)/login — 로그인"
+  - "/dashboard — 대시보드"
+  - "/services/[id]/files — 파일 탐색기"
+  - "/services/[id]/queue — 배포 큐"
+  - "/services/[id]/deploys — 배포 이력"
+  - "/services/[id]/events — 이벤트 관리"
+  - "/admin/services — 서비스 관리 (Admin)"
+  - "/admin/users — 사용자 관리 (Admin)"
+
+api_endpoints:
+  - "POST /api/files/presigned — S3 presigned URL 생성"
+  - "GET|POST /api/auth/[...nextauth] — 인증"
+
+server_actions:
+  - "files.ts: getFiles, uploadFile, editFile, moveFile, deleteFile, getFileVersions"
+  - "deploy-queue.ts: getQueueItems, skipQueueItem, addToQueue"
+  - "deploys.ts: createDeployBatch, executeDeploy, getDeployBatches, getAuditLog"
+  - "services.ts: createService, updateService, deleteService, getServices"
+  - "users.ts: createUser, updateUser, toggleUserActive, getUserPermissions"
+  - "events.ts: createEvent, updateEvent, completeEvent"
+  - "dashboard.ts: getDashboardStats, getRecentDeployments"
+
+features:
+  - "파일 업로드/다운로드/편집/삭제 (드래그앤드롭)"
+  - "Monaco 에디터 (HTML/CSS/JS/JSON 코드 편집 + 라이브 프리뷰)"
+  - "S3 버전 관리 + 파일 히스토리 + diff 비교"
+  - "RBAC: Admin → Developer → Editor"
+  - "배포 큐 (Dev → 검증 → Prod)"
+  - "이벤트 기반 파일 그룹핑 (릴리즈/기능)"
+  - "Prod 감사 로그"
+  - "멀티 서비스 (서비스별 독립 S3 버킷/크레덴셜)"
+
+dependencies:
+  inbound:
+    - system: "사용자 (웹 브라우저)"
+      method: "HTTP"
+  outbound:
+    - system: "AWS S3"
+      method: "SDK v3"
+      purpose: "파일 저장/버전 관리/presigned URL"
+    - system: "AWS Secrets Manager"
+      method: "SDK (계획)"
+      purpose: "크레덴셜 관리"
+    - system: "PostgreSQL"
+      method: "Drizzle ORM"
+      purpose: "메타데이터/사용자/배포 이력"
+    - system: "LocalStack (개발)"
+      method: "SDK"
+      purpose: "로컬 AWS 서비스 모킹"
+
+build:
+  commands:
+    build: "npm run build"
+    dev: "npm run dev"
+    start: "npm run start"
+    db_generate: "npm run db:generate"
+    db_push: "npm run db:push"
+    db_migrate: "npm run db:migrate"
+    db_seed: "npm run db:seed"
+    docker_up: "npm run docker:local:up"
+    docker_down: "npm run docker:local:down"
+  docker:
+    local: "docker-compose.local.yml (PostgreSQL 16 + LocalStack 4.4)"
+    devops_dir: ".devops/{dev,prod}/"
+    note: "Dockerfile, buildspec.yml, entrypoint.sh — 아직 비어있음 (구성 예정)"
+  ci:
+    status: "미구성 (buildspec 템플릿만 존재)"
+  profiles: [local, dev, prod]
+  env_vars:
+    - "DATABASE_URL"
+    - "NEXTAUTH_SECRET"
+    - "NEXTAUTH_URL"
+    - "ENCRYPTION_KEY (32-byte hex)"
+
+status:
+  sqlite_to_postgresql: "마이그레이션 진행 중 (스키마 준비 완료, 테스트 있음)"
+  ci_cd: "미구성"
+  docs: "project-overview.md, service-team-guide.md, admin-developer-guide.md 존재"
+
+risk:
+  change_frequency: ""   # TODO
+  incident_impact: ""    # TODO: S3 파일 관리/배포 중단 시 영향
+  data_coupling: low     # 독립 DB, 독립 S3 버킷
+
+modernization:
+  track: ""
+  status: "not-started"
+  notes: |
+    - 신규 서비스 (Next.js 16, modern stack)
+    - PostgreSQL 마이그레이션 진행 중
+    - CI/CD 파이프라인 구성 필요
+    - Observe 트랙
+
+harness_status: "not-started"

@@ -1,0 +1,196 @@
+# bazaar 서비스 프로파일
+# 소스: /Users/user/Documents/workspace/bazaar/BazaarServer
+
+service_id: bazaar
+name: bazaar
+type: new
+description: "멀티벤더 마켓플레이스 연동 플랫폼 — 오픈마켓(eBay, Gmarket, Auction, 11번가) 상품/주문/배송/반품 동기화"
+
+owners:
+  primary: "iyk@aladin.co.kr"    # 강인용 (프리랜서)
+  backup: "jjy@aladin.co.kr"    # 조주영 (프리랜서)
+
+components:
+  batch:
+    description: "배치 처리 서비스 (메인) + REST API"
+    runtime:
+      type: spring-boot
+      version: "3.5.3"
+      language: "Kotlin 2.0.20"
+      jvm: "OpenJDK 21 (LTS)"
+      hosting: "AWS ECS/EKS (Docker + K8s + ArgoCD)"
+    port: 8080 (app) / 8081 (actuator)
+    batch_jobs:
+      - ProductBatchScheduler
+      - OrderBatchScheduler
+      - FulfillmentBatchScheduler
+      - ResolutionBatchScheduler
+      - ReconcilerBatchScheduler
+
+repo: "https://github.com/AladinCommunication/BazaarServer"
+
+youtrack:
+  project_key: DEV2
+
+architecture:
+  pattern: "Hexagonal Architecture (Ports & Adapters) + DDD + CQRS"
+  modules_count: 18
+  layers:
+    bazaar-base: "공통 (상수, 예외, 유틸)"
+    bazaar-core-domain: "순수 도메인 모델 (Product, Order, Fulfillment, Resolution, Outbox, Category, Location, Reconciler)"
+    bazaar-ports: "포트 인터페이스 (Command/Query 분리, Vendor/Supplier 전략)"
+    bazaar-usecase: "비즈니스 로직 오케스트레이션"
+    bazaar-adapters: "구현체 (persistence-jpa, vendor-ebay, vendor-st11, vendor-http, supplier-aladin)"
+    bazaar-facade: "외부 시스템 파사드 (aws-secrets, http, mssql)"
+    bazaar-apps: "진입점 (batch, common)"
+  key_patterns:
+    - "Strategy Pattern: 벤더별 플러그인형 비즈니스 로직"
+    - "Transactional Outbox: At-Least-Once 이벤트 발행 보장"
+    - "CQRS: Command/Query Repository 분리"
+    - "Aggregate Root: 도메인별 경계 관리"
+
+stack:
+  framework: "Spring Boot 3.5.3"
+  language: "Kotlin 2.0.20"
+  jvm: "OpenJDK 21"
+  build: "Gradle 8 (Kotlin DSL)"
+  orm: "Spring Data JPA (Hibernate)"
+  async: "Kotlin Coroutines 1.9.0 + Project Reactor"
+  http_client: "OkHttp 4.12.0"
+  auth: "JJWT 0.13.0 (JWT)"
+  api_docs: "SpringDoc OpenAPI (Swagger UI)"
+  testing:
+    - "JUnit 5.13.4"
+    - "MockK 1.13.12"
+    - "kotlinx-coroutines-test"
+  quality:
+    - "ktlint 13.1.0"
+    - "Kover 0.9.2 (coverage)"
+  code_stats:
+    kotlin_lines: 31594
+    kotlin_files: 538
+
+data:
+  primary:
+    db_type: postgresql
+    db_name: alaconn
+    hosting: "AWS RDS"
+    migration: "Flyway (27+ migrations)"
+    connection_pool:
+      write: 50
+      read: 20
+    shared_db: false  # Bazaar 전용
+    direct_sp_write: false  # JPA/Hibernate로 write
+  secondary:
+    db_type: mssql
+    purpose: "알라딘 공급자 시스템 연동 (읽기 전용)"
+    access: "Custom JDBC facade (MssqlFacade)"
+    shared_db: true  # 알라딘 내부 시스템과 공유
+    direct_sp_write: false  # 읽기 전용
+    secret: "sm-bazaar-{env}-supplier-ashop"
+
+domains:
+  - name: Product
+    description: "상품 카탈로그 관리 및 벤더 동기화"
+  - name: Order
+    description: "주문 처리 및 동기화"
+  - name: Fulfillment
+    description: "배송/쿠폰/전자책 이행"
+  - name: Resolution
+    description: "반품/교환/취소 후처리"
+  - name: Outbox
+    description: "이벤트 발행 안전 보장"
+  - name: Category
+    description: "카테고리 매핑"
+  - name: Location
+    description: "창고/위치 관리"
+  - name: Reconciler
+    description: "크로스시스템 데이터 정합성"
+
+vendors:
+  - name: eBay
+    adapter: vendor-ebay
+    secret: "sm-bazaar-{env}-vendor-ebay"
+  - name: "Gmarket (ESM+)"
+    adapter: vendor-http
+    protocol: "HTTPS/SOAP"
+  - name: "11번가 (ST11)"
+    adapter: vendor-st11
+    secret: "sm-bazaar-{env}-vendor-st11"
+
+api_endpoints:
+  batch_control:
+    - "POST /batch/control/pause — 배치 일시정지"
+    - "POST /batch/control/resume — 배치 재개"
+    - "GET /batch/control/status — 배치 상태 조회"
+    - "POST /batch/log/enable/{vendor} — 벤더별 디버그 로깅"
+  actuator:
+    - "GET /actuator/health"
+    - "GET /actuator"
+
+dependencies:
+  inbound:
+    - system: "알라딘 내부 시스템"
+      method: "MSSQL (JDBC, 읽기 전용)"
+      purpose: "상품/주문/배송 데이터 조회"
+  outbound:
+    - system: "eBay API"
+      method: "HTTPS/REST"
+      purpose: "상품/주문/배송 동기화"
+    - system: "Gmarket ESM+ 플랫폼"
+      method: "HTTPS/SOAP"
+      purpose: "상품/주문 동기화"
+    - system: "11번가 (ST11) 플랫폼"
+      method: "HTTPS/REST"
+      purpose: "상품/주문 동기화"
+    - system: "알라딘 MSSQL"
+      method: "JDBC"
+      purpose: "공급자 데이터 읽기"
+    - system: "AWS Secrets Manager"
+      method: "SDK"
+      purpose: "크레덴셜 관리"
+    - system: "이벤트 구독자"
+      method: "HTTP webhook / MQ"
+      purpose: "Outbox 이벤트 발행"
+
+build:
+  commands:
+    build: "./gradlew clean build"
+    build_jar: "./gradlew :bazaar-apps:batch:bootJar"
+    test: "./gradlew test"
+    lint: "./gradlew ktlintFormat"
+  docker:
+    base_image: "Alpine Linux + OpenJDK 21"
+    strategy: "Multi-stage build"
+    user: "aladin-app (UID 2000, GID 2000)"
+    devops_dir: ".devops/{dev,prod}/batch/"
+  ci:
+    tool: "AWS CodeBuild"
+    buildspec: ".devops/{dev,prod}/batch/buildspec.yml"
+    registry: "AWS ECR"
+    deployment: "ArgoCD GitOps"
+  safe_deploy:
+    description: "프로덕션 안전 배포"
+    steps:
+      - "POST /batch/control/pause — 배치 일시정지"
+      - "GET /batch/control/status 폴링 (최대 5분) — 모든 잡 idle 확인"
+      - "ArgoCD sync 트리거"
+      - "kubectl patch deployment (restart)"
+  profiles: [dev, prod]
+  secrets: "AWS Secrets Manager"
+
+risk:
+  change_frequency: ""   # TODO: high / medium / low
+  incident_impact: ""    # TODO: 오픈마켓 동기화 중단 시 주문/배송 지연
+  data_coupling: medium  # PostgreSQL 전용이지만 MSSQL 읽기 의존
+
+modernization:
+  track: ""              # 신규 서비스 — 해당 없을 수 있음
+  status: "not-started"
+  notes: |
+    - 이미 modern stack (Spring Boot 3.5.3, Kotlin, Hexagonal, DDD)
+    - naru와 유사한 아키텍처 (Hexagonal + DDD + CQRS)
+    - MSSQL 읽기 의존만 있으므로 독립성 높음
+    - Observe 트랙이 적합
+
+harness_status: "not-started"

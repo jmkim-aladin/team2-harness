@@ -1,0 +1,67 @@
+# 서비스 매니페스트
+# 이 파일은 서비스의 메타데이터를 구조화하여 관리합니다.
+# AI와 자동화 도구가 참조하는 기계 판독 가능한 서비스 정의입니다.
+
+service_id: "{{서비스ID}}"
+name: "{{서비스명}}"
+description: "{{서비스 설명}}"
+
+owners:
+  primary: "{{주 담당자}}"
+  backup: "{{백업 담당자}}"
+  deploy_authority: "{{배포 권한자}}"
+  rollback_authority: "{{롤백 권한자}}"
+
+runtime:
+  type: "{{dotnet-framework / dotnet / spring-boot / nextjs 등}}"
+  version: "{{버전}}"
+  language: "{{C# / Kotlin / TypeScript 등}}"
+  hosting: "{{iis / kubernetes / vercel 등}}"
+
+build:
+  command: "{{빌드 명령}}"
+  test_command: "{{테스트 명령}}"
+  lint_command: "{{린트 명령}}"
+
+youtrack:
+  project_key: "{{YouTrack 프로젝트 키}}"
+
+repo:
+  url: "{{GitHub 레포 URL}}"
+  default_branch: "main"
+
+entrypoints:
+  - "{{/api/...}}"
+
+data:
+  main_db: "{{DB명}}"
+  write_owner_tables:
+    - "{{테이블명}}"
+  stored_procedures:
+    - name: "{{SP명}}"
+      purpose: "{{용도}}"
+      risk: "{{high / medium / low}}"
+  shared_db: false  # true면 다른 서비스와 DB 공유
+
+dependencies:
+  inbound:  # 이 서비스를 호출하는 시스템
+    - service: "{{서비스명}}"
+      method: "{{REST / gRPC / MQ 등}}"
+  outbound:  # 이 서비스가 호출하는 시스템
+    - service: "{{서비스명}}"
+      method: "{{REST / gRPC / MQ 등}}"
+
+risk:
+  change_frequency: "{{high / medium / low}}"
+  incident_impact: "{{high / medium / low}}"
+  data_coupling: "{{high / medium / low}}"
+  direct_sp_write: false
+
+modernization:
+  track: "{{observe / wrap / extract / freeze}}"
+  status: "{{not-started / in-progress / complete}}"
+
+monitoring:
+  dashboard: "{{모니터링 URL}}"
+  logs: "{{로그 위치}}"
+  alerts: "{{알림 채널}}"

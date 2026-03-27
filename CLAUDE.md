@@ -1,0 +1,36 @@
+# 개발 2팀 하네스
+
+팀 공통 정책, 스킬, 서비스 카탈로그의 source of truth.
+셋업: [docs/setup-guide.md](./docs/setup-guide.md) | 운영: [docs/harness-guide.md](./docs/harness-guide.md)
+
+## 구조
+
+- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md)
+- `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm)
+- `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
+- `.claude/commands/ad/` — 팀 스킬 (ticket, code-review, kb-read, kb-list, kb-sync)
+- `scripts/setup.sh` — 원커맨드 셋업
+- `docs/` — 가이드 문서
+
+## 핵심 규칙
+
+- 브랜치: `feature/{이슈ID}` | 커밋: `[{이슈ID}] 작업 내용` | PR 전 squash 필수
+- 모든 작업은 YouTrack 티켓(5W1H)에서 시작, 2일 초과 시 분할
+- DB/SP 변경 별도 승인, 프로덕션 배포 사람 승인
+- 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지
+
+## 서비스
+
+| 서비스 | 유형 | 프로파일 |
+|--------|------|----------|
+| max (만권당) | legacy | [catalog/max.yaml](./catalog/max.yaml) |
+| tobe (투비컨티뉴드) | legacy | [catalog/tobe.yaml](./catalog/tobe.yaml) |
+| naru | new | [catalog/naru.yaml](./catalog/naru.yaml) |
+| bazaar | new | [catalog/bazaar.yaml](./catalog/bazaar.yaml) |
+| aasm | new | [catalog/aasm.yaml](./catalog/aasm.yaml) |
+
+## 문서 규칙
+
+- 한국어 작성, 코드/기술 용어 영어 허용
+- 파일명: `kebab-case.md`
+- CLAUDE.md 최소화 원칙: [policies/claude-md-policy.md](./policies/claude-md-policy.md)

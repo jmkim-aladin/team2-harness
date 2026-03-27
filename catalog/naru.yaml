@@ -1,0 +1,190 @@
+# naru 서비스 프로파일
+# 소스: /Users/user/Documents/workspace/naru/NaruServer
+
+service_id: naru
+name: naru
+type: new
+description: "멀티프로토콜 SSO 게이트웨이 — 파트너 인증 연동, KMS 봉투 암호화 기반 사용자 매핑, ID 페더레이션"
+
+owners:
+  primary: "jmkim@aladin.co.kr"  # 김정민
+  backup: ""
+
+# 멀티 서비스 (독립 배포 단위)
+components:
+  sso-api:
+    description: "파트너 SSO 인증 처리 (외부 네트워크)"
+    runtime:
+      type: spring-boot
+      version: "3.5.6"
+      language: "Kotlin 2.0.20"
+      jvm: "Java 21 (Eclipse Temurin)"
+      hosting: "AWS ECS (Docker)"
+    port: 9890 (local) / 8081 (dev/prod)
+    network: external
+    web_framework: Spring WebFlux (reactive)
+
+  account-api:
+    description: "사용자 조회/복호화 API (내부 네트워크)"
+    runtime:
+      type: spring-boot
+      version: "3.5.6"
+      language: "Kotlin 2.0.20"
+      jvm: "Java 21 (Eclipse Temurin)"
+      hosting: "AWS ECS (Docker)"
+    port: 9891 (local) / 8081 (dev/prod)
+    network: internal
+    web_framework: Spring WebMvc (servlet)
+
+repo: "https://github.com/AladinCommunication/NaruServer"
+
+youtrack:
+  project_key: DEV2
+  instance: "https://aladincommunication.youtrack.cloud"
+  example_issues: [DEV2-3599, DEV2-3600, DEV2-3601, DEV2-3608, DEV2-2964]
+
+architecture:
+  pattern: "Hexagonal Architecture (Ports & Adapters) + DDD + CQRS"
+  modules:
+    base: "공통 유틸, 상수, 예외"
+    core-domain: "순수 도메인 모델 (Partner, Contract, PartnerUser, PartnerUserMapping)"
+    ports: "포트 인터페이스 (UseCase, Repository, External Service)"
+    usecase: "비즈니스 로직 오케스트레이션"
+    adapters: "포트 구현체 (persistence, security, HTTP, external, SSO protocols)"
+    apps: "진입점 (sso-api, account-api, mock-multicampus-server, dev-tools)"
+  key_patterns:
+    - "Strategy Pattern: SsoProtocolRegistry로 프로토콜별 전략 자동 등록"
+    - "Envelope Encryption: AWS KMS Master Key → 파트너별 DEK → 데이터 암호화"
+    - "Adapter Pattern: 외부 서비스별 어댑터 분리"
+    - "Reactive: SSO API는 WebFlux + Kotlin Coroutines"
+
+stack:
+  framework: "Spring Boot 3.5.6"
+  language: "Kotlin 2.0.20"
+  jvm: "Java 21"
+  build: "Gradle 8.x (Kotlin DSL)"
+  orm: "Spring Data JPA (Hibernate)"
+  async: "Kotlin Coroutines 1.9.0 + Project Reactor"
+  security: "Spring Security 6.x"
+  api_docs: "SpringDoc OpenAPI 2.7.0 (Swagger UI)"
+  encryption:
+    - "AWS KMS (봉투 암호화)"
+    - "Bouncy Castle 1.78.1 (AES, RSA, SHA-256)"
+    - "Auth0 java-jwt 4.4.0 (JWT)"
+  testing:
+    - "JUnit 5 + Kotest 5.9.1"
+    - "MockK 1.13.13 + Mockito 5.14.2"
+    - "TestContainers"
+  quality:
+    - "ktlint 13.1.0"
+    - "Kover 0.9.2 (coverage)"
+    - "SonarQube 7.2.0"
+
+data:
+  db_type: postgresql
+  hosting: "AWS RDS"
+  databases:
+    - name: "naru (공유)"
+      purpose: "SSO API + Account API 공유"
+      migration: "Flyway (V{N}__{description}.sql)"
+  tables:
+    - partner
+    - service_endpoint
+    - partner_contract
+    - partner_user
+    - partner_user_mapping
+    - security_audit_event
+    - access_logs
+    - audit_logs
+  shared_db: true   # sso-api, account-api가 같은 DB 공유
+  direct_sp_write: false  # SP 미사용, JPA/Hibernate로 write
+  cache:
+    type: "AWS ElastiCache Valkey (Redis 호환)"
+    usage: "DEK 캐시, Auth Code 캐시, Consent Token 캐시"
+  local_cache: "Caffeine 3.1.8 (인메모리)"
+
+api_endpoints:
+  sso-api:
+    - "POST /v1/partners/{partnerSlug}/auth — SSO 인증 요청"
+    - "Consent 관리 엔드포인트"
+    - "Swagger UI: /swagger-ui.html"
+  account-api:
+    - "GET /partner-users/resolve — 파트너 사용자 복호화/조회 (API 키 인증)"
+    - "파트너 관리 (admin)"
+    - "계약 관리"
+    - "약관 관리"
+    - "토큰 관리/검증"
+    - "감사 로그 조회"
+    - "Swagger UI: /swagger-ui.html"
+  actuator:
+    - "/actuator/health"
+    - "/actuator/metrics"
+    - "/actuator/prometheus"
+
+dependencies:
+  inbound:
+    - system: "파트너 SSO 시스템 (멀티캠퍼스, LG 라이프케어 등)"
+      method: "HTTP (SSO 프로토콜)"
+      target: sso-api
+    - system: "내부 서비스"
+      method: "REST (API 키 인증)"
+      target: account-api
+  outbound:
+    - system: "멀티캠퍼스 서버"
+      method: "REST (RSA 서명 기반)"
+      purpose: "SSO 인증 후 콜백"
+    - system: "쇼핑몰 시스템"
+      method: "REST (X-Api-Key)"
+      purpose: "JIT 사용자 프로비저닝"
+    - system: "AWS KMS"
+      method: "SDK"
+      purpose: "DEK 암호화/복호화"
+    - system: "AWS Secrets Manager"
+      method: "SDK"
+      purpose: "DB/KMS/JWT/Cache 크레덴셜 관리"
+    - system: "AWS ElastiCache Valkey"
+      method: "Redis protocol"
+      purpose: "캐시"
+    - system: "PostgreSQL (AWS RDS)"
+      method: "JDBC"
+
+build:
+  commands:
+    build: "./gradlew build"
+    test: "./gradlew test"
+    lint: "./gradlew ktlintFormat"
+    coverage: "./gradlew koverHtmlReport"
+    run_sso: "./gradlew :apps:sso-api:bootRun"
+    run_account: "./gradlew :apps:account-api:bootRun"
+  docker:
+    base_image: "Eclipse Temurin JDK/JRE 21 Alpine"
+    strategy: "Multi-stage build (builder → runtime)"
+    user: "aladin-app (UID 2000, GID 2000)"
+    devops_dir: ".devops/{dev,prod}/{sso-api,account-api}/"
+  profiles: [local, dev, prod]
+  secrets: "AWS Secrets Manager (local: LocalStack, prod: IRSA)"
+  ci:
+    - "GitHub Actions: .github/workflows/loc.yml (LOC 업데이트)"
+
+sso_protocols:
+  - name: multicampus-inbound-v1
+    partner: 멀티캠퍼스
+    type: "RSA 서명 기반"
+  - name: lglifecare-inbound-v1
+    partner: LG 라이프케어
+    type: "커스텀 프로토콜"
+
+risk:
+  change_frequency: ""   # TODO: high / medium / low
+  incident_impact: ""    # TODO: high / medium / low (SSO 장애 시 파트너 인증 불가)
+  data_coupling: low     # 독립 DB, SP 없음, 깔끔한 경계
+
+modernization:
+  track: ""              # 신규 서비스 — 해당 없을 수 있음
+  status: "not-started"
+  notes: |
+    - 이미 modern stack (Spring Boot 3.5.6, Kotlin, Hexagonal, DDD)
+    - 현대화 대상이 아니라 참조 아키텍처에 가까움
+    - Observe 트랙이 적합
+
+harness_status: "not-started"

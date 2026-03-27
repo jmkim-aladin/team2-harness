@@ -1,0 +1,242 @@
+# 만권당 (Max) 서비스 프로파일
+# 소스: /Users/user/Documents/workspace/max-doc
+
+service_id: max
+name: 만권당 (max)
+type: legacy
+description: "알라딘 전자책 구독 서비스 — 콘텐츠 제공, 구독 관리, 검색/브라우즈"
+
+owners:
+  primary: "jmkim@aladin.co.kr"      # 김정민
+  backup: "heum2@aladin.co.kr"       # 조은흠
+  additional: "heesoo@aladin.co.kr"  # 박희수
+
+# 멀티 런타임 서비스 (하위 프로젝트별 분리)
+components:
+  max-api:
+    description: "소비자용 API"
+    runtime:
+      type: dotnet-framework
+      version: "4.8"
+      language: "C#"
+      hosting: iis
+    dependencies:
+      - Dapper 2.0.90
+      - Unity Container 5.11.11
+      - AutoMapper 10.1.1
+      - NLog 5.4.0
+      - Swashbuckle 5.6.0
+
+  maxcms-api:
+    description: "CMS 관리자 API"
+    runtime:
+      type: dotnet
+      version: "8.0"
+      language: "C#"
+      hosting: docker  # K8s/Docker ready
+    dependencies:
+      - Dapper
+      - Swashbuckle 7.1.0
+
+  max-front:
+    description: "소비자용 프론트엔드"
+    runtime:
+      type: nextjs
+      version: "14.2.3"
+      language: "TypeScript 5.2.2"
+      hosting: docker  # Node.js 20.9.0-alpine
+    dependencies:
+      - Recoil (state)
+      - styled-components
+      - "@tanstack/react-query 4.0.0"
+      - Swiper
+      - dnd-kit
+
+  maxcms-front:
+    description: "CMS 관리자 프론트엔드"
+    runtime:
+      type: nextjs
+      version: "14.2.35"
+      language: "TypeScript 5.1"
+      hosting: docker
+    dependencies:
+      - Jotai (state)
+      - Tailwind CSS
+      - Ant Design 5.22.7
+      - React Hook Form
+      - Zod
+      - "@tanstack/react-query 5.62.10"
+
+  max-batch:
+    description: "배치 작업 (SQL Server Agent)"
+    runtime:
+      type: sql-agent
+      language: "T-SQL"
+    schedulers:
+      - name: LEGO
+        jobs: "검색 업데이트, 상품 업데이트, 정산, 통계"
+      - name: COOL
+        jobs: "구독 관리, 다운로드/읽기 큐 처리"
+    procedure_count: "18+ 스케줄 SP"
+
+repos:
+  # 팀 관리 레포 (핵심)
+  max-api: "https://github.com/AladinCommunication/max-api"
+  max-front: "https://github.com/AladinCommunication/max-front"
+  maxcms-api: "https://github.com/AladinCommunication/maxcms-api"
+  maxcms-front: "https://github.com/AladinCommunication/maxcms-front"
+  max-db-script: "https://github.com/AladinCommunication/max-db-script"
+
+  # 신규 전환용
+  max-server: "https://github.com/AladinCommunication/MaxServer"
+
+  # 관련 레포 (타팀 관리)
+  max-search: "https://github.com/AladinCommunication/max-search"             # 검색 AI 팀 관리
+  ebook-web-viewer: "https://github.com/AladinCommunication/Ebook_Web_Viewer"  # 개발 4팀 관리 (뷰어)
+  ebook-viewer-api: "https://github.com/AladinCommunication/EbookViewerAPI"    # 개발 4팀 관리 (뷰어 API)
+  ebook-ios: "https://github.com/AladinCommunication/EbookIos"                 # 개발 4팀 관리 (iOS 앱)
+  shopping-android: "https://github.com/AladinCommunication/ShoppingAndroid"   # 개발 4팀 관리 (Android 앱)
+
+youtrack:
+  project_key: DEV2
+
+data:
+  databases:
+    - name: WebCatalog
+      purpose: "메인 상품 카탈로그"
+      used_by: [max-api, maxcms-api]
+      sp_count: "410+"
+    - name: EbookCms
+      purpose: "CMS 콘텐츠 관리"
+      used_by: [maxcms-api]
+      sp_count: "171+"
+    - name: Alibaba
+      purpose: "외부/레거시 연동"
+      used_by: [maxcms-api]
+    - name: WebLog
+      purpose: "로깅/분석"
+      used_by: [max-api]
+    - name: Tobe
+      purpose: "레거시 연동"
+      used_by: [max-api]
+  db_type: mssql
+  db_version: "SQL Server 2016 SP1+"
+  shared_db: true       # 여러 컴포넌트가 같은 DB 공유
+  direct_sp_write: true  # SP 기반 write 집중적 사용
+  cache: redis
+
+api_endpoints:
+  max-api:  # RoutePrefix: "Api/"
+    - "Products/{itemId}"
+    - "Series/{seriesId}"
+    - "Browse/*"
+    - "Search/*"
+    - "User/*"
+    - "Subscribe/*"
+    - "Order/*"
+    - "My/Library"
+    - "My/Subscription"
+    - "My/Playlist"
+    - "Theme/*"
+    - "Notice/*"
+    - "Noti/*"
+    - "Cache/*"
+    - "Catalog/*"
+    - "MaxGame/*"
+  maxcms-api:
+    - "Swagger UI: /swagger/ui (Development/Stage only)"
+
+dependencies:
+  inbound:
+    - system: "프론트엔드 (max-front, maxcms-front)"
+      method: REST
+    - system: "내부 인증 시스템"
+      method: custom
+  outbound:
+    - system: Redis
+      method: cache
+    - system: "이메일 서비스"
+      method: notification
+    - system: "결제 게이트웨이"
+      method: REST
+
+build:
+  max-api:
+    command: "NuGet restore → MSBuild (VS 2022)"
+    publish_profiles: [Local, Stage, Release, Production]
+    devops_script: ".devops/build.ps1"
+  maxcms-api:
+    command: "dotnet build / dotnet publish"
+    config: "appsettings.{Environment}.json"
+  max-front:
+    command: "next build"
+    start: "next start"
+    local_dev: "Traefik + mkcert (domain: nextjs.aladin.co.kr)"
+    makefile: "make initialize → npm run dev"
+  maxcms-front:
+    command: "next build"
+
+architecture:
+  pattern: "N-Tier (Controllers → Services → Repositories → Stored Procedures)"
+  model_naming:
+    M: Model
+    QM: QueryModel
+    LQM: ListQueryModel
+    KM: KeyModel
+    CM: ConditionModel
+    VM: ViewModel
+    IM: InputModel
+  approach: "Database-First — 새 기능은 SP 설계부터 시작"
+
+risk:
+  change_frequency: ""   # TODO: high / medium / low
+  incident_impact: ""    # TODO: high / medium / low
+  data_coupling: high    # 5개 DB 공유, 410+ SP, 여러 컴포넌트 공유
+
+modernization:
+  track: extract         # 컴포넌트별로 다름 (아래 전략 참조)
+  status: "not-started"
+  strategy: |
+    ## 전환 경로: .NET Framework 4.8 → .NET Core → Kotlin (Spring Boot)
+
+    ### Phase 1: .NET Framework 4.8 → .NET Core
+    - max-api 레포의 `origin/deploy/max-dev-core` 브랜치에서 .NET Core 전환 진행 중
+    - SP 의존은 유지하되, adapter 패턴으로 감싸기
+
+    ### Phase 2: .NET Core → Kotlin (Spring Boot)
+    - MaxServer (https://github.com/AladinCommunication/MaxServer) 가 Kotlin 전환용 레포
+    - .NET Core 전환 완료 후 Kotlin/Spring Boot로 최종 전환
+    - naru, bazzar와 동일 아키텍처 (Hexagonal + DDD) 목표
+    - SP를 서비스 코드로 점진적 이관
+
+  components:
+    max-api:
+      current: ".NET Framework 4.8"
+      phase1_target: ".NET Core"
+      phase1_branch: "origin/deploy/max-dev-core"  # max-api 레포 내 브랜치
+      phase2_target: "Kotlin + Spring Boot"
+      phase2_repo: "https://github.com/AladinCommunication/MaxServer"  # Kotlin 전환용
+      track: extract
+    maxcms-api:
+      current: ".NET 8.0"
+      target: "Kotlin + Spring Boot (장기)"
+      track: observe  # 이미 modern, 급하지 않음
+    max-front:
+      current: "Next.js 14"
+      track: observe  # modern stack
+    maxcms-front:
+      current: "Next.js 14"
+      track: observe  # modern stack
+    max-batch:
+      current: "SQL Server Agent + T-SQL"
+      target: "서비스 코드로 이관"
+      track: wrap  # SP 확산 방지 우선
+
+  priorities:
+    - "1. SP 확산 방지 — 신규 코드에서 SP 직접 호출 금지"
+    - "2. max-api → .NET Core 전환 (MaxServer)"
+    - "3. adapter 패턴으로 레거시 DB/SP 감싸기"
+    - "4. .NET Core → Kotlin 전환"
+    - "5. SP를 서비스 코드로 점진 이관"
+
+harness_status: "not-started"
