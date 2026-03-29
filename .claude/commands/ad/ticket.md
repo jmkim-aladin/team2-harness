@@ -1,16 +1,33 @@
 # YouTrack 티켓 생성
 
 사용자 요청을 기반으로 5W1H 형식의 YouTrack 티켓을 생성합니다.
-Feature는 반드시 5W1H 항목을 포함해 작성합니다.
-Task 의 경우 상위 Feature 를 찾아서 해당 Task의 영역을 세분화 하여 기록합니다.
 
 ## 기본값
 
 - **프로젝트**: DEV2
-- **담당자**: 대상 서비스의 owner를 `team-members.md`에서 참조 (없으면 사용자에게 질문)
+- **담당자**: 대상 서비스의 owner를 `policies/team-members.md`에서 참조 (없으면 사용자에게 질문)
 - **유형**: Task
 - **Phase**: Backlog (ToBe)
 - **우선순위**: 보통 (Normal)
+
+## 참조 문서 (Source of Truth)
+
+티켓 작성 시 아래 하네스 문서를 **반드시 읽어서** 규칙을 준수합니다.
+
+| 문서 | 경로 | 참조 항목 |
+|------|------|-----------|
+| **티켓 작성 가이드** | `docs/sprint/ticket-guide.md` | 5W1H 상세 작성법, 스프린트 상태, 티켓 크기 |
+| **스토리 포인트 가이드** | `docs/sprint/story-point-guide.md` | SP 산정 기준 (1/2/3/5/8/13) |
+| **스프린트 계획 운영** | `docs/sprint/sprint-planning-overview.md` | 운영/계획 업무 분류 |
+| **업무 계획 변경 절차** | `docs/sprint/plan-change-process.md` | 긴급 요청·이월 처리 |
+| **전사 상태 플로우** | `youtrack/ticket-guide.md` | YouTrack 상태 머신 (ToBe→Closed) |
+
+### 핵심 규칙 요약
+
+- **Feature ≤ 1주 / Task ≤ 1일** (초과 시 분할)
+- **13점(XXL)은 스프린트 투입 금지** → 8점 이하로 분할 필수
+- **예상 시작 일자 필수**
+- **전월 마지막 주에 계획 완료**
 
 ## 환경변수
 
@@ -24,39 +41,36 @@ Task 의 경우 상위 Feature 를 찾아서 해당 Task의 영역을 세분화 
 ### YouTrack Knowledge Base 조회
 티켓 작성 시 관련 KB 문서를 참조하여 컨텍스트를 보강합니다.
 
-**KB API 접근:**
 ```bash
+BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
 curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
-  "$YOUTRACK_BASE_URL/api/articles?\$top=10&fields=id,idReadable,summary,content,parentArticle(summary)&query=project:DEV2"
+  "$BASE/api/articles?\$top=10&fields=id,idReadable,summary,content,parentArticle(summary)&query=project:DEV2"
 ```
 
 **DEV2 KB 구조:**
 - `DEV2-A-1` (Team): 팀 운영 (온보딩, 서버접속, 보안, 장애대응, OKR, 스프린트)
 - `DEV2-A-21` (Shared): 공유 문서 (만권당, 투비 등 서비스별)
 - `DEV2-A-22` (Onboarding): 온보딩
-
-**서비스별 KB 문서 (Shared 하위):**
 - `DEV2-A-108`: 😺만권당
-- 투비컨티뉴드, naru, bazaar 등
 
 ### 서비스 카탈로그 참조
-티켓 대상 서비스가 명확한 경우, 팀 하네스의 서비스 카탈로그를 참조합니다.
-- 위치: `catalog/` (이 레포 내)
-- 서비스: max, tobe, naru, bazaar, aasm
+- 위치: `catalog/` (max, tobe, naru, bazaar, aasm)
 
 ### 팀원 정보
-- 위치: `policies/team-members.md` (이 레포 내)
+- 위치: `policies/team-members.md`
 - 서비스별 owner/backup 정보로 담당자 자동 제안
 
 ## 실행 지침
 
 사용자가 `/ad:ticket` 또는 `/ad:ticket [설명]`을 입력하면:
 
-1. 사용자 입력이 있으면 해당 내용을 기반으로 티켓 작성
-2. 사용자 입력이 없으면 어떤 티켓을 만들지 질문
-3. **대상 서비스가 명확하면** 서비스 카탈로그(`catalog/*.yaml`)를 읽어 컨텍스트 보강
-4. **관련 KB 문서가 있을 수 있으면** YouTrack KB API로 검색하여 참조 (선택적)
-5. **담당자**는 서비스별 owner를 기본값으로 제안 (`policies/team-members.md` 참조)
+1. **`docs/sprint/ticket-guide.md`를 읽어** 5W1H 작성법과 최신 규칙을 확인
+2. 사용자 입력이 있으면 해당 내용을 기반으로 티켓 작성
+3. 사용자 입력이 없으면 어떤 티켓을 만들지 질문
+4. **대상 서비스가 명확하면** 서비스 카탈로그(`catalog/*.yaml`)를 읽어 컨텍스트 보강
+5. **관련 KB 문서가 있을 수 있으면** YouTrack KB API로 검색하여 참조 (선택적)
+6. **담당자**는 서비스별 owner를 기본값으로 제안
+7. **SP 산정**: `docs/sprint/story-point-guide.md` 기준표에 따라 산정 제안
 
 ## 티켓 출력 형식
 
@@ -66,41 +80,20 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 - **유형**: Task
 - **Phase**: Backlog (ToBe)
 - **우선순위**: 보통 (Normal)
+- **스토리 포인트**: {1|2|3|5|8} (산정 근거: 복잡도/불확실성/작업량)
+- **예상 시작 일자**: {YYYY-MM-DD}
+- **OKR 연계**: {팀 KR 번호} (해당 시, docs/okr/ 참조)
 
 ---
 
+(5W1H 본문은 docs/sprint/ticket-guide.md 3항의 형식을 따름)
+
 * ### What (무엇을 할 것인가)
-  이번 작업에서 바꾸거나 만드는 대상과 범위를 명확히 적습니다.
-  개발: 기능/모듈/API/배치/정책 로직 변경 범위
-  기획: 사용자 시나리오, 정책(허용/제한/예외), 화면/플로우 변경 범위
-  디자인: 적용 화면 범위, 컴포넌트 변경/추가, 상태(로딩/오류/빈화면) 정의 범위
-
 * ### Why (왜 필요한가)
-  이 작업이 필요한 배경과 해결하려는 문제, 기대 효과를 적습니다.
-  개발: 중복 제거, 안정성/성능, 확장성, 유지보수성 개선 근거
-  기획: 운영 효율, CS 감소, 전환율/완료율 개선, 정책 준수 필요성
-  디자인: 가독성/일관성, 사용자 혼란 감소, 접근성/사용성 개선 근거
-
 * ### Who (누가 사용할 것인가)
-  '사람 이름'이 아니라 "사용 주체/대상"을 적습니다.
-  사용자: 고객/관리자/파트너/내부 운영자 등
-  기획/디자인: 영향을 받는 이해관계자(운영팀/CS/파트너사 등)
-  개발: 호출 주체(어댑터/서비스/배치), 연관 시스템/모듈 등
-
 * ### When (언제 수행/발생하는가)
-  '배포일/배치 시간'이 아니라 "언제 이 기능이 동작하거나 이슈가 발생하는지(트리거)"를 적습니다.
-  예: 로그인 시, 주문/결제 시, 상품 등록/수정 시, 정산 시, 특정 운영 액션 시, 스케줄 실행 시
-
 * ### Where (어디에 적용되는가)
-  "적용 위치"를 적습니다.
-  기획/디자인: 적용 화면/메뉴/서비스 영역(예: 마이페이지 \> 구독, 어드민 \> 상품관리)
-  개발: 적용 모듈/패키지/서비스
-
 * ### How (어떻게 구현할 것인가)
-  구현 방식뿐 아니라, 정책/화면/검증 포인트까지 "핵심만" bullet로 적습니다.
-  개발: 주요 설계(인터페이스 분리, 트랜잭션/동기화, 예외 처리, 로그/모니터링)
-  기획: 정책 결정(허용/제한/예외), 운영 플로우, 데이터 기준(정의/소스)
-  디자인: 화면 구성/컴포넌트, 상태 정의(로딩/오류/빈 상태), 가이드/카피 반영
 ```
 
 ## 후속 작업 안내
@@ -109,3 +102,5 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 1. 내용 검토 및 수정 요청 여부 확인
 2. 확인되면 YouTrack MCP(`mcp__youtrack__create_issue`)로 직접 생성 제안
 3. KB 참조 문서가 있으면 티켓 설명에 링크 포함
+
+ARGUMENTS: $ARGUMENTS

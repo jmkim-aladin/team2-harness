@@ -5,12 +5,14 @@
 
 ## 구조
 
-- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md)
+- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드)
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm)
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
-- `.claude/commands/ad/` — 팀 스킬 (ticket, code-review, kb-read, kb-list, kb-sync)
+- `.claude/commands/ad/` — 팀 스킬 (ticket, code-review, kb-read, kb-list, kb-sync, okr, harness-optimize)
 - `scripts/setup.sh` — 원커맨드 셋업
 - `docs/` — 가이드 문서
+- `docs/okr/` — OKR 문서 (연간, 분기별 팀/개인)
+- `docs/sprint/` — 스프린트 운영 (SP 가이드, 티켓 작성, 계획 변경 절차)
 
 ## 핵심 규칙
 
@@ -28,6 +30,11 @@
 | naru | new | [catalog/naru.yaml](./catalog/naru.yaml) |
 | bazaar | new | [catalog/bazaar.yaml](./catalog/bazaar.yaml) |
 | aasm | new | [catalog/aasm.yaml](./catalog/aasm.yaml) |
+
+## gstack 스킬
+
+gstack 스킬(`/ship`, `/review`, `/cso`, `/qa` 등) 사용 시 반드시 [policies/gstack-override-policy.md](./policies/gstack-override-policy.md) 참조.
+팀 Git 컨벤션·배포 정책이 gstack 기본값보다 우선한다.
 
 ## 문서 규칙
 

@@ -1,26 +1,16 @@
 # YouTrack 티켓 가이드
 
-## 티켓 작성 방식 (5W1H)
+> 전사 YouTrack 상태 플로우 기준 문서입니다.
+> DEV2팀 스프린트 운영 규칙은 [docs/sprint/](../docs/sprint/) 를 참조합니다.
 
-모든 티켓은 5W1H 방식으로 작성합니다.
+## DEV2팀 스프린트 운영 문서
 
-### Why
-배경과 목적, 기대하는 효과
-
-### Who
-영향 받는 사용자
-
-### What
-구현할 기능 또는 해결할 문제
-
-### How
-접근 방식 또는 기술적 구현 방법
-
-### Where
-이슈 UP: 고객 문의 / 내부 발견 / 타팀 요청
-
-### When
-목표 일정 또는 릴리즈 주기
+| 문서 | 내용 |
+|------|------|
+| [티켓 작성 가이드](../docs/sprint/ticket-guide.md) | 5W1H 작성법, 스프린트 상태, 티켓 크기 기준 |
+| [스토리 포인트 가이드](../docs/sprint/story-point-guide.md) | 직군별 SP 산정 기준 (1~13) |
+| [스프린트 계획 운영 개요](../docs/sprint/sprint-planning-overview.md) | 맨데이 배분, 월간 타임라인 |
+| [업무 계획 변경 절차](../docs/sprint/plan-change-process.md) | 긴급 요청·이월 처리 프로세스 |
 
 ---
 
