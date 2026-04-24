@@ -34,7 +34,6 @@ CLAUDE.md 상단에 아래 섹션을 추가합니다:
 ### 핵심 규칙
 - Git Flow: `feature/DEV2-{번호}` → `develop` → `release/*` → `master`
 - 커밋: Conventional Commits (`feat(scope): 🟩 DEV2-123 제목`)
-- PR 전 squash merge 필수
 - DB/SP 변경 시 별도 승인 + 롤백 스크립트 필수
 - 신규 코드에서 레거시 DB/SP 직접 접근 금지
 ```

@@ -32,7 +32,7 @@
 | naru | 김정민 (jmkim) | | |
 | bazaar | 강인용 (iyk) | 조주영 (jjy) | 프리랜서 |
 | aasm | 김정민 (jmkim) | | |
-| b2b | 안혜련 (hyeryun) | 이현민 (bbooya) | 서비스 미등록 — 레포 확정 후 카탈로그 추가 |
+| b2b-store (B2B 전용몰) | 김정민 (jmkim) | 조은흠 (heum2) | 설계 단계, 안혜련·이현민 티켓 발행 참여 |
 
 ## 역할 정의
 

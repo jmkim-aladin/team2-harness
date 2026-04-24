@@ -17,12 +17,21 @@
 - 모든 변경은 `feature/{이슈ID}` → `develop` → `release/*` → `master` 순서로 진행
 - 브랜치명: `feature/{이슈ID}` (예: `feature/DEV2-1234`) — Feature ID, 없으면 Task ID
 - 커밋 메시지: `[{이슈ID}] 작업 내용` (예: `[DEV2-1235] 프로필 조회 API 추가`)
-- PR 전에 squash merge로 커밋 정리
 - PR에는 사용자 영향, 롤백 방법 필수 기재
 - DB/SP 변경이 포함된 PR은 별도 승인 필수
 - 프로덕션 배포는 사람 승인 필수
 
 상세: [branching-strategy.md](./branching-strategy.md)
+
+## DB 마이그레이션 컨벤션
+
+- **max-db-script** 레포의 `databases/{DBName}/_migrations/` 에 작성
+- Flyway 네이밍: `V{YYYYMMDD}_{HHmm}__{이슈ID}_{설명}.sql`
+  - 예: `V20260401_1430__DEV2-5322_fix_settle_month_pk.sql`
+  - `V` 접두사 + 타임스탬프 + 더블 언더스코어(`__`) + 이슈ID + 설명
+- 멱등성 보장: `IF EXISTS` / `IF NOT EXISTS` 로 반복 실행 안전하게 작성
+- `Tables/*.sql`은 자동 생성 참조용 — 직접 수정 금지, 변경은 반드시 `_migrations/`로
+- DB/SP 변경 PR은 별도 승인 + 롤백 스크립트 필수
 
 ## 기술 스택 원칙
 

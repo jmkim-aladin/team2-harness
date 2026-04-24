@@ -24,7 +24,8 @@
 
 ### 핵심 규칙 요약
 
-- **Feature ≤ 1주 / Task ≤ 1일** (초과 시 분할)
+- **Feature 총 기간 ≤ 1주 (필수)** — 초과 시 반드시 분할. 시작일~종료일이 7일을 넘으면 생성 차단
+- **Task ≤ 1일 (필수)** — 초과 시 분할
 - **13점(XXL)은 스프린트 투입 금지** → 8점 이하로 분할 필수
 - **예상 시작 일자 필수**
 - **전월 마지막 주에 계획 완료**
@@ -69,13 +70,18 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 3. 사용자 입력이 없으면 어떤 티켓을 만들지 질문
 4. **대상 서비스가 명확하면** 서비스 카탈로그(`catalog/*.yaml`)를 읽어 컨텍스트 보강
 5. **관련 KB 문서가 있을 수 있으면** YouTrack KB API로 검색하여 참조 (선택적)
-6. **담당자**는 서비스별 owner를 기본값으로 제안
+6. **담당자 설정 (필수)**: `policies/team-members.md`에서 대상 서비스의 owner를 조회하고, 티켓 생성 후 **반드시** `mcp__youtrack__change_issue_assignee`로 담당자를 설정한다. owner를 확인할 수 없으면 `jmkim` (김정민)을 기본 담당자로 설정한다. 담당자 미설정 티켓은 허용하지 않는다.
 7. **SP 산정**: `docs/sprint/story-point-guide.md` 기준표에 따라 산정 제안
+8. **Feature 기간 검증 (필수)**: 유형이 Feature일 때 아래 검증 수행
+   - 예상 시작일 ~ 종료일(또는 하위 Task 완료 예상일)이 **7일 초과 시 생성 차단**
+   - 사용자에게 분할 방안을 제안하고, 분할 후 재작성
+   - 분할 기준: 도메인별 / 단계별(설계→구현→테스트) / 의존성 기준
 
 ## 티켓 출력 형식
 
 ```
 ## 티켓 정보
+- **제목**: [{서비스}] {작업 요약}
 - **담당자**: {서비스 owner} ({이름})
 - **유형**: Task
 - **Phase**: Backlog (ToBe)
@@ -100,7 +106,8 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 
 티켓 초안 작성 후 사용자에게 안내:
 1. 내용 검토 및 수정 요청 여부 확인
-2. 확인되면 YouTrack MCP(`mcp__youtrack__create_issue`)로 직접 생성 제안
-3. KB 참조 문서가 있으면 티켓 설명에 링크 포함
+2. 확인되면 YouTrack MCP(`mcp__youtrack__create_issue`)로 직접 생성
+3. **생성 직후 반드시** `mcp__youtrack__change_issue_assignee`로 담당자 설정 (서비스 owner 기준)
+4. KB 참조 문서가 있으면 티켓 설명에 링크 포함
 
 ARGUMENTS: $ARGUMENTS

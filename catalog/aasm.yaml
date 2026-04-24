@@ -50,8 +50,8 @@ stack:
   aws:
     - "@aws-sdk/client-s3 (v3)"
     - "@aws-sdk/s3-request-presigner"
+    - "@aws-sdk/client-secrets-manager (v3)"
     - "S3 versioning"
-    - "Secrets Manager (계획)"
   orm: "Drizzle ORM 0.45.1"
   testing: []  # TODO: 테스트 프레임워크 추가 예정
   quality:
@@ -123,8 +123,8 @@ dependencies:
       method: "SDK v3"
       purpose: "파일 저장/버전 관리/presigned URL"
     - system: "AWS Secrets Manager"
-      method: "SDK (계획)"
-      purpose: "크레덴셜 관리"
+      method: "SDK v3"
+      purpose: "크레덴셜 관리 (database-write, jwt-secret-key, encryption-key)"
     - system: "PostgreSQL"
       method: "Drizzle ORM"
       purpose: "메타데이터/사용자/배포 이력"
@@ -136,30 +136,42 @@ build:
   commands:
     build: "npm run build"
     dev: "npm run dev"
+    dev_local: "npm run dev:local (LocalStack 연동)"
     start: "npm run start"
+    start_sm: "npm run start:sm (Secrets Manager 연동 기동)"
     db_generate: "npm run db:generate"
     db_push: "npm run db:push"
+    db_push_local: "npm run db:push:local (LocalStack 연동)"
     db_migrate: "npm run db:migrate"
     db_seed: "npm run db:seed"
+    db_seed_local: "npm run db:seed:local (LocalStack 연동)"
     docker_up: "npm run docker:local:up"
     docker_down: "npm run docker:local:down"
   docker:
     local: "docker-compose.local.yml (PostgreSQL 16 + LocalStack 4.4)"
     devops_dir: ".devops/{dev,prod}/"
-    note: "Dockerfile, buildspec.yml, entrypoint.sh — 아직 비어있음 (구성 예정)"
+    entrypoint: "npm run start:sm → with-secrets.mjs → entrypoint.mjs → next start"
   ci:
-    status: "미구성 (buildspec 템플릿만 존재)"
+    status: "CodeBuild + ArgoCD (dev buildspec.yml 구성 완료)"
   profiles: [local, dev, prod]
-  env_vars:
-    - "DATABASE_URL"
-    - "NEXTAUTH_SECRET"
-    - "NEXTAUTH_URL"
-    - "ENCRYPTION_KEY (32-byte hex)"
+  profile_var: "APP_ENV (NODE_ENV와 별도 — Next.js는 배포 시 항상 NODE_ENV=production)"
+  secrets:
+    convention: "sm-aasm-web-{APP_ENV}-{resource}"
+    resources:
+      - "database-write: DB 연결 (url, port, database, username, password)"
+      - "jwt-secret-key: NextAuth JWT 서명 키 (secretKey)"
+      - "encryption-key: AES-256-GCM 암호화 키 (encryptionKey)"
+    loading: "scripts/with-secrets.mjs — 런타임에 SM에서 fetch → process.env 주입"
+  container_env_vars:
+    - "APP_ENV (필수: dev | prod)"
+    - "NEXTAUTH_URL (필수: 앱 외부 접근 URL)"
+    - "AWS_REGION (선택: 기본 ap-northeast-2)"
 
 status:
   sqlite_to_postgresql: "마이그레이션 진행 중 (스키마 준비 완료, 테스트 있음)"
-  ci_cd: "미구성"
-  docs: "project-overview.md, service-team-guide.md, admin-developer-guide.md 존재"
+  secrets_manager: "구성 완료 (with-secrets.mjs + entrypoint.mjs)"
+  ci_cd: "CodeBuild + ArgoCD (dev 구성 완료, prod 템플릿)"
+  docs: "project-overview.md, service-team-guide.md, admin-developer-guide.md, aasm-environment-variables.md"
 
 risk:
   change_frequency: ""   # TODO

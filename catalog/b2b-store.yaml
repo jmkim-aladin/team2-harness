@@ -1,0 +1,95 @@
+# B2B 전용몰 서비스 프로파일
+# 상태: 설계 단계 (2026 Q2~)
+
+service_id: b2b-store
+name: B2B 전용몰 (스토어프론트)
+type: new
+description: "B2B 파트너 전용 커머스 플랫폼 — 멀티 테넌시 기반 전시·주문·정산, 바자르/뉴빌링 연동"
+
+owners:
+  primary: "jmkim@aladin.co.kr"      # 김정민 (BE/아키텍처)
+  backup: "heum2@aladin.co.kr"       # 조은흠 (FE)
+  stakeholders:
+    - "hyeryun@aladin.co.kr"         # 안혜련 (티켓 발행)
+    - "bbooya@aladin.co.kr"          # 이현민 (티켓 발행)
+
+status: design  # design → development → staging → production
+
+# 아직 레포 미생성 — 설계 확정 후 생성 예정
+repo: TBD
+components: TBD
+
+youtrack:
+  project_key: DEV2
+
+architecture:
+  pattern: "Hexagonal Architecture (Ports & Adapters) + DDD (목표)"
+  design_phase:
+    q2_2026:
+      - "서비스 정의 및 핵심 기능 도출"
+      - "도메인별 연계 구조 정의 (고객·상품·주문·정산)"
+      - "Bounded Context 및 Aggregate 정의 (5개+)"
+      - "멀티 테넌시 전략 결정"
+      - "데이터 스키마 설계"
+      - "권한 격리 아키텍처 설계"
+      - "바자르/뉴빌링 연동 API 인터페이스 명세"
+    q3_2026:
+      - "핵심 기능 개발 (전시·주문 엔진)"
+      - "바자르 연동 모듈 개발"
+    q4_2026:
+      - "통합 테스트 및 런칭 대기"
+  domains:
+    - name: 고객(파트너)
+      scope: "테넌트 관리, 입점, 계약"
+      integration: TBD  # 스토어프론트 소유 vs 외부 연동 미확정
+    - name: 상품
+      scope: "카탈로그, 검색, 전시"
+      integration: TBD  # 바자르 연동 vs 독립 카탈로그 미확정
+    - name: 주문
+      scope: "장바구니, 주문, 배송"
+      integration: TBD  # 바자르 주문 흐름 활용 여부 미확정
+    - name: 정산
+      scope: "파트너 정산, 수수료"
+      integration: "뉴빌링 연동"
+
+stack:
+  framework: "Spring Boot (예정)"
+  language: "Kotlin (예정)"
+  hosting: "AWS (예정)"
+  frontend: "Next.js (예정, JEH 담당)"
+
+data:
+  db_type: TBD  # 멀티 테넌시 전략에 따라 결정
+  tenancy_strategy: TBD  # Shared DB / Schema per Tenant / DB per Tenant
+  shared_db: false
+
+dependencies:
+  outbound:
+    - system: "바자르 (BazaarServer)"
+      method: REST
+      purpose: "상품/주문 연동"
+    - system: "뉴빌링"
+      method: REST
+      purpose: "결제/정산 연동"
+
+okr:
+  annual: "KR6. B2B 전용 커머스(스토어프론트) 개발 및 연동 완료 (런칭 대기)"
+  q2: "KR6. B2B 전용 커머스 기획 및 설계"
+  owner_kr:
+    kimjeongmin: "KR3. B2B 스토어프론트 데이터 스키마 및 권한 격리 아키텍처 확정"
+    joeunheum: "KR3. B2B 스토어프론트 FE 구조설계"
+
+risk:
+  change_frequency: ""
+  incident_impact: ""
+  data_coupling: low  # 신규 서비스, 독립 DB 예정
+
+modernization:
+  track: ""  # 신규 서비스 — 해당 없음
+  status: "design"
+  notes: |
+    - 신규 프로젝트로 modern stack 적용 예정
+    - naru, bazaar와 동일 아키텍처 (Hexagonal + DDD) 목표
+    - Q2 설계 → Q3 개발 → Q4 런칭 대기
+
+harness_status: "initial"

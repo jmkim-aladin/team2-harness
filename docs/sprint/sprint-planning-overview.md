@@ -46,6 +46,7 @@
 
 | 문서 | 설명 |
 |------|------|
+| [스프린트 워크플로우 실행 가이드](./sprint-workflow-execution.md) | 백로그 → 오픈 → 진행 → 종료 단계별 실행 프로세스 |
 | [스토리 포인트 가이드](./story-point-guide.md) | SP 산정 기준표 (개발자/기획자/디자이너) |
 | [티켓 작성 가이드](./ticket-guide.md) | 5W1H 기반 Feature 작성, 상태 관리, 이월 규칙 |
 | [업무 계획 변경 절차](./plan-change-process.md) | 긴급 요청·이월 처리 프로세스 |

@@ -61,7 +61,6 @@ Feature 티켓이 있으면 Feature ID, 없으면 Task ID를 사용합니다.
 - 현재 스프린트의 통합 개발 브랜치
 - `feature/*` → `develop`으로 PR
 - 매일 새벽 Fortify 자동 수행, 결과는 release PR 전에 수정
-- PR 전에 squash로 커밋 정리
 
 ### feature/*
 - 단위 기능 개발 브랜치
@@ -153,16 +152,20 @@ Task: DEV2-5678 "로그인 오류 수정"
 
 > 브랜치 = Feature ID (없으면 Task ID), 커밋 = 항상 작업 이슈 ID
 
-### Squash Merge
+### Merge 방식
 
-develop PR 시 squash merge로 정리할 수 있습니다:
+develop PR은 **squash merge를 사용하지 않습니다**. Task 단위 커밋 이력을 develop에 그대로 보존합니다.
+
+- 기본: merge commit (`--no-ff`) — Feature의 Task 커밋들을 개별로 유지
+- 이유: Task ID 기반 커밋 이력을 통해 YouTrack 연동 추적, `git bisect`, 변경 단위별 revert가 가능하도록 유지
+- GitHub PR 머지 버튼은 **"Create a merge commit"** 사용. "Squash and merge", "Rebase and merge"는 금지
+- Feature 브랜치 내부에서 WIP/오탈자 등 정리가 필요하면 **PR 전**에 rebase/fixup으로 정리하고, develop으로 갈 때는 squash하지 않음
+
 ```bash
-git checkout develop
-git merge --squash feature/DEV2-1234
-git commit -m "[DEV2-1234] 프로필 조회 및 수정 API 구현"
+# GitHub UI: "Create a merge commit" 선택
+# CLI:
+gh pr merge {번호} --merge --delete-branch
 ```
-
-squash 시 커밋 메시지는 Feature 티켓 ID를 사용합니다.
 
 ## Git Worktree
 
