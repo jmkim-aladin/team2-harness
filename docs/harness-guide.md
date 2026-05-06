@@ -61,6 +61,12 @@ team2 레포에서 실행할 필요 없이, 평소처럼 각 서비스 레포에
 - 장애/위험 포인트 추가
 - 금지 패턴 갱신
 
+운영 지식 위키 설계는 [operational-knowledge-wiki.md](./designs/operational-knowledge-wiki.md)를 따른다. 이 위키는 System Discovery Loop와 Ticket Execution Loop를 분리하여 전체 서비스 분석과 티켓 기반 실행을 같은 graph/wiki에 연결한다.
+
+운영 지식 위키의 Obsidian vault 경로는 `/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`로 둔다.
+
+AI 도구는 하네스 문서를 갱신하거나 티켓 초안을 작성할 수 있지만, YouTrack 티켓/Task 생성, 티켓 상태/필드 변경, 커밋/푸시/머지 전에는 반드시 사용자에게 확인한다.
+
 ## 실제 작업 흐름
 
 ```

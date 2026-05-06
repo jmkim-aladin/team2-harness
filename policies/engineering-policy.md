@@ -10,6 +10,7 @@
 - 티켓은 5W1H 형식으로 작성한다 (What, Why, Who, Where, When, How)
 - 예측 소요시간이 2일을 초과하면 자식 이슈로 분할한다 (목표: 1일 이내 완료 단위)
 - In Progress 상태에서 매일 퇴근 전 소요시간을 기록한다
+- AI 도구(Codex, Claude Code 등)는 YouTrack 티켓/Task 생성, 티켓 상태 변경, 담당자/스프린트/Story points 변경 전에 사용자에게 명시 확인을 받는다
 
 ## 코드 변경 규칙
 
@@ -17,6 +18,7 @@
 - 모든 변경은 `feature/{이슈ID}` → `develop` → `release/*` → `master` 순서로 진행
 - 브랜치명: `feature/{이슈ID}` (예: `feature/DEV2-1234`) — Feature ID, 없으면 Task ID
 - 커밋 메시지: `[{이슈ID}] 작업 내용` (예: `[DEV2-1235] 프로필 조회 API 추가`)
+- AI 도구는 커밋, 푸시, PR 생성, 머지 전에 사용자에게 명시 확인을 받는다
 - PR에는 사용자 영향, 롤백 방법 필수 기재
 - DB/SP 변경이 포함된 PR은 별도 승인 필수
 - 프로덕션 배포는 사람 승인 필수
