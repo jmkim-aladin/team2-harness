@@ -153,7 +153,7 @@ graph LR
 |--------------|--------|------|
 | 랜딩페이지 커스터마이징 | SDUI 기반 / 템플릿 선택 / 코드 수준 | JEH의 SDUI 이벤트 시스템 재활용 가능? |
 | 커스터마이징 주체 | 알라딘 운영자 / 파트너사 관리자 / 둘 다 | |
-| 테넌트 URL 구조 | 서브도메인 (partner.store.aladin.co.kr) / 경로 (/partner/) / 독립 도메인 | |
+| ~~테넌트 URL 구조~~ | ✅ 서브도메인 확정 | [tenant-model.md#테넌트-식별-url-라우팅](../architecture/b2b-store-tenant-model.md#테넌트-식별-url-라우팅) |
 
 ## 4. 기존 시스템 연계 맵
 

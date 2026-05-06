@@ -314,6 +314,8 @@ data class ProductSnapshot(
 
 SF가 주문 생성 요청. 바자르가 `vendorReference.vendor = B2B_STOREFRONT`로 Order 저장 + supplier 주문 생성 트리거.
 
+> **호출자 (2026-04-28 갱신)**: 컨트롤러가 직접 호출하지 **않는다**. SF tx-2(결제 완료)에서 outbox에 `OrderDispatchRequested` 적재 후, **SF Outbox 워커가 본 Port를 호출**. 가용성을 SF·바자르가 분리. 상세 [b2b-store-order-orchestration.md](./b2b-store-order-orchestration.md) §2~§4.
+
 ```kotlin
 interface BazaarOrderDispatchPort {
     suspend fun createOrder(request: SfOrderCreateRequest): OrderKey  // UUID
@@ -325,13 +327,18 @@ interface BazaarOrderDispatchPort {
 }
 
 data class SfOrderCreateRequest(
-    val sfOrderId: String,                 // vendor referenceId가 됨
+    val sfOrderId: String,                 // vendor referenceId가 됨, 멱등 키로도 사용
+    val idempotencyKey: String,            // = sfOrderId. 동일 키 재호출 시 같은 응답 (바자르 측 dedup)
     val tenantContext: TenantContext,      // SF만 의미 있음, 바자르는 메타로 저장
     val items: List<SfOrderItem>,
     val shippingAddress: ShippingAddress,
     val recipientInfo: RecipientInfo
 )
 ```
+
+**계약 요구사항** (바자르 측 추가 개발 — §10-1 참조):
+- `idempotencyKey`로 dedup. 동일 키 재호출 시 같은 `OrderKey` 반환.
+- 응답 코드 표준 — 비즈니스 거절(재고 부족·정책 위반) vs 일시 장애(네트워크·타임아웃) 구분 가능. SF가 보상 saga 트리거 여부 결정에 사용.
 
 ### Port 3 — `ResolutionRequestPort` (SF → 바자르)
 
@@ -373,30 +380,39 @@ interface BazaarEventConsumer {
 
 ### 정상 플로우 (성공 경로)
 
+> **2026-04-28 갱신**: SF→바자르가 **비동기 OHS** 패턴. 결제는 동기 saga, 바자르 위임은 SF outbox로 분리. 상세 [b2b-store-order-orchestration.md](./b2b-store-order-orchestration.md) §2~§3.
+
 ```
 [SF] 사용자 주문 확정
   │
-  ├─▶ [SF] 혜택 차감 (알라딘 포인트)
-  ├─▶ [SF] PG 결제 (뉴빌링)
-  │    ↓ 성공
-  └─▶ [SF→바자르] OrderDispatchPort.createOrder()
-         │
-         [바자르] OrderRootEntity 저장 (vendor=B2B_STOREFRONT)
-         │   ↓ Outbox: OrderCreated
-         │   
-         [바자르] supplier 주문 생성 → 알라딘 MSSQL
-         │   supplierOrderStatus: CREATE_READY → CREATE_PROCESSING → CREATE_APPLIED
-         │   ↓ Outbox: OrderSynced
-         │   
-      ┌──◀ SF는 이벤트 구독 → 주문 상태 업데이트
-      │   
-      │  [바자르] Fulfillment 시작 (Integrated 모드, domainKey=orderKey)
-      │     ↓ Outbox: FulfillmentStarted
-      ├──◀ SF 주문 상태: 준비 중
-      │     
-      │  [바자르] Shipping → 알라딘 이행 → 배송 완료
-      │     ↓ Outbox: FulfillmentCompleted
-      └──◀ SF 주문 상태: 배송 완료 + 사용자 알림
+  ├─ [SF tx-1] Order 저장 (status=PENDING_PAYMENT, idempotency_key)
+  ├─ [SF→뉴빌링] 혜택 차감 → PG 승인 (동기 saga)
+  ├─ [SF tx-2] Order.status=PAID
+  │    + Outbox 적재: OrderDispatchRequested  ← 같은 트랜잭션
+  │    ↓ commit
+  │
+  └─ [SF Outbox 워커] (poll/CDC, 별도 프로세스)
+       └─▶ OrderDispatchPort.createOrder() 호출 (idempotency_key 포함)
+              │
+              [바자르] OrderRootEntity 저장 (vendor=B2B_STOREFRONT)
+              │   ↓ Outbox: OrderCreated
+              │
+              [바자르] supplier 주문 생성 → 알라딘 MSSQL
+              │   supplierOrderStatus: CREATE_READY → CREATE_PROCESSING → CREATE_APPLIED
+              │   ↓ Outbox: OrderSynced
+              │
+           ┌──◀ [SF 구독자 워커] Order.status=SYNCED + 사용자 알림
+           │
+           │  [바자르] Fulfillment 시작 (Integrated 모드, domainKey=orderKey)
+           │     ↓ Outbox: FulfillmentStarted
+           ├──◀ SF 주문 상태: 준비 중
+           │
+           │  [바자르] Shipping → 알라딘 이행 → 배송 완료
+           │     ↓ Outbox: FulfillmentCompleted
+           └──◀ SF 주문 상태: COMPLETED + 사용자 알림
+
+사용자 응답: tx-2 commit 직후 즉시 "주문접수 완료"
+              OrderSynced 수신 시 "알라딘 반영 완료" 알림
 ```
 
 ### 취소 플로우 (Resolution)
@@ -421,11 +437,14 @@ interface BazaarEventConsumer {
 
 ### Shadow Path (실패 경로)
 
+> **2026-04-28 갱신**: 보상은 **자동 saga**로 단일화. 사용자에게는 환불 완료 알림. 상세 [order-orchestration.md](./b2b-store-order-orchestration.md) §5.
+
 | 시점 | 실패 종류 | 처리 |
 |------|---------|------|
-| 결제 승인 후, 바자르 주문 생성 실패 | `createOrder` 타임아웃·네트워크 | SF 보상 Tx: 혜택 환원 + PG 취소. 사용자 에러 |
-| 바자르 supplier 주문 생성 실패 | `supplierOrderStatus=CREATE_REJECTED` | Outbox 이벤트로 SF에 알림. SF 보상 Tx |
-| Fulfillment 실패 | `FulfillmentFailureEntity` | Outbox 이벤트. SF CS 영역 |
+| 결제 승인 후, 바자르 호출 네트워크 실패 | `createOrder` 타임아웃·연결 실패 | SF Outbox 워커가 exponential backoff 재시도 → N회 후 DLQ + 운영 alert. 사용자는 정상(백그라운드 처리) |
+| 바자르 비즈니스 거절 (재고0·정책 위반) | 응답 코드로 구분 (`reason_code`) | SF 워커가 `BazaarRejected` 발행 → 자동 보상 saga (혜택 환원 + PG 취소). 사용자 알림: "주문 실패, 환불 완료" |
+| 바자르 supplier 주문 생성 실패 | `supplierOrderStatus=CREATE_REJECTED` → Outbox `OrderSyncFailed` | SF가 `OrderSyncFailed` 수신 → 자동 보상 saga. 사용자 알림 |
+| Fulfillment 실패 | `FulfillmentFailureEntity` | Outbox 이벤트. SF CS 영역 (보상 saga 대상 X — 이미 supplier 출고 단계) |
 | Resolution 실패 | `ResolutionFailureEntity` | SF가 재시도 or 수동 처리 |
 
 ---
@@ -470,6 +489,9 @@ SF 연동을 위해 **바자르 코드에 필요한 변경** 예상:
 | SF용 Resolution 요청 API | 중 | `bazaar-apps/admin-api/` |
 | `bazaar-apps/admin-api` Spring 설정 — 신규 SF endpoint | 소 | `application.yml` |
 | Outbox 이벤트에 SF 대상 확장 (필터링 로직) | 소~중 | usecase/publisher |
+| **`createOrder` 멱등성 보장** — 동일 `idempotencyKey` 재호출 시 같은 `OrderKey` 반환 (2026-04-28 추가) | 소 | OrderUseCase·dedup table |
+| **응답 코드 표준화** — 비즈니스 거절 vs 일시 장애 구분 가능한 status (재고 부족·정책 위반 등) (2026-04-28 추가) | 중 | API ErrorResponse |
+| **Outbox 이벤트 페이로드 정식 계약** — `OrderSynced`(`bazaar_order_key, supplier_order_id, synced_at`), `OrderSyncFailed`(`bazaar_order_key, reason_code, failed_at`) (2026-04-28 추가) | 소~중 | outbox/dto |
 
 ### 10-2. 권장 (Phase 2)
 
@@ -492,7 +514,7 @@ SF 연동을 위해 **바자르 코드에 필요한 변경** 예상:
 | Phase | 시점 | 바자르 변경 | SF 구현 |
 |------|-----|----------|--------|
 | **Phase 0** | 2026-04 ~ 05 | 없음 — 설계 합의만 | 본 문서 + 김규태 협의 |
-| **Phase 1 MVP** | 2026 Q2~Q3 | `Vendor.B2B_STOREFRONT` 활성화 + SF용 REST API 3개 (Order·Resolution·Product Query) | SF → 바자르 어댑터 (Port 4개 구현) |
+| **Phase 1 MVP** | 2026 Q2~Q3 | `Vendor.B2B_STOREFRONT` 활성화 + SF용 REST API 3개 (Order·Resolution·Product Query) + **`createOrder` 멱등성 + 응답 코드 표준 + Outbox 페이로드 계약** (2026-04-28) | SF → 바자르 어댑터 (Port 4개 구현) + **SF Outbox 인프라 + Order saga + 보상 saga** (2026-04-28, [order-orchestration.md](./b2b-store-order-orchestration.md)) |
 | **Phase 2a** | 2026 Q4 | `tenantContext` 필드 추가 | 클레임 오케스트레이션 확장 (반품·교환) |
 | **Phase 2b** | 2027 Q1 | `Vendor.B2B_BULK_ORDER` 활성화 | 견적 몰 라이브 |
 | **Phase 3+** | 2027 Q2+ | 필요 시 `CUSTOMER_SUPPORT` Scope 확장 | CS 도구 연계 |
@@ -507,7 +529,8 @@ SF 연동을 위해 **바자르 코드에 필요한 변경** 예상:
 - [ ] **B2B_BULK_ORDER** 활성화 시점 — Phase 2b(견적 몰) 기준
 - [ ] 바자르 측 SF용 REST API 추가 — `bazaar-apps/admin-api/`에 endpoint 추가 방향
 - [ ] **책임 경계 원칙**: 상품/벤더 성격 정책은 바자르, 고객/테넌트/채널 정책은 SF
-- [ ] SF가 **Outbox 구독자로 등록** — 이벤트 소비 방식(Kafka? DB polling? HTTP callback?)
+- [ ] **양방향 outbox·비동기 OHS** (2026-04-28 결정) — SF→바자르 호출은 SF Outbox 워커가 REST로 호출, 결과는 바자르 Outbox 이벤트로 회수. 가용성 분리. 상세 [order-orchestration.md](./b2b-store-order-orchestration.md)
+- [ ] SF가 **바자르 Outbox 구독자로 등록** — 이벤트 소비 방식(Kafka? DB polling? HTTP callback?). SF 측 결정: **DB polling 또는 CDC**(SF Outbox 인프라 PoC 결과)
 
 ### 세부 설계 (60분)
 
@@ -520,10 +543,11 @@ SF 연동을 위해 **바자르 코드에 필요한 변경** 예상:
 
 ### 기술 세부 (60분 별도)
 
-- [ ] Outbox 이벤트 **페이로드 스키마** 정식 계약 (JSON Schema 합의)
-- [ ] **멱등성 키** 전달 방식 (event_id · order_id 등)
+- [ ] Outbox 이벤트 **페이로드 스키마** 정식 계약 (JSON Schema 합의) — `OrderSynced`/`OrderSyncFailed` 필드 (2026-04-28 합의된 잠정 스키마: [order-orchestration.md §4.3c](./b2b-store-service-boundaries.md#43c-saga바자르-위임보상-이벤트-8개-mvp-필수))
+- [ ] **멱등성 키** 전달 방식 — SF가 발급한 `sfOrderId`를 `idempotencyKey`로 사용 (2026-04-28 결정). 바자르 측 dedup 구현 필요 (§10-1)
+- [ ] **응답 코드 표준** — 비즈니스 거절(재고0·정책 위반) vs 일시 장애(네트워크·타임아웃) 구분 (2026-04-28 결정). SF 보상 saga 트리거 여부 결정에 사용
 - [ ] **Authentication·Authorization** — SF → 바자르 API 인증 (JWT? Service Account?)
-- [ ] **Rate Limit·SLA** (예: 주문 초당 10건 등)
+- [ ] **Rate Limit·SLA** (예: 주문 초당 10건 등) + Outbox 처리 SLA `p99 < 10초` 목표
 - [ ] **에러 응답 포맷** (공통 Error 코드 스키마)
 
 ---
@@ -535,7 +559,7 @@ SF 연동을 위해 **바자르 코드에 필요한 변경** 예상:
 | # | 질문 | 조사 대상 |
 |---|------|---------|
 | Q1 | 상품 가격(원가) 어디에 저장되나 — bazaar-core-domain? supplier-aladin에서 매번 조회? | `ProductVendorItemEntity`, `AladinItemMapper` |
-| Q2 | Outbox 이벤트 페이로드 실제 구조 | `outbox/dto/`, `bazaar-usecase/publisher/` |
+| Q2 | Outbox 이벤트 페이로드 실제 구조 (현 코드) — SF 측 잠정 계약은 §12 기술 세부에 명시 | `outbox/dto/`, `bazaar-usecase/publisher/` |
 | Q3 | `supplier-aladin-mssql` 정확한 접근 범위 (Read-only만? Write도?) | `CoolDataSourceConfig`, 어댑터 구현체 |
 | Q4 | `Vendor.isSupportsAny` 로직 — SF 등록 시 기존 로직과 충돌 없는지 | `Vendor.kt:27-30`, 호출처 전수 |
 | Q5 | `Reconciler` 도메인 역할 — SF에도 필요한가 | `ReconcilerRootEntity`, `usecase/reconciler` |

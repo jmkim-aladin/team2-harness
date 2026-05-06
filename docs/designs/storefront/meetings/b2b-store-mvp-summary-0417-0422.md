@@ -73,5 +73,6 @@ MVP에 포함된 기능을 **각 담당자가 설정·조회하는 부분까지 
 
 - 4/17 도메인 분류 원본: [DEV2-A-1064](https://aladincommunication.youtrack.cloud/articles/DEV2-A-1064)
 - 4/22 MVP 최종: [DEV2-A-1087](https://aladincommunication.youtrack.cloud/articles/DEV2-A-1087)
+- 4/28 MVP 갱신: [DEV2-A-1109](https://aladincommunication.youtrack.cloud/articles/DEV2-A-1109)
 - 4/22 협의 원본: [b2b-store-mvp-agreement-0422.md](./b2b-store-mvp-agreement-0422.md)
 - 상위 티켓: [DEV2-5283](https://aladincommunication.youtrack.cloud/issue/DEV2-5283)

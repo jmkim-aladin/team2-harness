@@ -1,12 +1,13 @@
 # B2B 전용몰 멀티테넌시 전략
 
-> 작성일: 2026-04-09 | 작성자: 김정민 | 상태: 결정 완료
+> 작성일: 2026-04-09 | 수정일: 2026-05-06 | 작성자: 김정민 | 상태: 결정 완료
 > 관련 티켓: [DEV2-5285](https://aladincommunication.youtrack.cloud/issue/DEV2-5285), [DEV2-5286](https://aladincommunication.youtrack.cloud/issue/DEV2-5286)
 > 상위 티켓: [DEV2-5283](https://aladincommunication.youtrack.cloud/issue/DEV2-5283)
 
 ## 결정
 
-**Schema per Tenant (단일 DB) → DB Sharding → MSA 전환 시에도 유지**
+- **DB 전략**: Schema per Tenant (단일 DB) → DB Sharding → MSA 전환 시에도 유지
+- **URL 라우팅**: 서브도메인 (`{slug}.store.aladin.co.kr`)
 
 ## 전략 비교표
 
@@ -36,6 +37,106 @@
 
 **미채택: Shared DB** — WHERE 누락 위험, 인덱스 복잡도, 해지 위험
 **미채택: DB per Tenant** — 초기 과잉, 커넥션 풀 관리 복잡, DevOps 투자 필요
+
+## 테넌트 식별 (URL 라우팅)
+
+**재검토 결론: 서브도메인 채택 유지 (`{slug}.store.aladin.co.kr`)**
+
+고객이 직접 접속하는 전용몰은 **몰별 origin 격리**가 URL 구조의 핵심 요구사항이다. 따라서 운영 편의만 보면 path 방식이 더 단순하지만, 프로덕션 테넌트 경계로는 서브도메인을 기본값으로 둔다. Path 방식은 내부 preview, 로컬 개발, 운영자용 fallback URL처럼 보조 채널로만 제한한다.
+
+### 전략 비교
+
+| 항목 | 서브도메인 | 경로 (`/{slug}/`) | 독립 도메인 |
+|------|:---:|:---:|:---:|
+| 쿠키·storage·CORS 격리 | 자동 (origin 분리) | 공유 (XSS 횡단 위험) | 자동 |
+| 인프라 셋업 | 와일드카드 DNS+TLS, 1회성 | 단일 도메인 | 제휴사별 ACME |
+| 제휴사 온보딩 | 설정만, 배포 불필요 | 설정만 | 인증서 자동발급 필요 |
+| Referer 노출 | slug가 host에 노출될 수 있음 | slug가 path에 노출될 수 있음 | 도메인 자체 노출 |
+| 브랜딩/SEO | 제휴사별 독립 사이트 | 단일 사이트 하위 | 완전 독립 |
+| 커스텀 도메인 확장 | Phase 4+에서 추가 가능 | 재설계 필요 | 이미 최대 |
+| 업계 사례 (B2B 커머스) | Shopify, BigCommerce, Salesforce | Notion, Linear (협업툴) | Shopify Plus |
+| 로컬 개발 난이도 | 중간 (`lvh.me`/hosts 필요) | 낮음 | 높음 |
+| Service Worker 격리 | 몰별 분리 | 같은 origin 안에서 scope 관리 필요 | 몰별 분리 |
+| 장애 격리/차단 | Host 단위 차단·격리 가능 | path rule 의존 | 도메인 단위 차단 |
+
+### 장단점 상세
+
+| 방식 | 장점 | 단점 | 적합한 용도 |
+|------|------|------|------|
+| **서브도메인** | origin 분리, 몰별 쿠키·localStorage·Service Worker 격리, 몰별 CSP/CORS/HSTS 정책 분리 가능, 커스텀 도메인으로 자연스럽게 확장 | 와일드카드 DNS/TLS·Host 라우팅·로컬 개발 가이드 필요, 알라딘 SSO/결제 콜백처럼 cross-origin 흐름을 명시 설계해야 함 | 고객용 프로덕션 전용몰 기본 URL |
+| **Path** | 단일 도메인이라 DNS/TLS/LB 구성이 단순, same-origin API 호출이 쉬움, 로컬 개발·미리보기 구성이 간단 | 테넌트가 browser origin을 공유함. 한 몰 XSS가 동일 origin 권한으로 다른 몰 경로/API에 접근할 수 있고, localStorage·Service Worker·root path 쿠키가 공유될 수 있음 | 내부 preview, QA, 로컬 개발, 운영자 fallback |
+| **독립 도메인** | 브랜딩과 격리 최대, 제휴사 도메인 요구 수용 | 제휴사별 DNS 소유권 검증, 인증서 발급/갱신, 장애 대응, 보안 정책 관리 비용이 큼 | 대형 제휴사 옵션 또는 Phase 4+ 커스텀 도메인 |
+
+### 선택 근거
+
+| 근거 | 설명 |
+|------|------|
+| 보안 격리 | origin 분리로 localStorage·Service Worker·CORS 기본 경계가 몰별로 분리된다. path 방식은 같은 origin이므로 브라우저 보안 경계가 테넌트 경계와 일치하지 않는다. |
+| 쿠키 설계 안전성 | 서브도메인은 host-only 쿠키를 기본으로 두면 몰별 세션을 자연스럽게 분리할 수 있다. 단, `.aladin.co.kr` 또는 `.store.aladin.co.kr` domain cookie는 공유 쿠키이므로 SSO 전용·HttpOnly·SameSite 정책을 별도로 고정해야 한다. |
+| Referer 관리 | 두 방식 모두 slug 노출 가능성이 있다. 서브도메인은 `Referrer-Policy: strict-origin-when-cross-origin`에서도 host에 slug가 남을 수 있으므로 slug에 개인정보·계약명을 넣지 않고, 필요 시 `no-referrer` 또는 `origin` 정책을 화면별로 적용한다. |
+| 업계 표준 | B2B 커머스 SaaS는 제휴사별 storefront를 독립 origin으로 두는 모델이 운영·보안 경계와 잘 맞는다. path는 협업툴/문서도구처럼 워크스페이스 경계가 앱 내부 권한 모델에 강하게 묶인 경우에 더 적합하다. |
+| 확장 경로 | 향후 제휴사 자체 도메인 매핑 시 [Channel/Access BC](./b2b-store-service-boundaries.md)로 무중단 확장 |
+| 운영 단순성 | 와일드카드 인증서 1장으로 무한 테넌트 수용, 온보딩 = 설정 입력 |
+
+### Path 방식을 채택하지 않는 이유
+
+Path 방식은 초기 구축비가 낮지만, 전용몰의 테넌트 경계를 애플리케이션 코드와 라우팅 규칙에 계속 의존하게 만든다.
+
+- **브라우저 origin 공유**: `/partner-a`에서 발생한 XSS는 같은 origin 권한으로 `/partner-b` API를 호출할 수 있다. 서버 권한 체크가 막아야 하지만, URL 구조 자체가 보안 경계를 제공하지 않는다.
+- **저장소 공유**: localStorage, IndexedDB, BroadcastChannel은 origin 단위다. tenant별 key prefix를 강제해야 하고, 누락 시 교차 오염이 발생한다.
+- **Service Worker 위험**: root scope 또는 넓은 scope의 Service Worker가 모든 몰 경로에 영향을 줄 수 있다. 서브도메인은 이 위험을 origin 경계에서 차단한다.
+- **쿠키 Path는 보안 경계가 아님**: Path 속성은 전송 범위를 줄이는 힌트일 뿐이다. root path 세션 쿠키, 공통 SSO 쿠키, JS 접근 가능 쿠키가 생기면 모든 몰이 같은 origin 위험을 공유한다.
+- **캐시·CDN 키 누락 위험**: path 방식도 slug를 cache key에 반드시 넣어야 한다. 누락 시 테넌트 간 HTML/API 응답 혼선이 발생할 수 있다.
+
+### 서브도메인 채택 시 보완해야 할 위험
+
+서브도메인은 기본 경계가 더 좋지만, 자동으로 안전해지는 것은 아니다. 아래 항목을 구현 기준으로 고정한다.
+
+- **Host 검증 필수**: `Host`/`X-Forwarded-Host`를 신뢰하기 전에 LB/Reverse Proxy에서 허용 host 패턴을 검증한다. 앱은 `tenant_registry`에 등록된 slug만 활성 테넌트로 인정한다.
+- **slug 정책**: 영문 소문자·숫자·하이픈만 허용하고, 개인정보·회사 실명·계약명이 그대로 드러나는 slug를 금지한다. `admin`, `api`, `www`, `static`, `assets`, `auth`, `pay`, `m` 등 예약어는 사전 차단한다.
+- **공유 쿠키 최소화**: 몰별 세션은 host-only cookie가 기본이다. SSO 브릿지 쿠키가 필요하면 `HttpOnly`, `Secure`, `SameSite=Lax/Strict`, 짧은 TTL을 강제한다.
+- **Referrer-Policy 명시**: 기본값은 `strict-origin-when-cross-origin`으로 두되, 외부 제휴 링크·결제·마케팅 픽셀 화면은 `origin` 또는 `no-referrer` 적용 여부를 별도 검토한다.
+- **CSP/CORS 분리**: 몰별 프론트 origin과 API origin 패턴을 명시한다. `*.store.aladin.co.kr` 전체 허용은 관리자·결제·개인정보 API에는 사용하지 않는다.
+- **캐시 키 고정**: CDN·WAF·Reverse Proxy 캐시 키에 `Host`를 포함한다. API 응답은 `tenant_id`와 인증 상태에 따라 `Cache-Control`을 분리한다.
+- **HSTS 범위 결정**: `includeSubDomains` 적용 전 모든 서브도메인의 HTTPS 준비 상태를 확인한다. 운영 준비 전에는 store 하위 도메인 단위로 점진 적용한다.
+
+### 인프라 요구사항
+
+| 항목 | 요구 |
+|------|------|
+| DNS | `*.store.aladin.co.kr` → LB |
+| TLS | 와일드카드 인증서 (1단계 한정. `a.b.store...` 미커버) |
+| LB / Reverse Proxy | Host 헤더 보존, SNI 지원 |
+| 애플리케이션 | `Host` → tenant_slug 추출 → `tenant_registry` 조회 → `TenantFilter` 주입 |
+| CDN / WAF | 캐시 키와 룰에 Host 포함 (테넌트 간 캐시 충돌 방지) |
+| 관측 | 로그·메트릭·트레이스 라벨에 tenant_id 필수 |
+
+### 제휴사 온보딩 흐름
+
+```mermaid
+flowchart LR
+    ADMIN["Admin: 제휴사 C 생성"] --> REG["tenant_registry INSERT<br/>(slug='partner-c')"]
+    REG --> SCHEMA["스키마 생성 + 마이그레이션<br/>(상기 흐름)"]
+    SCHEMA --> DNS["*.store.aladin.co.kr<br/>자동 매칭"]
+    DNS --> READY["partner-c.store.aladin.co.kr<br/>즉시 접속"]
+    style READY fill:#e8f5e9,stroke:#43a047
+```
+
+DNS·인증서·배포 추가 작업 없음. 와일드카드가 새 서브도메인을 자동 흡수.
+
+### Phase별 진화
+
+| Phase | URL 형태 | 비고 |
+|-------|---------|------|
+| MVP~ | `{slug}.store.aladin.co.kr` | 와일드카드 인증서 1장으로 시작 |
+| Phase 4+ | `shop.{partner}.com` 매핑 옵션 | Channel/Access BC, ACME(Let's Encrypt) 자동발급 파이프라인 |
+
+### 함정 / 사전 결정 필요 사항
+
+- **로컬 개발환경**: `*.localhost` 호환성 OS별 상이 → `*.lvh.me` 또는 `/etc/hosts` 가이드 필요
+- **알 수 없는 서브도메인**: 폴백 정책(마케팅 사이트 / 404 / 대표몰 redirect) 결정 필요
+- **비프로덕션 URL**: staging·QA도 서브도메인 구조를 재현할지, path fallback을 허용할지 결정 필요
+- **SEO 우선순위**: B2B 폐쇄몰이면 검색 노출보다 보안·운영 격리를 우선한다. 공개형 제휴몰이 생기면 canonical·sitemap·robots 정책을 몰별로 분리한다.
 
 ## 확장 로드맵
 

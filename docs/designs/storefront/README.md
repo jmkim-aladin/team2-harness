@@ -104,7 +104,7 @@ CEO 리뷰, 기타 리뷰 기록.
 ## 🔗 외부 참조
 
 - 상위 티켓: DEV2-5283
-- YouTrack KB: DEV2-A-1050 (4/15 기획), DEV2-A-1064 (4/17 도메인 분류)
+- YouTrack KB: DEV2-A-1050 (4/15 기획), DEV2-A-1064 (4/17 도메인 분류), DEV2-A-1087 (4/22 MVP 최종), DEV2-A-1109 (4/28 MVP 갱신)
 - 티켓 업데이트 기록: `docs/DEV2-5283-subtask-updates-0420.md` (상위 `docs/`)
 
 ---

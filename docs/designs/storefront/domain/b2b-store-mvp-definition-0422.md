@@ -421,4 +421,5 @@ flowchart LR
 - DDD·BC·MSA: [../architecture/b2b-store-ddd-classification.md](../architecture/b2b-store-ddd-classification.md)
 - 이벤트 스토밍 시뮬레이션: [../event-storming/b2b-store-event-storming-simulation.md](../event-storming/b2b-store-event-storming-simulation.md)
 - 스코프: [../scope/b2b-store-scope-definition-0415.md](../scope/b2b-store-scope-definition-0415.md)
+- 4/28 MVP 갱신 KB: [DEV2-A-1109](https://aladincommunication.youtrack.cloud/articles/DEV2-A-1109)
 - 상위 티켓: DEV2-5283
