@@ -182,6 +182,21 @@ git pull    # 최신 스킬 가져오기
 | `~/.claude/settings.json` | 개인 홈 | 개인 | `YOUTRACK_TOKEN`, `YOUTRACK_BASE_URL`, `TEAM2_HARNESS_PATH` |
 | `~/.claude/mcp.json` | 개인 홈 | 개인 | YouTrack MCP 서버 (토큰 포함) |
 | `~/.claude/commands/ad` | 개인 홈 | symlink → team2 | 팀 스킬 자동 연결 |
+| `~/.codex/AGENTS.md` | 개인 홈 | 개인 | Codex용 팀 하네스 진입점 |
+| `~/.codex/skills/dev2-team-harness-ko` | 개인 홈 | 개인 | Codex용 개발2팀 하네스 Skill |
+| `~/.codex/skills/youtrack-ticket-5w1h-ko` | 개인 홈 | 개인 | Codex용 DEV2 티켓 Skill |
+
+## Codex 사용
+
+Codex는 Claude Code의 `.claude/commands/ad/*.md`를 자동 명령으로 로드하지 않는다.
+Codex에서는 아래 Skill을 통해 같은 하네스 기준을 적용한다.
+
+| 요청 | Codex Skill |
+|------|-------------|
+| 개발2팀 정책, 카탈로그, KB, OKR, 주간업무, 코드리뷰 | `$dev2-team-harness-ko` |
+| `/ad:ticket`, DEV2 티켓 생성/초안 | `$youtrack-ticket-5w1h-ko` |
+
+Codex YouTrack MCP는 `~/.codex/config.toml`의 `mcp_servers.youtrack` 설정을 사용한다.
 
 ---
 

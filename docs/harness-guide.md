@@ -105,8 +105,8 @@ PR 생성 (체크리스트 포함)
 5. PR로 리뷰 후 머지
 
 ### 신규 서비스
-1. `templates/archetypes/`에서 적합한 archetype 선택
-2. archetype에 포함된 하네스로 시작
+1. `templates/service-harness/`의 템플릿을 복사하여 서비스 레포에 적용
+2. 신규 서비스 정보로 템플릿 채우기
 3. 서비스 개발하면서 계속 갱신
 
 ## 하네스 갱신 트리거
@@ -130,7 +130,7 @@ PR 생성 (체크리스트 포함)
 | `/ad:ticket` | YouTrack 티켓 생성 (5W1H) | 구현됨 |
 | `/ad:ticket-split` | 2일 초과 이슈 분할 | 미구현 |
 | `/ad:time-log` | 소요시간 기록 | 미구현 |
-| `/ad:code-review` | 코드 리뷰 체크리스트 | 미구현 |
+| `/ad:code-review` | GitHub PR 코드 리뷰 (팀 체크리스트 기반) | 구현됨 |
 | `/ad:status-update` | 티켓 상태 전환 | 미구현 |
 | `/ad:daily-report` | 일일 작업 요약 | 미구현 |
 | `/ad:sprint-plan` | 스프린트 계획 보조 | 미구현 |
