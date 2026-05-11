@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "project": "{{service_id}}-full-resource-analysis",
+  "qualityGates": [
+    "서비스 repo와 DB/schema/script repo는 read-only로 다룬다.",
+    "원문 SQL/C#/Kotlin/TypeScript는 위키에 복사하지 않고 source path, hash, graph/generated JSON으로 추적한다.",
+    "source 없는 판단은 canonical로 승격하지 않는다.",
+    "민감 정보는 redaction 후 요약만 기록한다.",
+    "분석 결과는 로컬 Obsidian 운영 지식 위키에만 저장한다.",
+    "YouTrack KB/티켓/상태 변경, commit, push는 사용자 확인 없이 수행하지 않는다.",
+    "운영 대응 readiness와 현대화/DB 분리 readiness를 분리해서 평가한다.",
+    "핵심 table의 write owner, read consumers, shared DB coupling을 기록한다.",
+    "read path 분리 후보, write path 보류 영역, reconciliation, rollback 기준을 기록한다.",
+    "migration-ready는 L4 이상일 때만 사용한다.",
+    "DB 이관/CDC 진단이 필요한 경우 전체 UPDATE, rename/swap, TRUNCATE/DROP/CREATE, SELECT INTO, 파생/집계/랭킹 table, Lock 이력 후보, CDC 등급 A~F, 권장 조치를 함께 추출한다.",
+    "python3 scripts/lint_wiki.py가 error 0으로 종료해야 한다."
+  ],
+  "stories": [
+    {
+      "id": "{{SERVICE_ID_UPPER}}-ANALYSIS-010",
+      "title": "전체 source inventory를 갱신한다",
+      "status": "open",
+      "description": "{{service_id}} 관련 source repo를 스캔해 코드, API, DB/schema/script, batch/event 후보를 graph/generated에 반영한다.",
+      "acceptanceCriteria": [
+        "source inventory가 최신화된다.",
+        "주요 source가 path와 hash 또는 commit을 가진다.",
+        "dirty source가 있으면 canonical 승격을 막는 항목으로 기록된다."
+      ]
+    },
+    {
+      "id": "{{SERVICE_ID_UPPER}}-ANALYSIS-020",
+      "title": "계약 그래프를 생성한다",
+      "status": "open",
+      "dependsOn": [
+        "{{SERVICE_ID_UPPER}}-ANALYSIS-010"
+      ],
+      "description": "API, controller/action, service method, repository/data-access, SP/query/table/event/batch 관계를 graph node/edge로 생성한다.",
+      "acceptanceCriteria": [
+        "contract graph에 서비스별 핵심 node type이 존재한다.",
+        "호출/읽기/쓰기/발행/구독 관계가 가능한 범위에서 연결된다.",
+        "동적 호출이나 source 불명 항목은 unresolved queue에 남는다."
+      ]
+    },
+    {
+      "id": "{{SERVICE_ID_UPPER}}-ANALYSIS-030",
+      "title": "도메인 후보를 위키에 투영한다",
+      "status": "open",
+      "dependsOn": [
+        "{{SERVICE_ID_UPPER}}-ANALYSIS-020"
+      ],
+      "description": "계약 그래프와 naming/table/module evidence를 기반으로 도메인 후보를 만들고 위키 inventory/domain candidates에 투영한다.",
+      "acceptanceCriteria": [
+        "wiki/services/{{service_id}}.md가 생성 또는 갱신된다.",
+        "도메인 후보와 evidence count가 위키에 기록된다.",
+        "P0/P1 우선순위 후보가 Needs Review 또는 execution record에 남는다."
+      ]
+    },
+    {
+      "id": "{{SERVICE_ID_UPPER}}-ANALYSIS-040",
+      "title": "P0 도메인 canonical 후보 문서를 만든다",
+      "status": "open",
+      "dependsOn": [
+        "{{SERVICE_ID_UPPER}}-ANALYSIS-030"
+      ],
+      "description": "P0 도메인부터 Summary, Confirmed, Inferred, Business Rules, State Machine, Source Anchors, Incident Routine, Query Templates, Needs Review, Actions 구조의 문서를 만든다.",
+      "acceptanceCriteria": [
+        "P0 도메인 문서가 최소 1개 이상 생성된다.",
+        "문서가 source anchor를 가진다.",
+        "운영 장애/문의 대응 루틴이 포함된다.",
+        "source 불명 판단은 Needs Review 또는 discovery queue에 남는다."
+      ]
+    },
+    {
+      "id": "{{SERVICE_ID_UPPER}}-ANALYSIS-050",
+      "title": "완성도와 미해결 큐를 갱신한다",
+      "status": "open",
+      "dependsOn": [
+        "{{SERVICE_ID_UPPER}}-ANALYSIS-040"
+      ],
+      "description": "orphan, low-confidence, missing source, stale, dirty source를 unresolved/discovery/action queue에 반영하고 lint를 실행한다.",
+      "acceptanceCriteria": [
+        "discovery queue 또는 unresolved queue가 최신화된다.",
+        "Action Register에 다음 agent-ready 작업이 남는다.",
+        "lint error가 0이다."
+      ]
+    },
+    {
+      "id": "{{SERVICE_ID_UPPER}}-ANALYSIS-060",
+      "title": "현대화와 DB 분리 readiness를 평가한다",
+      "status": "open",
+      "dependsOn": [
+        "{{SERVICE_ID_UPPER}}-ANALYSIS-040",
+        "{{SERVICE_ID_UPPER}}-ANALYSIS-050"
+      ],
+      "description": "P0 도메인을 운영 readiness와 별도로 현대화/DB 분리 readiness 기준으로 평가하고, L0~L5 level, 데이터 소유권, read/write split, migration verification gap을 execution record에 남긴다.",
+      "acceptanceCriteria": [
+        "P0 도메인마다 Modernization Readiness와 DB Separation Readiness가 기록된다.",
+        "핵심 table의 write owner와 read consumers가 확인 또는 Needs Review로 분류된다.",
+        "read path 분리 후보와 write path 보류 영역이 구분된다.",
+        "reconciliation query, shadow-read, rollback 기준의 누락 여부가 기록된다.",
+        "Action Register에 다음 agent-ready 작업이 남는다."
+      ]
+    },
+    {
+      "id": "{{SERVICE_ID_UPPER}}-ANALYSIS-070",
+      "title": "DB 이관/CDC 1차 진단 후보를 추출한다",
+      "status": "open",
+      "dependsOn": [
+        "{{SERVICE_ID_UPPER}}-ANALYSIS-020"
+      ],
+      "description": "2주 안에 확인 가능한 범위에서 batch, procedure, table, query 후보를 선별하고 전체 UPDATE, rename/swap, TRUNCATE/DROP/CREATE, SELECT INTO, 파생/집계/랭킹 여부, lock 후보, CDC 등급 A~F, 권장 조치를 기록한다.",
+      "acceptanceCriteria": [
+        "wiki/inventory/{{service_id}}-db-migration-cdc-candidates.md 후보 표가 생성 또는 갱신된다.",
+        "각 후보는 대상명, 유형, 관련 테이블, 처리 방식, CDC 등급, 권장 조치, 근거, 상태를 가진다.",
+        "D/E/F 등급 후보는 CDC 제외 또는 재생성 후보로 분리된다.",
+        "C 등급 후보는 chunk update 또는 version pointer 전환 후보로 기록된다.",
+        "lock 이력은 source만으로 단정하지 않고 운영 확인 필요 항목으로 남긴다."
+      ]
+    }
+  ]
+}

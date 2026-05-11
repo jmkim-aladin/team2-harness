@@ -19,6 +19,12 @@
 
 분류 매트릭스: `변경 빈도 × 장애 영향도 × 데이터 결합도`
 
+운영 지식 위키 산출물을 현대화 또는 DB 분리 판단에 사용할 때는 [../docs/legacy-modernization-db-separation-analysis-guide.md](../docs/legacy-modernization-db-separation-analysis-guide.md)를 적용한다. 운영 대응 문서가 있더라도 데이터 소유권, read/write 경계, 추출 순서, 정합성 검증 기준이 없으면 현대화 실행 계획의 근거로 보지 않는다.
+
+IDC DB 운영 안정화와 AWS 전환을 함께 고려하는 경우 [db-migration-cdc-assessment-policy.md](./db-migration-cdc-assessment-policy.md)를 적용한다. batch/SP/table/query 분석 시 전체 UPDATE, rename/swap, TRUNCATE/DROP/CREATE, SELECT INTO, 파생/집계/랭킹 table, lock 이력 후보, CDC 등급 A~F, 권장 조치를 함께 추출한다.
+
+현대화/DB 분리 산출물은 unresolved evidence gate를 통과하기 전까지 완료로 보지 않는다. 특히 source 없는 SP, runtime 없는 batch, dirty source는 각각 별도 unresolved 상태로 유지하고, owner/운영 evidence 없이 canonical contract 또는 migration-ready로 승격하지 않는다.
+
 ## 실행 원칙
 
 ### SP 관련

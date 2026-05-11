@@ -20,6 +20,8 @@
 - 브랜치: `feature/{이슈ID}` | 커밋: `[{이슈ID}] 작업 내용`
 - 모든 작업은 YouTrack 티켓(5W1H)에서 시작
 - AI 도구는 YouTrack 티켓/Task 생성, 티켓 상태 변경, 커밋/푸시/머지 전에 반드시 사용자에게 확인한다
+- YouTrack KB 생성/수정/삭제/이동은 반드시 사용자 확인 후 수행한다
+- 가이드/정책/스킬은 팀 하네스에, 도메인 분석 결과/Querybook은 로컬 Obsidian 운영 지식 위키에 저장한다
 - Feature ≤ 1주 (필수) / Task ≤ 1일 (필수) — 초과 시 분할. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md)
 - DB/SP 변경 별도 승인, 프로덕션 배포 사람 승인
 - 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지
@@ -43,8 +45,23 @@ gstack 스킬(`/ship`, `/review`, `/cso`, `/qa` 등) 사용 시 반드시 [polic
 ## 문서 규칙
 
 - 한국어 작성, 코드/기술 용어 영어 허용
+- 문서 H1/title은 한국어를 기본으로 하고, 서비스별 운영 위키 문서는 한글 서비스명 접두어로 시작한다. 상세: [policies/wiki-document-language-and-title-policy.md](./policies/wiki-document-language-and-title-policy.md)
 - 파일명: `kebab-case.md`
 - CLAUDE.md 최소화 원칙: [policies/claude-md-policy.md](./policies/claude-md-policy.md)
+- Ralph Loop 도메인 지식 고도화 요청 기준: [docs/ralph-loop-domain-knowledge-guide.md](./docs/ralph-loop-domain-knowledge-guide.md)
+- 레거시 현대화/DB 분리 분석 기준: [docs/legacy-modernization-db-separation-analysis-guide.md](./docs/legacy-modernization-db-separation-analysis-guide.md)
+- DB 이관/CDC 진단 기준: [docs/db-migration-cdc-assessment-guide.md](./docs/db-migration-cdc-assessment-guide.md)
+- Ralph Loop 서비스 확장 기준: [docs/ralph-loop-service-expansion-guide.md](./docs/ralph-loop-service-expansion-guide.md)
+
+## 운영 위키 탐색
+
+- 로컬 Obsidian 운영 지식 위키 경로: `/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`
+- 서비스/API/SP/Table 관계를 탐색할 때는 운영 위키의 `graph/contract-graph.json`, `graph/source-inventory.json`, `graph/unresolved-queue.json`을 먼저 확인한다.
+- 사람이 문서처럼 탐색할 때는 운영 위키의 `wiki/indexes/services.md`, `wiki/indexes/domains.md`, `wiki/indexes/graphify.md`와 각 문서의 `Related Links` generated block을 먼저 확인한다.
+- `graph/generated/graphify/{service_id}/`에 최신 Graphify sidecar 산출물이 있으면 `GRAPH_REPORT.md`의 god node, surprise edge, suggested questions를 먼저 참고한다.
+- Graphify 결과는 후보 지식이다. canonical 판단은 source path/hash, DEV2 graph, 사람 검토 기준을 따른다.
+- 링크/인덱스가 낡았으면 운영 위키에서 `python3 scripts/generate_wiki.py`와 `python3 scripts/lint_wiki.py`를 실행한다.
+- Graphify sidecar가 없거나 stale이면 직접 실행하지 말고 운영 위키에서 `python3 scripts/plan_graphify_runs.py` 또는 `python3 scripts/enqueue_graphify_trigger.py --service {service_id} --trigger ticket-graph-missing --reason "{이유}"`로 queue에 등록한다.
 
 ## Skill routing
 

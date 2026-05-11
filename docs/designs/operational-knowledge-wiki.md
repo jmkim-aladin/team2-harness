@@ -81,6 +81,20 @@ System Discovery Loop는 팀의 기억을 사전에 구축하는 루프이고, T
 
 위키가 단일 지식원천이라는 말은 "분석과 운영 맥락의 단일 지식원천"을 뜻한다. 실행 사실과 공식 상태는 각 원천의 권위를 유지한다.
 
+## 티켓 상태 동기화 정책
+
+운영 지식 위키의 `status`는 위키 문서의 성숙도를 나타내며, YouTrack Issue의 업무 상태를 대체하지 않는다.
+
+- `status`: `analyzed`, `reviewed`, `canonical`, `archived` 등 위키 문서 성숙도에만 사용한다.
+- `youtrack_state`: `Open`, `In Progress`, `Fixed`, `Closed` 등 마지막으로 확인한 YouTrack 상태 스냅샷을 기록한다.
+- `youtrack_resolved_at`: YouTrack의 해결 시각이 있을 때만 기록한다.
+- `youtrack_synced_at`: 위키가 YouTrack 상태를 마지막으로 확인한 날짜를 기록한다.
+- `execution_state`: 로컬 실행 기록의 상태를 `planned`, `running`, `completed`, `blocked` 등으로 기록한다.
+
+티켓이 완료되면 위키에는 append-only 방식으로 `완료 기록` 섹션을 남긴다. 이 섹션에는 실행 결과의 위치, 검증 기준, redaction 여부, 후속 재사용 지식 후보만 기록한다. 개인정보 원문, 운영 실데이터 원문, 결과 엑셀 원문은 위키에 저장하지 않는다.
+
+반복 가능한 처리 기준은 티켓 문서에만 묶어두지 않고 `patterns/`, `guides/`, `contracts/` 등 재사용 문서로 분리한다. 사람 검토 전에는 `analyzed`로 두고, source와 검토 근거가 충분할 때만 `canonical`로 승격한다.
+
 ## 보안 및 저장 금지 기준
 
 위키는 장기적으로 많은 source를 연결하므로 저장 가능한 정보와 저장하면 안 되는 정보를 분리한다.
@@ -324,6 +338,9 @@ YouTrack 상태와 위키 상태는 다음 기준으로 매핑한다.
 - 외부 ID가 있는 문서는 ID를 파일명에 포함한다.
 - 날짜는 proposal, execution, log, snapshot 계열에만 사용한다.
 - 충돌 가능성이 있는 문서는 서비스 namespace를 경로로 분리한다.
+- YouTrack 티켓 문서는 예외 없이 `wiki/tickets/{ticket-id-lowercase}.md` flat 구조를 사용한다. 예: `wiki/tickets/dev2-6006.md`
+- 티켓 문서에는 프로젝트별 하위 폴더(`wiki/tickets/DEV2/`)를 만들지 않는다.
+- 티켓 문서 frontmatter는 `type: ticket`, `ticket: DEV2-0000`, `canonical_id: ticket:dev2-0000`, `sources:` 배열을 사용한다. `type: ticket-analysis`, `issue_id`, 단수 `source:`는 사용하지 않는다.
 
 예시:
 
@@ -351,6 +368,18 @@ canonical_id: proposal:20260507-001
 ```
 
 문서 생성 전에는 `canonical_id`, `title`, `aliases`로 기존 문서를 검색하고, 없을 때만 새 문서를 생성한다.
+
+## Obsidian 링크와 인덱스
+
+위키 링크는 별도 Obsidian 플러그인에 의존하지 않고 plain wikilink를 기본으로 한다.
+
+- 링크 기준 ID는 frontmatter의 `canonical_id`다.
+- `scripts/generate_wiki.py`가 `canonical_id -> wiki path`를 해석해 `[[services/tobe|투비컨티뉴드]]` 형식의 vault-root 상대 링크를 생성한다.
+- 자동 링크 산출물은 `wiki/indexes/services.md`, `wiki/indexes/domains.md`, `wiki/indexes/graphify.md`와 각 주요 문서의 `Related Links` generated block에만 쓴다.
+- 사람이 작성한 본문 링크는 유지하고, 자동 갱신 영역은 generated block으로 격리한다.
+- `scripts/lint_wiki.py`는 깨진 wikilink, 누락된 navigation index, 누락된 `related-links` block을 warning으로 보고한다.
+
+Dataview, Breadcrumbs 같은 Obsidian 플러그인은 선택 사항이다. 팀 하네스의 유지 계약은 Markdown 파일, frontmatter, generated block, lint로 충분히 동작해야 한다.
 
 ## 위키 문서 공통 형식
 
@@ -488,6 +517,8 @@ Discovery Queue 예시:
 - 승인 필요 항목
 - Actions
 
+티켓 분석 문서는 `wiki/tickets/{ticket-id-lowercase}.md`에 등록한다. H1은 `DEV2-0000 ...`처럼 원래 티켓 ID 대문자를 유지하되, 파일명과 `canonical_id`는 소문자를 사용한다.
+
 ## Feedback Loop
 
 Ticket Execution Loop와 System Discovery Loop는 서로를 보강해야 한다.
@@ -616,6 +647,7 @@ scan
 | Runner | 역할 | 도입 우선순위 | 판단 |
 |--------|------|---------------|------|
 | Ralph Loop | 내부 소스, DB script, 기존 문서를 정해진 pass 단위로 분석 | 1순위 | System Discovery Loop의 기본 runner |
+| Graphify sidecar | 코드/문서/PDF/이미지를 별도 knowledge graph로 분석하고 god node, surprise edge, query 후보를 만든다 | 1.5순위 | DEV2 graph의 source of truth가 아니라 discovery accelerator |
 | Auto Research | 외부 자료, 오픈소스, 일반 패턴, 정책 비교 조사 | 2순위 | 내부 소스 분석이 아니라 보조 research runner |
 | Hermes Agent | 장기 실행 agent platform, cron, memory, gateway, subagent orchestration | 보류 | 추후 운영자가 필요할 때 파일럿 |
 
@@ -675,6 +707,81 @@ PRD story 예시:
   ]
 }
 ```
+
+### Graphify sidecar
+
+Graphify는 운영 지식 위키의 canonical graph를 대체하지 않는다. 별도 sidecar 산출물로 실행하고, 결과는 후보 지식으로만 사용한다.
+
+사용 대상:
+
+- 신규 서비스나 낯선 서비스의 god node, 중심 모듈, 예상치 못한 연결을 빠르게 파악
+- 기존 docs/claudedocs, 설계 문서, 이미지, PDF를 함께 읽어 도메인 후보를 찾기
+- Ralph Loop deep analysis 전에 질문 후보와 우선순위를 좁히기
+- `GRAPH_REPORT.md`의 surprise edge를 discovery queue 후보로 전환하기
+
+저장 위치:
+
+```text
+graph/generated/graphify/{service_id}/{run_id}/
+  graph.json
+  GRAPH_REPORT.md
+  graph.html
+  metadata.json
+```
+
+반영 흐름:
+
+```text
+trigger event
+  -> graphify trigger queue
+  -> policy gate
+  -> Graphify sidecar
+  -> graphify-out/graph.json + GRAPH_REPORT.md
+  -> DEV2 adapter
+  -> redaction + schema validation
+  -> discovery/proposal/unresolved queue 후보
+  -> human review
+  -> canonical graph/wiki promotion
+```
+
+Graphify는 사람이 직접 실행하는 운영 루틴이 아니라 trigger 기반으로 후보 실행을 만든다. 단, trigger가 곧바로 canonical graph를 수정하지 않는다.
+
+트리거 후보:
+
+| Trigger | 발생 조건 | 기본 동작 |
+|---------|-----------|-----------|
+| service registry 추가 | `registry/services/{service_id}.yaml` 신규 등록 | 해당 서비스 `graphify-sidecar-pass` 후보 등록 |
+| source commit/hash 변경 | `scan_sources.py`가 서비스 repo 또는 DB script repo의 commit/hash 변화를 감지 | code/sql AST 중심 sidecar 후보 등록 |
+| docs/claudedocs 변경 | 기존 문서 inventory가 증가하거나 hash가 바뀜 | docs sidecar 후보 등록. semantic extraction은 gate 필요 |
+| unresolved 급증 | `unresolved-queue.json`의 low-confidence 항목이 임계치 이상 | god node/surprise edge 탐색 후보 등록 |
+| ticket 분석 중 graph 누락 | 관련 API/SP/Table/도메인이 graph에 없음 | 해당 범위만 sidecar 후보 등록 |
+| 주기 실행 | launchd/cron/CI가 `run_all.py` 또는 전용 runner 실행 | 큐에 쌓인 eligible 항목만 실행 |
+
+실행 정책:
+
+- git hook은 Graphify를 직접 실행하지 않고 queue item만 추가한다.
+- `run_all.py` 이후 단계에서 `plan_graphify_runs.py`가 후보를 만들고, `run_graphify_queue.py`가 policy gate를 통과한 항목만 실행한다.
+- code/sql AST 로컬 추출은 자동 실행 가능하다.
+- docs/images/PDF semantic extraction은 redaction, 파일 크기, 모델 전송 정책을 통과해야 한다.
+- 같은 service/source hash 조합은 24시간 안에 중복 실행하지 않는다.
+- Graphify 실패는 pipeline 실패로 보지 않고 sidecar run 실패 이벤트로 기록한다.
+
+Graphify 결과를 DEV2 graph에 직접 merge하지 않는다. adapter는 다음 항목을 반드시 보강해야 한다.
+
+- DEV2 `canonical_id`
+- source path, commit, source hash
+- `confidence`와 `review_state`
+- `EXTRACTED`, `INFERRED`, `AMBIGUOUS` 같은 원천 태그
+- 민감 정보 탐지 결과
+- generated artifact 경로
+
+Graphify 실행 제한:
+
+- 내부 코드/SP/YouTrack 비공개 원문을 외부 LLM semantic extraction에 보내지 않는다.
+- code/sql AST 로컬 추출만으로 충분한 파일럿부터 시작한다.
+- docs/images/PDF semantic extraction은 redaction policy와 사용 모델 확인 후 허용한다.
+- `graphify codex install`처럼 AGENTS.md/CLAUDE.md를 자동 수정하는 설치 명령은 팀 하네스 리뷰 없이 실행하지 않는다.
+- 최신 버전 적용은 파일럿 branch 또는 별도 run directory에서 먼저 검증한다.
 
 ### Auto Research
 
@@ -812,6 +919,7 @@ Subagent는 서로 다른 write set을 가져야 하며, 같은 문서를 동시
 | 자동 갱신 | 자동화는 `<!-- GENERATED:START -->`와 `<!-- GENERATED:END -->` 사이만 수정한다. human notes, Confirmed/Inferred/Needs Review는 덮어쓰지 않는다. |
 | stale 판정 | source commit, source hash, scanner version, graph schema version이 바뀌면 관련 문서를 `stale` 후보로 표시한다. |
 | 외부 research | Auto Research에는 내부 코드/SP/YouTrack 비공개 원문을 보내지 않는다. 외부 도구는 일반 패턴과 도구 비교에만 사용한다. |
+| Graphify 적용 | Graphify는 sidecar discovery 도구로만 쓴다. `graphify-out` 결과는 adapter와 lint를 거친 후보 지식이며, DEV2 canonical graph에 직접 merge하지 않는다. |
 | 실행 권한 | Ralph Loop와 Codex/Claude command는 기본 read-only이며, YouTrack 생성/코드 변경/DB 변경/배포는 승인 단계 이후에만 가능하다. |
 
 ### Data Flow
@@ -835,6 +943,14 @@ Ralph Loop PRD
   -> graph/wiki/queue draft
   -> human review
   -> canonical promotion or discovery queue
+
+Graphify sidecar
+  -> trigger queue
+  -> policy gate
+  -> graphify-out/graph.json + GRAPH_REPORT.md
+  -> adapter/redaction/lint
+  -> discovery/proposal/unresolved queue 후보
+  -> human review
 ```
 
 ### Failure Modes
@@ -849,6 +965,11 @@ Ralph Loop PRD
 | YouTrack MCP 장애 | ticket sync를 skip하고 로컬 graph/wiki만 갱신한다. |
 | graph schema 변경 | schema version을 올리고 migration note를 `wiki/_log.md`에 남긴다. |
 | 동일 canonical_id 중복 | 새 문서 생성을 중단하고 merge 후보로 queue에 남긴다. |
+| trigger가 너무 자주 발생 | service/source hash 기준 debounce를 적용하고 queue item을 병합한다. |
+| git hook에서 무거운 실행 발생 | hook은 enqueue만 허용하고 Graphify 실행은 runner에서만 처리한다. |
+| Graphify inferred edge를 사실로 오인 | `review_state: needs-review`와 원천 태그를 유지하고 canonical 승격을 막는다. |
+| Graphify output schema 변경 | adapter 변환을 실패 처리하고 sidecar 산출물만 보관한다. |
+| Graphify semantic extraction에 민감 원문 포함 | 실행 전 redaction gate에서 차단하고 `unresolved-queue`에 승인 필요 항목으로 남긴다. |
 
 ### Test Plan
 
@@ -863,6 +984,13 @@ MVP 구현 전 최소 검증 항목은 다음과 같다.
 - `SP -> Table` read/write 후보 edge 생성 테스트
 - dirty source repo가 canonical 승격되지 않는지 테스트
 - YouTrack 티켓 입력이 `wiki/tickets/{ticket-id}.md`와 work graph로 연결되는지 테스트
+- Graphify trigger가 queue item만 만들고 canonical graph를 수정하지 않는지 테스트
+- 같은 source hash의 Graphify trigger가 debounce되는지 테스트
+- Graphify sidecar 결과가 DEV2 graph에 직접 merge되지 않는지 테스트
+- Graphify adapter가 `canonical_id`, source path/hash, confidence, review_state를 채우는지 테스트
+- Graphify `INFERRED`/`AMBIGUOUS` edge가 `needs-review` 후보로만 남는지 테스트
+- Graphify 산출물이 generated 경로 밖 human notes를 수정하지 않는지 테스트
+- docs/images/PDF semantic extraction 전에 redaction gate가 동작하는지 테스트
 
 ### NOT in Scope
 
@@ -874,6 +1002,9 @@ MVP에서는 다음을 하지 않는다.
 - 코드 변경 또는 DB/SP 변경
 - 서비스 repo의 `docs/claudedocs` 삭제
 - canonical 도메인 지식 자동 승격
+- Graphify 결과의 canonical graph 직접 merge
+- Graphify hook/installer가 AGENTS.md 또는 CLAUDE.md를 자동 수정하는 방식
+- git hook에서 Graphify full pipeline을 직접 실행하는 방식
 
 ### What Already Exists
 
@@ -881,6 +1012,7 @@ MVP에서는 다음을 하지 않는다.
 - `tobe-db-script`, `max-db-script`의 DB object git 관리 구조
 - `max-msa`의 Ralph Loop table/SP/domain/completeness pass 패턴
 - YouTrack Issue와 YouTrack KB
+- Graphify CLI 설치본. 다만 sidecar 파일럿 전 최신 버전과 출력 schema를 별도 run directory에서 검증해야 한다.
 
 ### Engineering Score
 

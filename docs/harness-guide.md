@@ -65,7 +65,65 @@ team2 레포에서 실행할 필요 없이, 평소처럼 각 서비스 레포에
 
 운영 지식 위키의 Obsidian vault 경로는 `/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`로 둔다.
 
-AI 도구는 하네스 문서를 갱신하거나 티켓 초안을 작성할 수 있지만, YouTrack 티켓/Task 생성, 티켓 상태/필드 변경, 커밋/푸시/머지 전에는 반드시 사용자에게 확인한다.
+AI 도구는 하네스 문서를 갱신하거나 티켓 초안을 작성할 수 있지만, YouTrack 티켓/Task 생성, 티켓 상태/필드 변경, YouTrack KB 생성/수정/삭제/이동, 커밋/푸시/머지 전에는 반드시 사용자에게 확인한다.
+
+가이드/정책/스킬은 팀 하네스에 저장하고, 서비스 분석 결과와 Querybook은 로컬 Obsidian 운영 지식 위키에 저장한다. Ralph Loop로 도메인 지식을 고도화할 때는 [ralph-loop-domain-knowledge-guide.md](./ralph-loop-domain-knowledge-guide.md)를 따른다.
+운영 지식 위키 산출물을 레거시 현대화와 DB 분리 판단에 사용할 때는 [legacy-modernization-db-separation-analysis-guide.md](./legacy-modernization-db-separation-analysis-guide.md)의 readiness level과 rubric을 함께 적용한다.
+IDC DB 운영 안정화와 AWS 전환을 위한 batch/SP/table/query 진단은 [db-migration-cdc-assessment-guide.md](./db-migration-cdc-assessment-guide.md)를 따른다.
+다른 서비스로 Ralph Loop를 확장할 때는 [ralph-loop-service-expansion-guide.md](./ralph-loop-service-expansion-guide.md)를 따른다.
+
+### 문서 언어와 제목
+
+팀 하네스와 로컬 Obsidian 운영 지식 위키의 문서는 한국어로 작성한다. 코드, API, SP, Table, CDC, DTO, Querybook 같은 기술 용어는 영어를 허용하지만, H1 제목과 `title` frontmatter는 한국어 명사구가 중심이어야 한다.
+
+서비스별 문서는 폴더 구조와 별개로 제목에서 서비스가 바로 보이도록 한다. 파일명은 `tobe-...`, `web-aladin-...`처럼 `service_id` 접두어를 유지하고, H1/title은 `투비 ...`, `알라딘 웹 ...`처럼 한글 서비스 표시명으로 시작한다. 전체 기준은 [wiki-document-language-and-title-policy.md](../policies/wiki-document-language-and-title-policy.md)를 따른다.
+
+### 운영 지식 위키 탐색과 Graphify sidecar
+
+서비스/API/SP/Table 관계를 탐색할 때는 로컬 Obsidian 운영 지식 위키의 graph를 먼저 확인한다.
+
+```text
+/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/
+  graph/contract-graph.json
+  graph/source-inventory.json
+  graph/unresolved-queue.json
+  graph/generated/graphify/{service_id}/{run_id}/GRAPH_REPORT.md
+```
+
+Graphify sidecar 산출물이 있으면 `GRAPH_REPORT.md`의 god node, surprise edge, suggested questions를 먼저 참고한다. 단, Graphify 결과는 후보 지식이며 source path/hash, DEV2 graph, 사람 검토 없이 canonical 사실로 쓰지 않는다.
+
+Obsidian에서 위키처럼 탐색할 때는 자동 생성 인덱스와 Related Links 블록을 진입점으로 쓴다.
+
+```text
+wiki/indexes/services.md
+wiki/indexes/domains.md
+wiki/indexes/graphify.md
+```
+
+링크 유지는 로컬 위키의 `generate_wiki.py`가 담당한다. 문서 파일명을 바꾸거나 새 서비스/도메인/인벤토리 문서를 추가한 뒤에는 `python3 scripts/generate_wiki.py`와 `python3 scripts/lint_wiki.py`를 실행해 wikilink, index, related-links block을 확인한다.
+
+Graphify sidecar가 없거나 stale이면 직접 full pipeline을 실행하지 않고 queue에 등록한다.
+
+```bash
+cd "/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+python3 scripts/generate_wiki.py
+python3 scripts/lint_wiki.py
+python3 scripts/plan_graphify_runs.py
+python3 scripts/enqueue_graphify_trigger.py --service {service_id} --trigger ticket-graph-missing --reason "{탐색 중 graph 누락 사유}"
+```
+
+자동 최신화는 다음 기준을 따른다.
+
+| Trigger | 처리 |
+|---------|------|
+| `scan_sources.py` 이후 source commit/hash 변경 | `plan_graphify_runs.py`가 `source-hash-changed` 후보 생성 |
+| 새 `registry/services/*.yaml` | `service-registry-added` 후보 생성 |
+| docs/claudedocs 변경 | `docs-changed` 후보 생성, semantic extraction은 gated |
+| unresolved queue 급증 | `unresolved-spike` 후보 생성 |
+| 티켓/스킬 분석 중 graph 누락 | `enqueue_graphify_trigger.py --trigger ticket-graph-missing`로 후보 생성 |
+| 동기화/주기 실행 이후 | `python3 scripts/run_all.py --run-graphify`로 eligible 항목만 처리 |
+
+git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙일 경우 queue item 생성까지만 허용한다.
 
 ## 실제 작업 흐름
 
