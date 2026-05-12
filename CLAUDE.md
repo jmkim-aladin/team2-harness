@@ -8,7 +8,7 @@
 - `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid)
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, b2b-store)
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
-- `.claude/commands/ad/` — 팀 스킬 (ticket, code-review, kb-read, kb-list, kb-sync, okr, weekly-report, harness-optimize)
+- `.claude/commands/ad/` — 팀 스킬 (ticket, code-review, kb-read, kb-list, kb-sync, okr, weekly-report, weekly-planned, harness-optimize)
 - `scripts/setup.sh` — 원커맨드 셋업
 - `docs/` — 가이드 문서
 - `docs/designs/` — 설계 문서 (스토어프론트 플랫폼 방향, 테넌트 모델, 인증, 스코프 등)
@@ -72,6 +72,7 @@ The skill has specialized workflows that produce better results than ad-hoc answ
 Key routing rules:
 - 티켓 생성, YouTrack 티켓 → invoke ad:ticket
 - 주간업무 보고, 보고서 → invoke ad:weekly-report
+- 주간 계획 스냅샷, planned 태그 트리, 위키 meetings 저장 → invoke ad:weekly-planned
 - OKR 조회/작성 → invoke ad:okr
 - KB 조회 → invoke ad:team2-kb-read
 - 하네스 최적화, 중복 제거 → invoke ad:harness-optimize

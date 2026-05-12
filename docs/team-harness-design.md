@@ -243,8 +243,8 @@ sequenceDiagram
     CC->>CC: Feature 7일 초과 검증
     CC->>U: 5W1H 초안 + 담당자 + SP 제안
     U->>CC: 확인
-    CC->>YT: mcp__youtrack__create_issue
-    CC->>YT: mcp__youtrack__change_issue_assignee
+    CC->>YT: POST /api/issues (티켓 생성)
+    CC->>YT: POST /api/issues/{id} (Assignee 갱신)
     YT-->>U: 티켓 생성 완료 (담당자 자동 배정)
 ```
 

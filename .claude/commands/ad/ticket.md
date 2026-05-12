@@ -39,13 +39,41 @@
 
 ## 참조 정보
 
-### YouTrack Knowledge Base 조회
-티켓 작성 시 관련 KB 문서를 참조하여 컨텍스트를 보강합니다.
+### YouTrack API 호출 (curl)
+
+티켓 생성·담당자 변경·KB 조회는 모두 YouTrack REST API를 사용한다. MCP 도구를 호출하지 않는다.
 
 ```bash
 BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+AUTH="Authorization: Bearer $YOUTRACK_TOKEN"
+
+# 1. DEV2 프로젝트 internal id 조회 (create_issue 입력값)
+curl -s -H "$AUTH" \
+  "$BASE/api/admin/projects?fields=id,shortName&query=DEV2"
+
+# 2. 관련 KB 검색 (티켓 컨텍스트 보강)
+curl -s -H "$AUTH" \
   "$BASE/api/articles?\$top=10&fields=id,idReadable,summary,content,parentArticle(summary)&query=project:DEV2"
+
+# 3. 티켓 생성
+curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{
+        "project": {"id": "<DEV2 internal id>"},
+        "summary": "[{서비스}] {작업 요약}",
+        "description": "{5W1H 본문}"
+      }' \
+  "$BASE/api/issues?fields=idReadable,summary"
+
+# 4. 담당자 설정 (Assignee 커스텀 필드 갱신)
+curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{
+        "customFields": [{
+          "name": "Assignee",
+          "$type": "SingleUserIssueCustomField",
+          "value": {"login": "<YouTrack login>"}
+        }]
+      }' \
+  "$BASE/api/issues/{idReadable}?fields=idReadable,customFields(name,value(login))"
 ```
 
 **DEV2 KB 구조:**
@@ -70,7 +98,7 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 3. 사용자 입력이 없으면 어떤 티켓을 만들지 질문
 4. **대상 서비스가 명확하면** 서비스 카탈로그(`catalog/*.yaml`)를 읽어 컨텍스트 보강
 5. **관련 KB 문서가 있을 수 있으면** YouTrack KB API로 검색하여 참조 (선택적)
-6. **담당자 설정 (필수)**: `policies/team-members.md`에서 대상 서비스의 owner를 조회하고, 티켓 생성 후 **반드시** `mcp__youtrack__change_issue_assignee`로 담당자를 설정한다. owner를 확인할 수 없으면 `jmkim` (김정민)을 기본 담당자로 설정한다. 담당자 미설정 티켓은 허용하지 않는다.
+6. **담당자 설정 (필수)**: `policies/team-members.md`에서 대상 서비스의 owner를 조회하고, 티켓 생성 후 **반드시** YouTrack REST API(`POST /api/issues/{idReadable}`)로 `Assignee` 커스텀 필드를 갱신한다. owner를 확인할 수 없으면 `jmkim` (김정민)을 기본 담당자로 설정한다. 담당자 미설정 티켓은 허용하지 않는다.
 7. **SP 산정**: `docs/sprint/story-point-guide.md` 기준표에 따라 산정 제안
 8. **Feature 기간 검증 (필수)**: 유형이 Feature일 때 아래 검증 수행
    - 예상 시작일 ~ 종료일(또는 하위 Task 완료 예상일)이 **7일 초과 시 생성 차단**
@@ -106,8 +134,8 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 
 티켓 초안 작성 후 사용자에게 안내:
 1. 내용 검토 및 수정 요청 여부 확인
-2. 확인되면 YouTrack MCP(`mcp__youtrack__create_issue`)로 직접 생성
-3. **생성 직후 반드시** `mcp__youtrack__change_issue_assignee`로 담당자 설정 (서비스 owner 기준)
+2. 확인되면 YouTrack REST API(`POST /api/issues`)로 직접 생성. MCP 도구는 사용하지 않는다.
+3. **생성 직후 반드시** `POST /api/issues/{idReadable}`로 `Assignee` 커스텀 필드를 갱신해 담당자 설정 (서비스 owner 기준)
 4. KB 참조 문서가 있으면 티켓 설명에 링크 포함
 
 ARGUMENTS: $ARGUMENTS
