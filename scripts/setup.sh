@@ -63,7 +63,7 @@ echo "  ✓ ~/.claude/commands/ad → team2/.claude/commands/ad"
 
 # 2. YouTrack 토큰 확인
 echo ""
-echo "[2/4] YouTrack 토큰 확인..."
+echo "[2/3] YouTrack 토큰 확인..."
 
 if [ -f "$CLAUDE_DIR/settings.json" ]; then
     if grep -q "YOUTRACK_TOKEN" "$CLAUDE_DIR/settings.json"; then
@@ -89,7 +89,7 @@ fi
 
 # 3. gh CLI 확인
 echo ""
-echo "[3/4] gh CLI 확인..."
+echo "[3/3] gh CLI 확인..."
 
 if command -v gh &> /dev/null; then
     echo "  ✓ gh CLI 설치됨: $(gh --version | head -1)"
@@ -104,40 +104,8 @@ else
     echo "  인증: gh auth login"
 fi
 
-# 4. YouTrack MCP 확인
 echo ""
-echo "[4/4] YouTrack MCP 확인..."
-
-if [ -f "$CLAUDE_DIR/mcp.json" ]; then
-    if grep -q "youtrack" "$CLAUDE_DIR/mcp.json"; then
-        echo "  ✓ YouTrack MCP 설정됨"
-    else
-        echo "  ⚠ YouTrack MCP가 ~/.claude/mcp.json에 없습니다."
-        echo "  아래 내용을 추가하세요 (mcpServers 안에):"
-        echo '    "youtrack": {'
-        echo '      "type": "http",'
-        echo '      "url": "https://aladincommunication.youtrack.cloud/mcp",'
-        echo '      "headers": {'
-        echo '        "Authorization": "Bearer {본인 YouTrack 토큰}"'
-        echo '      }'
-        echo '    }'
-    fi
-else
-    echo "  ⚠ ~/.claude/mcp.json이 없습니다. 생성합니다..."
-    echo '  토큰을 입력해야 합니다.'
-    echo '  ~/.claude/mcp.json을 아래 내용으로 생성하세요:'
-    echo '  {'
-    echo '    "mcpServers": {'
-    echo '      "youtrack": {'
-    echo '        "type": "http",'
-    echo '        "url": "https://aladincommunication.youtrack.cloud/mcp",'
-    echo '        "headers": {'
-    echo '          "Authorization": "Bearer {본인 YouTrack 토큰}"'
-    echo '        }'
-    echo '      }'
-    echo '    }'
-    echo '  }'
-fi
+echo "ℹ YouTrack은 REST API(YOUTRACK_TOKEN)로만 호출합니다. MCP는 사용하지 않습니다."
 
 echo ""
 echo "=== 셋업 완료 ==="

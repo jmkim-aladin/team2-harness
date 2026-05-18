@@ -59,23 +59,9 @@ ln -s /path/to/team2/.claude/commands/ad ~/.claude/commands/ad
 ```
 토큰 발급: https://aladincommunication.youtrack.cloud > Profile > Account Security > New Token
 
-#### 4. YouTrack MCP 서버
-`~/.claude/mcp.json`에 추가 (파일 없으면 생성):
-```json
-{
-  "mcpServers": {
-    "youtrack": {
-      "type": "http",
-      "url": "https://aladincommunication.youtrack.cloud/mcp",
-      "headers": {
-        "Authorization": "Bearer {본인의 YouTrack 토큰}"
-      }
-    }
-  }
-}
-```
+> 팀 스킬은 YouTrack을 REST API(`curl` + `$YOUTRACK_TOKEN`)로만 호출한다. MCP 서버는 사용하지 않는다.
 
-#### 5. gh CLI
+#### 4. gh CLI
 ```bash
 brew install gh
 gh auth login
@@ -180,7 +166,6 @@ git pull    # 최신 스킬 가져오기
 |------|------|------|------|
 | `.claude/commands/ad/*.md` | team2 레포 | 팀 (git → symlink) | 팀 스킬 정의 |
 | `~/.claude/settings.json` | 개인 홈 | 개인 | `YOUTRACK_TOKEN`, `YOUTRACK_BASE_URL`, `TEAM2_HARNESS_PATH` |
-| `~/.claude/mcp.json` | 개인 홈 | 개인 | YouTrack MCP 서버 (토큰 포함) |
 | `~/.claude/commands/ad` | 개인 홈 | symlink → team2 | 팀 스킬 자동 연결 |
 | `~/.codex/AGENTS.md` | 개인 홈 | 개인 | Codex용 팀 하네스 진입점 |
 | `~/.codex/skills/dev2-team-harness-ko` | 개인 홈 | 개인 | Codex용 개발2팀 하네스 Skill |
@@ -196,19 +181,19 @@ Codex에서는 아래 Skill을 통해 같은 하네스 기준을 적용한다.
 | 개발2팀 정책, 카탈로그, KB, OKR, 주간업무, 코드리뷰 | `$dev2-team-harness-ko` |
 | `/ad:ticket`, DEV2 티켓 생성/초안 | `$youtrack-ticket-5w1h-ko` |
 
-Codex YouTrack MCP는 `~/.codex/config.toml`의 `mcp_servers.youtrack` 설정을 사용한다.
+Codex Skill도 YouTrack은 REST API(`$YOUTRACK_TOKEN`)로만 호출한다.
 
 ---
 
 ## 스킬별 필요 설정
 
-| 스킬 | YouTrack 토큰 | YouTrack MCP | gh CLI |
-|------|:---:|:---:|:---:|
-| `/ad:ticket` | O | O (직접 생성 시) | - |
-| `/ad:code-review` | - | - | O |
-| `/ad:team2-kb-read` | O | - | - |
-| `/ad:team2-kb-list` | O | - | - |
-| `/ad:team2-kb-sync` | O | - | - |
+| 스킬 | YouTrack 토큰 | gh CLI |
+|------|:---:|:---:|
+| `/ad:ticket` | O | - |
+| `/ad:code-review` | - | O |
+| `/ad:team2-kb-read` | O | - |
+| `/ad:team2-kb-list` | O | - |
+| `/ad:team2-kb-sync` | O | - |
 
 ---
 
@@ -218,7 +203,7 @@ Codex YouTrack MCP는 `~/.codex/config.toml`의 `mcp_servers.youtrack` 설정을
 |------|------|------|
 | `/ad:ticket`이 안 보임 | 심볼릭 링크 없음 | `./scripts/setup.sh` 실행 |
 | KB 조회 시 인증 오류 | `YOUTRACK_TOKEN` 미설정 | `~/.claude/settings.json` env 확인 |
-| 티켓 생성 시 MCP 오류 | YouTrack MCP 미설정 | `~/.claude/mcp.json` 확인 |
+| 티켓 생성 시 401/403 | `YOUTRACK_TOKEN` 만료/오타 | YouTrack에서 토큰 재발급 후 settings.json 갱신 |
 | PR 리뷰 시 gh 오류 | gh CLI 미설치/미인증 | `brew install gh` → `gh auth login` |
 | 환경변수 적용 안 됨 | Claude Code 재시작 필요 | `/exit` 후 `claude` 다시 실행 |
 | 스킬 업데이트 안 됨 | team2 pull 필요 | `cd team2 && git pull` |
