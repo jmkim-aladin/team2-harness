@@ -4,6 +4,13 @@ B2B 스토어프론트(SF) 프로젝트 설계 문서 모음. 속성별로 6개 
 
 ---
 
+## 빠른 온보딩
+
+- [storefront-quick-brief.md](./storefront-quick-brief.md): 처음 공유하기 좋은 1페이지 요약
+- [storefront-onboarding-brief.md](./storefront-onboarding-brief.md): 새 담당자가 이어서 읽는 상세 온보딩 브리프
+
+---
+
 ## 📁 폴더 구조
 
 ### 1. [`scope/`](./scope/) — 비전·스코프 정의
