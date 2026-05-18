@@ -1,5 +1,5 @@
 # 만권당 (Max) 서비스 프로파일
-# 소스: /Users/user/Documents/workspace/max-doc
+# 소스: /Users/user/Documents/workspace/max
 
 service_id: max
 name: 만권당 (max)
@@ -7,9 +7,9 @@ type: legacy
 description: "알라딘 전자책 구독 서비스 — 콘텐츠 제공, 구독 관리, 검색/브라우즈"
 
 owners:
-  primary: "jmkim@aladin.co.kr"      # 김정민
-  backup: "heum2@aladin.co.kr"       # 조은흠
-  additional: "heesoo@aladin.co.kr"  # 박희수
+  primary: "jmkim@aladin.co.kr" # 김정민
+  backup: "heum2@aladin.co.kr" # 조은흠
+  additional: "heesoo@aladin.co.kr" # 박희수
 
 # 멀티 런타임 서비스 (하위 프로젝트별 분리)
 components:
@@ -33,7 +33,7 @@ components:
       type: dotnet
       version: "8.0"
       language: "C#"
-      hosting: docker  # K8s/Docker ready
+      hosting: docker # K8s/Docker ready
     dependencies:
       - Dapper
       - Swashbuckle 7.1.0
@@ -44,7 +44,7 @@ components:
       type: nextjs
       version: "14.2.3"
       language: "TypeScript 5.2.2"
-      hosting: docker  # Node.js 20.9.0-alpine
+      hosting: docker # Node.js 20.9.0-alpine
     dependencies:
       - Recoil (state)
       - styled-components
@@ -91,11 +91,11 @@ repos:
   max-server: "https://github.com/AladinCommunication/MaxServer"
 
   # 관련 레포 (타팀 관리)
-  max-search: "https://github.com/AladinCommunication/max-search"             # 검색 AI 팀 관리
-  ebook-web-viewer: "https://github.com/AladinCommunication/Ebook_Web_Viewer"  # 개발 4팀 관리 (뷰어)
-  ebook-viewer-api: "https://github.com/AladinCommunication/EbookViewerAPI"    # 개발 4팀 관리 (뷰어 API)
-  ebook-ios: "https://github.com/AladinCommunication/EbookIos"                 # 개발 4팀 관리 (iOS 앱)
-  shopping-android: "https://github.com/AladinCommunication/ShoppingAndroid"   # 개발 4팀 관리 (Android 앱)
+  max-search: "https://github.com/AladinCommunication/max-search" # 검색 AI 팀 관리
+  ebook-web-viewer: "https://github.com/AladinCommunication/Ebook_Web_Viewer" # 개발 4팀 관리 (뷰어)
+  ebook-viewer-api: "https://github.com/AladinCommunication/EbookViewerAPI" # 개발 4팀 관리 (뷰어 API)
+  ebook-ios: "https://github.com/AladinCommunication/EbookIos" # 개발 4팀 관리 (iOS 앱)
+  shopping-android: "https://github.com/AladinCommunication/ShoppingAndroid" # 개발 4팀 관리 (Android 앱)
 
 youtrack:
   project_key: DEV2
@@ -121,12 +121,12 @@ data:
       used_by: [max-api]
   db_type: mssql
   db_version: "SQL Server 2016 SP1+"
-  shared_db: true       # 여러 컴포넌트가 같은 DB 공유
-  direct_sp_write: true  # SP 기반 write 집중적 사용
+  shared_db: true # 여러 컴포넌트가 같은 DB 공유
+  direct_sp_write: true # SP 기반 write 집중적 사용
   cache: redis
 
 api_endpoints:
-  max-api:  # RoutePrefix: "Api/"
+  max-api: # RoutePrefix: "Api/"
     - "Products/{itemId}"
     - "Series/{seriesId}"
     - "Browse/*"
@@ -189,12 +189,12 @@ architecture:
   approach: "Database-First — 새 기능은 SP 설계부터 시작"
 
 risk:
-  change_frequency: ""   # TODO: high / medium / low
-  incident_impact: ""    # TODO: high / medium / low
-  data_coupling: high    # 5개 DB 공유, 410+ SP, 여러 컴포넌트 공유
+  change_frequency: "" # TODO: high / medium / low
+  incident_impact: "" # TODO: high / medium / low
+  data_coupling: high # 5개 DB 공유, 410+ SP, 여러 컴포넌트 공유
 
 modernization:
-  track: extract         # 컴포넌트별로 다름 (아래 전략 참조)
+  track: extract # 컴포넌트별로 다름 (아래 전략 참조)
   status: "not-started"
   strategy: |
     ## 전환 경로: .NET Framework 4.8 → .NET Core → Kotlin (Spring Boot)
@@ -213,24 +213,24 @@ modernization:
     max-api:
       current: ".NET Framework 4.8"
       phase1_target: ".NET Core"
-      phase1_branch: "origin/deploy/max-dev-core"  # max-api 레포 내 브랜치
+      phase1_branch: "origin/deploy/max-dev-core" # max-api 레포 내 브랜치
       phase2_target: "Kotlin + Spring Boot"
-      phase2_repo: "https://github.com/AladinCommunication/MaxServer"  # Kotlin 전환용
+      phase2_repo: "https://github.com/AladinCommunication/MaxServer" # Kotlin 전환용
       track: extract
     maxcms-api:
       current: ".NET 8.0"
       target: "Kotlin + Spring Boot (장기)"
-      track: observe  # 이미 modern, 급하지 않음
+      track: observe # 이미 modern, 급하지 않음
     max-front:
       current: "Next.js 14"
-      track: observe  # modern stack
+      track: observe # modern stack
     maxcms-front:
       current: "Next.js 14"
-      track: observe  # modern stack
+      track: observe # modern stack
     max-batch:
       current: "SQL Server Agent + T-SQL"
       target: "서비스 코드로 이관"
-      track: wrap  # SP 확산 방지 우선
+      track: wrap # SP 확산 방지 우선
 
   priorities:
     - "1. SP 확산 방지 — 신규 코드에서 SP 직접 호출 금지"
