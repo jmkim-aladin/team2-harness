@@ -5,7 +5,7 @@
 
 ## 구조
 
-- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, 데이터 추출 요청)
+- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, AWS Secrets, DB 이관/CDC, 위키 문서 언어/제목, 데이터 추출 요청)
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, b2b-store, caravan, shopping)
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
 - `.claude/commands/ad/` — 팀 스킬 (ticket, code-review, kb-read, kb-list, kb-sync, okr, weekly-report, weekly-planned, harness-optimize, data-request)
@@ -47,24 +47,10 @@ gstack 스킬(`/ship`, `/review`, `/cso`, `/qa` 등) 사용 시 반드시 [polic
 
 ## 문서 규칙
 
-- 한국어 작성, 코드/기술 용어 영어 허용
-- 문서 H1/title은 한국어를 기본으로 하고, 서비스별 운영 위키 문서는 한글 서비스명 접두어로 시작한다. 상세: [policies/wiki-document-language-and-title-policy.md](./policies/wiki-document-language-and-title-policy.md)
-- 파일명: `kebab-case.md`
+- 한국어 작성 (코드/기술 용어 영어 허용), 파일명 `kebab-case.md`
+- 문서 H1/title 규칙: [policies/wiki-document-language-and-title-policy.md](./policies/wiki-document-language-and-title-policy.md)
 - CLAUDE.md 최소화 원칙: [policies/claude-md-policy.md](./policies/claude-md-policy.md)
-- Ralph Loop 도메인 지식 고도화 요청 기준: [docs/ralph-loop-domain-knowledge-guide.md](./docs/ralph-loop-domain-knowledge-guide.md)
-- 레거시 현대화/DB 분리 분석 기준: [docs/legacy-modernization-db-separation-analysis-guide.md](./docs/legacy-modernization-db-separation-analysis-guide.md)
-- DB 이관/CDC 진단 기준: [docs/db-migration-cdc-assessment-guide.md](./docs/db-migration-cdc-assessment-guide.md)
-- Ralph Loop 서비스 확장 기준: [docs/ralph-loop-service-expansion-guide.md](./docs/ralph-loop-service-expansion-guide.md)
-
-## 운영 위키 탐색
-
-- 로컬 Obsidian 운영 지식 위키 경로: `/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`
-- 서비스/API/SP/Table 관계를 탐색할 때는 운영 위키의 `graph/contract-graph.json`, `graph/source-inventory.json`, `graph/unresolved-queue.json`을 먼저 확인한다.
-- 사람이 문서처럼 탐색할 때는 운영 위키의 `wiki/indexes/services.md`, `wiki/indexes/domains.md`, `wiki/indexes/graphify.md`와 각 문서의 `Related Links` generated block을 먼저 확인한다.
-- `graph/generated/graphify/{service_id}/`에 최신 Graphify sidecar 산출물이 있으면 `GRAPH_REPORT.md`의 god node, surprise edge, suggested questions를 먼저 참고한다.
-- Graphify 결과는 후보 지식이다. canonical 판단은 source path/hash, DEV2 graph, 사람 검토 기준을 따른다.
-- 링크/인덱스가 낡았으면 운영 위키에서 `python3 scripts/generate_wiki.py`와 `python3 scripts/lint_wiki.py`를 실행한다.
-- Graphify sidecar가 없거나 stale이면 직접 실행하지 말고 운영 위키에서 `python3 scripts/plan_graphify_runs.py` 또는 `python3 scripts/enqueue_graphify_trigger.py --service {service_id} --trigger ticket-graph-missing --reason "{이유}"`로 queue에 등록한다.
+- 분석/평가 가이드 (Ralph Loop, 레거시 현대화, DB 이관, 운영 위키 탐색 등): [docs/analysis-guides.md](./docs/analysis-guides.md)
 
 ## Skill routing
 
@@ -90,5 +76,4 @@ Key routing rules:
 - Design system, brand → invoke design-consultation
 - Visual audit, design polish → invoke design-review
 - Architecture review → invoke plan-eng-review
-- Save progress, checkpoint, resume → invoke checkpoint
 - Code quality, health check → invoke health
