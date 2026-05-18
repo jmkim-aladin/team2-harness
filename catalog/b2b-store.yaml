@@ -11,7 +11,6 @@ owners:
   backup: "heum2@aladin.co.kr"       # 조은흠 (FE)
   stakeholders:
     - "hyeryun@aladin.co.kr"         # 안혜련 (티켓 발행)
-    - "bbooya@aladin.co.kr"          # 이현민 (티켓 발행)
 
 status: design  # design → development → staging → production
 

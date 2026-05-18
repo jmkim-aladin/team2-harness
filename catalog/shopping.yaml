@@ -1,0 +1,83 @@
+# 알라딘 쇼핑 (shopping) 서비스 프로파일
+# 소스: /Users/user/Documents/workspace/shopping
+
+service_id: shopping
+name: 알라딘 쇼핑 (shopping)
+type: legacy
+description: "알라딘 쇼핑 — B2B / C2C / 중고매장 업무가 복합적으로 통합된 레거시 웹 서비스 + 백오피스"
+
+owners:
+  primary: "jmkim@aladin.co.kr"  # 김정민
+
+# 멀티 컴포넌트 서비스
+components:
+  dev1-web-aladin:
+    description: "알라딘 쇼핑 웹 — B2B/C2C/중고매장 통합 (소비자/매장/거래 업무 혼재)"
+    runtime:
+      type: dotnet-framework
+      version: "4.8"
+      language: "C# / ASP.NET (WebForms)"
+      hosting: iis
+    solution: "Aladin.sln"
+    structure:
+      - "BaseProjects/Aladdin.AppBlock"
+      - "BaseProjects/Aladdin.FrameWork"
+      - "BaseProjects/Aladdin.Encryption"
+      - "BaseProjects/Aladdin.DataBlock"
+      - "WebRelease (웹 진입점)"
+    scale:
+      csharp_loc: "약 126만"
+      aspnet_loc: "약 61만"
+      js_loc: "약 22만"
+    business_domains:
+      - "B2B"
+      - "C2C"
+      - "중고매장"
+
+  dev1-backoffice-thanks:
+    description: "백오피스 프로그램 (운영/매장/거래 관리)"
+    runtime:
+      type: vb6
+      language: "Visual Basic 6 (.frm / .cls / .bas)"
+      hosting: "Windows 클라이언트 실행"
+    scale:
+      form_count: "196+"
+      total_loc: "약 5.6만"
+
+repos:
+  dev1-web-aladin: "https://github.com/AladinCommunication/dev1-web-aladin"
+  dev1-backoffice-thanks: "https://github.com/AladinCommunication/dev1-backoffice-thanks"
+  # db-script 레포 분리 예정 (현재는 로컬 db_script 폴더 사용)
+  db-script: ""  # TODO: 추후 db-script 레포로 전환
+
+youtrack:
+  project_key: DEV2
+
+data:
+  db_type: mssql
+  schemas:
+    - name: webcatalog
+      purpose: "쇼핑 카탈로그/거래 메인 스키마"
+      source_path: "db_script/webcatalog"  # 로컬 (추후 db-script 레포로 이전)
+    - name: ebookcms
+      purpose: "전자책/CMS 연동 (max와 공유 가능성 있음)"
+      source_path: "db_script/ebookcms"
+  shared_db: true        # max/tobe 등 다른 서비스와 DB 공유 가능성 (추후 확인)
+  direct_sp_write: true  # SP 기반 (레거시 .NET FW + VB6)
+  notes: |
+    현재는 로컬 폴더(/Users/user/Documents/workspace/shopping/db_script)에 SP/Function/Table 스크립트가 있음.
+    스키마는 webcatalog, ebookcms 두 개로 시작하고, 추후 별도 db-script 레포로 이관 예정.
+
+risk:
+  change_frequency: ""   # TODO: high / medium / low
+  incident_impact: ""    # TODO: high / medium / low
+  data_coupling: high    # 레거시 DB 공유 + B2B/C2C/중고매장 도메인 혼재
+
+modernization:
+  track: wrap            # 우선 SP 확산 방지 + 도메인 분리 식별
+  status: "not-started"
+  notes: |
+    B2B/C2C/중고매장 도메인이 한 코드베이스에 혼재 → 현대화 시 도메인 식별/분리가 선결 과제.
+    백오피스는 VB6 → 단계적 대체(웹/현대 백오피스) 검토 필요.
+
+harness_status: "not-started"

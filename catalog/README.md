@@ -8,9 +8,11 @@
 |--------|------|------|-----|-----|-----------------|-------------|
 | [만권당 (max)](max.yaml) | legacy | .NET FW 4.8 / .NET 8 / Next.js 14 | MSSQL 5개 공유 | 580+ | Wrap/Extract | 미시작 |
 | [투비컨티뉴드 (tobe)](tobe.yaml) | legacy | .NET FW 4.8 (ASP.NET MVC + React SSR) | MSSQL 5개 공유 | 200+ | Wrap | 미시작 |
+| [알라딘 쇼핑 (shopping)](shopping.yaml) | legacy | .NET FW 4.8 ASP.NET (web) + VB6 (백오피스) | MSSQL (webcatalog/ebookcms) | TBD | Wrap | 미시작 |
 | [naru](naru.yaml) | new | Spring Boot 3.5.6 + Kotlin | PostgreSQL | 없음 | Observe | 미시작 |
 | [bazaar](bazaar.yaml) | new | Spring Boot 3.5.3 + Kotlin | PostgreSQL + MSSQL(읽기) | 없음 | Observe | 미시작 |
 | [aasm](aasm.yaml) | new | Next.js 16 + TypeScript | PostgreSQL (마이그레이션 중) | 없음 | Observe | 미시작 |
+| [caravan](caravan.yaml) | new | Spring Boot 3.3.7 + Kotlin + Spring Cloud Gateway + Next.js 14 | PostgreSQL + Redis 7 | 없음 | Observe | 미시작 |
 
 ## 아키텍처 비교
 
@@ -18,8 +20,10 @@
 |--------|----------|-----|------|--------|
 | max | N-Tier (Controller→Service→Repository→SP) | Dapper | MSBuild + IIS / Docker | IIS + Docker |
 | tobe | Layered N-Tier (MVC→Bll→Dal→SP) | Dapper | CodeDeploy (Windows) | IIS (Windows Server) |
+| shopping | ASP.NET WebForms + VB6 백오피스 (도메인 혼재) | ADO.NET / SP | MSBuild + IIS / Windows 클라이언트 배포 | IIS + Windows |
 | naru | Hexagonal + DDD + CQRS | JPA/Hibernate | Docker multi-stage → AWS ECS | AWS ECS |
 | bazaar | Hexagonal + DDD + CQRS | JPA/Hibernate | Docker → AWS ECR → ArgoCD (K8s) | K8s (ArgoCD) |
+| caravan | Clean Architecture (domain/application/infra) + Reverse-Proxy Gateway | JPA/Hibernate (Admin) | Docker → Kubernetes | Kubernetes |
 
 ## 공유 DB 현황
 
@@ -38,9 +42,9 @@
 
 | 트랙 | 서비스 | 설명 |
 |------|--------|------|
-| Observe | naru, bazaar, aasm | 이미 modern stack, 하네스 문서화만 |
-| Wrap | tobe, max(일부) | adapter/facade로 감싸기, SP 확산 방지 |
-| Extract | max(일부) | 신규 서비스로 도메인 추출 후보 |
+| Observe | naru, bazaar, aasm, caravan | 이미 modern stack, 하네스 문서화만 |
+| Wrap | tobe, max(일부), shopping | adapter/facade로 감싸기, SP 확산 방지 |
+| Extract | max(일부), shopping(후보) | 신규 서비스로 도메인 추출 후보 (shopping은 B2B/C2C/중고매장 분리 식별 단계) |
 | Freeze/Retire | - | 해당 없음 |
 
 ## 신규 서비스 등록
