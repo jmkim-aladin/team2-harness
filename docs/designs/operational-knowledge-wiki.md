@@ -107,6 +107,7 @@ System Discovery Loop는 팀의 기억을 사전에 구축하는 루프이고, T
 - YouTrack 이슈 ID와 공개 가능한 처리 맥락
 - KB ID와 정책 적용 결과
 - redaction된 샘플 구조
+- **분석/진단용 SQL 쿼리 본문** (읽기 전용 SELECT, EXEC 검증, 메타데이터 조회 등). 같은 분석을 재실행하거나 재현하기 위한 핵심 자산이므로 티켓 위키 문서에 함께 저장한다. DB/스키마/SP 이름과 컬럼 후보는 식별 가능한 정보가 아니므로 그대로 보관한다.
 
 저장 금지:
 
@@ -116,8 +117,29 @@ System Discovery Loop는 팀의 기억을 사전에 구축하는 루프이고, T
 - 결제/인증/보안 민감값
 - 외부 LLM 또는 외부 research 도구로 보내면 안 되는 내부 코드/데이터
 - 승인되지 않은 프로덕션 운영 절차 세부값
+- **SQL 실행 결과의 원문 행 데이터** (행 자체에 개인정보·실거래값·민감값 포함 가능). 결과는 redaction된 요약/카운트/구조만 기록한다.
+- **데이터 변경 SQL** (`INSERT`/`UPDATE`/`DELETE`/`DROP`/`TRUNCATE`/`ALTER`/`MERGE` 등). 변경 작업은 별도 승인된 마이그레이션 채널에서만 실행하며, 본문 자체를 위키에 보관하지 않는다.
 
 민감 정보가 포함된 source는 redaction 후 요약만 위키에 기록한다. redaction 여부는 frontmatter에 남긴다.
+
+### 티켓 위키 문서의 SQL 저장 규칙
+
+분석에 사용한 SQL은 티켓 위키 문서(`wiki/tickets/{ticket-id}.md`)에 같이 저장한다.
+
+- 위치: 별도 `## 검증 SQL` 섹션으로 모으거나, "권장 작업 분해"/"Actions" 항목 옆에 코드블록으로 둔다.
+- 형태: `sql` 코드블록을 사용하고, 같은 쿼리에서 사용할 입력값은 `DECLARE ... = ...;` 변수로 분리해 재사용 가능하게 둔다.
+- **모든 SQL은 `db_script/` 코드 베이스에 실재하는 객체를 근거로 작성한다.** 테이블/컬럼/SP/함수/파라미터 이름과 시그니처는 추측이 아니라 다음 경로의 정의를 직접 확인한 뒤 사용한다.
+  - `db_script/{db}/Tables/*.sql` (컬럼 존재 여부)
+  - `db_script/{db}/StoredProcedures/*.sql` (SP 시그니처, 호출 인자 순서, 기본값)
+  - `db_script/{db}/Functions/*.sql` (반환 컬럼/타입)
+  - 기본 경로 예: `/Users/user/Documents/workspace/shopping/db_script/webcatalog/`, `ebookcms/`
+  - 코드 베이스에 정의가 없거나 컬럼이 불확실하면, 쿼리 작성 대신 `sys.columns`/`sys.objects` 같은 메타 조회 SQL로 먼저 스키마를 확인하는 단계를 명시한다.
+- 각 쿼리에는 근거 SP/Table 파일 경로를 같은 위키 문서 안에서 참조한다(예: `/Users/user/Documents/workspace/shopping/db_script/webcatalog/StoredProcedures/OrdersItemInfo_Get.sql`).
+- 범위: 읽기 전용 SELECT, 시스템 카탈로그 조회(`sys.objects`, `sys.columns` 등), `EXEC` 검증 호출, 컬럼 존재 확인 쿼리는 그대로 저장한다.
+- 결과: 쿼리 결과는 비식별 요약(예: "v1 0행, v2 1행", "WebItem 미존재, SoldOutUsedItem hit")으로만 기록한다. 행 원문·OrderNo·메일·결제값은 저장하지 않는다.
+- 변경 쿼리는 저장하지 않는다. 필요한 경우 "변경 안: `OrdersItemInfo_Get` 본체에 `fn_WebItem` 폴백 추가" 같은 의도 기술만 두고, 실제 DDL/DML 본문은 별도 승인된 마이그레이션 PR에 둔다.
+- 동일 SQL이 여러 티켓에서 반복되면 `wiki/patterns/` 또는 `wiki/guides/` 로 일반화한 뒤 티켓에서 링크한다.
+- 본 규칙은 `wiki/guides/zero-base-code-evidence-review-rule.md` 의 zero-base 코드 근거 검토 원칙을 SQL에 적용한 것이다. 둘 중 하나라도 어기는 쿼리는 위키에 저장하지 않는다.
 
 ```yaml
 redaction:
