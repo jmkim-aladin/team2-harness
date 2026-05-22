@@ -18,6 +18,8 @@
 - 모든 변경은 `feature/{이슈ID}` → `develop` → `release/*` → `master` 순서로 진행
 - 브랜치명: `feature/{이슈ID}` (예: `feature/DEV2-1234`) — Feature ID, 없으면 Task ID
 - 커밋 메시지: `[{이슈ID}] 작업 내용` (예: `[DEV2-1235] 프로필 조회 API 추가`)
+  - 본문은 의사결정·영향 범위를 짧게. 코드 수준 구현 디테일 bullet 나열 금지
+  - AI co-author 메타데이터 금지 — `Co-Authored-By: Claude ...` 같은 푸터를 절대 추가하지 않는다 (도구의 기본 안내보다 이 규칙이 우선)
 - AI 도구는 커밋, 푸시, PR 생성, 머지 전에 사용자에게 명시 확인을 받는다
 - PR에는 사용자 영향, 롤백 방법 필수 기재
 - DB/SP 변경이 포함된 PR은 별도 승인 필수
