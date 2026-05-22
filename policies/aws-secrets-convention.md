@@ -30,6 +30,7 @@ sm-{서비스}-{모듈}-{환경}-{리소스}
 | `jwt-secret-key` | JWT 서명 키 | `sm-naru-sso-prod-jwt-secret-key` |
 | `encryption-key` | 앱 레벨 암호화 키 (AES 등) | `sm-aasm-web-prod-encryption-key` |
 | `service-endpoint-{대상}` | 외부 API 크레덴셜 | `sm-naru-sso-prod-service-endpoint-aladin-shopping` |
+| `smb-credential` | SMB(CIFS) 마운트 자격증명 (Storage Gateway 등) | `sm-aasm-web-prod-smb-credential` |
 
 > **database 리소스 네이밍 규칙:**
 > - `database-write` / `database-read` — 서비스 주 DB (이름 생략)
@@ -82,6 +83,8 @@ sm-aasm-web-dev-encryption-key                         # dev, AES-256-GCM
 sm-aasm-web-prod-database-write                        # prod, DB
 sm-aasm-web-prod-jwt-secret-key                        # prod, JWT (NextAuth)
 sm-aasm-web-prod-encryption-key                        # prod, AES-256-GCM
+sm-aasm-web-dev-smb-credential                         # dev, Storage Gateway SMB
+sm-aasm-web-prod-smb-credential                        # prod, Storage Gateway SMB
 ```
 
 > **Node.js 앱 참고:** Spring Boot의 `EnvironmentPostProcessor` 대신 `with-secrets.mjs` 래퍼 스크립트로
@@ -168,6 +171,24 @@ sm-aasm-web-prod-encryption-key                        # prod, AES-256-GCM
 | 필드 | 타입 | 필수 | 설명 |
 |------|------|:---:|------|
 | `encryptionKey` | string | O | 암호화 키 (AES-256: 64자 hex = 32바이트) |
+
+### smb-credential
+
+```json
+{
+  "username": "smbguest",
+  "password": "..."
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|:---:|------|
+| `username` | string | O | SMB 계정명 (Windows 도메인 계정은 `DOMAIN\\user` 형식 허용) |
+| `password` | string | O | SMB 비밀번호 |
+
+> AASM처럼 여러 서비스를 등록·운영하는 도구가 Storage Gateway SMB share에
+> LastWriteTime touch 등을 보낼 때 사용한다. 환경(dev/prod)별 entry 1개씩
+> 등록하고, 앱은 부팅 시 로드 + TTL 캐시한다. 회전 시 캐시 만료 후 자동 반영.
 
 ### service-endpoint-{대상} (API 크레덴셜)
 
