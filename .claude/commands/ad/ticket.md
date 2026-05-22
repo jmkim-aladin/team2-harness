@@ -37,6 +37,14 @@
 | `$YOUTRACK_TOKEN` | YouTrack API 인증 토큰 |
 | `$YOUTRACK_BASE_URL` | YouTrack 베이스 URL (기본: `https://aladincommunication.youtrack.cloud`) |
 
+### 토큰 owner 규칙 (필수)
+
+- `$YOUTRACK_TOKEN`은 **티켓을 발행하는 본인 계정의 토큰**이어야 한다.
+- YouTrack은 issue 생성 시 reporter(작성자) 필드를 자동으로 토큰 owner로 박는다. 일반 사용자 권한으로는 reporter 필드를 다른 사람으로 변경할 수 없다.
+- 다른 사람의 토큰(예: 팀장 토큰)을 그대로 쓰면 모든 티켓이 그 사람 명의로 등록되어 작성자 추적이 어그러진다.
+- 검증 방법: `curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$YOUTRACK_BASE_URL/api/users/me?fields=login,fullName,email"` 로 본인 계정인지 확인.
+- 토큰이 본인 것이 아니면 본인 YouTrack 토큰을 발급받아 `.envrc` 또는 셸 rc 파일에 교체한 뒤 진행한다.
+
 ## 참조 정보
 
 ### YouTrack API 호출 (curl)
@@ -93,6 +101,7 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 
 사용자가 `/ad:ticket` 또는 `/ad:ticket [설명]`을 입력하면:
 
+0. **토큰 owner 검증 (필수)**: `curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$YOUTRACK_BASE_URL/api/users/me?fields=login,fullName,email"` 로 토큰 owner를 확인한다. 토큰 owner가 사용자 본인 계정(`$USER` 또는 git config user.email)과 일치하지 않으면 reporter가 토큰 owner로 박혀 변경할 수 없으므로 **티켓 생성을 중단**하고 사용자에게 본인 토큰 교체를 요청한다.
 1. **`docs/sprint/ticket-guide.md`를 읽어** 5W1H 작성법과 최신 규칙을 확인
 2. 사용자 입력이 있으면 해당 내용을 기반으로 티켓 작성
 3. 사용자 입력이 없으면 어떤 티켓을 만들지 질문
