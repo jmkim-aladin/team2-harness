@@ -25,7 +25,20 @@ model: sonnet
 
 ## 사전 확인
 
-리뷰 시작 전 반드시:
+### 실행 모드
+
+이 스킬은 다수의 `gh` 호출과 마지막 리뷰 게시까지 포함하므로, **세션 시작 시 `--dangerously-skip-permissions` 로 진입하는 것을 권장**한다.
+
+```bash
+claude --dangerously-skip-permissions
+```
+
+- 권한 프롬프트가 모두 우회되므로, 게시 직전 단계에서 스킬이 보여주는 **미리보기를 사용자가 검토**하는 것이 유일한 게이트가 된다.
+- 미리보기 단계에서 사용자가 "이대로 게시"라고 답해야만 `gh api ... POST` 를 실행한다 — 이 규칙은 권한 모드와 무관하게 지킨다.
+- 일반 모드로 실행했다면 `.claude/settings.local.json` 의 `Bash(gh pr view:*)` / `Bash(rtk gh pr view:*)` 계열 화이트리스트로 읽기 명령은 통과하고, 게시 명령은 사용자 확인을 거친다.
+
+### 도구 점검
+
 ```bash
 # gh CLI 설치 확인
 gh --version
@@ -39,18 +52,32 @@ gh CLI가 없으면 설치 안내: https://cli.github.com/ (`brew install gh`)
 
 ## 실행 지침
 
+### 0. 입력 파싱 — 항상 `--repo` 명시
+
+하네스 워킹디렉터리(`team2`)는 대상 레포가 아니므로, gh 호출에는 **반드시 `--repo {owner}/{name}`을 붙인다.** 추론 실패 시 사용자에게 묻고 진행한다.
+
+| 입력 형태 | 처리 |
+|----------|------|
+| `https://github.com/{owner}/{repo}/pull/{N}` | URL에서 `{owner}/{repo}`와 `{N}` 추출 → `--repo {owner}/{repo}` 사용 |
+| 숫자만 (`1308`) | `catalog/*.yaml`의 `repos:` 매핑에서 후보를 모은 뒤 `AskUserQuestion`으로 어느 레포인지 확인 |
+| `{owner}/{repo}#{N}` 또는 `{repo}#{N}` | 같은 방식으로 owner/repo 해석 |
+
+레포 해석 결과는 **수집 단계 첫 출력**으로 사용자에게 한 줄 노출한다 (예: `대상: AladinCommunication/max-front #1308`). 잘못 매핑되면 조기 중단 가능하도록.
+
 ### 1. PR 정보 수집
 
 ```bash
 # PR 기본 정보 + 최신 커밋 SHA (한 번에 조회)
-gh pr view {PR번호} --json title,body,author,baseRefName,headRefName,commits,files,additions,deletions
+gh pr view {N} --repo {owner}/{repo} --json title,body,author,baseRefName,headRefName,commits,files,additions,deletions
 
 # 변경 파일 목록 (이름만)
-gh pr diff {PR번호} --name-only
+gh pr diff {N} --repo {owner}/{repo} --name-only
 
 # 전체 diff (코드 리뷰용)
-gh pr diff {PR번호}
+gh pr diff {N} --repo {owner}/{repo}
 ```
+
+> `--repo` 누락 시 현재 디렉터리(하네스)의 remote를 따라가 엉뚱한 레포 조회나 실패가 발생한다. 항상 명시한다.
 
 ### 2. 팀 하네스 기준 리뷰
 
@@ -131,23 +158,66 @@ GitHub에 게시하는 코멘트/리뷰 본문에는 로컬 하네스 내부 정
 
 반드시 사용자 확인 후에만 게시합니다.
 
+**중요: `gh api -f 'comments[][...]'` 반복 브래킷 폼 인코딩은 금지.**
+GitHub API가 `side` 필드를 인식 못 하거나 배열 인덱스를 잘못 매핑해 422 에러가 난다.
+**반드시 JSON 페이로드를 stdin/파일로 전달한다.**
+
+#### 5-A. 인라인 코멘트 **없을 때** (단순 APPROVE/COMMENT/REQUEST_CHANGES)
+
+`gh pr review` 명령 한 줄로 끝.
+
 ```bash
-# Pending review 생성 (코멘트 포함)
-gh api repos/{owner}/{repo}/pulls/{PR번호}/reviews \
+# APPROVE
+gh pr review {N} --repo {owner}/{repo} --approve --body "{전체 메시지}"
+
+# REQUEST_CHANGES
+gh pr review {N} --repo {owner}/{repo} --request-changes --body "{전체 메시지}"
+
+# COMMENT
+gh pr review {N} --repo {owner}/{repo} --comment --body "{전체 메시지}"
+```
+
+#### 5-B. 인라인 코멘트 **포함**할 때
+
+JSON 페이로드를 작성 후 한 번에 review를 POST한다 (event를 같이 보내면 별도 submit 단계 불필요).
+
+```bash
+# 1. JSON 페이로드 작성 (임시 파일)
+cat > /tmp/review-{N}.json <<'EOF'
+{
+  "commit_id": "{SHA}",
+  "event": "APPROVE",
+  "body": "{전체 메시지}",
+  "comments": [
+    {"path": "src/foo.ts", "line": 42, "side": "RIGHT", "body": "{코멘트 1}"},
+    {"path": "src/bar.ts", "line": 10, "side": "RIGHT", "body": "{코멘트 2}"}
+  ]
+}
+EOF
+
+# 2. 게시
+gh api repos/{owner}/{repo}/pulls/{N}/reviews \
   -X POST \
-  -f commit_id="{SHA}" \
-  -f 'comments[][path]={파일}' \
-  -F 'comments[][line]={줄}' \
-  -f 'comments[][side]=RIGHT' \
-  -f 'comments[][body]={코멘트}' \
+  --input /tmp/review-{N}.json \
   --jq '{id, state}'
 
-# Review 제출
-gh api repos/{owner}/{repo}/pulls/{PR번호}/reviews/{REVIEW_ID}/events \
-  -X POST \
-  -f event="{APPROVE|REQUEST_CHANGES|COMMENT}" \
-  -f body="{전체 메시지}"
+# 3. 임시 파일 정리
+rm /tmp/review-{N}.json
 ```
+
+**페이로드 작성 규칙:**
+- `event` 값은 `APPROVE` / `REQUEST_CHANGES` / `COMMENT` 중 하나 (event를 함께 보내면 즉시 submit 됨)
+- 각 comment 객체는 `path`, `line`, `body` 필수. `side`는 `RIGHT`(추가/수정된 줄) 또는 `LEFT`(삭제된 줄). 기본 `RIGHT`.
+- 멀티라인 코멘트는 `start_line` 추가 (`line`은 끝줄).
+- `body`가 빈 문자열인 코멘트는 페이로드에서 제외 (서버가 422 반환).
+- JSON 문자열 안의 따옴표·줄바꿈은 반드시 이스케이프. 백틱·달러 기호는 heredoc `<<'EOF'`(단일 따옴표) 사용으로 셸 확장 차단.
+
+#### 5-C. 게시 직후 확인
+
+```bash
+gh api repos/{owner}/{repo}/pulls/{N}/reviews --jq '.[-1] | {id, state, user: .user.login}'
+```
+`state`가 `APPROVED` / `CHANGES_REQUESTED` / `COMMENTED`로 나오면 성공.
 
 ## 이벤트 타입 선택 기준
 
