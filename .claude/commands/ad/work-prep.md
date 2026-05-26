@@ -2,6 +2,8 @@
 
 YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obsidian 운영 위키에 티켓 노트를 생성·갱신하고 업무를 시작할 컨텍스트를 묶어준다.
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 ## 인보크 형태
 
 ```
@@ -68,7 +70,7 @@ curl -s -H "$AUTH" \
 
 | 모드 | 경로 |
 |------|------|
-| 티켓 모드 | `$LOCAL_WIKI_PATH/wiki/tickets/dev2-{NNNN}.md` (소문자, 4자리는 zero-pad 없이 그대로) |
+| 티켓 모드 | `$LOCAL_WIKI_PATH/wiki/processes/tickets/in-progress/dev2-{NNNN}.md` (소문자, 4자리는 zero-pad 없이 그대로) |
 | 자유글 모드 | `$LOCAL_WIKI_PATH/wiki/tasks/{YYYY-MM-DD}-{kebab-slug}.md` |
 
 기존 파일이 있으면 **읽어서** frontmatter `youtrack_synced_at`/`updated_at` 갱신만 하고, 본문은 보존한다. 사용자에게 "이미 있음 → 갱신" / "처음 생성" 인지 보고한다.
@@ -181,9 +183,9 @@ curl -s -H "$AUTH" \
 
 ### 7. Daily 노트 아젠다 추가
 
-`$LOCAL_WIKI_PATH/wiki/daily/{오늘 YYYY-MM-DD}.md`를 열어 `## 오늘의 아젠다` 섹션에 한 줄 추가:
+`$LOCAL_WIKI_PATH/wiki/processes/daily/{오늘 YYYY-MM-DD}.md`를 열어 `## 오늘의 아젠다` 섹션에 한 줄 추가:
 
-- 티켓 모드: `- [ ] [[wiki/tickets/dev2-{nnnn}|DEV2-{NNNN}]] — {제목 요약}`
+- 티켓 모드: `- [ ] [[wiki/processes/tickets/in-progress/dev2-{nnnn}|DEV2-{NNNN}]] — {제목 요약}`
 - 자유글 모드: `- [ ] [[wiki/tasks/{YYYY-MM-DD}-{slug}|{제목}]]`
 
 이미 동일 링크가 있으면 추가하지 않는다 (idempotent).
@@ -235,8 +237,8 @@ cmux rename-tab --surface "$CMUX_SURFACE_ID" "NO-TICKET — {제목}"
 | 모드 | 티켓 / 자유글 |
 | 서비스 | {서비스ID} ({카탈로그 경로}) |
 | 담당자 | {fullName ({login})} |
-| 위키 노트 | $LOCAL_WIKI_PATH/wiki/tickets/dev2-{nnnn}.md (생성/갱신) |
-| Daily 아젠다 | $LOCAL_WIKI_PATH/wiki/daily/{YYYY-MM-DD}.md (추가/스킵) |
+| 위키 노트 | $LOCAL_WIKI_PATH/wiki/processes/tickets/in-progress/dev2-{nnnn}.md (생성/갱신) |
+| Daily 아젠다 | $LOCAL_WIKI_PATH/wiki/processes/daily/{YYYY-MM-DD}.md (추가/스킵) |
 | cmux 탭 | DEV2-{NNNN} — {제목} (변경/스킵 — cmux 외부면 스킵) |
 | 제안 브랜치 | feature/DEV2-{NNNN} (미생성) |
 | 제안 커밋 prefix | [DEV2-{NNNN}] |
@@ -307,5 +309,25 @@ cmux rename-tab --surface "$CMUX_SURFACE_ID" "NO-TICKET — {제목}"
 - 운영 데이터 추출 SQL/결과물 → data-requests-dev2 repo
 - 특정 서비스 코드와만 의미 있는 매뉴얼 → 그 서비스 repo
 - 그 외 (프로젝트 진행·운영·도메인·회의·일지·티켓 산출물·OKR) → Obsidian vault
+
+## frontmatter 표준 (티켓 산출물)
+
+```yaml
+---
+type: ticket
+ticket_id: DEV2-XXXX
+ticket_status: auto-prep | in-progress | done | backlog
+assignee: jmkim
+service: max
+sprint: 2026-05
+type_yt: feature | task | bug
+---
+```
+
+상세: vault `wiki/guides/frontmatter-spec.md`.
+
+## 사전 분석 (auto-prep) 활용
+
+vault `wiki/processes/tickets/auto-prep/{DEV2-id}.md` (야간 자동 분석 산출물) 존재 시 본문을 시작점으로 정리한다. 사람 검토 후 in-progress로 이동.
 
 ARGUMENTS: $ARGUMENTS

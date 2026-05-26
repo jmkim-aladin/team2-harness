@@ -1,5 +1,7 @@
 # 스프린트 마감 자가점검 (D-5 / D-4)
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 본인 담당 티켓 중 마감 프로세스(`docs/sprint/sprint-closing-process.md`) D-5 / D-4 점검 항목에 걸리는 티켓을 카테고리별로 **목록·링크만** 출력합니다. 상태 변경·코멘트 추가·티켓 수정은 **수행하지 않습니다**. 처리는 사용자가 YouTrack에서 직접 합니다.
 
 ## 사용법
@@ -163,5 +165,21 @@ curl -s -H "$AUTH" \
 - **다중 담당자**: 출력에 담당자 표기 포함하여 식별 가능하게 함.
 - **페이지네이션**: 50개 초과 시 `$skip`으로 끝까지.
 - **태그 변형**: `{YYMM}-planned` 외 다른 컨벤션(예: 2605-sprint)은 인자로 명시.
+
+## frontmatter 표준 (티켓 산출물)
+
+```yaml
+---
+type: ticket
+ticket_id: DEV2-XXXX
+ticket_status: auto-prep | in-progress | done | backlog
+assignee: jmkim
+service: max
+sprint: 2026-05
+type_yt: feature | task | bug
+---
+```
+
+상세: vault `wiki/guides/frontmatter-spec.md`.
 
 ARGUMENTS: $ARGUMENTS

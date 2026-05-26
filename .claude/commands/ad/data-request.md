@@ -1,5 +1,7 @@
 # 운영 데이터 추출 요청 SQL 등록
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 YouTrack 데이터 추출 요청의 SQL과 산출물을 [`AladinCommunication/data-requests-dev2`](https://github.com/AladinCommunication/data-requests-dev2) 레포에 정책에 맞춰 등록한다.
 
 ## 정책 (Source of Truth)
@@ -152,7 +154,7 @@ fi
 + - 테이블: `WebCatalog.dbo.CustomerLoginHistory`
 ```
 
-위키 노트(Obsidian vault `wiki/tickets/`)와 작업자 로컬 메모에는 정확한 파일경로·라인번호를 남겨도 되지만, **data-requests-dev2 레포 산출물에는 DB 식별자만 기록한다**.
+위키 노트(Obsidian vault `wiki/processes/tickets/`)와 작업자 로컬 메모에는 정확한 파일경로·라인번호를 남겨도 되지만, **data-requests-dev2 레포 산출물에는 DB 식별자만 기록한다**.
 
 ### 4단계: 커밋
 

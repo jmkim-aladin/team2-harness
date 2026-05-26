@@ -2,6 +2,8 @@
 
 YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를 조회·업데이트합니다.
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 ## 사용법
 
 ```
@@ -238,7 +240,7 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
    - 제목 라인: `*` + 이중 `**` 분할 + 원문제목 `\[`/`\]` escape
    - 본문 라인: `  : ` + 본문 + `(일정정보, 담당자 DEV2-xxxx [원문제목])`
    - Feature 하위 없거나 단일 Task인 경우 본문에 동일 티켓 정보 반복
-5. **저장 경로**: 옵시디언 vault — `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/weekly/YYYY-MM-NW-draft.md`
+5. **저장 경로**: 옵시디언 vault — `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/weekly/YYYY-MM-NW-draft.md`
    - W 번호 = 해당 월 N주차 (월 첫 월요일 시작 기준)
    - 임시본은 vault 외부 작성 금지 (CLAUDE.md "도메인 분석 결과는 로컬 Obsidian 운영 지식 위키" 정책)
 6. **frontmatter 포함**:
@@ -278,5 +280,21 @@ Feature는 총 기간 1주일 이내가 필수 규칙 (`docs/sprint/ticket-guide
 - 티켓 링크 형식: `{담당자} {티켓ID} {티켓명}` (YouTrack 자동 링크)
 - 지연 항목은 반드시 지연 사유 포함
 - 분기 전환 시 새 분기 문서가 없으면 생성 안내
+
+## frontmatter 표준 (티켓 산출물)
+
+```yaml
+---
+type: ticket
+ticket_id: DEV2-XXXX
+ticket_status: auto-prep | in-progress | done | backlog
+assignee: jmkim
+service: max
+sprint: 2026-05
+type_yt: feature | task | bug
+---
+```
+
+상세: vault `wiki/guides/frontmatter-spec.md`.
 
 ARGUMENTS: $ARGUMENTS

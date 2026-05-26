@@ -2,6 +2,8 @@
 
 하네스 문서의 최신화, 중복 제거, YouTrack KB 동기화를 수행합니다.
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 ## 사용법
 
 ```
@@ -25,7 +27,7 @@
 | **이월 절차** | `docs/sprint/plan-change-process.md` | `docs/sprint/ticket-guide.md` 7항 (요약+링크만) |
 | **맨데이 배분** | `docs/sprint/sprint-planning-overview.md` | - |
 | **전사 상태 플로우** | `youtrack/ticket-guide.md` | `docs/sprint/ticket-guide.md` 8항 (링크만) |
-| **OKR (팀/개인)** | Obsidian vault `wiki/okr/` | `.claude/commands/ad/okr.md` |
+| **OKR (팀/개인)** | Obsidian vault `wiki/processes/okr/` | `.claude/commands/ad/okr.md` |
 | **서비스 프로파일** | `catalog/*.yaml` | `.claude/commands/ad/ticket.md` |
 | **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md` |
 
@@ -145,5 +147,28 @@ VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
 ```
 
 매치되는 파일은 사용자와 함께 어느 쪽이 SSOT인지 결정 후 반대편 제거.
+
+### frontmatter 스키마 검증
+
+vault 티켓 산출물 frontmatter 표준 준수 확인:
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+for f in $(find "$VAULT/wiki/processes/tickets" -name '*.md' ! -name '_index.md'); do
+  for key in ticket_id ticket_status assignee service sprint; do
+    grep -q "^$key:" "$f" || echo "MISSING $key in $(basename $f)"
+  done
+done
+```
+
+누락 필드 surface된 row는 사람 검토.
+
+### generated block 드리프트
+
+```bash
+python3 tools/sync_harness_links.py --vault "$VAULT" --harness . 2>&1 | grep -E "replaced|skipped|missing"
+```
+
+`replaced` 발견되면 sync 실행해 차이 반영.
 
 ARGUMENTS: $ARGUMENTS

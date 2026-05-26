@@ -1,5 +1,7 @@
 # 서비스 작업 활동 조회
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 YouTrack 티켓을 서비스 태그·기간으로 필터링하여 팀 작업 현황을 정리합니다. 운영 위키에 스냅샷 저장 가능.
 
 ## 사용법
@@ -104,8 +106,8 @@ LAST_SUN=$(date -v-mon -v-1d +%Y-%m-%d)
 ## 저장 (옵션)
 
 - vault 경로: `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/`
-- 파일 경로: `wiki/activity/{YYYY-MM-DD}-{services}-{from}_{to}.md`
-  - 예: `wiki/activity/2026-05-26-max-tobe-2026-05-18_2026-05-24.md`
+- 파일 경로: `wiki/processes/activity/{YYYY-MM-DD}-{services}-{from}_{to}.md`
+  - 예: `wiki/processes/activity/2026-05-26-max-tobe-2026-05-18_2026-05-24.md`
 - 파일 존재 시 덮어쓰기 전 사용자 확인
 - frontmatter:
 

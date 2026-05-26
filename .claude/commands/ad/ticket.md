@@ -2,6 +2,8 @@
 
 사용자 요청을 기반으로 5W1H 형식의 YouTrack 티켓을 생성합니다.
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 ## 기본값
 
 - **프로젝트**: DEV2
@@ -127,7 +129,7 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 - **우선순위**: 보통 (Normal)
 - **스토리 포인트**: {Task: 1|2|3|5|8|13 / Feature: 0 고정} (산정 근거: 복잡도/불확실성/작업량 — Feature는 하위 Task 합산이라 0)
 - **예상 시작 일자**: {YYYY-MM-DD}
-- **OKR 연계**: {팀 KR 번호} (해당 시, Obsidian vault wiki/okr/ 참조)
+- **OKR 연계**: {팀 KR 번호} (해당 시, vault wiki/processes/okr/ 참조)
 
 ---
 
@@ -148,5 +150,21 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 2. 확인되면 YouTrack REST API(`POST /api/issues`)로 직접 생성. MCP 도구는 사용하지 않는다.
 3. **생성 직후 반드시** `POST /api/issues/{idReadable}`로 `Assignee` 커스텀 필드를 갱신해 담당자 설정 (서비스 owner 기준)
 4. KB 참조 문서가 있으면 티켓 설명에 링크 포함
+
+## frontmatter 표준 (티켓 산출물)
+
+```yaml
+---
+type: ticket
+ticket_id: DEV2-XXXX
+ticket_status: auto-prep | in-progress | done | backlog
+assignee: jmkim
+service: max
+sprint: 2026-05
+type_yt: feature | task | bug
+---
+```
+
+상세: vault `wiki/guides/frontmatter-spec.md`.
 
 ARGUMENTS: $ARGUMENTS

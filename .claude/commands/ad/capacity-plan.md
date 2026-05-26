@@ -1,5 +1,7 @@
 # 가용 용량 분석 (capacity plan)
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 다음 달 개인 가용 맨데이 + 팀 dev 수용량 SP를 산출하고, `{YYMM}-planned` 태그 티켓 SP 합계와 비교하여 초과 여부를 판정합니다. 산식·양식 출처:
 - `docs/sprint/velocity-guide.md` (velocity 정의)
 - `docs/sprint/story-point-guide.md` (SP 환산)
@@ -256,7 +258,7 @@ AASM 환산 = {aasm_sp} × {weight} = {a}
 ## 저장 (옵션)
 
 - vault 경로: `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/`
-- 파일 경로: `wiki/capacity/{YYYY-MM}-{담당자}.md`
+- 파일 경로: `wiki/processes/capacity/{YYYY-MM}-{담당자}.md`
 - 파일 존재 시 덮어쓰기 전 사용자 확인
 - frontmatter:
 
@@ -302,7 +304,7 @@ status: draft
 
 ## 사용 예 (참조)
 
-- `wiki/capacity/2026-06-김정민.md` (Obsidian vault) — 5월→6월 환산 적용 사례. AASM 30% 시나리오로 6월 baseline 57 SP 산출.
+- `wiki/processes/capacity/2026-06-김정민.md` (Obsidian vault) — 5월→6월 환산 적용 사례. AASM 30% 시나리오로 6월 baseline 57 SP 산출.
 
 ## 주의
 
@@ -314,5 +316,17 @@ status: draft
 - `Story points` customField value는 int/float 직접 (dict 아님) — 파싱 시 타입 분기 필요
 - 박민석 등 SP 산정 누락 케이스 다수 — baseline 정확도 위해 산정 완료 권고
 - AASM 가중치는 팀장 지침. 변경 시 frontmatter `aasm_weight` 갱신
+
+## 저장 frontmatter
+
+```yaml
+---
+type: capacity-plan
+year: 2026
+month: 6
+assignees: [jmkim, heum2, pms0905, hyeryun]
+updated_at: 2026-05-27
+---
+```
 
 ARGUMENTS: $ARGUMENTS
