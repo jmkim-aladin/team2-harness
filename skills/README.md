@@ -22,6 +22,7 @@
 | 스킬 | 설명 | 인증 | 상태 |
 |------|------|------|------|
 | `ad:ticket` | YouTrack 티켓 생성 (5W1H) | YouTrack | 구현됨 |
+| `ad:work-prep` | 티켓번호/자유글 → 로컬 위키 노트 + daily 아젠다 + 브랜치 제안 | YouTrack | 구현됨 |
 | `ad:code-review` | GitHub PR 코드 리뷰 (팀 체크리스트 기반) | gh CLI | 구현됨 |
 | `ad:ticket-split` | 2일 초과 이슈 자식 분할 | YouTrack | 미구현 |
 | `ad:time-log` | 소요시간 기록 | YouTrack | 미구현 |
