@@ -43,7 +43,12 @@ python3 "$HARNESS_ROOT/tools/sync_harness_links.py" \
   --vault "$VAULT" --harness "$HARNESS_ROOT" $APPLY \
   2>&1 | grep -E "^(mode|created|replaced|inserted|skipped|missing|staged)" | sed 's/^/  /'
 
-# 3. lint 전체 — apply가 아니어도 항상 lint (검증성)
+# 3. promote 마커 분리 (있으면 적용)
+log "=== promote_notes ==="
+python3 "$HARNESS_ROOT/tools/promote_notes.py" --vault "$VAULT" --all $APPLY 2>&1 \
+  | grep -E "(promoted|total|ERR)" | sed 's/^/  /' || true
+
+# 4. lint 전체 — apply가 아니어도 항상 lint (검증성)
 log "=== lint_vault ==="
 if python3 "$HARNESS_ROOT/tools/lint_vault.py" --vault "$VAULT" --all 2>&1 | tail -3; then
   LINT_RC=0

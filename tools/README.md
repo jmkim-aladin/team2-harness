@@ -210,6 +210,34 @@ tools/vault_sweep.sh --apply   # 실 실행
 # 0 9 * * * /Users/jm/Documents/workspace/team2/tools/vault_sweep.sh --apply --quiet
 ```
 
+## promote_notes.py — promote 마커 분리 (Sub 8)
+
+ticket note 또는 임의 vault md 안에 다음 마커 작성 → 도구가 별도 노트로 promote.
+
+마커:
+```
+<!-- promote:{type}/{svc?}/{slug} title="제목" [domain="..."] -->
+{본문}
+<!-- /promote -->
+```
+
+지원 type:
+- `domain` → `services/{svc}/domains/{slug}.md` (또는 `domain="..."` 시 `domains/{domain}/{slug}.md`)
+- `analysis` → `services/{svc}/analysis/{slug}.md`
+- `decision` → `services/{svc}/decisions/{slug}.md`
+- `proposal` → `services/{svc}/proposals/{slug}.md`
+- `glossary` → `glossary/{slug}.md` (svc 무시)
+
+```bash
+# 단일 파일
+python3 tools/promote_notes.py --vault "$VAULT" --file wiki/processes/tickets/in-progress/dev2-XXXX.md
+
+# 전체 scan + 실 실행
+python3 tools/promote_notes.py --vault "$VAULT" --all --apply
+```
+
+원본 마커 영역 = `[[stem|title]]` wikilink 한 줄로 치환. 새 노트는 template frontmatter 자동 채움.
+
 ## archive_vault.py — hot/cold 자동 archive (Sub E)
 
 frontmatter `updated_at` 또는 `date`가 N일 전 이상이면 `archive/YYYY/`로 이동.
