@@ -85,3 +85,39 @@ python3 tools/migrate_vault.py --vault "$VAULT" --plan "...migration-plan.json" 
 - merge에서 dst 존재 시 자동 append + surface (사람 후속 검토)
 - git mv 실패(untracked) 시 mv + git add fallback
 - wikilink 충돌(동명 다른 새 이름) 시 변경 안 함 + surface
+
+## generate_vault_indexes.py — vault `_index.md` 자동 생성
+
+vault `services/{svc}/`, `processes/{type}/`, hub `_index.md`를 generated block 기반으로 생성·갱신.
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+
+# dry-run (기본)
+python3 tools/generate_vault_indexes.py --vault "$VAULT"
+
+# 실 실행
+python3 tools/generate_vault_indexes.py --vault "$VAULT" --apply
+
+# 부분 target
+python3 tools/generate_vault_indexes.py --vault "$VAULT" --target services --apply
+```
+
+### 동작
+
+- `<!-- generated:vault-index ... -->` 블록만 자동 갱신
+- 기존 _index.md에 generated block 없으면 skip + surface (사람 본문 보존)
+- 없는 _index.md는 신규 생성 (frontmatter + block + harness-link placeholder)
+- `--apply` 시 변경 파일만 git add
+
+### 산출
+
+- services/{svc}/_index.md
+- processes/{type}/_index.md
+- wiki/services/_index.md, wiki/processes/_index.md (hub)
+
+### 의존성
+
+Python 3.10+ stdlib만.
