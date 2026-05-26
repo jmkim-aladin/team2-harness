@@ -44,6 +44,8 @@
 
 판단 모호 시 기본값 = **Obsidian vault**.
 
+vault **내부** 결정 트리(어느 디렉터리에 둘지)는 vault 측 [`wiki/guides/document-placement.md`](obsidian://open?vault=team2&file=wiki%2Fguides%2Fdocument-placement) 참조. 본 문서가 정의하는 *경계*는 "어느 저장소에 둘지"까지이고, *vault 내부 분류*는 vault 측 가이드가 SoT.
+
 ## 핵심 경계 시그널
 
 | 시그널 | 위치 |
