@@ -121,3 +121,40 @@ python3 tools/generate_vault_indexes.py --vault "$VAULT" --target services --app
 ### 의존성
 
 Python 3.10+ stdlib만.
+
+## sync_harness_links.py — harness ↔ vault sync
+
+harness `catalog/*.yaml`, `policies/team-members.md`, `policies/*.md`를 vault 안 generated 블록에 반영.
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+REPO="/Users/jm/Documents/workspace/team2"
+
+# dry-run
+python3 tools/sync_harness_links.py --vault "$VAULT" --harness "$REPO"
+
+# 실 실행
+python3 tools/sync_harness_links.py --vault "$VAULT" --harness "$REPO" --apply
+
+# target 한정
+python3 tools/sync_harness_links.py --vault "$VAULT" --harness "$REPO" --target services --apply
+```
+
+### 갱신 대상 블록
+
+- `services/{svc}/_index.md` 의 `<!-- generated:harness-link -->`
+- `processes/team/_index.md` 의 `<!-- generated:team-members -->` (없으면 파일 신규 생성)
+- `wiki/_index.md` 의 `<!-- generated:policy-index -->` (없으면 본문 끝에 추가)
+
+### 동작
+
+- catalog yaml은 정규식 shallow 파싱 (service_id, name, type, status, owners.{primary,backup,additional,stakeholders})
+- team-members.md 정규직 표 파싱 + 이메일 → '한글이름 (id)' 매핑
+- policies/*.md 파일 listing + H1 다음 첫 행 = 1행 요약
+- 기존 _index.md에 해당 블록 없으면 skip + surface (services 케이스)
+
+### 의존성
+
+Python 3.10+ stdlib.
