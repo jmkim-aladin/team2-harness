@@ -224,6 +224,14 @@ def lint_file(rel: str, abs_path: Path) -> list[str]:
     return violations
 
 
+SKIP_DIRS = {"templates", "_audit"}  # placeholder 포함 또는 도구 자체 산출물
+
+
+def is_skip(rel: str) -> bool:
+    parts = Path(rel).parts
+    return any(d in parts for d in SKIP_DIRS)
+
+
 def collect_files(vault: Path, files: list[str] | None) -> list[Path]:
     if files:
         out = []
@@ -232,10 +240,20 @@ def collect_files(vault: Path, files: list[str] | None) -> list[Path]:
             if not p.is_absolute():
                 p = vault / f
             if p.exists() and p.suffix == ".md":
-                out.append(p)
+                try:
+                    rel = str(p.relative_to(vault))
+                except ValueError:
+                    rel = str(p)
+                if not is_skip(rel):
+                    out.append(p)
         return out
-    # all wiki/**/*.md
-    return sorted((vault / "wiki").rglob("*.md"))
+    # all wiki/**/*.md (skip templates/, _audit/)
+    out = []
+    for p in sorted((vault / "wiki").rglob("*.md")):
+        rel = str(p.relative_to(vault))
+        if not is_skip(rel):
+            out.append(p)
+    return out
 
 
 def main():
