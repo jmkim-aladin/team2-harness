@@ -71,7 +71,7 @@ curl -s -H "$AUTH" \
 | 모드 | 경로 |
 |------|------|
 | 티켓 모드 | `$LOCAL_WIKI_PATH/wiki/processes/tickets/in-progress/dev2-{NNNN}.md` (소문자, 4자리는 zero-pad 없이 그대로) |
-| 자유글 모드 | `$LOCAL_WIKI_PATH/wiki/tasks/{YYYY-MM-DD}-{kebab-slug}.md` |
+| 자유글 모드 | 서비스 추정되면 `$LOCAL_WIKI_PATH/wiki/services/{서비스ID}/proposals/{kebab-slug}.md`, 추정 불가 시 `$LOCAL_WIKI_PATH/wiki/processes/tickets/backlog/{kebab-slug}.md` (티켓 발의 권장) |
 
 기존 파일이 있으면 **읽어서** frontmatter `youtrack_synced_at`/`updated_at` 갱신만 하고, 본문은 보존한다. 사용자에게 "이미 있음 → 갱신" / "처음 생성" 인지 보고한다.
 
@@ -86,16 +86,16 @@ curl -s -H "$AUTH" \
 type: ticket
 title: DEV2-{NNNN} {YouTrack 제목}
 canonical_id: ticket:dev2-{nnnn}
-status: planned          # planned | in-progress | analyzed | done
-review_state: drafting   # drafting | needs-review | reviewed
+status: canonical
 updated_at: {YYYY-MM-DD}
-ticket: DEV2-{NNNN}
-youtrack_state: {YouTrack 상태}
-youtrack_resolved_at: {ISO 또는 빈값}
-youtrack_synced_at: "{YYYY-MM-DD}"
-execution_state: planned
+ticket_id: DEV2-{NNNN}
+ticket_status: in-progress    # auto-prep | in-progress | done | backlog
+assignee: {jmkim 등 id}
 service: {서비스ID}
-owner: {담당자 login}
+sprint: {YYYY-MM}
+type_yt: feature              # feature | task | bug
+youtrack_state: {YouTrack 상태}
+youtrack_synced_at: "{YYYY-MM-DD}"
 sources:
   - youtrack: {BASE}/issue/DEV2-{NNNN}
   - harness: $TEAM2_HARNESS_PATH/catalog/{서비스}.yaml
@@ -105,22 +105,39 @@ sources:
 
 #### 5.2 자유글 모드 frontmatter
 
+서비스 추정 시 `proposal` type, 추정 불가 시 `ticket` type (backlog status):
+
+서비스 추정 → `wiki/services/{서비스ID}/proposals/{slug}.md`:
 ```yaml
 ---
-type: task
-title: {kebab-slug → 사람용 제목}
-canonical_id: task:{YYYY-MM-DD}-{kebab-slug}
-status: planned
-review_state: drafting
+type: proposal
+title: {사람용 제목}
+canonical_id: proposal:{서비스ID}/{kebab-slug}
+status: draft
 updated_at: {YYYY-MM-DD}
-ticket:                    # 후속 티켓 생성 시 채움
-execution_state: planned
-service: {서비스ID 또는 미정}
-owner: jmkim
-sources:
-  - harness: $TEAM2_HARNESS_PATH/catalog/{서비스}.yaml
+service_id: {서비스ID}
+related_tickets: []          # 후속 티켓 발의 시 채움
 ---
 ```
+
+서비스 추정 불가 → `wiki/processes/tickets/backlog/{slug}.md`:
+```yaml
+---
+type: ticket
+title: {사람용 제목}
+canonical_id: ticket:backlog/{kebab-slug}
+status: draft
+updated_at: {YYYY-MM-DD}
+ticket_id: TBD
+ticket_status: backlog
+assignee: jmkim
+service: unknown
+sprint: {YYYY-MM}
+type_yt: task
+---
+```
+
+(둘 다 후속 `/ad:ticket`으로 정식 발의 권장)
 
 #### 5.3 본문 (두 모드 공통)
 
