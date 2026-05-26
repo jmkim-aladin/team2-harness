@@ -1,0 +1,89 @@
+# 알라딘 블로그/북플 (blog) 서비스 프로파일
+# 소스: /Users/jm/Documents/workspace/blog/blog-web
+
+service_id: blog
+name: 알라딘 블로그/북플 (blog)
+type: legacy
+description: |
+  알라딘 블로그(blog) 와 북플(bookple)을 함께 호스팅하는 ASP.NET Web Site 프로젝트.
+  하나의 코드베이스(`blog-web` 리포 / `BlogRelease/` 웹 루트) 안에서 블로그, 북플(앱/웹),
+  Town, Paper, MyAladdin, Chronicle, m/mobile, admin/mng, partner 등이 동거한다.
+  "블로그 ≒ 북플"로 인식되며, 북플 관련 도메인 객체는 blog 코드와 DB(`webcatalog`)를 공유한다.
+
+owners:
+  primary: "jmkim@aladin.co.kr"  # 김정민
+
+# 멀티 컴포넌트가 아닌 단일 Web Site 프로젝트
+components:
+  blog-web:
+    description: "블로그 + 북플 통합 ASP.NET Web Site (블로그/북플/Town/Paper/MyAladdin 등)"
+    runtime:
+      type: dotnet-framework
+      version: "4.8"
+      language: "C# / ASP.NET (Web Site, WebForms)"
+      hosting: iis
+    solution: "Blog.sln"
+    project_type: web-site  # NOT Web Application — App_Code/는 런타임 컴파일, .csproj 없음
+    structure:
+      - "BlogRelease/App_Code/ (런타임 컴파일, Bookple.cs ~325KB monolith 포함)"
+      - "BlogRelease/api, ajax, alajax (서버 RPC/REST)"
+      - "BlogRelease/blog, bookple, bp, town, Chronicle, m, mobile, admin, mng 등 URL area"
+      - "BlogRelease/Rewrite.config (IIS URL Rewrite — 라우팅 SoT)"
+      - "BlogRelease/Global.asax (Blog2Context 와이어업)"
+    scale:
+      csharp_loc: "약 8.2만"      # README CLOC 기준
+      aspnet_loc: "약 5.5만"
+      js_loc: "약 1.7만"
+    business_domains:
+      - "블로그 (서평/페이퍼/커뮤니티/마이블로그)"
+      - "북플 (앱·웹 SNS, 친구·팔로우·추천)"
+      - "Town/Paper/Chronicle/Partner 등 부가 도메인"
+
+repos:
+  blog-web: "https://github.com/AladinCommunication/blog-web"
+
+# DB 스크립트는 shopping 서비스와 동일 레포 공유 (webcatalog 스키마)
+# blog/bookple 전용 별도 db-script 레포는 없음 — shopping-db-script가 SoT
+data:
+  db_type: mssql
+  schemas:
+    - name: webcatalog
+      purpose: "블로그/북플/쇼핑 공통 스키마 (Customer, Bookple_*, Paper, WebItem 등 혼재)"
+      source_path_repo: "/Users/jm/Documents/workspace/shopping/shopping-db-script"
+      source_path_in_repo: "databases/webcatalog"
+  shared_db: true        # shopping/max/tobe 등 다른 서비스와 webcatalog 공유
+  direct_sp_write: true  # SP 기반 (레거시 .NET FW Web Site)
+  notes: |
+    SP/Function/Table 스크립트는 shopping-db-script 레포 안 webcatalog 스키마 폴더에 있다.
+    단, 블로그/북플 도메인 SP 중 일부(예: B2_FavoriteMyDictionary_Add)는 아직 export되지 않은
+    것이 있으며 운영 DB가 source of truth — 수정 전 export 또는 운영 DB 확인이 필요하다.
+    follow 관계 핵심 테이블: webcatalog.dbo.Bookple_FriendRelation (Custkey, refCustkey, Relativity).
+
+deploy:
+  ci: ".github/workflows/vsbuild.yml — self-hosted runner(blog-stage-runner)에서 git pull"
+  build: "MSBuild 없음 — ASP.NET 런타임 컴파일 (Web Site 프로젝트)"
+  takedown: "app_offline.htm.exclude / app_offline.htm.2.exclude → app_offline.htm 으로 rename"
+  notify: "Discord webhook (DISCORD_WEBHOOK_URL)"
+
+local_setup:
+  required_externals:
+    - "BlogRelease/Web.config, BlogRelease/bin/, BlogRelease/ucl_editor/ 는 git 제외 → \\\\stagenew\\BlogRelease 에서 복사"
+    - "git config core.hooksPath hooks (ucl_editor/ 커밋 차단 pre-commit 활성화)"
+  port: 61204
+
+youtrack:
+  project_key: DEV2
+
+risk:
+  change_frequency: ""    # TODO
+  incident_impact: ""     # TODO
+  data_coupling: high     # webcatalog 공유 + 블로그·북플 도메인 동거
+
+modernization:
+  track: wrap             # SP 확산 방지 + 도메인 분리 식별 우선
+  status: "not-started"
+  notes: |
+    블로그/북플 동거 + App_Code/Bookple.cs 단일 파일 ~325KB → 도메인 분해/모듈 분리가 선결 과제.
+    ucl_editor/ 는 pre-commit + CI에서 변경 차단 (외부 의존 영역).
+
+harness_status: "not-started"

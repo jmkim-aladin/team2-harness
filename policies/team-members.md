@@ -10,7 +10,7 @@
 | 디자이너 | 김정실 | jungsiri@aladin.co.kr | |
 | 디자이너 | 이유림 | design72@aladin.co.kr | |
 | 기획자 | 조윤주 | yj@aladin.co.kr | |
-| 백엔드 개발자 | 김정민 | jmkim@aladin.co.kr | max, tobe, naru, aasm, caravan, shopping, b2b-store (메인) |
+| 백엔드 개발자 | 김정민 | jmkim@aladin.co.kr | max, tobe, naru, aasm, caravan, shopping, b2b-store, blog (메인) |
 | 백엔드 개발자 | 안혜련 | hyeryun@aladin.co.kr | b2b-store |
 | 프론트엔드 개발자 | 조은흠 | heum2@aladin.co.kr | max, tobe, caravan (서브) |
 
@@ -34,6 +34,7 @@
 | b2b-store (B2B 전용몰) | 김정민 (jmkim) | 조은흠 (heum2) | 설계 단계, 안혜련 티켓 발행 참여 |
 | caravan (가상 대기열) | 김정민 (jmkim) | 조은흠 (heum2) | AS-IS: [DEV2-A-985](https://aladincommunication.youtrack.cloud/articles/DEV2-A-985/7JWM652865SYIOuMgOq4sOyXtCDshJzrsoQ) |
 | shopping (알라딘 쇼핑) | 김정민 (jmkim) | | 레거시 .NET FW + VB6 백오피스, B2B/C2C/중고매장 도메인 혼재 |
+| blog (블로그/북플) | 김정민 (jmkim) | | 레거시 ASP.NET Web Site, 블로그 + 북플 동거. DB 스크립트는 shopping-db-script(webcatalog) 공유 |
 
 ## 역할 정의
 
