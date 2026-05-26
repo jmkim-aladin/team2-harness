@@ -27,7 +27,7 @@
 | P1 | `naru` | 신규 인증/계정 기반 서비스, 향후 공통 인증 영향 | API/domain/contract 중심 |
 | P1 | `bazaar` | 신규 Kotlin/DDD/batch, 오픈마켓 연동 영향 | aggregate/event/batch 중심 |
 | P2 | `aasm` | 내부 관리성 신규 서비스, 독립 DB/S3 | config/secret/deploy 중심 |
-| P2 | `b2b-store` | 설계 중, 실행 코드보다 설계/도메인 결정 연결 중요 | design/ticket/domain decision 중심 |
+| P2 | `storefront` | 설계 중, 실행 코드보다 설계/도메인 결정 연결 중요 | design/ticket/domain decision 중심 |
 
 우선순위는 현재 스프린트, 장애, 티켓, 사용자 지시에 따라 바뀔 수 있다.
 

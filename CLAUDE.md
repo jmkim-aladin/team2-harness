@@ -6,7 +6,7 @@
 ## 구조
 
 - `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, AWS Secrets, 로컬 자격증명/Keychain, DB 이관/CDC, 위키 문서 언어/제목, 데이터 추출 요청)
-- `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, b2b-store, caravan, shopping)
+- `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, storefront, caravan, shopping, blog)
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
 - `.claude/commands/ad/` — 팀 스킬 (ticket, work-prep, code-review, kb-read, kb-list, kb-sync, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan)
 - `scripts/setup.sh` — 원커맨드 셋업
@@ -35,7 +35,7 @@
 | naru | new | [catalog/naru.yaml](./catalog/naru.yaml) |
 | bazaar | new | [catalog/bazaar.yaml](./catalog/bazaar.yaml) |
 | aasm | new | [catalog/aasm.yaml](./catalog/aasm.yaml) |
-| storefront (스토어프론트) | new (설계 중) | [catalog/b2b-store.yaml](./catalog/b2b-store.yaml) |
+| storefront (스토어프론트) | new (설계 중) | [catalog/storefront.yaml](./catalog/storefront.yaml) |
 | caravan (가상 대기열) | new | [catalog/caravan.yaml](./catalog/caravan.yaml) |
 | shopping (알라딘 쇼핑) | legacy | [catalog/shopping.yaml](./catalog/shopping.yaml) |
 | blog (블로그/북플) | legacy | [catalog/blog.yaml](./catalog/blog.yaml) |

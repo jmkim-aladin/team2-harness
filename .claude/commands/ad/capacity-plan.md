@@ -31,7 +31,7 @@
 | 김정민 | jmkim | BE |
 | 조은흠 | heum2 | FE |
 | 박민석 | pms0905 | BE/FE |
-| 안혜련 | hyeryun | BE (b2b-store) |
+| 안혜련 | hyeryun | BE (storefront) |
 
 > 팀 수용량 집계 시 위 dev role 정직원만 합산.
 > **제외 대상**:

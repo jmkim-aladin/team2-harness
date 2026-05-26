@@ -1,7 +1,7 @@
 # B2B 전용몰 서비스 프로파일
 # 상태: 설계 단계 (2026 Q2~)
 
-service_id: b2b-store
+service_id: storefront
 name: B2B 전용몰 (스토어프론트)
 type: new
 description: "B2B 파트너 전용 커머스 플랫폼 — 멀티 테넌시 기반 전시·주문·정산, 바자르/뉴빌링 연동"

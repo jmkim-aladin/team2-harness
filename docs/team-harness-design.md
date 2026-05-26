@@ -52,7 +52,7 @@ graph TD
     Policies --> P3["security / incident<br/>release / team-members"]
 
     Catalog --> C1["max · tobe (legacy)"]
-    Catalog --> C2["naru · bazaar · aasm<br/>b2b-store (new)"]
+    Catalog --> C2["naru · bazaar · aasm<br/>storefront (new)"]
 
     Templates --> T1["archetypes/<br/>(4개 서비스 원형)"]
     Templates --> T2["ticket-templates/"]
