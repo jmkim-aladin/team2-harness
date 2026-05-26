@@ -2,12 +2,12 @@
 
 ## 목적
 
-로컬 Obsidian 운영 지식 위키와 팀 하네스 문서가 서비스별로 바로 구분되고, 한국어 사용자가 검색/검토하기 쉬운 형태로 유지되도록 문서 언어와 제목 기준을 고정한다.
+Obsidian vault(운영·도메인 지식 SSOT)와 팀 하네스 문서가 서비스별로 바로 구분되고, 한국어 사용자가 검색/검토하기 쉬운 형태로 유지되도록 문서 언어와 제목 기준을 고정한다. 저장소 경계 정의는 [knowledge-base-policy.md](./knowledge-base-policy.md) 참조.
 
 ## 적용 범위
 
 - 팀 하네스의 `docs/`, `policies/`, `templates/`
-- 로컬 Obsidian 운영 지식 위키의 `wiki/`, `registry/`, `imports/`
+- Obsidian vault의 `wiki/`, `registry/`, `imports/` 등 운영업무·도메인 지식 트리
 - Ralph Loop, Graphify sidecar, DB 이관/CDC 진단, 레거시 현대화/DB 분리 분석 산출물
 - 자동 생성 인덱스, Queue, Register, Querybook 문서
 
@@ -46,7 +46,7 @@
 
 | 항목 | 규칙 | 예시 |
 |---|---|---|
-| 파일명 | `service_id` + 영문 kebab-case | `wiki/inventory/tobe-sp-inventory.md` |
+| 파일명 | `service_id` + 영문 kebab-case | vault `wiki/inventory/tobe-sp-inventory.md` |
 | H1/title | 한글 서비스명 + 한국어 제목 | `# 투비 SP 인벤토리` |
 | 링크 표시명 | H1과 같은 한국어 이름 권장 | `[[tobe-sp-inventory|투비 SP 인벤토리]]` |
 

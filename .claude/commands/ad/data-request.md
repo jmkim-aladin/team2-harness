@@ -131,6 +131,29 @@ fi
 {필요 시 파라미터 치환 방법}
 ```
 
+**경로 표기 규칙** — 본 레포는 팀 공용이므로 작업자 로컬 환경 정보를 노출하지 않는다.
+
+- ❌ 금지: 작업자 로컬 절대경로 (`/Users/jm/Documents/workspace/shopping/shop-db-script/...`, `~/Documents/workspace/...`)
+- ❌ 금지: 다른 레포의 상대 경로 (`shop-db-script/databases/WebCatalog/Tables/Foo.sql`, `dev1-web-aladin/WebRelease/...`)
+- ✓ 권장: **DB/스키마 식별자**로 표기 — `WebCatalog.dbo.Foo` (테이블), `WebCatalog.dbo.Foo_Get_SP` (SP), `Community.dbo.Bar` 등
+- ✓ 운영 도구 URL은 그대로 (예: `https://www.aladin.co.kr/aaintraweb/...`)
+- ✓ 외부 레포 식별이 꼭 필요하면 레포 루트 기준으로 단축: `shop-db-script` → `WebCatalog 스키마` / `dev1-web-aladin` → `AaIntraWeb 페이지` 식으로 의미 단위 표현
+
+예시:
+
+```diff
+- 추적 경로:
+- - `/Users/jm/Documents/workspace/shopping/dev1-web-aladin/WebRelease/AaIntraWeb/PageTracker/CustomerInBox.aspx.cs:52`
+- - `shop-db-script/databases/WebCatalog/StoredProcedures/Customer_InBox_Timeline_V2.sql:195-256`
+- - `shop-db-script/databases/WebCatalog/Tables/CustomerLoginHistory.sql`
++ 추적 경로:
++ - 운영 도구: `AaIntraWeb/PageTracker/CustomerInBox.aspx?QueryType=8` (https://www.aladin.co.kr/aaintraweb/...)
++ - SP: `WebCatalog.dbo.Customer_InBox_Timeline_V2` (QueryType=8 분기)
++ - 테이블: `WebCatalog.dbo.CustomerLoginHistory`
+```
+
+위키 노트(Obsidian vault `wiki/tickets/`)와 작업자 로컬 메모에는 정확한 파일경로·라인번호를 남겨도 되지만, **data-requests-dev2 레포 산출물에는 DB 식별자만 기록한다**.
+
 ### 4단계: 커밋
 
 ```bash
@@ -179,6 +202,7 @@ git push -u origin "$SPRINT"     # 신규 브랜치 첫 푸시
 - 커밋/푸시 전 사용자 확인 생략
 - 티켓 ID 없는 커밋
 - 정책에 없는 부서 폴더 신규 생성 (필요 시 사용자에게 확인)
+- 설명.md / query.sql 주석에 작업자 로컬 절대경로(`/Users/jm/...`, `~/Documents/...`) 또는 외부 레포 상대경로(`shop-db-script/...`, `dev1-web-aladin/...`) 기록 — DB 식별자(`WebCatalog.dbo.Foo`)로만 표기
 
 ## 예외 처리
 

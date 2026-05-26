@@ -109,6 +109,8 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 5. **관련 KB 문서가 있을 수 있으면** YouTrack KB API로 검색하여 참조 (선택적)
 6. **담당자 설정 (필수)**: `policies/team-members.md`에서 대상 서비스의 owner를 조회하고, 티켓 생성 후 **반드시** YouTrack REST API(`POST /api/issues/{idReadable}`)로 `Assignee` 커스텀 필드를 갱신한다. owner를 확인할 수 없으면 `jmkim` (김정민)을 기본 담당자로 설정한다. 담당자 미설정 티켓은 허용하지 않는다.
 7. **SP 산정**: `docs/sprint/story-point-guide.md` 기준표에 따라 산정 제안
+   - **Feature 유형은 SP `0` 고정** (하위 Task SP 합으로 Velocity 자연 집계, 중복 카운트 방지). Feature 생성 시 Story points 필드를 명시적으로 `0`으로 설정한다
+   - Task만 1/2/3/5/8/13 중에서 산정
 8. **Feature 기간 검증 (필수)**: 유형이 Feature일 때 아래 검증 수행
    - 예상 시작일 ~ 종료일(또는 하위 Task 완료 예상일)이 **7일 초과 시 생성 차단**
    - 사용자에게 분할 방안을 제안하고, 분할 후 재작성
@@ -123,9 +125,9 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 - **유형**: Task
 - **Phase**: Backlog (ToBe)
 - **우선순위**: 보통 (Normal)
-- **스토리 포인트**: {1|2|3|5|8} (산정 근거: 복잡도/불확실성/작업량)
+- **스토리 포인트**: {Task: 1|2|3|5|8|13 / Feature: 0 고정} (산정 근거: 복잡도/불확실성/작업량 — Feature는 하위 Task 합산이라 0)
 - **예상 시작 일자**: {YYYY-MM-DD}
-- **OKR 연계**: {팀 KR 번호} (해당 시, docs/okr/ 참조)
+- **OKR 연계**: {팀 KR 번호} (해당 시, Obsidian vault wiki/okr/ 참조)
 
 ---
 

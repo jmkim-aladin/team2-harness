@@ -14,16 +14,19 @@
 /ad:okr 동기화                   # YouTrack KB에서 최신 OKR 가져오기
 ```
 
-## 하네스 OKR 문서 위치
+## OKR 문서 위치 (Obsidian vault)
+
+OKR 문서는 Obsidian vault `wiki/okr/`에 저장된다. 절대 경로 베이스:
+`/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/okr/`
 
 | 파일 | 내용 | YouTrack KB |
 |------|------|-------------|
-| `docs/okr/2026-team-okr.md` | 팀 연간 OKR | REF-A-2175 |
-| `docs/okr/2026-q1-team-okr.md` | 1분기 팀 + 개인별 OKR | REF-A-2470 |
-| `docs/okr/2026-q2-team-okr.md` | 2분기 팀 OKR (담당자·월 배정) | REF-A-3122 |
-| `docs/okr/2026-q1-kimjeongmin.md` | 김정민 1분기 개인 OKR | REF-A-2566 |
-| `docs/okr/2026-q2-kimjeongmin.md` | 김정민 2분기 개인 OKR | - |
-| `docs/okr/2026-q2-joeunheum.md` | 조은흠 2분기 개인 OKR | - |
+| vault `wiki/okr/2026-team-okr.md` | 팀 연간 OKR | REF-A-2175 |
+| vault `wiki/okr/2026-q1-team-okr.md` | 1분기 팀 + 개인별 OKR | REF-A-2470 |
+| vault `wiki/okr/2026-q2-team-okr.md` | 2분기 팀 OKR (담당자·월 배정) | REF-A-3122 |
+| vault `wiki/okr/2026-q1-kimjeongmin.md` | 김정민 1분기 개인 OKR | REF-A-2566 |
+| vault `wiki/okr/2026-q2-kimjeongmin.md` | 김정민 2분기 개인 OKR | - |
+| vault `wiki/okr/2026-q2-joeunheum.md` | 조은흠 2분기 개인 OKR | - |
 
 ## 팀원 이니셜 매핑
 
@@ -44,7 +47,7 @@
 
 ### 조회 모드
 
-1. 사용자 요청에 맞는 `docs/okr/` 파일을 읽어서 표시
+1. 사용자 요청에 맞는 vault `wiki/okr/` 파일을 읽어서 표시
 2. 팀원 이름으로 요청 시 해당 팀원의 모든 분기 OKR을 조회
 3. 팀 OKR 조회 시 담당자 배정 현황도 함께 표시
 
@@ -52,7 +55,7 @@
 
 개인 OKR 초안 작성 시 아래 원칙을 따릅니다:
 
-1. **팀 OKR에서 담당 항목 추출**: `docs/okr/2026-q2-team-okr.md`에서 해당 팀원 이니셜이 배정된 KR 항목을 식별
+1. **팀 OKR에서 담당 항목 추출**: vault `wiki/okr/2026-q2-team-okr.md`에서 해당 팀원 이니셜이 배정된 KR 항목을 식별
 2. **1분기 OKR 참조**: 해당 팀원의 1분기 OKR 스타일과 역할 맥락을 참조
 3. **연간 OKR 정렬**: 연간 목표와의 연결고리 확인
 
@@ -95,7 +98,7 @@
 ### YouTrack 동기화 모드
 
 1. YouTrack KB API로 최신 OKR 문서 조회
-2. 하네스의 기존 문서와 비교
+2. vault `wiki/okr/`의 기존 문서와 비교
 3. 변경 사항이 있으면 업데이트
 
 ```bash

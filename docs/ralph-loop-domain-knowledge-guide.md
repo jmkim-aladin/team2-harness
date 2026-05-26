@@ -27,7 +27,7 @@
 
 Ralph Loop 산출물은 [wiki-document-language-and-title-policy.md](../policies/wiki-document-language-and-title-policy.md)를 따른다.
 
-- 파일명은 `wiki/domains/tobe-{domain}.md`, `wiki/inventory/web-aladin-{topic}.md`처럼 `service_id` 접두어와 `kebab-case.md`를 유지한다.
+- 파일명은 vault `wiki/domains/tobe-{domain}.md`, vault `wiki/inventory/web-aladin-{topic}.md`처럼 `service_id` 접두어와 `kebab-case.md`를 유지한다.
 - H1 제목과 `title` frontmatter는 `투비 ...`, `알라딘 웹 ...`처럼 한글 서비스 표시명으로 시작한다.
 - `Tobe SP Inventory`, `Web-Aladin Raw SQL Write Boundary`처럼 영어만 있는 제목은 새 산출물에 사용하지 않는다.
 - 공통 Queue/Register/Index도 `운영 위키 발견 큐`, `운영 위키 조치 등록부`처럼 한국어 범위 접두어를 둔다.

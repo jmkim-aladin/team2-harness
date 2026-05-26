@@ -240,3 +240,66 @@ modernization:
     - "5. SP를 서비스 코드로 점진 이관"
 
 harness_status: "not-started"
+
+infrastructure:
+  # 출처: 개발3팀 양우석 (wsyang@aladin.co.kr), 2026-05-19 메일
+  # 제목: [개발3팀] 만권당 API 인프라 구축 정보 공유 건 (개발계)
+  # 대상: max-api 레포 deploy/max-dev-core 브랜치 (.NET Core 전환, 별도 레포 아님)
+  dev:
+    aws_account: aladin-aws-max-dev
+    components:
+      max-api-core:
+        repo: "AladinCommunication/max-api"
+        branch: "deploy/max-dev-core"
+        description: "만권당 API Core (.NET Core) — max-api(.NET Framework 4.8)의 .NET Core 전환 브랜치 산출물"
+        workflow: "API G/W → VPC Link V2 → ALB Internal → EKS Pod → 연계 시스템"
+        api_gateway:
+          domain: "api.max.dev.aladin.co.kr/max-core"
+          full_domain: true
+        ci_cd: "CodePipeline → CodeBuild → ECR → ArgoCD → EKS Pod"
+        logs:
+          cloudwatch_log_group: "/aws/containerinsights/eks-max-dev/aladin"
+          purpose: "Application Logs"
+        network:
+          eks_subnets_cidr: "10.68.12.0/23"
+    notes:
+      - "개발/운영 통합 구성도 (운영은 추후 구축 예정)"
+      - "서비스 간 통신이기에 방화벽 정책 사용 기간은 1년 이상으로 설정 권고"
+    firewall_rules:
+      # 개발계 방화벽 정책 신청 대상 (8개 룰)
+      # 자세한 신청서 초안: Obsidian vault wiki/proposals/max-api-core-dev-firewall-application.md
+      - id: "Rule 01"
+        src: "max.dev.aladin.co.kr"
+        dst: "api.max.dev.aladin.co.kr/core"
+        proto_port: "TCP/443"
+      - id: "Rule 02"
+        src: "sync.ebook.dev.aladin.co.kr"
+        dst: "api.max.dev.aladin.co.kr/core"
+        proto_port: "TCP/443"
+      - id: "Rule 03"
+        src: "1.232.255.128/27 (고객센터)"
+        dst: "api.max.dev.aladin.co.kr/core"
+        proto_port: "TCP/443"
+      - id: "Rule 04"
+        src: "110.14.75.192/27 (물류센터)"
+        dst: "api.max.dev.aladin.co.kr/core"
+        proto_port: "TCP/443"
+      - id: "Rule 05"
+        src: "10.68.12.0/23 (eks max dev subnets)"
+        dst: "CoolDev, LegoDev"
+        proto_port: "TCP/1433"
+      - id: "Rule 06"
+        src: "api.max.dev.aladin.co.kr/core"
+        dst: "ai.search.dev.aladin.co.kr/mall"
+        proto_port: "TCP/443"
+      - id: "Rule 07"
+        src: "10.68.12.0/23 (eks max dev subnets)"
+        dst: "mall.dev.aladin.co.kr"
+        proto_port: "TCP/443"
+      - id: "Rule 08"
+        src: "10.68.12.0/23 (eks max dev subnets)"
+        dst: "redis-cluster-68-max-dev (Valkey)"
+        proto_port: "TCP/6379"
+  prod:
+    status: "not-built"
+    note: "운영 인프라는 추후 구축 예정"

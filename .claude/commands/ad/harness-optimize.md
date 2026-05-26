@@ -25,7 +25,7 @@
 | **이월 절차** | `docs/sprint/plan-change-process.md` | `docs/sprint/ticket-guide.md` 7항 (요약+링크만) |
 | **맨데이 배분** | `docs/sprint/sprint-planning-overview.md` | - |
 | **전사 상태 플로우** | `youtrack/ticket-guide.md` | `docs/sprint/ticket-guide.md` 8항 (링크만) |
-| **OKR (팀/개인)** | `docs/okr/` | `.claude/commands/ad/okr.md` |
+| **OKR (팀/개인)** | Obsidian vault `wiki/okr/` | `.claude/commands/ad/okr.md` |
 | **서비스 프로파일** | `catalog/*.yaml` | `.claude/commands/ad/ticket.md` |
 | **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md` |
 
@@ -46,7 +46,6 @@
 ├── .claude/commands/ad/okr.md           (OKR 스킬)
 ├── templates/ticket-templates/feature.md (Feature 템플릿)
 ├── templates/ticket-templates/bugfix.md  (Bugfix 템플릿)
-├── docs/okr/*.md                        (OKR 문서들)
 └── CLAUDE.md                            (하네스 진입점)
 ```
 
@@ -112,5 +111,39 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-312
 - [ ] 구조 설명 최신화 여부
 - [ ] 스킬 목록 최신화 여부
 ```
+
+## repo↔vault 드리프트 점검
+
+새 항목이 잘못된 저장소에 들어갔는지 정기 점검한다.
+
+### repo에서 vault 성격 파일 surface
+
+```bash
+REPO="/Users/jm/Documents/workspace/team2"
+# 운영업무/도메인/회의/티켓/OKR 성격 후보
+find "$REPO/docs" -maxdepth 2 -type f -name '*.md' \
+  | grep -Ev 'sprint/|superpowers/|setup-guide|harness-guide|gstack-usage-guide|analysis-guides|wiki-navigation-guide|service-harness-setup|team-harness-design|db-migration|legacy-modernization|ralph-loop' \
+  | grep -E 'DEV2-|domain-guide|firewall-application|okr|meeting'
+```
+
+### vault에서 정책/템플릿 성격 파일 surface
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+find "$VAULT/wiki" -type f -name '*.md' \
+  | grep -E 'policy|template|catalog|skill|harness-setup' \
+  | head -20
+```
+
+### 중복 제목 surface
+
+```bash
+REPO="/Users/jm/Documents/workspace/team2"
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+(find "$REPO/docs" "$REPO/policies" "$REPO/templates" "$REPO/catalog" -name '*.md' -exec basename {} \; ;
+ find "$VAULT/wiki" -name '*.md' -exec basename {} \;) | sort | uniq -d
+```
+
+매치되는 파일은 사용자와 함께 어느 쪽이 SSOT인지 결정 후 반대편 제거.
 
 ARGUMENTS: $ARGUMENTS
