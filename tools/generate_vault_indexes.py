@@ -141,8 +141,20 @@ def render_hub_index_block(vault: Path, hub: str) -> str:
     )
 
 
+def llm_hint_block(scope: str, examples: str = "") -> str:
+    """LLM이 디렉터리 의도를 빠르게 파악하도록 hint 블록 삽입."""
+    body = f"이 디렉터리는 {scope}."
+    if examples:
+        body += f" 예: {examples}"
+    return f"<!-- llm-hint -->\n{body}\n<!-- /llm-hint -->"
+
+
 def new_service_index(svc: str, block: str) -> str:
     today_s = today()
+    hint = llm_hint_block(
+        f"`{svc}` 서비스의 도메인·해석·결정·개선·운영 절차 산출물",
+        "domains/, analysis/, decisions/, proposals/, processes/"
+    )
     return (
         f"---\n"
         f"type: service-index\n"
@@ -153,6 +165,7 @@ def new_service_index(svc: str, block: str) -> str:
         f"service_id: {svc}\n"
         f"---\n\n"
         f"# {svc}\n\n"
+        f"{hint}\n\n"
         f"{block}\n\n"
         f"<!-- generated:harness-link source=team2/catalog/{svc}.yaml updated=N/A -->\n"
         f"(Sub 5에서 채움)\n"
@@ -162,6 +175,18 @@ def new_service_index(svc: str, block: str) -> str:
 
 def new_process_index(process_type: str, block: str) -> str:
     today_s = today()
+    scope_map = {
+        "daily": "팀 daily 노트 (YYYY-MM-DD.md). 그날 아젠다·진행·미해결 기록",
+        "weekly": "주간업무 보고서 초안·확정본 (YYYY-MM-NW-{user}.md)",
+        "meetings": "팀 회의록 (YYYY-MM-DD-topic.md). KB 아님",
+        "tickets": "DEV2-* 티켓 산출물. status별 (auto-prep|in-progress|done|backlog|archive)",
+        "okr": "분기/연간 OKR. 팀·개인",
+        "incidents": "장애 사례·post-mortem",
+        "capacity": "월별 가용 맨데이·velocity 스냅샷",
+        "sprint": "스프린트 운영·마감·회고 산출물",
+        "team": "팀 멤버 메타 (harness team-members.md 미러)",
+    }
+    hint = llm_hint_block(scope_map.get(process_type, f"{process_type} 프로세스 산출물"))
     return (
         f"---\n"
         f"type: process-index\n"
@@ -171,6 +196,7 @@ def new_process_index(process_type: str, block: str) -> str:
         f"updated_at: {today_s}\n"
         f"---\n\n"
         f"# {process_type}\n\n"
+        f"{hint}\n\n"
         f"{block}\n"
     )
 
@@ -179,6 +205,11 @@ def new_hub_index(hub: str, block: str) -> str:
     today_s = today()
     title_map = {"services": "서비스", "processes": "프로세스"}
     title = title_map.get(hub, hub)
+    hint_map = {
+        "services": "서비스별 도메인·해석·결정 진입점. service_id = harness catalog/{name}.yaml의 service_id",
+        "processes": "팀 업무 프로세스 진입점 (sprint·okr·weekly·daily·meetings·tickets·incidents·capacity·team)",
+    }
+    hint = llm_hint_block(hint_map.get(hub, f"{title} 인덱스"))
     return (
         f"---\n"
         f"type: index\n"
@@ -188,11 +219,35 @@ def new_hub_index(hub: str, block: str) -> str:
         f"updated_at: {today_s}\n"
         f"---\n\n"
         f"# {title}\n\n"
+        f"{hint}\n\n"
         f"{block}\n"
     )
 
 
-def update_existing(text: str, block: str, file_kind: str) -> tuple[str, str]:
+def ensure_llm_hint(text: str, hint: str) -> str:
+    """llm-hint 블록이 없으면 H1 뒤에 삽입. 있으면 보전."""
+    if "<!-- llm-hint -->" in text:
+        return text
+    # H1 다음 빈줄 뒤에 삽입
+    lines = text.splitlines(keepends=True)
+    out: list[str] = []
+    inserted = False
+    for i, line in enumerate(lines):
+        out.append(line)
+        if not inserted and line.startswith("# "):
+            # 다음 빈 줄 한 개 통과 후 삽입
+            out.append("\n")
+            out.append(hint + "\n")
+            out.append("\n")
+            inserted = True
+    if not inserted:
+        # H1 없으면 끝에 append
+        out.append("\n" + hint + "\n")
+    return "".join(out)
+
+
+def update_existing(text: str, block: str, file_kind: str,
+                     llm_hint: str | None = None) -> tuple[str, str]:
     """기존 파일에 generated 블록 교체 또는 추가.
 
     Returns (new_text, status). status: replaced | inserted | skipped
@@ -207,11 +262,16 @@ def update_existing(text: str, block: str, file_kind: str) -> tuple[str, str]:
             count=1,
             flags=re.MULTILINE,
         )
+        # llm-hint 부재 시 보강
+        if llm_hint:
+            new_text = ensure_llm_hint(new_text, llm_hint)
         return new_text, "replaced"
     # 본문이 거의 비어있으면 inserted
     if len(text.strip().splitlines()) <= 5:
         # frontmatter만 있는 수준 — block을 본문 끝에 추가
         new_text = text.rstrip() + "\n\n" + block + "\n"
+        if llm_hint:
+            new_text = ensure_llm_hint(new_text, llm_hint)
         return new_text, "inserted"
     # 본문이 있고 generated block 없으면 skip + surface
     return text, "skipped"
@@ -220,9 +280,13 @@ def update_existing(text: str, block: str, file_kind: str) -> tuple[str, str]:
 def process_service(vault: Path, svc: str, dry_run: bool) -> dict:
     idx_path = vault / "wiki/services" / svc / "_index.md"
     block = render_service_index_block(vault, svc)
+    hint = llm_hint_block(
+        f"`{svc}` 서비스의 도메인·해석·결정·개선·운영 절차 산출물",
+        "domains/, analysis/, decisions/, proposals/, processes/"
+    )
     if idx_path.exists():
         text = idx_path.read_text(encoding="utf-8")
-        new_text, status = update_existing(text, block, "service")
+        new_text, status = update_existing(text, block, "service", llm_hint=hint)
         if status == "skipped":
             return {"file": str(idx_path.relative_to(vault)),
                     "status": "skipped",
@@ -239,9 +303,21 @@ def process_service(vault: Path, svc: str, dry_run: bool) -> dict:
 def process_process(vault: Path, process_type: str, dry_run: bool) -> dict:
     idx_path = vault / "wiki/processes" / process_type / "_index.md"
     block = render_process_index_block(vault, process_type)
+    scope_map = {
+        "daily": "팀 daily 노트 (YYYY-MM-DD.md). 그날 아젠다·진행·미해결 기록",
+        "weekly": "주간업무 보고서 초안·확정본",
+        "meetings": "팀 회의록. KB 아님",
+        "tickets": "DEV2-* 티켓 산출물. status별 (auto-prep|in-progress|done|backlog|archive)",
+        "okr": "분기/연간 OKR. 팀·개인",
+        "incidents": "장애 사례·post-mortem",
+        "capacity": "월별 가용 맨데이·velocity 스냅샷",
+        "sprint": "스프린트 운영·마감·회고",
+        "team": "팀 멤버 메타 (harness team-members.md 미러)",
+    }
+    hint = llm_hint_block(scope_map.get(process_type, f"{process_type} 산출물"))
     if idx_path.exists():
         text = idx_path.read_text(encoding="utf-8")
-        new_text, status = update_existing(text, block, "process")
+        new_text, status = update_existing(text, block, "process", llm_hint=hint)
         if status == "skipped":
             return {"file": str(idx_path.relative_to(vault)),
                     "status": "skipped",
@@ -258,9 +334,14 @@ def process_process(vault: Path, process_type: str, dry_run: bool) -> dict:
 def process_hub(vault: Path, hub: str, dry_run: bool) -> dict:
     idx_path = vault / "wiki" / hub / "_index.md"
     block = render_hub_index_block(vault, hub)
+    hint_map = {
+        "services": "서비스별 도메인·해석·결정 진입점. service_id = harness catalog/{name}.yaml의 service_id",
+        "processes": "팀 업무 프로세스 진입점 (sprint·okr·weekly·daily·meetings·tickets·incidents·capacity·team)",
+    }
+    hint = llm_hint_block(hint_map.get(hub, f"{hub} 인덱스"))
     if idx_path.exists():
         text = idx_path.read_text(encoding="utf-8")
-        new_text, status = update_existing(text, block, "hub")
+        new_text, status = update_existing(text, block, "hub", llm_hint=hint)
         if status == "skipped":
             return {"file": str(idx_path.relative_to(vault)),
                     "status": "skipped",

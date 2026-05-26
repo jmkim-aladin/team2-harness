@@ -158,3 +158,66 @@ python3 tools/sync_harness_links.py --vault "$VAULT" --harness "$REPO" --target 
 ### 의존성
 
 Python 3.10+ stdlib.
+
+## lint_vault.py — vault 5룰 lint (Sub A)
+
+vault 안 md를 5 룰로 검사. pre-commit hook + 정기 sweep 호출 진입점.
+
+룰:
+1. frontmatter `type` 필수 + type별 필수 필드
+2. 파일 위치 = type 기반 결정 트리 일치
+3. 파일명 = kebab-case, 서비스 prefix 금지
+4. file size warn (≥500 line)
+5. `_index.md` 안 `<!-- llm-hint -->` 블록 의무
+
+```bash
+# 전체
+python3 tools/lint_vault.py --vault "$VAULT" --all
+
+# staged diff (pre-commit)
+python3 tools/lint_vault.py --vault "$VAULT" --files wiki/foo.md
+```
+
+exit 0 = 통과, 1 = 위반.
+
+## import_from_archive.py — 옛 vault → 새 vault (Sub C)
+
+team2-archive에서 단일 파일을 새 team2 vault로 selective import.
+
+```bash
+# 매치 파일 찾기
+python3 tools/import_from_archive.py --archive ARCHIVE --vault VAULT --find dev2-5749
+
+# dry-run dst 확인
+python3 tools/import_from_archive.py --archive ARCHIVE --vault VAULT --file wiki/tickets/dev2-5749.md
+
+# 실 복사
+python3 tools/import_from_archive.py --archive ARCHIVE --vault VAULT --file ... --apply
+```
+
+dst 위치는 src frontmatter type 기준 자동 결정. 서비스 prefix 자동 제거.
+
+## vault_sweep.sh — 정기 sweep (Sub D)
+
+generate_vault_indexes + sync_harness_links + lint 일괄.
+
+```bash
+# 수동
+tools/vault_sweep.sh           # dry-run
+tools/vault_sweep.sh --apply   # 실 실행
+
+# cron 권장
+# 0 9 * * * /Users/jm/Documents/workspace/team2/tools/vault_sweep.sh --apply --quiet
+```
+
+## archive_vault.py — hot/cold 자동 archive (Sub E)
+
+frontmatter `updated_at` 또는 `date`가 N일 전 이상이면 `archive/YYYY/`로 이동.
+
+대상: `processes/{tickets/done, daily, meetings, weekly}/*`. okr·incidents·capacity는 영구 보관.
+
+```bash
+python3 tools/archive_vault.py --vault "$VAULT" --days 180
+python3 tools/archive_vault.py --vault "$VAULT" --days 180 --apply
+```
+
