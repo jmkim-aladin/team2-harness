@@ -3,11 +3,11 @@
 
 spec: docs/superpowers/specs/2026-05-27-vault-index-generator-design.md
 
-생성 대상:
-- wiki/services/{svc}/_index.md
-- wiki/processes/{type}/_index.md
-- wiki/services/_index.md (hub)
-- wiki/processes/_index.md (hub)
+생성 대상 (Tolaria 호환 네이밍):
+- wiki/services/{svc}/{svc}.md (type: service)
+- wiki/processes/{type}/{type}-index.md (type: index)
+- wiki/services/services-index.md (hub, type: index)
+- wiki/processes/processes-index.md (hub, type: index)
 
 generated:vault-index 블록만 자동 갱신, 사람 작성 본문은 보존.
 """
@@ -46,7 +46,7 @@ def list_md_files(dir: Path, sort_by_date_desc: bool = False) -> list[Path]:
     if not dir.exists():
         return []
     files = [p for p in dir.iterdir() if p.is_file() and p.suffix == ".md"
-             and p.name != "_index.md"]
+             and not p.name.endswith("-index.md")]
     if sort_by_date_desc:
         files.sort(key=lambda p: p.stem, reverse=True)
     else:
@@ -55,13 +55,15 @@ def list_md_files(dir: Path, sort_by_date_desc: bool = False) -> list[Path]:
 
 
 def list_subdir_indexes(dir: Path) -> list[tuple[str, Path]]:
-    """디렉터리 안 sub-dir의 _index.md 목록."""
+    """디렉터리 안 sub-dir의 index 노트 목록. ({name}-index.md 또는 서비스 {name}.md)."""
     if not dir.exists():
         return []
     out = []
     for d in sorted(dir.iterdir()):
         if d.is_dir():
-            idx = d / "_index.md"
+            idx = d / f"{d.name}-index.md"
+            if not idx.exists():
+                idx = d / f"{d.name}.md"  # 서비스 엔티티
             out.append((d.name, idx if idx.exists() else None))
     return out
 
@@ -81,9 +83,9 @@ def render_service_index_block(vault: Path, svc: str) -> str:
                 lines.append(f"- [[{f.stem}]]")
             for name, idx in sub_idx:
                 if idx is not None:
-                    lines.append(f"- [[{cat}/{name}/_index|{name}]]")
+                    lines.append(f"- [[{idx.stem}|{name}]]")
                 else:
-                    lines.append(f"- [[{cat}/{name}/]] (인덱스 없음)")
+                    lines.append(f"- {name}/ (인덱스 없음)")
         sections.append("\n".join(lines))
     body = "\n\n".join(sections)
     today_s = today()
@@ -107,9 +109,9 @@ def render_process_index_block(vault: Path, process_type: str) -> str:
             lines.append(f"- [[{f.stem}]]")
         for name, idx in sub_idx:
             if idx is not None:
-                lines.append(f"- [[{name}/_index|{name}]]")
+                lines.append(f"- [[{idx.stem}|{name}]]")
             else:
-                lines.append(f"- [[{name}/]] (인덱스 없음)")
+                lines.append(f"- {name}/ (인덱스 없음)")
     body = "\n".join(lines)
     today_s = today()
     return (
@@ -129,9 +131,9 @@ def render_hub_index_block(vault: Path, hub: str) -> str:
     else:
         for name, idx in sub_idx:
             if idx is not None:
-                lines.append(f"- [[{hub}/{name}/_index|{name}]]")
+                lines.append(f"- [[{idx.stem}|{name}]]")
             else:
-                lines.append(f"- [[{hub}/{name}/]] (인덱스 없음)")
+                lines.append(f"- {name}/ (인덱스 없음)")
     body = "\n".join(lines)
     today_s = today()
     return (
@@ -157,7 +159,7 @@ def new_service_index(svc: str, block: str) -> str:
     )
     return (
         f"---\n"
-        f"type: service-index\n"
+        f"type: service\n"
         f"title: {svc}\n"
         f"canonical_id: service:{svc}\n"
         f"status: canonical\n"
@@ -189,7 +191,7 @@ def new_process_index(process_type: str, block: str) -> str:
     hint = llm_hint_block(scope_map.get(process_type, f"{process_type} 프로세스 산출물"))
     return (
         f"---\n"
-        f"type: process-index\n"
+        f"type: index\n"
         f"title: {process_type}\n"
         f"canonical_id: process:{process_type}\n"
         f"status: canonical\n"
@@ -278,7 +280,7 @@ def update_existing(text: str, block: str, file_kind: str,
 
 
 def process_service(vault: Path, svc: str, dry_run: bool) -> dict:
-    idx_path = vault / "wiki/services" / svc / "_index.md"
+    idx_path = vault / "wiki/services" / svc / f"{svc}.md"
     block = render_service_index_block(vault, svc)
     hint = llm_hint_block(
         f"`{svc}` 서비스의 도메인·해석·결정·개선·운영 절차 산출물",
@@ -301,7 +303,7 @@ def process_service(vault: Path, svc: str, dry_run: bool) -> dict:
 
 
 def process_process(vault: Path, process_type: str, dry_run: bool) -> dict:
-    idx_path = vault / "wiki/processes" / process_type / "_index.md"
+    idx_path = vault / "wiki/processes" / process_type / f"{process_type}-index.md"
     block = render_process_index_block(vault, process_type)
     scope_map = {
         "daily": "팀 daily 노트 (YYYY-MM-DD.md). 그날 아젠다·진행·미해결 기록",
@@ -332,7 +334,7 @@ def process_process(vault: Path, process_type: str, dry_run: bool) -> dict:
 
 
 def process_hub(vault: Path, hub: str, dry_run: bool) -> dict:
-    idx_path = vault / "wiki" / hub / "_index.md"
+    idx_path = vault / "wiki" / hub / f"{hub}-index.md"
     block = render_hub_index_block(vault, hub)
     hint_map = {
         "services": "서비스별 도메인·해석·결정 진입점. service_id = harness catalog/{name}.yaml의 service_id",
