@@ -4,9 +4,9 @@
 룰:
 1. frontmatter `type` 필수 + type별 필수 필드
 2. 파일 위치 = type 기반 결정 트리 일치
-3. 파일명 = kebab-case, 서비스 prefix 금지 (basename uniqueness)
+3. 파일명 = kebab-case, 서비스 prefix 금지 (단 {name}-index.md는 stem uniqueness 위해 허용)
 4. file size warn (≥500 line)
-5. _index.md 안 <!-- llm-hint --> 블록 의무
+5. {name}-index.md 안 <!-- llm-hint --> 블록 의무
 
 Usage:
     # 전체 vault lint (정기 sweep)
@@ -68,20 +68,15 @@ TYPE_RULES: dict[str, dict] = {
         "location": r"^wiki/processes/capacity/",
         "filename": r"^\d{4}-\d{2}(-[a-z0-9-]+)?\.md$",
     },
-    "service-index": {
-        "required": ["service_id"],
-        "location": r"^wiki/services/[a-z0-9-]+/_index\.md$",
-        "filename": r"^_index\.md$",
-    },
-    "domain-index": {
-        "required": ["service_id", "domain"],
-        "location": r"^wiki/services/[a-z0-9-]+/domains/[a-z0-9-]+/_index\.md$",
-        "filename": r"^_index\.md$",
-    },
-    "process-index": {
+    "sprint": {
         "required": [],
-        "location": r"^wiki/processes/[a-z0-9-]+/_index\.md$",
-        "filename": r"^_index\.md$",
+        "location": r"^wiki/processes/sprint/",
+        "filename": r"^[a-z0-9-]+\.md$",
+    },
+    "domain": {
+        "required": ["service_id"],
+        "location": r"^wiki/services/[a-z0-9-]+/domains/",
+        "filename": r"^[a-z0-9-]+\.md$",
     },
     "analysis": {
         "required": ["service_id"],
@@ -115,8 +110,13 @@ TYPE_RULES: dict[str, dict] = {
     },
     "index": {
         "required": [],
-        "location": r"^wiki/(_index\.md|.+/_index\.md)$",
-        "filename": r"^_index\.md$",
+        "location": r"^wiki/.*-index\.md$",
+        "filename": r"^[a-z0-9-]+-index\.md$",
+    },
+    "Type": {  # Tolaria 타입정의 문서 (vault root)
+        "required": [],
+        "location": r"^[a-z0-9-]+\.md$",
+        "filename": r"^[a-z0-9-]+\.md$",
     },
     "audit-report": {
         "required": [],
@@ -203,8 +203,8 @@ def lint_file(rel: str, abs_path: Path) -> list[str]:
         violations.append(
             f"{rel}: type=`{t}` 파일명 패턴 위반. 기대=`{rules['filename']}`, 실제=`{fname}`"
         )
-    # 3b. 서비스 prefix 금지 (_index 등 예외 제외)
-    if fname != "_index.md" and fname != "_log.md":
+    # 3b. 서비스 prefix 금지 (단 {name}-index.md는 stem uniqueness 위해 허용)
+    if not fname.endswith("-index.md") and fname != "_log.md":
         for p in SERVICE_PREFIX:
             if fname.startswith(p):
                 violations.append(
@@ -219,11 +219,11 @@ def lint_file(rel: str, abs_path: Path) -> list[str]:
             f"{rel}: WARN — {line_count} lines (≥{SIZE_WARN_LINES}). atomic 분리 권장"
         )
 
-    # 5. _index.md llm-hint 블록
-    if fname == "_index.md":
+    # 5. {name}-index.md llm-hint 블록
+    if fname.endswith("-index.md"):
         if "<!-- llm-hint -->" not in text or "<!-- /llm-hint -->" not in text:
             violations.append(
-                f"{rel}: _index.md 안 `<!-- llm-hint -->` ~ `<!-- /llm-hint -->` 블록 의무 누락"
+                f"{rel}: {fname} 안 `<!-- llm-hint -->` ~ `<!-- /llm-hint -->` 블록 의무 누락"
             )
 
     return violations
