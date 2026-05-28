@@ -78,6 +78,11 @@ TYPE_RULES: dict[str, dict] = {
         "location": r"^wiki/services/[a-z0-9-]+/domains/",
         "filename": r"^[a-z0-9-]+\.md$",
     },
+    "service": {  # 서비스 home 엔티티 (그래프 허브)
+        "required": ["service_id"],
+        "location": r"^wiki/services/[a-z0-9-]+/[a-z0-9-]+\.md$",
+        "filename": r"^[a-z0-9-]+\.md$",
+    },
     "analysis": {
         "required": ["service_id"],
         "location": r"^wiki/services/[a-z0-9-]+/analysis/",
