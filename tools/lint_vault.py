@@ -33,6 +33,11 @@ TYPE_RULES: dict[str, dict] = {
         "location": r"^wiki/processes/tickets/",
         "filename": r"^dev2-\d+\.md$",
     },
+    "worksheet": {
+        "required": ["ticket_id", "target_yearmonth"],
+        "location": r"^wiki/processes/tickets/",
+        "filename": r"^dev2-\d+-worksheet-\d+\.md$",
+    },
     "weekly-report": {
         "required": ["year", "month", "week_in_month", "assignee"],
         "location": r"^wiki/processes/weekly/",
