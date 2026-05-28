@@ -49,9 +49,10 @@ TYPE_RULES: dict[str, dict] = {
         "filename": r"^\d{4}-\d{2}-\d{2}\.md$",
     },
     "meeting": {
-        "required": ["date"],
+        # filename: 단일일자(YYYY-MM-DD) 또는 월간(YYYY-MM) 모두 허용. 일자는 date/meeting_date에 명시.
+        "required": [],
         "location": r"^wiki/processes/meetings/",
-        "filename": r"^\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.md$",
+        "filename": r"^\d{4}-\d{2}(-\d{2})?-[a-z0-9-]+\.md$",
     },
     "okr": {
         "required": ["year", "quarter", "scope"],
