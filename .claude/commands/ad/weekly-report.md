@@ -289,7 +289,7 @@ type: ticket
 ticket_id: DEV2-XXXX
 ticket_status: auto-prep | in-progress | done | backlog
 assignee: jmkim
-service: max
+service: "[[max]]"
 sprint: 2026-05
 type_yt: feature | task | bug
 ---

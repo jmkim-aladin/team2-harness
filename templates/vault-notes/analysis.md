@@ -4,7 +4,7 @@ title: {{service_id}} {{title}}
 canonical_id: analysis:{{service_id}}/{{slug}}
 status: draft
 updated_at: {{date}}
-service_id: {{service_id}}
+service_id: "[[{{service_id}}]]"
 related_domains: []
 related_tickets: []
 ---

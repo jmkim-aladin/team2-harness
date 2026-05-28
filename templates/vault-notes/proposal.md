@@ -4,7 +4,7 @@ title: {{service_id}} {{title}}
 canonical_id: proposal:{{service_id}}/{{slug}}
 status: draft
 updated_at: {{date}}
-service_id: {{service_id}}
+service_id: "[[{{service_id}}]]"
 priority: P2     # P0 | P1 | P2 | P3
 effort_estimate: ""    # 예: "human: ~2d / CC: ~30min"
 related_tickets: []

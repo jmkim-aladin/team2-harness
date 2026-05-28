@@ -86,12 +86,12 @@ curl -s -H "$AUTH" \
 type: ticket
 title: DEV2-{NNNN} {YouTrack 제목}
 canonical_id: ticket:dev2-{nnnn}
-status: canonical
+status: canonical             # 분석·검토 완료 노트. 미검토(야간 auto-prep)는 draft (§"사전 분석")
 updated_at: {YYYY-MM-DD}
 ticket_id: DEV2-{NNNN}
 ticket_status: in-progress    # auto-prep | in-progress | done | backlog
 assignee: {jmkim 등 id}
-service: {서비스ID}
+service: "[[{서비스ID}]]"      # 서비스 노트로 graph 엣지 (Tolaria 호환, bare stem)
 sprint: {YYYY-MM}
 type_yt: feature              # feature | task | bug
 youtrack_state: {YouTrack 상태}
@@ -115,7 +115,7 @@ title: {사람용 제목}
 canonical_id: proposal:{서비스ID}/{kebab-slug}
 status: draft
 updated_at: {YYYY-MM-DD}
-service_id: {서비스ID}
+service_id: "[[{서비스ID}]]"   # 서비스 노트로 graph 엣지
 related_tickets: []          # 후속 티켓 발의 시 채움
 ---
 ```
@@ -335,7 +335,7 @@ type: ticket
 ticket_id: DEV2-XXXX
 ticket_status: auto-prep | in-progress | done | backlog
 assignee: jmkim
-service: max
+service: "[[max]]"
 sprint: 2026-05
 type_yt: feature | task | bug
 ---
@@ -345,6 +345,11 @@ type_yt: feature | task | bug
 
 ## 사전 분석 (auto-prep) 활용
 
-vault `wiki/processes/tickets/dev2-{id}.md` 중 frontmatter `ticket_status: auto-prep`(야간 자동 분석 산출물) 존재 시 본문을 시작점으로 정리한다. 사람 검토 후 `ticket_status: in-progress`로 갱신.
+vault `wiki/processes/tickets/dev2-{id}.md` 중 frontmatter `ticket_status: auto-prep`(야간 자동 분석 산출물) 존재 시 본문을 시작점으로 정리한다.
+
+상태는 **두 축을 분리**해서 다룬다 (vault `wiki/guides/frontmatter-spec.md` 참조):
+
+- `status` (문서 신뢰도): 야간 산출물은 미검토 기계 생성이므로 `status: draft`로 들어온다. work-prep로 사람이 검토·분석을 끝내면 `status: canonical`로 승격한다 — **이것이 "분석 완료" 신호**다.
+- `ticket_status` (작업 워크플로): YouTrack 작업 라이프사이클에 정렬되는 축. 작업을 시작하면 `in-progress`로 갱신한다. 분석 완료 신호로는 쓰지 않는다.
 
 ARGUMENTS: $ARGUMENTS

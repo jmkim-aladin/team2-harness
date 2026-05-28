@@ -4,7 +4,7 @@ title: {{service_id}} {{title}}
 canonical_id: decision:{{service_id}}/{{slug}}
 status: canonical
 updated_at: {{date}}
-service_id: {{service_id}}
+service_id: "[[{{service_id}}]]"
 decision_date: {{date}}
 deciders:
   - {{user}}

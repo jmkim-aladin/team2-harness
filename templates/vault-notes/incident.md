@@ -6,7 +6,7 @@ status: canonical
 updated_at: {{date}}
 date: {{date}}
 severity: P2
-service: {{service_id}}
+service: "[[{{service_id}}]]"
 duration: ""
 affected_users: ""
 related_tickets: []

@@ -7,7 +7,7 @@ updated_at: {{date}}
 ticket_id: {{ticket_id}}
 ticket_status: in-progress
 assignee: {{user}}
-service: {{service_id}}
+service: "[[{{service_id}}]]"
 sprint: {{sprint}}
 type_yt: feature
 related_domains: []
