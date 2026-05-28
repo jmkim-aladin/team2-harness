@@ -70,8 +70,8 @@ curl -s -H "$AUTH" \
 
 | 모드 | 경로 |
 |------|------|
-| 티켓 모드 | `$LOCAL_WIKI_PATH/wiki/processes/tickets/in-progress/dev2-{NNNN}.md` (소문자, 4자리는 zero-pad 없이 그대로) |
-| 자유글 모드 | 서비스 추정되면 `$LOCAL_WIKI_PATH/wiki/services/{서비스ID}/proposals/{kebab-slug}.md`, 추정 불가 시 `$LOCAL_WIKI_PATH/wiki/processes/tickets/backlog/{kebab-slug}.md` (티켓 발의 권장) |
+| 티켓 모드 | `$LOCAL_WIKI_PATH/wiki/processes/tickets/dev2-{NNNN}.md` (소문자, 4자리는 zero-pad 없이 그대로) |
+| 자유글 모드 | 서비스 추정되면 `$LOCAL_WIKI_PATH/wiki/services/{서비스ID}/proposals/{kebab-slug}.md`, 추정 불가 시 `$LOCAL_WIKI_PATH/wiki/processes/tickets/{kebab-slug}.md` (티켓 발의 권장) |
 
 기존 파일이 있으면 **읽어서** frontmatter `youtrack_synced_at`/`updated_at` 갱신만 하고, 본문은 보존한다. 사용자에게 "이미 있음 → 갱신" / "처음 생성" 인지 보고한다.
 
@@ -120,7 +120,7 @@ related_tickets: []          # 후속 티켓 발의 시 채움
 ---
 ```
 
-서비스 추정 불가 → `wiki/processes/tickets/backlog/{slug}.md`:
+서비스 추정 불가 → `wiki/processes/tickets/{slug}.md`:
 ```yaml
 ---
 type: ticket
@@ -202,8 +202,8 @@ curl -s -H "$AUTH" \
 
 `$LOCAL_WIKI_PATH/wiki/processes/daily/{오늘 YYYY-MM-DD}.md`를 열어 `## 오늘의 아젠다` 섹션에 한 줄 추가:
 
-- 티켓 모드: `- [ ] [[wiki/processes/tickets/in-progress/dev2-{nnnn}|DEV2-{NNNN}]] — {제목 요약}`
-- 자유글 모드: `- [ ] [[wiki/tasks/{YYYY-MM-DD}-{slug}|{제목}]]`
+- 티켓 모드: `- [ ] [[dev2-{nnnn}|DEV2-{NNNN}]] — {제목 요약}` (Tolaria 호환: bare stem, path 금지)
+- 자유글 모드: `- [ ] [[{YYYY-MM-DD}-{slug}|{제목}]]`
 
 이미 동일 링크가 있으면 추가하지 않는다 (idempotent).
 Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (`daily-meeting-operating-rule.md` 참조).
@@ -254,7 +254,7 @@ cmux rename-tab --surface "$CMUX_SURFACE_ID" "NO-TICKET — {제목}"
 | 모드 | 티켓 / 자유글 |
 | 서비스 | {서비스ID} ({카탈로그 경로}) |
 | 담당자 | {fullName ({login})} |
-| 위키 노트 | $LOCAL_WIKI_PATH/wiki/processes/tickets/in-progress/dev2-{nnnn}.md (생성/갱신) |
+| 위키 노트 | $LOCAL_WIKI_PATH/wiki/processes/tickets/dev2-{nnnn}.md (생성/갱신) |
 | Daily 아젠다 | $LOCAL_WIKI_PATH/wiki/processes/daily/{YYYY-MM-DD}.md (추가/스킵) |
 | cmux 탭 | DEV2-{NNNN} — {제목} (변경/스킵 — cmux 외부면 스킵) |
 | 제안 브랜치 | feature/DEV2-{NNNN} (미생성) |
@@ -345,6 +345,6 @@ type_yt: feature | task | bug
 
 ## 사전 분석 (auto-prep) 활용
 
-vault `wiki/processes/tickets/auto-prep/{DEV2-id}.md` (야간 자동 분석 산출물) 존재 시 본문을 시작점으로 정리한다. 사람 검토 후 in-progress로 이동.
+vault `wiki/processes/tickets/dev2-{id}.md` 중 frontmatter `ticket_status: auto-prep`(야간 자동 분석 산출물) 존재 시 본문을 시작점으로 정리한다. 사람 검토 후 `ticket_status: in-progress`로 갱신.
 
 ARGUMENTS: $ARGUMENTS

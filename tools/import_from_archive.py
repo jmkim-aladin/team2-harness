@@ -30,7 +30,7 @@ from pathlib import Path
 
 # lint_vault와 동일한 mapping (import 위치 결정용)
 TYPE_LOCATION: dict[str, str] = {
-    "ticket": "wiki/processes/tickets/{ticket_status}/",
+    "ticket": "wiki/processes/tickets/",
     "weekly-report": "wiki/processes/weekly/",
     "daily": "wiki/processes/daily/",
     "meeting": "wiki/processes/meetings/",
@@ -91,7 +91,6 @@ def determine_destination(vault: Path, src_text: str, src_name: str) -> tuple[Pa
     # 템플릿 채움
     try:
         rendered = tpl.format(
-            ticket_status=fm.get("ticket_status", "in-progress"),
             service_id=fm.get("service_id") or fm.get("service", "unknown"),
             domain=fm.get("domain", "unknown"),
             name=fm.get("name", "unknown"),

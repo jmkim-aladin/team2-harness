@@ -3,10 +3,10 @@
 # vault 안 파일을 macOS `open`으로 Obsidian에서 즉시 열기.
 #
 # Usage:
-#   tools/obsidian_open.sh wiki/processes/tickets/in-progress/dev2-5749.md
+#   tools/obsidian_open.sh wiki/processes/tickets/dev2-5749.md
 #   tools/obsidian_open.sh wiki/services/max/_index.md
 #   tools/obsidian_open.sh --search "DEV2-5749"        # vault 검색
-#   tools/obsidian_open.sh --new wiki/processes/tickets/in-progress/dev2-XXXX.md "초기 본문"
+#   tools/obsidian_open.sh --new wiki/processes/tickets/dev2-XXXX.md "초기 본문"
 #
 # 옵션:
 #   --vault NAME       Obsidian 안 vault 이름 (기본: team2)

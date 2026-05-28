@@ -230,7 +230,7 @@ ticket note 또는 임의 vault md 안에 다음 마커 작성 → 도구가 별
 
 ```bash
 # 단일 파일
-python3 tools/promote_notes.py --vault "$VAULT" --file wiki/processes/tickets/in-progress/dev2-XXXX.md
+python3 tools/promote_notes.py --vault "$VAULT" --file wiki/processes/tickets/dev2-XXXX.md
 
 # 전체 scan + 실 실행
 python3 tools/promote_notes.py --vault "$VAULT" --all --apply
@@ -242,7 +242,7 @@ python3 tools/promote_notes.py --vault "$VAULT" --all --apply
 
 frontmatter `updated_at` 또는 `date`가 N일 전 이상이면 `archive/YYYY/`로 이동.
 
-대상: `processes/{tickets/done, daily, meetings, weekly}/*`. okr·incidents·capacity는 영구 보관.
+대상: `processes/tickets/*` 중 `ticket_status: done` + `processes/{daily, meetings, weekly}/*`. okr·incidents·capacity는 영구 보관.
 
 ```bash
 python3 tools/archive_vault.py --vault "$VAULT" --days 180

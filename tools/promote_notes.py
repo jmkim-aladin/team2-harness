@@ -16,7 +16,7 @@ ticket note 본문 안에 다음 마커 작성:
 
 Usage:
     # 단일 파일 promote 마커 처리
-    python3 tools/promote_notes.py --vault VAULT --file wiki/processes/tickets/in-progress/dev2-XXXX.md
+    python3 tools/promote_notes.py --vault VAULT --file wiki/processes/tickets/dev2-XXXX.md
 
     # vault 전체 scan
     python3 tools/promote_notes.py --vault VAULT --all

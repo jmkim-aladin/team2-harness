@@ -8,7 +8,7 @@
 
 ```
 /ad:new-note {제목 또는 키워드 또는 자유 묘사}
-/ad:new-note 멀티캠퍼스 4월 데이터 추출 결과    # → processes/tickets/in-progress/{slug}.md 추정
+/ad:new-note 멀티캠퍼스 4월 데이터 추출 결과    # → processes/tickets/{slug}.md 추정
 /ad:new-note 5월 4주차 회의록 storefront 멀티테넌시  # → processes/meetings/2026-05-27-storefront-multi-tenancy.md
 /ad:new-note tobe 주문 환불 도메인 분석            # → services/tobe/domains/order-refund.md
 /ad:new-note 김정민 6월 capacity                  # → processes/capacity/2026-06-kimjeongmin.md
@@ -22,7 +22,7 @@ vault `wiki/guides/document-placement.md` 트리 기준.
 
 | 입력 신호 | type | 위치 |
 |---|---|---|
-| `DEV2-NNNN` 패턴 | ticket | `wiki/processes/tickets/{auto-prep\|in-progress\|done\|backlog}/dev2-NNNN.md` |
+| `DEV2-NNNN` 패턴 | ticket | `wiki/processes/tickets/dev2-NNNN.md` (상태는 frontmatter `ticket_status`) |
 | "회의록", "회의", 날짜 + 주제 | meeting | `wiki/processes/meetings/YYYY-MM-DD-{slug}.md` |
 | "daily", "일지", 오늘 | daily | `wiki/processes/daily/YYYY-MM-DD.md` |
 | "주간보고", "주간업무", NW | weekly-report | `wiki/processes/weekly/YYYY-MM-NW-{user}.md` |
@@ -102,7 +102,7 @@ type_yt: feature | task | bug
 
 ## 템플릿 사용
 
-본문 스켈레톤은 vault `wiki/templates/{type}.md`가 SoT. 스킬은 type 결정 후 해당 템플릿 읽어 placeholder 치환.
+본문 스켈레톤은 repo `$TEAM2_HARNESS_PATH/templates/vault-notes/{type}.md`가 SoT (Tolaria 호환 위해 vault 밖으로 분리 — vault 내 노트 스텁이 type 충돌·clutter 유발). 스킬은 type 결정 후 해당 템플릿 읽어 placeholder 치환.
 
 치환 변수:
 - `{{date}}` → 오늘 YYYY-MM-DD

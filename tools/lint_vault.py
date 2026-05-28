@@ -30,7 +30,7 @@ from pathlib import Path
 TYPE_RULES: dict[str, dict] = {
     "ticket": {
         "required": ["ticket_id", "ticket_status", "assignee", "service", "sprint"],
-        "location": r"^wiki/processes/tickets/(auto-prep|in-progress|done|backlog|archive)/",
+        "location": r"^wiki/processes/tickets/",
         "filename": r"^dev2-\d+\.md$",
     },
     "weekly-report": {

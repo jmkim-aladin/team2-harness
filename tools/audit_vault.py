@@ -157,18 +157,14 @@ def classify(rel_path: Path, fm: dict[str, str]) -> dict:
             "reason": f"dir={top} → {dst_dir}",
         }
 
-    # tickets
+    # tickets — flat 구조 (상태는 frontmatter ticket_status, 폴더 분리 안 함)
     if top == "tickets":
-        # frontmatter의 ticket_status 또는 status 우선
-        status = fm.get("ticket_status") or fm.get("status")
-        if status not in {"auto-prep", "in-progress", "done", "backlog"}:
-            status = "in-progress"  # 기본 (수동 검토 시 정정)
         return {
             "src": str(rel_path),
-            "dst": f"wiki/processes/tickets/{status}/{name}",
+            "dst": f"wiki/processes/tickets/{name}",
             "action": "move", "confidence": "medium",
-            "service": service, "category": f"processes/tickets/{status}",
-            "reason": f"tickets/ + ticket_status={status} (없으면 기본 in-progress)",
+            "service": service, "category": "processes/tickets",
+            "reason": "tickets/ flat (상태는 frontmatter ticket_status)",
         }
 
     # service 매핑 가능한 dir

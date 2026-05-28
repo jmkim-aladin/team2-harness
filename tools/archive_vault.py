@@ -2,7 +2,7 @@
 """hot/cold archive — frontmatter `updated_at`이 N일 전 이상이면 archive/YYYY/로 이동.
 
 archive 대상:
-- processes/tickets/done/* (스프린트 마감 후 archive)
+- processes/tickets/* 중 ticket_status: done (스프린트 마감 후 archive)
 - processes/daily/* (180일+ 옛 daily)
 - processes/meetings/* (180일+ 옛 회의록)
 - processes/weekly/* (180일+ 옛 주간보고)
@@ -25,11 +25,28 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 ARCHIVE_TARGETS = [
-    "wiki/processes/tickets/done",
+    "wiki/processes/tickets",
     "wiki/processes/daily",
     "wiki/processes/meetings",
     "wiki/processes/weekly",
 ]
+
+# flat tickets/: ticket_status == done 인 것만 archive (in-progress/backlog는 나이 무관 보존)
+TICKETS_TARGET = "wiki/processes/tickets"
+
+
+def is_done_ticket(text: str) -> bool:
+    """frontmatter ticket_status가 done인지."""
+    if not text.startswith("---"):
+        return False
+    end = text.find("\n---", 3)
+    if end < 0:
+        return False
+    for line in text[4:end].splitlines():
+        m = re.match(r'^ticket_status:\s*(\S+)', line.strip())
+        if m:
+            return m.group(1).strip().strip('"\'') == "done"
+    return False
 
 
 def parse_frontmatter_date(text: str) -> datetime | None:
@@ -106,6 +123,9 @@ def main():
             try:
                 text = md.read_text(encoding="utf-8", errors="replace")
             except OSError:
+                continue
+            # flat tickets/: done 상태만 archive 대상
+            if target == TICKETS_TARGET and not is_done_ticket(text):
                 continue
             d = parse_frontmatter_date(text)
             if d is None:
