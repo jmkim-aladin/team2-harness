@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev2 Team Harness"
+  short_description: "Load team2 policies and context"
+  default_prompt: "Use the development team 2 harness context."

@@ -2,6 +2,8 @@
 
 팀/개인 OKR을 조회하거나, 2분기 개인 OKR 초안을 작성합니다.
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 ## 사용법
 
 ```
@@ -14,16 +16,21 @@
 /ad:okr 동기화                   # YouTrack KB에서 최신 OKR 가져오기
 ```
 
-## 하네스 OKR 문서 위치
+## OKR 문서 위치 (Obsidian vault)
+
+OKR 문서는 Obsidian vault `wiki/processes/okr/`에 저장된다. 절대 경로 베이스:
+`/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/okr/`
+
+> **현재 상태 (2026-06 기준):** OKR 문서는 `team2-archive`에서 `wiki/processes/okr/`로 이관 완료(team/q1/q2 + 김정민 q1~q4 + q1 자기평가 + 조은흠 q2). 팀·김정민/조은흠 q2 등 KB 보유분은 KB 본문 기준으로 동기화함. **canonical은 YouTrack KB(REF-A-*)** — 이후 변경은 `/ad:okr 동기화`로 최신화한다. 연간 팀 OKR(`2026-team-okr.md`)은 분기 `quarter`가 없으므로 lint_vault okr 룰은 taxonomy(분기/연간 허용)에 맞춰 `required=[year,scope]` + 연간 파일명 허용으로 정렬됨.
 
 | 파일 | 내용 | YouTrack KB |
 |------|------|-------------|
-| `docs/okr/2026-team-okr.md` | 팀 연간 OKR | REF-A-2175 |
-| `docs/okr/2026-q1-team-okr.md` | 1분기 팀 + 개인별 OKR | REF-A-2470 |
-| `docs/okr/2026-q2-team-okr.md` | 2분기 팀 OKR (담당자·월 배정) | REF-A-3122 |
-| `docs/okr/2026-q1-kimjeongmin.md` | 김정민 1분기 개인 OKR | REF-A-2566 |
-| `docs/okr/2026-q2-kimjeongmin.md` | 김정민 2분기 개인 OKR | - |
-| `docs/okr/2026-q2-joeunheum.md` | 조은흠 2분기 개인 OKR | - |
+| vault `wiki/processes/okr/2026-team-okr.md` | 팀 연간 OKR | REF-A-2175 |
+| vault `wiki/processes/okr/2026-q1-team-okr.md` | 1분기 팀 + 개인별 OKR | REF-A-2470 |
+| vault `wiki/processes/okr/2026-q2-team-okr.md` | 2분기 팀 OKR (담당자·월 배정) | REF-A-3122 |
+| vault `wiki/processes/okr/2026-q1-kimjeongmin.md` | 김정민 1분기 개인 OKR | REF-A-2566 |
+| vault `wiki/processes/okr/2026-q2-kimjeongmin.md` | 김정민 2분기 개인 OKR | - |
+| vault `wiki/processes/okr/2026-q2-joeunheum.md` | 조은흠 2분기 개인 OKR | - |
 
 ## 팀원 이니셜 매핑
 
@@ -44,7 +51,7 @@
 
 ### 조회 모드
 
-1. 사용자 요청에 맞는 `docs/okr/` 파일을 읽어서 표시
+1. 사용자 요청에 맞는 vault `wiki/processes/okr/` 파일을 읽어서 표시 (파일이 없으면 — 현재 기본 상태 — `/ad:okr 동기화`를 먼저 실행하거나 KB `REF-A-*`를 직접 조회)
 2. 팀원 이름으로 요청 시 해당 팀원의 모든 분기 OKR을 조회
 3. 팀 OKR 조회 시 담당자 배정 현황도 함께 표시
 
@@ -52,7 +59,7 @@
 
 개인 OKR 초안 작성 시 아래 원칙을 따릅니다:
 
-1. **팀 OKR에서 담당 항목 추출**: `docs/okr/2026-q2-team-okr.md`에서 해당 팀원 이니셜이 배정된 KR 항목을 식별
+1. **팀 OKR에서 담당 항목 추출**: vault `wiki/processes/okr/2026-q2-team-okr.md`에서 해당 팀원 이니셜이 배정된 KR 항목을 식별
 2. **1분기 OKR 참조**: 해당 팀원의 1분기 OKR 스타일과 역할 맥락을 참조
 3. **연간 OKR 정렬**: 연간 목표와의 연결고리 확인
 
@@ -95,7 +102,7 @@
 ### YouTrack 동기화 모드
 
 1. YouTrack KB API로 최신 OKR 문서 조회
-2. 하네스의 기존 문서와 비교
+2. vault `wiki/processes/okr/`의 기존 문서와 비교
 3. 변경 사항이 있으면 업데이트
 
 ```bash
@@ -114,5 +121,19 @@ OKR 작성 시 스프린트 운영 문서도 참조합니다:
 - `docs/sprint/sprint-planning-overview.md` — 맨데이 배분 및 계획 업무 비율
 - `docs/sprint/story-point-guide.md` — SP 산정 기준
 - `docs/sprint/ticket-guide.md` — 티켓 작성 규칙
+
+## OKR 문서 frontmatter
+
+```yaml
+---
+type: okr
+title: 김정민 2026 Q2 개인 OKR
+year: 2026
+quarter: 2
+scope: team | personal
+assignee: jmkim  # personal일 때
+updated_at: 2026-05-27
+---
+```
 
 ARGUMENTS: $ARGUMENTS

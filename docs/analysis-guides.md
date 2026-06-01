@@ -1,0 +1,24 @@
+# 분석/평가 가이드 인덱스
+
+특정 분석 작업을 시작하기 전 참고하는 절차/기준 문서 모음.
+
+## 도메인 지식 분석
+
+| 가이드 | 용도 |
+|--------|------|
+| [Ralph Loop 도메인 지식 고도화 요청 기준](./ralph-loop-domain-knowledge-guide.md) | 도메인 지식 고도화 작업 요청 기준 |
+| [Ralph Loop 서비스 확장 기준](./ralph-loop-service-expansion-guide.md) | Ralph Loop 대상 서비스를 확장할 때의 기준 |
+
+## 레거시 현대화 / DB 이관 분석
+
+| 가이드 | 용도 |
+|--------|------|
+| [레거시 현대화/DB 분리 분석 기준](./legacy-modernization-db-separation-analysis-guide.md) | 레거시 서비스의 현대화 트랙 결정과 DB 분리 가능성 분석 |
+| [DB 이관/CDC 진단 기준](./db-migration-cdc-assessment-guide.md) | DB 이관 또는 CDC 도입 시 진단 기준 |
+
+## 위키/문서 운영
+
+| 가이드 | 용도 |
+|--------|------|
+| [운영 위키 탐색 가이드](./wiki-navigation-guide.md) | 로컬 Obsidian 운영 지식 위키 및 Graphify 산출물 탐색 절차 |
+| [위키 문서 언어/제목 정책](../policies/wiki-document-language-and-title-policy.md) | 문서 H1/title 작성 규칙 |

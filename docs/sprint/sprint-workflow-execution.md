@@ -64,3 +64,6 @@
 | [티켓 작성 및 운영 가이드](./ticket-guide.md) | 5W1H 기반 Feature 작성, 상태 관리, 태그 컨벤션 |
 | [스토리 포인트 가이드](./story-point-guide.md) | SP 산정 기준표 (개발자/기획자/디자이너) |
 | [업무 계획 변경 절차](./plan-change-process.md) | 긴급 요청/이월 처리 프로세스 |
+| [Velocity 측정 및 활용 가이드](./velocity-guide.md) | Velocity 산출 규칙, 수용량 산정 |
+| [Velocity-OKR 스프린트 운영 정책](./velocity-okr-sprint-policy.md) | 80% 수용량 설계, 계획 이행률, OKR 달성 판정 |
+| [스프린트 마감 프로세스 가이드](./sprint-closing-process.md) | D-5 ~ D-day 마감 절차 |

@@ -1,5 +1,5 @@
 # 투비컨티뉴드 (ToBe) 서비스 프로파일
-# 소스: /Users/user/Documents/workspace/tobe-project
+# 소스: /Users/user/Documents/workspace/tobe
 
 service_id: tobe
 name: 투비컨티뉴드 (tobe)
@@ -7,9 +7,9 @@ type: legacy
 description: "디지털 콘텐츠 크리에이터 플랫폼 — 노트/블로그/디지털 작품 발행, 멤버십, 정산 관리"
 
 owners:
-  primary: "jmkim@aladin.co.kr"      # 김정민
-  backup: "heum2@aladin.co.kr"       # 조은흠
-  additional: "heesoo@aladin.co.kr"  # 박희수
+  primary: "jmkim@aladin.co.kr" # 김정민
+  backup: "heum2@aladin.co.kr" # 조은흠
+  additional: "heesoo@aladin.co.kr" # 박희수
 
 components:
   tobe-web:
@@ -54,8 +54,8 @@ repos:
   tobe-db-script: "https://github.com/AladinCommunication/tobe-db-script"
 
   # 앱 (개발 4팀 관리)
-  tobe-android: "https://github.com/AladinCommunication/ToBeAndroid"  # 개발 4팀
-  tobe-ios: "https://github.com/AladinCommunication/ToBeIos"          # 개발 4팀
+  tobe-android: "https://github.com/AladinCommunication/ToBeAndroid" # 개발 4팀
+  tobe-ios: "https://github.com/AladinCommunication/ToBeIos" # 개발 4팀
 
 youtrack:
   project_key: DEV2
@@ -109,7 +109,7 @@ data:
     - name: WebCatalog
       purpose: "카탈로그/상품 데이터"
       used_by: [tobe-web]
-      ownership: shared  # 알라딘 그룹 공유
+      ownership: shared # 알라딘 그룹 공유
     - name: Alibaba
       purpose: "서드파티 연동"
       used_by: [tobe-web]
@@ -122,8 +122,8 @@ data:
       purpose: "로깅"
       used_by: [tobe-web]
       ownership: shared
-  shared_db: true       # 4개 알라딘 공유 DB 참조
-  direct_sp_write: true  # SP 기반 write 집중적 사용 (200+ SP)
+  shared_db: true # 4개 알라딘 공유 DB 참조
+  direct_sp_write: true # SP 기반 write 집중적 사용 (200+ SP)
   db_scripts: "tobe-db-script 별도 레포로 관리"
 
 controllers:
@@ -137,7 +137,7 @@ controllers:
     - MypageController
     - AppController
     - NotificationController
-  intra:  # 내부 관리 도구
+  intra: # 내부 관리 도구
     - AuthorCertifiedController
     - DisplayBannerController
     - OrderController (Intra)
@@ -198,12 +198,12 @@ build:
   configurations: [Debug, Release, Production]
 
 risk:
-  change_frequency: ""    # TODO: high / medium / low
-  incident_impact: ""     # TODO: high / medium / low
-  data_coupling: high     # 5개 DB (1 자체 + 4 공유), 200+ SP, 40+ 배치
+  change_frequency: "" # TODO: high / medium / low
+  incident_impact: "" # TODO: high / medium / low
+  data_coupling: high # 5개 DB (1 자체 + 4 공유), 200+ SP, 40+ 배치
 
 modernization:
-  track: ""               # TODO: 분석 후 결정
+  track: "" # TODO: 분석 후 결정
   status: "not-started"
   notes: |
     - .NET Framework 4.8 + IIS + Windows Server — max(만권당)과 유사한 레거시 구조

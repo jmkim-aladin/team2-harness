@@ -1,0 +1,116 @@
+# 알라딘 쇼핑 (shopping) 서비스 프로파일
+# 소스: /Users/user/Documents/workspace/shopping
+
+service_id: shopping
+name: 알라딘 쇼핑 (shopping)
+type: legacy
+description: "알라딘 쇼핑 — B2B / C2C / 중고매장 업무가 복합적으로 통합된 레거시 웹 서비스 + 백오피스"
+
+owners:
+  primary: "jmkim@aladin.co.kr" # 김정민
+
+# 멀티 컴포넌트 서비스
+components:
+  dev1-web-aladin:
+    description: "알라딘 쇼핑 웹 — B2B/C2C/중고매장 통합 (소비자/매장/거래 업무 혼재)"
+    runtime:
+      type: dotnet-framework
+      version: "4.8"
+      language: "C# / ASP.NET (WebForms)"
+      hosting: iis
+    solution: "Aladin.sln"
+    structure:
+      - "BaseProjects/Aladdin.AppBlock"
+      - "BaseProjects/Aladdin.FrameWork"
+      - "BaseProjects/Aladdin.Encryption"
+      - "BaseProjects/Aladdin.DataBlock"
+      - "WebRelease (웹 진입점)"
+    scale:
+      csharp_loc: "약 126만"
+      aspnet_loc: "약 61만"
+      js_loc: "약 22만"
+    business_domains:
+      - "B2B"
+      - "C2C"
+      - "중고매장"
+
+  dev1-backoffice-thanks:
+    description: "백오피스 프로그램 (운영/매장/거래 관리)"
+    runtime:
+      type: vb6
+      language: "Visual Basic 6 (.frm / .cls / .bas)"
+      hosting: "Windows 클라이언트 실행"
+    scale:
+      form_count: "196+"
+      total_loc: "약 5.6만"
+
+  dev1-backoffice-packman:
+    description: "포장관리툴(팩맨) — 물류센터 포장/픽업/회차/송장 출력 백오피스 클라이언트. 땡큐와 같은 계열의 VB6 사내 운영툴"
+    owner: "jmkimdev2@aladin.co.kr" # 김정민
+    guide: "Obsidian vault: wiki/domains/shopping-packman-domain-guide.md"
+    runtime:
+      type: vb6
+      language: "Visual Basic 6 (.bas / .frm / .ctl)"
+      hosting: "Windows 클라이언트 실행 (\\\\magic\\workingapp\\물류최신버전\\Packman.exe)"
+    project_file: "PackMan.vbp"
+    deps:
+      # vbp에서 참조하는 사내 COM 컴포넌트
+      - "AladdinMailer2.dll (메일 발송)"
+      - "WebDALGet.dll / DALExec.dll / DALParm.dll (DB 접근 — webcatalog SP 호출)"
+      - "MS Word/Excel OLE, ADO 6.0"
+    scale:
+      form_count: "30+ .frm (frmPacking ~183KB, frmSequence ~99KB 등 거대 폼)"
+      key_modules: "Logic.bas (~243KB), PrintProc.bas (~696KB), PrintProcOld.bas (~664KB)"
+    business_domains:
+      - "포장 (Packing)"
+      - "픽업 (Pickup)"
+      - "회차 관리 (Sequence)"
+      - "보관 (Keeping)"
+      - "송장 출력 (CJ / FedEx / CU / 편의점)"
+      - "해외배송 (LA 도착 / USA)"
+
+repos:
+  dev1-web-aladin: "https://github.com/AladinCommunication/dev1-web-aladin"
+  dev1-backoffice-thanks: "https://github.com/AladinCommunication/dev1-backoffice-thanks"
+  dev1-backoffice-packman: "https://github.com/AladinCommunication/dev1-backoffice-packman"
+  # DB 스크립트는 별도 레포로 분리됨 (DBSourceTemplate 기반 fork)
+  # 로컬 경로: /Users/jm/Documents/workspace/shopping/shop-db-script
+  # 동일 webcatalog 스키마를 blog(블로그/북플) 서비스도 공유함 — catalog/blog.yaml 참조
+  db-script: "shop-db-script (DBSourceTemplate fork)"
+
+youtrack:
+  project_key: DEV2
+
+data:
+  db_type: mssql
+  schemas:
+    - name: webcatalog
+      purpose: "쇼핑 카탈로그/거래 메인 스키마 (blog/북플과 공유)"
+      source_path_repo: "/Users/jm/Documents/workspace/shopping/shop-db-script"
+      source_path_in_repo: "databases/webcatalog"
+    - name: ebookcms
+      purpose: "전자책/CMS 연동 (max와 공유 가능성 있음)"
+      source_path_repo: "/Users/jm/Documents/workspace/shopping/shop-db-script"
+      source_path_in_repo: "databases/ebookcms"
+  shared_db: true # max/tobe/blog 등 다른 서비스와 webcatalog 공유
+  direct_sp_write: true # SP 기반 (레거시 .NET FW + VB6)
+  notes: |
+    SP/Function/Table 스크립트는 shop-db-script 레포(DBSourceTemplate fork)로 이관 완료.
+    webcatalog 스키마는 shopping 외에 blog/북플 서비스(blog-web 리포)도 함께 사용한다 —
+    blog/북플 도메인 SP를 수정·생성할 때도 이 레포에 변경 PR을 올리는 것이 SoT.
+  query_guides:
+    - "Obsidian vault: wiki/domains/shopping-order-domain-guide.md" # 정상 주문 정의·OID 함수·Ticket 이벤트 적립금 패턴
+
+risk:
+  change_frequency: "" # TODO: high / medium / low
+  incident_impact: "" # TODO: high / medium / low
+  data_coupling: high # 레거시 DB 공유 + B2B/C2C/중고매장 도메인 혼재
+
+modernization:
+  track: wrap # 우선 SP 확산 방지 + 도메인 분리 식별
+  status: "not-started"
+  notes: |
+    B2B/C2C/중고매장 도메인이 한 코드베이스에 혼재 → 현대화 시 도메인 식별/분리가 선결 과제.
+    백오피스는 VB6 → 단계적 대체(웹/현대 백오피스) 검토 필요.
+
+harness_status: "not-started"

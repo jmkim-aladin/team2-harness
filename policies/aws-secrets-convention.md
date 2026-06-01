@@ -30,6 +30,7 @@ sm-{서비스}-{모듈}-{환경}-{리소스}
 | `jwt-secret-key` | JWT 서명 키 | `sm-naru-sso-prod-jwt-secret-key` |
 | `encryption-key` | 앱 레벨 암호화 키 (AES 등) | `sm-aasm-web-prod-encryption-key` |
 | `service-endpoint-{대상}` | 외부 API 크레덴셜 | `sm-naru-sso-prod-service-endpoint-aladin-shopping` |
+| `smb-credential` | SMB(CIFS) 마운트 자격증명 (Storage Gateway 등). 단일 또는 대상 매트릭스(`{target}-smb-credential`) | `sm-aasm-web-prod-mall-prod-smb-credential` |
 
 > **database 리소스 네이밍 규칙:**
 > - `database-write` / `database-read` — 서비스 주 DB (이름 생략)
@@ -82,7 +83,13 @@ sm-aasm-web-dev-encryption-key                         # dev, AES-256-GCM
 sm-aasm-web-prod-database-write                        # prod, DB
 sm-aasm-web-prod-jwt-secret-key                        # prod, JWT (NextAuth)
 sm-aasm-web-prod-encryption-key                        # prod, AES-256-GCM
+sm-aasm-web-dev-mall-dev-smb-credential                # AASM dev → mall dev share
+sm-aasm-web-prod-mall-dev-smb-credential               # AASM prod → mall dev share
+sm-aasm-web-prod-mall-prod-smb-credential              # AASM prod → mall prod share
 ```
+
+> AASM은 (자체 환경 × 대상 환경) 매트릭스로 SMB 자격증명을 사용한다.
+> AASM dev 인스턴스는 보안상 mall prod 자격증명을 보유하지 않는다.
 
 > **Node.js 앱 참고:** Spring Boot의 `EnvironmentPostProcessor` 대신 `with-secrets.mjs` 래퍼 스크립트로
 > 런타임에 시크릿을 fetch하여 `process.env`에 주입합니다. `APP_ENV` 환경변수로 프로파일을 구분합니다.
@@ -168,6 +175,26 @@ sm-aasm-web-prod-encryption-key                        # prod, AES-256-GCM
 | 필드 | 타입 | 필수 | 설명 |
 |------|------|:---:|------|
 | `encryptionKey` | string | O | 암호화 키 (AES-256: 64자 hex = 32바이트) |
+
+### smb-credential
+
+```json
+{
+  "smbUsername": "smbguest",
+  "smbPassword": "..."
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|:---:|------|
+| `smbUsername` | string | O | SMB 계정명. Windows 도메인 계정은 `DOMAIN\\user` 형식 허용 (JSON 이스케이프 필요) |
+| `smbPassword` | string | O | SMB 비밀번호 plaintext |
+
+> AASM처럼 여러 서비스를 등록·운영하는 도구가 Storage Gateway SMB share에
+> LastWriteTime touch 등을 보낼 때 사용한다. 단일 매핑이면 단일 entry로
+> 충분하지만, AASM처럼 (자체 환경 × 대상 환경) 매트릭스가 필요한 경우
+> `{target}-smb-credential` 접미어로 분리한다 (예: `mall-dev`, `mall-prod`).
+> 앱은 부팅 시 로드 + TTL 캐시한다. 회전 시 캐시 만료 후 자동 반영.
 
 ### service-endpoint-{대상} (API 크레덴셜)
 

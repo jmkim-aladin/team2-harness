@@ -65,7 +65,15 @@ Feature 티켓이 있으면 Feature ID, 없으면 Task ID를 사용합니다.
 ### feature/*
 - 단위 기능 개발 브랜치
 - YouTrack 이슈 ID로 생성: `feature/DEV2-123`
+- **브랜치명은 상위 Feature ID로 끝까지 유지**한다. Feature 하위 sub-Task가 여러 개 생기더라도 같은 `feature/{Feature ID}` 브랜치에 commit을 누적하고, sub-Task마다 새 브랜치를 만들지 않는다. 커밋 메시지로만 sub-Task ID를 구분: `[DEV2-XXXX] 작업 내용`
+- Feature 없이 단독 Task만 있으면 그 Task ID로 브랜치 생성
 - `feature/*` → `develop`으로 PR
+
+### deploy/* (서비스별 환경 배포 브랜치, 선택 적용)
+- 일부 서비스(예: AASM)는 개발 단계에서 `release/*` 를 생략하고 `feature → develop → deploy/dev` 로 직접 전파한다
+- 운영 배포(`deploy/prod`)는 서비스 구분 없이 표준 `release/YYYY.M.N` 흐름을 따른다 (아래 `release/*` 항목 참고)
+- `develop → deploy/dev` 전파 시 별도 release 브랜치를 만들지 않고 `develop`을 head로 직접 PR 생성
+- 적용 여부는 서비스별 정책 (CLAUDE.md 또는 catalog/*.yaml에 명시)
 
 ### release/*
 - QA 및 안정화 단계 — 모든 QA는 release 브랜치에서 수행
@@ -151,6 +159,8 @@ Task: DEV2-5678 "로그인 오류 수정"
 ```
 
 > 브랜치 = Feature ID (없으면 Task ID), 커밋 = 항상 작업 이슈 ID
+
+> 커밋 메시지 본문 품질 규칙(AI 생성 시 `Co-Authored-By` 푸터 금지, verbatim 인용/구현 단계 bullet 회피)은 [ai-usage-policy.md `메시지 작성 품질`](./ai-usage-policy.md#메시지-작성-품질) 참고.
 
 ### Merge 방식
 

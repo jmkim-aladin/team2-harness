@@ -32,8 +32,8 @@ CLAUDE.md 상단에 아래 섹션을 추가합니다:
 | 이 서비스 프로파일 | `$TEAM2_HARNESS_PATH/catalog/{서비스ID}.yaml` |
 
 ### 핵심 규칙
-- Git Flow: `feature/DEV2-{번호}` → `develop` → `release/*` → `master`
-- 커밋: Conventional Commits (`feat(scope): 🟩 DEV2-123 제목`)
+- Git Flow: `feature/{이슈ID}` → `develop` → `release/*` → `master`
+- 커밋: `[{이슈ID}] 작업 내용`
 - DB/SP 변경 시 별도 승인 + 롤백 스크립트 필수
 - 신규 코드에서 레거시 DB/SP 직접 접근 금지
 ```

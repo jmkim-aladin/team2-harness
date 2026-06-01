@@ -2,6 +2,8 @@
 
 YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를 조회·업데이트합니다.
 
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+
 ## 사용법
 
 ```
@@ -12,6 +14,8 @@ YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를
 /ad:weekly-report 조은흠 추가 [내용]         # 조은흠 항목 추가
 /ad:weekly-report 전체                      # 전체 팀원 보고서 조회
 /ad:weekly-report 동기화                    # YouTrack 티켓 상태 기반 자동 동기화
+/ad:weekly-report 초안                      # 옵시디언 vault에 이번주 초안 작성 (KB 미반영)
+/ad:weekly-report 이번주 초안 작성해줘        # 위와 동일 (자연어)
 ```
 
 ## 팀원 매핑
@@ -20,6 +24,8 @@ YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를
 |------|--------|-------------|------|------|
 | 김정민 | KJM | jmkim | 백엔드 (메인) | 기본값 |
 | 조은흠 | JEH | heum2 | 프론트엔드 (서브) | 김정민 보고서에 항목 포함 |
+| 박민석 | PMS | pms0905 | 백엔드/프론트엔드 | 김정민 보고서에 항목 포함, 2026-05-14 합류 |
+| 안혜련 | AHR | hyeryun | 백엔드 (storefront) | 김정민 보고서에 항목 포함 |
 
 > 팀원 추가 시 이 테이블에 행을 추가하면 됩니다.
 
@@ -27,44 +33,111 @@ YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를
 
 ```
 DEV2-A-692 (주간업무)
-├── DEV2-A-693 (2026 1Q)
-│   ├── DEV2-A-694 (조윤주)
-│   ├── DEV2-A-695 (이현민)
-│   ├── DEV2-A-696 (김정민)     ← 김정민 + 조은흠 항목 포함
-│   └── DEV2-A-830 (2026.03.5W) ← 주간 스냅샷
-└── (2026 2Q) ← 분기 시작 시 생성
+└── DEV2-A-693 (2026 1Q/2Q)
+    ├── DEV2-A-694 (조윤주)
+    ├── DEV2-A-695 (이현민)
+    ├── DEV2-A-696 (김정민)     ← 김정민 + 조은흠 + 박민석 + 안혜련 항목 포함
+    └── DEV2-A-830 (2026.05.2W) ← 주간 스냅샷
 ```
 
 ## 보고서 양식
 
 > 상세 가이드: `docs/sprint/weekly-report-guide.md`
+> 양식의 source of truth는 YouTrack KB `DEV2-A-696` 원본. 가이드 §5 템플릿과 KB 원본이 다르면 KB 원본을 따른다.
 
 ### 섹션 구조
 
 ```
-## 백로그 항목
-## 계획 항목
-## 진행중 항목
-## 완료된 항목
-## 이슈사항
-## 기타
+## **백로그 항목**
+## **계획 항목**
+## **진행중 항목**
+## **완료된 항목**
+## **이슈사항**
+## **기타**
 ```
 
-### 항목 형식
+- H2 헤더 안에 `**` bold 처리 (KB 원본 패턴)
 
-```markdown
-- **{제목} ({일정정보}, {담당자}** {티켓ID} **{티켓명})**
-  - ({상태}) {내용} ({일자}, {담당자} {하위티켓ID} {하위티켓명})
+### 항목 형식 (KB 원본 패턴)
+
+**제목 라인** (top-level):
+
 ```
+* **{제목} ({일정정보}, {담당자}** DEV2-xxxx **\[원문제목\])**
+```
+
+- 불릿 `*` (하이픈 `-` 아님)
+- `**` 짝 2개로 `(담당자**` ... **`\[원문제목\])` 감싼다
+- 원문제목의 대괄호는 `\[` `\]` escape (KB 마크다운 렌더링 호환)
+
+**본문 라인** (sub-task 또는 단일 본문):
+
+```
+  : ({상태}) {간략 설명} ({일정정보}, {담당자} DEV2-yyyy [원문제목])
+```
+
+- 2-space indent + `:` + space (불릿 아님)
+- 본문 라인 대괄호는 **escape 없이** `[원문제목]` 그대로 (KB 자동 링크 동작)
+
+**Feature 하위가 없거나 단일 Task인 경우**:
+
+- 본문 라인은 **반드시 작성**
+- 본문 라인의 티켓 정보(`DEV2-xxxx [원문제목]`)는 **제목과 동일**하게 반복
+
+예시 (단일 본문):
+
+```
+* **만권당 5월 이벤트 (5월의 책) (5/13, 조은흠** DEV2-5259 **\[만권당\]\[개발\] 5월 이벤트 (5월의 책))**
+  : (완료) 5월의 책 디자인/개발 일정 (5/13, 조은흠 DEV2-5259 [만권당][개발] 5월 이벤트 (5월의 책))
+```
+
+예시 (다중 sub-task):
+
+```
+* **\[AASM\] IAM Access Key → Node Role + Self-Assume 마이그레이션 (5/15, 김정민** DEV2-6223 **\[AASM\] IAM Access Key → Node Role + Self-Assume 마이그레이션)**
+  : (완료) S3 클라이언트 빌더 신설 + 진입점 제한 (5/15, 김정민 DEV2-6225 [AASM] S3 클라이언트 빌더 신설 + 진입점 제한)
+  : (완료) S3 연산 모듈 시그니처 일괄 변경 (5/15, 김정민 DEV2-6226 [AASM] S3 연산 모듈 시그니처 일괄 변경)
+```
+
+**표기 규칙**:
+
+- 앞 간략 설명은 보고서 흐름상 짧게 요약 (Task 본질만)
+- 티켓번호(`DEV2-xxxx`) 뒤에는 YouTrack 티켓 제목을 **수정 없이 그대로** 기재 (대괄호 prefix `[서비스][직군]` 포함). YouTrack 자동 링크와 원본 맥락 보존 목적
 
 **상태 말머리**: `(완료)`, `(진행 중)`, `(예정)`, `(보류)`
 
 **일정 형식**:
-- 백로그: 일정 없음
-- 미진행/계획: 시작 예상 일자~
-- 진행중: 시작일~, ~목표일
+
+- 백로그: 일정 없음 (보류 메모만 필요 시 추가)
+- 계획(예정): 시작 예상 일자~
+- 진행중: ~완료 예상 일자
 - 완료: 완료 일자
 - 지연: ~~기존목표~~ ~수정목표, 제목 뒤 `- 지연`, 지연 사유 기재
+
+## 기록 대상 필터
+
+가이드 `docs/sprint/weekly-report-guide.md` §1 원칙 강화:
+
+**포함**:
+
+- 팀 구성원 작성 Feature/Epic 중심
+- Type=Feature 또는 Epic
+- 하위 Task는 부모 Feature 컨텍스트로만 본문 라인에 표기
+
+**제외**:
+
+- 사업부 작성 운영성 단발 Task/Bug (통계요청·점검요청·팀장승인·앱푸시 발송 리스트 등)
+- 단발 운영 대응 (DB 정산 오류 확인, 사용자 개별 문의 등)
+- 가이드 §1 "예외적으로 포함"은 **이슈 규모가 크거나 팀 차원 공유가 필요한 운영성 업무**로만 한정
+
+판단 기준:
+
+| 항목 | 포함 여부 |
+|------|----------|
+| Type=Feature/Epic, 팀 구성원 작성 | 포함 |
+| Type=Feature, 사업부 작성 운영 (예: 멀티캠퍼스 IF) | 검토 후 결정 (계획 업무 성격이면 포함) |
+| Type=Task, 사업부 단발 운영 요청 | 제외 |
+| Type=Bug, 단발 장애/점검 | 제외 |
 
 ## 환경변수
 
@@ -156,12 +229,52 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 1. 현재 분기 부모 문서 하위의 모든 팀원 문서 조회
 2. 팀원별로 정리하여 표시
 
+### 6. 초안 모드 (옵시디언)
+
+사용자가 `/ad:weekly-report 초안` 또는 `이번주 초안 작성해줘` 류를 입력하면:
+
+1. **기존 보고서 조회**: KB(DEV2-A-696) 현재 내용 가져오기
+2. **상태 동기화**: 보고서 내 모든 티켓ID + 담당자별 In Progress + 최근 14일 resolved 일괄 조회
+3. **필터 적용**: Type=Feature/Epic only. 운영성 Task/Bug 제외 (위 "기록 대상 필터" 참조)
+   - **월별 계획 스냅샷("N월거만") 작성 시**: YouTrack 태그 `YYMM-planned`(예: 2026년 6월 = `2606-planned`) + dev 4인(jmkim/heum2/pms0905/hyeryun) assignee 로 필터. 디자인/기획/외주 제외. 이전 달 누적 완료분은 태그 없으면 자동 제외됨. 상태별 섹션 매핑: In Progress→진행중, Open/Reopened→계획, Backlog→백로그, Fixed/Closed/Verified→완료된. 하위 Task는 dev-planned 내 최상위 조상 Feature/Epic 아래 본문 라인으로 롤업
+4. **양식 정렬**: 위 "항목 형식" 패턴 그대로 적용
+   - 제목 라인: `*` + 이중 `**` 분할 + 원문제목 `\[`/`\]` escape
+   - 본문 라인: `  : ` + 본문 + `(일정정보, 담당자 DEV2-xxxx [원문제목])`
+   - Feature 하위 없거나 단일 Task인 경우 본문에 동일 티켓 정보 반복
+   - **Obsidian 줄바꿈**: 제목 라인·`: ` 본문 라인 끝에 공백 2칸(markdown hard break) 추가. 미적용 시 `: ` 하위 라인이 bullet lazy-continuation으로 한 단락에 합쳐져 줄바꿈이 사라짐 (KB/YouTrack 렌더와 달리 Obsidian에서 필요)
+5. **저장 경로**: 옵시디언 vault — `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/weekly/YYYY-MM-NW-{assignee}.md` (예: `2026-06-1W-jmkim.md`)
+   - 파일명은 Tolaria weekly-report 규약(`templates/vault-notes/weekly-report.md`) 준수 — assignee 슬러그 사용, `-draft` 금지. 초안 여부는 frontmatter `status: draft`로 표기
+   - 파일명·frontmatter `title`·`canonical_id` 는 동일 키(`YYYY-MM-NW-{assignee}`)로 통일
+   - W 번호 = 해당 월 N주차 (월 첫 월요일 시작 기준)
+   - 임시본은 vault 외부 작성 금지 (CLAUDE.md "도메인 분석 결과는 로컬 Obsidian 운영 지식 위키" 정책)
+6. **frontmatter 포함** (Tolaria weekly-report 규약):
+   ```yaml
+   ---
+   type: weekly-report
+   title: YYYY-MM-NW {담당자} 주간업무
+   canonical_id: weekly-report:YYYY-MM-NW-{assignee}
+   status: draft
+   updated_at: YYYY-MM-DD
+   assignee: {assignee}
+   year: YYYY
+   month: M
+   week_in_month: N
+   sprint: YYYY-MM
+   source: YouTrack DEV2-A-696 + N일 상태 동기화 (또는 YYMM-planned 태그)
+   filter: Type=Epic/Feature only. 운영대응(Task/Bug) 제외
+   note: 옵시디언 임시 저장본. KB 반영은 사용자 수동
+   ---
+   ```
+   - `type`/`year`/`month`/`week_in_month`/`assignee` 는 Tolaria weekly-report 필수 필드(`tools/lint_vault.py`). 본문은 KB(DEV2-A-696) 원본 모양 그대로 — H1·llm-hint 없이 `## **백로그 항목**`부터 시작. 저장 후 `python3 tools/lint_vault.py --vault <vault> --files <경로>` 로 검증
+7. **KB 자동 반영 금지** — TODO 섹션에 검토 포인트 명시 후 사용자가 수동으로 합침
+8. **이슈사항/기타** 섹션에 일정 리스크·합류·제외 사유 등 자유 기록
+
 ## 담당자별 항목 구분
 
-김정민 보고서에 조은흠 항목이 혼재되어 있으므로:
+김정민 보고서에 조은흠·박민석·안혜련 항목이 혼재되어 있으므로:
 - **담당자 식별**: 각 항목의 `(담당자` 부분에서 이름 추출
-- **조은흠 조회 시**: 김정민 보고서에서 조은흠 담당 항목만 필터링하여 표시
-- **조은흠 추가 시**: 김정민 보고서의 적절한 섹션에 조은흠 담당으로 항목 삽입
+- **개별 조회 시**: 김정민 보고서에서 해당 팀원 담당 항목만 필터링하여 표시
+- **개별 추가 시**: 김정민 보고서의 적절한 섹션에 해당 팀원 담당으로 항목 삽입
 
 ## Feature 기간 초과 경고
 
@@ -179,5 +292,21 @@ Feature는 총 기간 1주일 이내가 필수 규칙 (`docs/sprint/ticket-guide
 - 티켓 링크 형식: `{담당자} {티켓ID} {티켓명}` (YouTrack 자동 링크)
 - 지연 항목은 반드시 지연 사유 포함
 - 분기 전환 시 새 분기 문서가 없으면 생성 안내
+
+## frontmatter 표준 (티켓 산출물)
+
+```yaml
+---
+type: ticket
+ticket_id: DEV2-XXXX
+ticket_status: auto-prep | in-progress | done | backlog
+assignee: jmkim
+service: "[[max]]"
+sprint: 2026-05
+type_yt: feature | task | bug
+---
+```
+
+상세: vault `wiki/guides/frontmatter-spec.md`.
 
 ARGUMENTS: $ARGUMENTS

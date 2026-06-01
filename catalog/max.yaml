@@ -1,5 +1,5 @@
 # 만권당 (Max) 서비스 프로파일
-# 소스: /Users/user/Documents/workspace/max-doc
+# 소스: /Users/user/Documents/workspace/max
 
 service_id: max
 name: 만권당 (max)
@@ -7,9 +7,9 @@ type: legacy
 description: "알라딘 전자책 구독 서비스 — 콘텐츠 제공, 구독 관리, 검색/브라우즈"
 
 owners:
-  primary: "jmkim@aladin.co.kr"      # 김정민
-  backup: "heum2@aladin.co.kr"       # 조은흠
-  additional: "heesoo@aladin.co.kr"  # 박희수
+  primary: "jmkim@aladin.co.kr" # 김정민
+  backup: "heum2@aladin.co.kr" # 조은흠
+  additional: "heesoo@aladin.co.kr" # 박희수
 
 # 멀티 런타임 서비스 (하위 프로젝트별 분리)
 components:
@@ -33,7 +33,7 @@ components:
       type: dotnet
       version: "8.0"
       language: "C#"
-      hosting: docker  # K8s/Docker ready
+      hosting: docker # K8s/Docker ready
     dependencies:
       - Dapper
       - Swashbuckle 7.1.0
@@ -44,7 +44,7 @@ components:
       type: nextjs
       version: "14.2.3"
       language: "TypeScript 5.2.2"
-      hosting: docker  # Node.js 20.9.0-alpine
+      hosting: docker # Node.js 20.9.0-alpine
     dependencies:
       - Recoil (state)
       - styled-components
@@ -91,11 +91,11 @@ repos:
   max-server: "https://github.com/AladinCommunication/MaxServer"
 
   # 관련 레포 (타팀 관리)
-  max-search: "https://github.com/AladinCommunication/max-search"             # 검색 AI 팀 관리
-  ebook-web-viewer: "https://github.com/AladinCommunication/Ebook_Web_Viewer"  # 개발 4팀 관리 (뷰어)
-  ebook-viewer-api: "https://github.com/AladinCommunication/EbookViewerAPI"    # 개발 4팀 관리 (뷰어 API)
-  ebook-ios: "https://github.com/AladinCommunication/EbookIos"                 # 개발 4팀 관리 (iOS 앱)
-  shopping-android: "https://github.com/AladinCommunication/ShoppingAndroid"   # 개발 4팀 관리 (Android 앱)
+  max-search: "https://github.com/AladinCommunication/max-search" # 검색 AI 팀 관리
+  ebook-web-viewer: "https://github.com/AladinCommunication/Ebook_Web_Viewer" # 개발 4팀 관리 (뷰어)
+  ebook-viewer-api: "https://github.com/AladinCommunication/EbookViewerAPI" # 개발 4팀 관리 (뷰어 API)
+  ebook-ios: "https://github.com/AladinCommunication/EbookIos" # 개발 4팀 관리 (iOS 앱)
+  shopping-android: "https://github.com/AladinCommunication/ShoppingAndroid" # 개발 4팀 관리 (Android 앱)
 
 youtrack:
   project_key: DEV2
@@ -121,12 +121,12 @@ data:
       used_by: [max-api]
   db_type: mssql
   db_version: "SQL Server 2016 SP1+"
-  shared_db: true       # 여러 컴포넌트가 같은 DB 공유
-  direct_sp_write: true  # SP 기반 write 집중적 사용
+  shared_db: true # 여러 컴포넌트가 같은 DB 공유
+  direct_sp_write: true # SP 기반 write 집중적 사용
   cache: redis
 
 api_endpoints:
-  max-api:  # RoutePrefix: "Api/"
+  max-api: # RoutePrefix: "Api/"
     - "Products/{itemId}"
     - "Series/{seriesId}"
     - "Browse/*"
@@ -189,12 +189,12 @@ architecture:
   approach: "Database-First — 새 기능은 SP 설계부터 시작"
 
 risk:
-  change_frequency: ""   # TODO: high / medium / low
-  incident_impact: ""    # TODO: high / medium / low
-  data_coupling: high    # 5개 DB 공유, 410+ SP, 여러 컴포넌트 공유
+  change_frequency: "" # TODO: high / medium / low
+  incident_impact: "" # TODO: high / medium / low
+  data_coupling: high # 5개 DB 공유, 410+ SP, 여러 컴포넌트 공유
 
 modernization:
-  track: extract         # 컴포넌트별로 다름 (아래 전략 참조)
+  track: extract # 컴포넌트별로 다름 (아래 전략 참조)
   status: "not-started"
   strategy: |
     ## 전환 경로: .NET Framework 4.8 → .NET Core → Kotlin (Spring Boot)
@@ -213,24 +213,24 @@ modernization:
     max-api:
       current: ".NET Framework 4.8"
       phase1_target: ".NET Core"
-      phase1_branch: "origin/deploy/max-dev-core"  # max-api 레포 내 브랜치
+      phase1_branch: "origin/deploy/max-dev-core" # max-api 레포 내 브랜치
       phase2_target: "Kotlin + Spring Boot"
-      phase2_repo: "https://github.com/AladinCommunication/MaxServer"  # Kotlin 전환용
+      phase2_repo: "https://github.com/AladinCommunication/MaxServer" # Kotlin 전환용
       track: extract
     maxcms-api:
       current: ".NET 8.0"
       target: "Kotlin + Spring Boot (장기)"
-      track: observe  # 이미 modern, 급하지 않음
+      track: observe # 이미 modern, 급하지 않음
     max-front:
       current: "Next.js 14"
-      track: observe  # modern stack
+      track: observe # modern stack
     maxcms-front:
       current: "Next.js 14"
-      track: observe  # modern stack
+      track: observe # modern stack
     max-batch:
       current: "SQL Server Agent + T-SQL"
       target: "서비스 코드로 이관"
-      track: wrap  # SP 확산 방지 우선
+      track: wrap # SP 확산 방지 우선
 
   priorities:
     - "1. SP 확산 방지 — 신규 코드에서 SP 직접 호출 금지"
@@ -240,3 +240,66 @@ modernization:
     - "5. SP를 서비스 코드로 점진 이관"
 
 harness_status: "not-started"
+
+infrastructure:
+  # 출처: 개발3팀 양우석 (wsyang@aladin.co.kr), 2026-05-19 메일
+  # 제목: [개발3팀] 만권당 API 인프라 구축 정보 공유 건 (개발계)
+  # 대상: max-api 레포 deploy/max-dev-core 브랜치 (.NET Core 전환, 별도 레포 아님)
+  dev:
+    aws_account: aladin-aws-max-dev
+    components:
+      max-api-core:
+        repo: "AladinCommunication/max-api"
+        branch: "deploy/max-dev-core"
+        description: "만권당 API Core (.NET Core) — max-api(.NET Framework 4.8)의 .NET Core 전환 브랜치 산출물"
+        workflow: "API G/W → VPC Link V2 → ALB Internal → EKS Pod → 연계 시스템"
+        api_gateway:
+          domain: "api.max.dev.aladin.co.kr/max-core"
+          full_domain: true
+        ci_cd: "CodePipeline → CodeBuild → ECR → ArgoCD → EKS Pod"
+        logs:
+          cloudwatch_log_group: "/aws/containerinsights/eks-max-dev/aladin"
+          purpose: "Application Logs"
+        network:
+          eks_subnets_cidr: "10.68.12.0/23"
+    notes:
+      - "개발/운영 통합 구성도 (운영은 추후 구축 예정)"
+      - "서비스 간 통신이기에 방화벽 정책 사용 기간은 1년 이상으로 설정 권고"
+    firewall_rules:
+      # 개발계 방화벽 정책 신청 대상 (8개 룰)
+      # 자세한 신청서 초안: Obsidian vault wiki/proposals/max-api-core-dev-firewall-application.md
+      - id: "Rule 01"
+        src: "max.dev.aladin.co.kr"
+        dst: "api.max.dev.aladin.co.kr/core"
+        proto_port: "TCP/443"
+      - id: "Rule 02"
+        src: "sync.ebook.dev.aladin.co.kr"
+        dst: "api.max.dev.aladin.co.kr/core"
+        proto_port: "TCP/443"
+      - id: "Rule 03"
+        src: "1.232.255.128/27 (고객센터)"
+        dst: "api.max.dev.aladin.co.kr/core"
+        proto_port: "TCP/443"
+      - id: "Rule 04"
+        src: "110.14.75.192/27 (물류센터)"
+        dst: "api.max.dev.aladin.co.kr/core"
+        proto_port: "TCP/443"
+      - id: "Rule 05"
+        src: "10.68.12.0/23 (eks max dev subnets)"
+        dst: "CoolDev, LegoDev"
+        proto_port: "TCP/1433"
+      - id: "Rule 06"
+        src: "api.max.dev.aladin.co.kr/core"
+        dst: "ai.search.dev.aladin.co.kr/mall"
+        proto_port: "TCP/443"
+      - id: "Rule 07"
+        src: "10.68.12.0/23 (eks max dev subnets)"
+        dst: "mall.dev.aladin.co.kr"
+        proto_port: "TCP/443"
+      - id: "Rule 08"
+        src: "10.68.12.0/23 (eks max dev subnets)"
+        dst: "redis-cluster-68-max-dev (Valkey)"
+        proto_port: "TCP/6379"
+  prod:
+    status: "not-built"
+    note: "운영 인프라는 추후 구축 예정"

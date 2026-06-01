@@ -1,0 +1,221 @@
+# caravan 서비스 프로파일
+# 소스: /Users/user/Documents/workspace/caravan-core
+
+service_id: caravan
+name: caravan
+type: new
+description: "가상 대기열(Virtual Waiting Room) — 트래픽 폭주 시 Redis Sorted Set 기반 원자적 순번 발급, 슬롯 기반 입장 제어, JWT Entry Token으로 판매·예매 서비스 보호 (리버스 프록시, 백엔드 코드 변경 없음)"
+
+owners:
+  primary: "jmkim@aladin.co.kr"  # 김정민
+  backup: "heum2@aladin.co.kr"   # 조은흠
+
+# 멀티 컴포넌트 (단일 모노레포, 독립 배포 단위)
+components:
+  caravan-api:
+    description: "Public API — 대기열 진입, SSE 스트림, 토큰 발급/복원, 입장 확인"
+    runtime:
+      type: spring-boot
+      version: "3.3.7"
+      language: "Kotlin 2.1.0"
+      jvm: "Java 21"
+      hosting: "Docker / Kubernetes"
+    port: 8080
+    network: external (via gateway)
+    web_framework: Spring WebFlux (reactive, SSE)
+
+  caravan-admin:
+    description: "Admin API — 이벤트 CRUD, 상태 변경, 실시간 메트릭, 감사 로그, 토큰 강제 만료"
+    runtime:
+      type: spring-boot
+      version: "3.3.7"
+      language: "Kotlin 2.1.0"
+      jvm: "Java 21"
+      hosting: "Docker / Kubernetes"
+    port: 8083
+    network: internal
+
+  caravan-scheduler:
+    description: "백그라운드 — 슬롯 회수, 만료 세션 정리, 큐 정합성 유지"
+    runtime:
+      type: spring-boot
+      version: "3.3.7"
+      language: "Kotlin 2.1.0"
+      jvm: "Java 21"
+      hosting: "Docker / Kubernetes"
+
+  gateway:
+    description: "Spring Cloud Gateway — JWT Entry Token 검증, /{slug}/** 동적 리버스 프록시, Rate Limiting"
+    runtime:
+      type: spring-cloud-gateway
+      version: "Spring Boot 3.3.7"
+      language: "Kotlin 2.1.0"
+      jvm: "Java 21"
+      hosting: "Docker / Kubernetes"
+    port: 8090
+    network: external (사용자 진입점)
+
+  caravan-frontend:
+    description: "대기실 UI + 관리자 UI"
+    runtime:
+      type: nextjs
+      version: "Next.js 14.2.35"
+      language: "TypeScript 5"
+      hosting: "Docker / Kubernetes"
+    port: 3000
+    web_framework: "React 18 + Tailwind CSS + Zustand"
+
+repo: "https://github.com/AladinCommunication/caravan"
+
+youtrack:
+  project_key: DEV2
+  instance: "https://aladincommunication.youtrack.cloud"
+  kb_articles:
+    - id: DEV2-A-985
+      title: "알라딘 대기열 서버 (AS-IS 분석 hub)"
+      url: "https://aladincommunication.youtrack.cloud/articles/DEV2-A-985/7JWM652865SYIOuMgOq4sOyXtCDshJzrsoQ"
+      role: as-is
+    - id: DEV2-A-980
+      title: "알라딘 대기열(Standby) 시스템 분석 문서"
+      url: "https://aladincommunication.youtrack.cloud/articles/DEV2-A-980"
+      role: as-is
+    - id: DEV2-A-986
+      title: "대기열 서비스 운영 현황 및 미팅 요약 (04.02)"
+      url: "https://aladincommunication.youtrack.cloud/articles/DEV2-A-986"
+      role: as-is
+
+architecture:
+  pattern: "Clean Architecture (Hexagonal-style) — domain/application/infrastructure 분리 + reverse-proxy gateway"
+  modules:
+    caravan-domain: "순수 Kotlin 도메인 모델 (의존성 없음) — Event, Queue, Token, Slot, Session"
+    caravan-application: "UseCase + Port 인터페이스 (in/out)"
+    caravan-infrastructure: "어댑터 — Redis, JPA, SQS, Lua 스크립트, JWT 서명"
+    caravan-api: "Public API 진입점 (포트 8080)"
+    caravan-admin: "Admin API 진입점 (포트 8083)"
+    caravan-scheduler: "스케줄러 진입점"
+    gateway: "리버스 프록시 + 토큰 검증 (포트 8090)"
+    caravan-frontend: "Next.js 14 UI"
+  key_patterns:
+    - "Reverse Proxy Gateway: /{slug}/** 동적 라우팅으로 판매 서비스 코드 변경 zero"
+    - "Atomic Queue: Redis Sorted Set + Lua Script (rank_issuing / slot_filling / confirm_entry)"
+    - "Envelope-style Token: JWT RS256 Entry Token, gateway에서 검증·헤더 주입(x-entry-token-*)"
+    - "Pub/Sub-driven SSE: Redis Pub/Sub → 인스턴스당 50K 동시 SSE 연결"
+    - "Slot 기반 입장 제어: HSETNX 원자적 슬롯 점유, scheduler가 만료 회수"
+
+stack:
+  framework: "Spring Boot 3.3.7 + Spring Cloud Gateway"
+  language: "Kotlin 2.1.0"
+  jvm: "Java 21"
+  build: "Gradle (Kotlin DSL)"
+  orm: "Spring Data JPA (Hibernate) — Admin 영속화"
+  reactive: "Spring WebFlux + Project Reactor (API, Gateway)"
+  security: "Spring Security 6.x + JWT RS256 (Entry Token)"
+  frontend: "Next.js 14.2.35 + React 18 + TypeScript 5 + Tailwind CSS 3 + Zustand 5"
+  data:
+    - "Redis 7 (Sorted Set + Hash + Pub/Sub + Lua Script)"
+    - "PostgreSQL 16 (이벤트·감사 로그 영속)"
+    - "AWS SQS (메시지 큐, 로컬은 LocalStack)"
+  testing:
+    - "JUnit 5 + Spring Boot Test"
+    - "Testcontainers (Redis, PostgreSQL)"
+    - "k6 (부하 테스트: queue-join, queue-status, full-flow)"
+  observability: "Prometheus + Grafana, 구조화 JSON 로깅"
+
+data:
+  db_type: postgresql
+  hosting: "AWS RDS (운영) / docker-compose (로컬)"
+  databases:
+    - name: "caravan"
+      purpose: "이벤트, 감사 로그, 토큰 메타 영속 저장"
+      migration: "Flyway"
+  cache:
+    type: "Redis 7"
+    usage: "대기열(Sorted Set), 슬롯(Hash), 세션, 동적 프록시 targetUrl, Pub/Sub"
+  queue:
+    type: "AWS SQS (LocalStack for local)"
+  shared_db: false
+  direct_sp_write: false
+
+redis_keys:
+  - "queue:{eventId}            (Sorted Set) — 대기열, score=진입 시각"
+  - "slot:{eventId}             (Hash)       — 슬롯 점유 현황"
+  - "session:{eventId}:{userId} (String/Hash) — 입장 세션"
+  - "event:{slug}:targetUrl     (String)     — 동적 프록시 대상 URL"
+
+api_endpoints:
+  caravan-api:
+    - "POST /api/v1/queue/{eventId}/join — 대기열 진입"
+    - "GET  /api/v1/queue/{eventId}/status — 순번·상태 조회"
+    - "GET  /api/v1/queue/{eventId}/stream — SSE 실시간 스트림"
+    - "GET  /api/v1/events/{slug}/info — 이벤트 공개 정보"
+    - "POST /api/v1/events/{slug}/entry/{activate,confirm,complete} — 입장 흐름"
+    - "POST /api/v1/events/{slug}/tokens/recover — 재접속 토큰 복원"
+  caravan-admin:
+    - "POST /admin/v1/events — 이벤트 생성"
+    - "GET/PATCH/DELETE /admin/v1/events/{id} — CRUD"
+    - "POST /admin/v1/events/{id}/status — 상태 전이"
+    - "GET  /admin/v1/events/{id}/{metrics,audit-logs,tokens} — 모니터링"
+    - "DELETE /admin/v1/events/{id}/tokens/{tokenId} — 강제 퇴장"
+  gateway:
+    - "/api/v1/**    → caravan-api :8080"
+    - "/admin/v1/**  → caravan-admin :8083"
+    - "/waiting/**   → caravan-frontend :3000"
+    - "/{slug}/**    → 판매 서비스 (Redis targetUrl 동적 라우팅, JWT 검증)"
+
+dependencies:
+  inbound:
+    - system: "사용자 브라우저 (대기실 UI)"
+      method: "HTTPS (Gateway 진입)"
+      target: gateway
+    - system: "운영자 (관리자 UI)"
+      method: "HTTPS"
+      target: caravan-admin
+  outbound:
+    - system: "판매·예매 서비스 (보호 대상)"
+      method: "HTTP 리버스 프록시 (x-entry-token-* 헤더 주입)"
+      purpose: "트래픽 차단·우회 방지"
+    - system: "Redis"
+      method: "RESP (Lettuce/Reactive)"
+      purpose: "대기열·슬롯·세션·Pub/Sub"
+    - system: "PostgreSQL"
+      method: "JDBC (Admin)"
+      purpose: "이벤트·감사 로그"
+    - system: "AWS SQS"
+      method: "SDK"
+      purpose: "비동기 이벤트 처리"
+
+build:
+  commands:
+    build: "./gradlew build"
+    test: "./gradlew test"
+    run_api: "./gradlew :caravan-api:bootRun"
+    run_admin: "./gradlew :caravan-admin:bootRun"
+    run_scheduler: "./gradlew :caravan-scheduler:bootRun"
+    run_gateway: "./gradlew :gateway:bootRun"
+    run_frontend: "cd caravan-frontend && npm run dev"
+  docker:
+    compose: "docker-compose.yml — redis, postgres, localstack, 전체 서비스"
+    base_image: "Eclipse Temurin JDK 21"
+  load_test: "k6 run k6/{queue-join,queue-status,full-flow}.js"
+  e2e_test: "./scripts/scenario-test.sh"
+
+performance_targets:
+  - "대기열 진입: 피크 10,000 RPS"
+  - "순번 조회: P99 ≤ 50ms"
+  - "SSE 동시 연결: 인스턴스당 50,000"
+  - "가용성: 99.9% (Redis Sentinel)"
+
+risk:
+  change_frequency: ""   # TODO
+  incident_impact: ""    # TODO (대기열 장애 시 판매·예매 보호 실패 → 백엔드 다운 위험)
+  data_coupling: low     # 독립 DB, SP 없음, 판매 서비스와는 프록시 경계만
+
+modernization:
+  track: observe
+  status: "not-started"
+  notes: |
+    - 신규 서비스 — Modern stack (Spring Boot 3.3.7, Kotlin 2.1, Java 21, Clean Architecture)
+    - 기존 판매 서비스 보호 wrapper 역할이므로 다른 레거시의 Wrap/Extract 트랙과 함께 활용 가능
+    - 하네스 정착·관측 지표 정립이 우선
+
+harness_status: "not-started"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "DEV2 YouTrack Ticket"
+  short_description: "Draft DEV2 YouTrack tickets"
+  default_prompt: "Draft a DEV2 YouTrack ticket using 5W1H."

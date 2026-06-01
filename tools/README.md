@@ -1,0 +1,251 @@
+# harness tools
+
+팀 하네스 보조 도구 모음. 일회성 또는 정기 실행용 스크립트.
+
+## audit_vault.py — vault 분류 매트릭스 생성
+
+vault 내 모든 md를 새 택소노미에 대응시킨 분류표 생성.
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+
+python3 tools/audit_vault.py \
+  --vault "$VAULT" \
+  --catalog catalog/ \
+  --output-md  "$VAULT/wiki/guides/_audit/migration-plan.md" \
+  --output-json "$VAULT/wiki/guides/_audit/migration-plan.json"
+```
+
+### 출력
+
+- `migration-plan.md` — 사람 검토용 (서비스별 섹션 + 정렬 + 요약)
+- `migration-plan.json` — Sub 3 입력용
+
+### 분류 룰
+
+spec `docs/superpowers/specs/2026-05-27-vault-audit-migration-plan-design.md` 참조.
+
+요약:
+- service prefix(`tobe-`, `web-aladin-`, `max-`, `aasm-`, `shopping-`, `caravan-`, `naru-`, `bazaar-`, `storefront-`, `b2b-store-`, `blog-`, `bookple-`) → 해당 서비스 dir
+- 디렉터리(`daily/`, `meetings/`, `okr/`, `incidents/`, `capacity/`) → `processes/{name}/`
+- `domains/`, `proposals/`, `decisions/`, `inventory/` → `services/{svc}/{...}`
+- `indexes/` → DELETE (Sub 4 재생성)
+- `briefs/`, `execution/`, `archive/`, `exports/`, `patterns/`, `imports/`, `templates/`, `tasks/`, `usecases/`, `projects/`, `processes/`, `contracts/`, `services/` (기존) → 사람 판정 (`action=review`)
+- guides/ 메타 잔류, guides/ 서비스 prefix 사람 판정
+
+### 검토 절차
+
+1. 도구 실행 (위)
+2. `migration-plan.md` 열어 `action=review` row 확정 — `제안 경로` 셀 채우고 `action` 변경
+3. 검토 끝나면 도구 재실행하지 말고 json을 수동 갱신 또는 Sub 3 입력으로 직접 사용
+
+### 의존성
+
+Python 3.10+ stdlib만 사용. 외부 패키지 불필요.
+
+## migrate_vault.py — vault 일괄 이관
+
+audit_vault.py 산출(`migration-plan.json`)을 입력으로 받아 파일 이관 + wikilink 재작성.
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+
+# 1) dry-run으로 영향 확인 (기본)
+python3 tools/migrate_vault.py \
+  --vault "$VAULT" \
+  --plan  "$VAULT/wiki/guides/_audit/migration-plan.json"
+
+# 2) 단계별 실 실행
+python3 tools/migrate_vault.py --vault "$VAULT" --plan "...migration-plan.json" --phase 1 --apply
+python3 tools/migrate_vault.py --vault "$VAULT" --plan "...migration-plan.json" --phase 2 --apply
+python3 tools/migrate_vault.py --vault "$VAULT" --plan "...migration-plan.json" --phase 3
+```
+
+### Phase
+
+- 1: 파일 이관 (action: move/merge/delete)
+- 2: wikilink 재작성 (옛 이름 → 새 이름)
+- 3: 잔존 끊긴 wikilink 검증 + surface
+
+### 옵션
+
+- `--dry-run` (기본) — 실 변경 없음, 영향만 출력
+- `--apply` — 실 실행 (`git mv`/`git rm`/append/sed)
+- `--phase 1|2|3|all` — 기본 all
+- `--action move,merge,delete` — 처리 대상 action 필터
+- `--log-out <path>` — 로그 출력 경로 (기본 vault/wiki/guides/_audit/migration-log.md)
+
+### 안전장치
+
+- 기본 dry-run, `--apply` 명시해야 실 실행
+- merge에서 dst 존재 시 자동 append + surface (사람 후속 검토)
+- git mv 실패(untracked) 시 mv + git add fallback
+- wikilink 충돌(동명 다른 새 이름) 시 변경 안 함 + surface
+
+## generate_vault_indexes.py — vault `_index.md` 자동 생성
+
+vault `services/{svc}/`, `processes/{type}/`, hub `_index.md`를 generated block 기반으로 생성·갱신.
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+
+# dry-run (기본)
+python3 tools/generate_vault_indexes.py --vault "$VAULT"
+
+# 실 실행
+python3 tools/generate_vault_indexes.py --vault "$VAULT" --apply
+
+# 부분 target
+python3 tools/generate_vault_indexes.py --vault "$VAULT" --target services --apply
+```
+
+### 동작
+
+- `<!-- generated:vault-index ... -->` 블록만 자동 갱신
+- 기존 _index.md에 generated block 없으면 skip + surface (사람 본문 보존)
+- 없는 _index.md는 신규 생성 (frontmatter + block + harness-link placeholder)
+- `--apply` 시 변경 파일만 git add
+
+### 산출
+
+- services/{svc}/_index.md
+- processes/{type}/_index.md
+- wiki/services/_index.md, wiki/processes/_index.md (hub)
+
+### 의존성
+
+Python 3.10+ stdlib만.
+
+## sync_harness_links.py — harness ↔ vault sync
+
+harness `catalog/*.yaml`, `policies/team-members.md`, `policies/*.md`를 vault 안 generated 블록에 반영.
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+REPO="/Users/jm/Documents/workspace/team2"
+
+# dry-run
+python3 tools/sync_harness_links.py --vault "$VAULT" --harness "$REPO"
+
+# 실 실행
+python3 tools/sync_harness_links.py --vault "$VAULT" --harness "$REPO" --apply
+
+# target 한정
+python3 tools/sync_harness_links.py --vault "$VAULT" --harness "$REPO" --target services --apply
+```
+
+### 갱신 대상 블록
+
+- `services/{svc}/_index.md` 의 `<!-- generated:harness-link -->`
+- `processes/team/_index.md` 의 `<!-- generated:team-members -->` (없으면 파일 신규 생성)
+- `wiki/_index.md` 의 `<!-- generated:policy-index -->` (없으면 본문 끝에 추가)
+
+### 동작
+
+- catalog yaml은 정규식 shallow 파싱 (service_id, name, type, status, owners.{primary,backup,additional,stakeholders})
+- team-members.md 정규직 표 파싱 + 이메일 → '한글이름 (id)' 매핑
+- policies/*.md 파일 listing + H1 다음 첫 행 = 1행 요약
+- 기존 _index.md에 해당 블록 없으면 skip + surface (services 케이스)
+
+### 의존성
+
+Python 3.10+ stdlib.
+
+## lint_vault.py — vault 5룰 lint (Sub A)
+
+vault 안 md를 5 룰로 검사. pre-commit hook + 정기 sweep 호출 진입점.
+
+룰:
+1. frontmatter `type` 필수 + type별 필수 필드
+2. 파일 위치 = type 기반 결정 트리 일치
+3. 파일명 = kebab-case, 서비스 prefix 금지
+4. file size warn (≥500 line)
+5. `_index.md` 안 `<!-- llm-hint -->` 블록 의무
+
+```bash
+# 전체
+python3 tools/lint_vault.py --vault "$VAULT" --all
+
+# staged diff (pre-commit)
+python3 tools/lint_vault.py --vault "$VAULT" --files wiki/foo.md
+```
+
+exit 0 = 통과, 1 = 위반.
+
+## import_from_archive.py — 옛 vault → 새 vault (Sub C)
+
+team2-archive에서 단일 파일을 새 team2 vault로 selective import.
+
+```bash
+# 매치 파일 찾기
+python3 tools/import_from_archive.py --archive ARCHIVE --vault VAULT --find dev2-5749
+
+# dry-run dst 확인
+python3 tools/import_from_archive.py --archive ARCHIVE --vault VAULT --file wiki/tickets/dev2-5749.md
+
+# 실 복사
+python3 tools/import_from_archive.py --archive ARCHIVE --vault VAULT --file ... --apply
+```
+
+dst 위치는 src frontmatter type 기준 자동 결정. 서비스 prefix 자동 제거.
+
+## vault_sweep.sh — 정기 sweep (Sub D)
+
+generate_vault_indexes + sync_harness_links + lint 일괄.
+
+```bash
+# 수동
+tools/vault_sweep.sh           # dry-run
+tools/vault_sweep.sh --apply   # 실 실행
+
+# cron 권장
+# 0 9 * * * /Users/jm/Documents/workspace/team2/tools/vault_sweep.sh --apply --quiet
+```
+
+## promote_notes.py — promote 마커 분리 (Sub 8)
+
+ticket note 또는 임의 vault md 안에 다음 마커 작성 → 도구가 별도 노트로 promote.
+
+마커:
+```
+<!-- promote:{type}/{svc?}/{slug} title="제목" [domain="..."] -->
+{본문}
+<!-- /promote -->
+```
+
+지원 type:
+- `domain` → `services/{svc}/domains/{slug}.md` (또는 `domain="..."` 시 `domains/{domain}/{slug}.md`)
+- `analysis` → `services/{svc}/analysis/{slug}.md`
+- `decision` → `services/{svc}/decisions/{slug}.md`
+- `proposal` → `services/{svc}/proposals/{slug}.md`
+- `glossary` → `glossary/{slug}.md` (svc 무시)
+
+```bash
+# 단일 파일
+python3 tools/promote_notes.py --vault "$VAULT" --file wiki/processes/tickets/dev2-XXXX.md
+
+# 전체 scan + 실 실행
+python3 tools/promote_notes.py --vault "$VAULT" --all --apply
+```
+
+원본 마커 영역 = `[[stem|title]]` wikilink 한 줄로 치환. 새 노트는 template frontmatter 자동 채움.
+
+## archive_vault.py — hot/cold 자동 archive (Sub E)
+
+frontmatter `updated_at` 또는 `date`가 N일 전 이상이면 `archive/YYYY/`로 이동.
+
+대상: `processes/tickets/*` 중 `ticket_status: done` + `processes/{daily, meetings, weekly}/*`. okr·incidents·capacity는 영구 보관.
+
+```bash
+python3 tools/archive_vault.py --vault "$VAULT" --days 180
+python3 tools/archive_vault.py --vault "$VAULT" --days 180 --apply
+```
+

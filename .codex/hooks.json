@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/jm/Documents/workspace/team2/.claude/hooks/sqlcmd-readonly.sh'",
+            "timeout": 5,
+            "statusMessage": "Checking sqlcmd read-only policy"
+          }
+        ]
+      },
+      {
+        "matcher": "^mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/jm/Documents/workspace/team2/.claude/hooks/block-db-mcp.sh'",
+            "timeout": 5,
+            "statusMessage": "Checking DB MCP policy"
+          }
+        ]
+      }
+    ]
+  }
+}
