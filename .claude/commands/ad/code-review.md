@@ -7,6 +7,10 @@ model: sonnet
 
 팀 하네스 기준에 따라 GitHub PR을 리뷰하고 pending review로 코멘트를 게시합니다.
 
+## 검증 순서
+
+[policies/hypothesis-verification-order.md](../../../policies/hypothesis-verification-order.md) 적용 — "이거 맞나요?"류 질문 코멘트 달기 전에 콜그래프/grep + dev DB 읽기 쿼리로 답이 나오는지 먼저 확인. 잔여 의문만 작성자에게 질의 코멘트로 남긴다. dev DB 읽기는 사전 동의 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md)).
+
 ## 사용법
 
 ```

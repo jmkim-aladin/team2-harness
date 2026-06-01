@@ -4,6 +4,10 @@
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 
+## 검증 순서
+
+[policies/hypothesis-verification-order.md](../../../policies/hypothesis-verification-order.md) 적용 — 티켓 본문에 미확정 사실을 적기 전에 콜그래프/grep + dev DB 읽기 쿼리로 답이 나오는지 먼저 확인. 잔여 항목만 보고자/오너 컨펌 대상으로 남긴다.
+
 ## 기본값
 
 - **프로젝트**: DEV2
@@ -142,6 +146,68 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 * ### Where (어디에 적용되는가)
 * ### How (어떻게 구현할 것인가)
 ```
+
+## 외부(사업부) 티켓 처리 규칙 (필수)
+
+본인이 직접 생성하지 않은 티켓 — 특히 사업부(기획자·운영팀·CS) 생성 티켓 — 은 **원본을 변경하지 않는다**.
+
+### 식별 기준
+- `reporter` 필드가 본인(현재 사용자) 외 다른 사람
+- 사업부/기획자/운영팀이 작성한 요청 티켓 (예: `[만권당]` 요청 사항 형식, 본문에 "기능 추가 요청드립니다" 등)
+- 본인이 작성한 티켓이라도 다른 팀에 공유된 경우는 외부 취급
+
+### 금지 행위
+- Type 변경 (Task → Feature 등)
+- Assignee·CC·Service·Platform·Story points 등 필드 변경
+- description / summary 수정
+- State 임의 전환 (운영 정책상 허용된 전환만 가능)
+
+### 표준 처리 절차
+1. 외부 티켓 원본은 **그대로 둔다**
+2. 본인이 작업할 단위로 **신규 Feature를 생성**한다
+   - 제목 끝에 `(개발)` 같은 구분자 추가 권장
+   - 본문 첫 줄에 "## 상위 요청 — 사업부 요청 티켓 {외부 ID} 하위 개발 Feature" 명시
+3. 신규 Feature를 외부 티켓의 **Subtask로 링크** (외부 티켓 parent for, 신규 Feature subtask of)
+4. 하위 Task 9개는 모두 **신규 Feature 하위**로 생성·링크 (외부 티켓 직접 자식으로 두지 않음)
+
+### YouTrack 링크 API
+- linkType id `161-3` (Subtask), suffix `s` = sourceToTarget(parent for)
+- 추가: `POST /api/issues/{외부ID}/links/161-3s/issues` body `{"idReadable":"{신규ID}"}`
+- 제거 시 child의 **internal id**(`3-XXXXX`) 필요: `DELETE /api/issues/{parent}/links/161-3s/issues/{internal_id}`
+
+### 사례 기록
+DEV2-5512 (reporter=박상윤, 사업부): 원본 유지 → 하위에 DEV2-6607 (개발 Feature) 생성 → DEV2-6607 하위 9개 Task
+
+## 본문 작성 규칙 (필수)
+
+DEV2-5512 작업에서 사용자가 확정한 규칙. 모든 신규 티켓에 동일 적용한다.
+
+### 제목
+- Feature·Task 동일하게 `[{서비스명}] {업무 요약}` 형식 통일
+- 서비스명은 한글 (`[만권당]`, `[투비]`, `[바자르]`)
+- 날짜·버전·일정 표기 금지
+
+### 본문
+- **비즈니스 로직·정책·트리거·운영 영향 위주**로 작성
+- **코드 레벨 디테일 최소화**: 컬럼명·SP명·파일경로·테이블명 나열 금지. 필요 시 도메인 단위(`공급사 계약 도메인`, `정산 처리 로직`)로 표현
+- **코드블록 자제**: 본문에 ` ``` ` 사용 금지. 항목은 bullet/표로 표현
+- **날짜·기간 본문에 적지 않음**: 시작일/배포일/스프린트 월 표기 금지. YouTrack 필드(`예상 시작일`, `Sprints`)에서만 관리
+- **월별 스프린트 배정 표 본문 금지**: 배정은 Sprints 필드로만 관리
+- **5W1H 모든 섹션 단순 bullet 1-5개**로 유지. 산문/장문 금지
+
+### SP 분할 선호 규칙
+- 사용자 선호: **SP 3 (1 MD) 최대**로 1-2 레벨까지 분할
+- SP 5/8 등장 시 → 자동으로 SP 3 단위로 추가 분할 제안
+- 한 Feature 하위 Task는 모두 SP 3 균일이 이상적
+
+### 필드 기본값
+- **CC**: 비움 (사용자가 명시할 때만 추가)
+- **Service**: 대상 서비스 enum 반드시 설정
+- **Sprints**: 사용자 명시 시에만 설정 (기본 Backlog)
+- **Story points**: Feature=0, Task=3 우선
+
+### Feature 1주 룰 예외
+- 단독 진행 + 9 MD 등 1주 초과 명시 결정 시 사용자 결정 존중. 경고만 출력하고 진행
 
 ## 후속 작업 안내
 

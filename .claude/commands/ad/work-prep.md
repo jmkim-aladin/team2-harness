@@ -36,6 +36,14 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 | 서비스 카탈로그 | `$TEAM2_HARNESS_PATH/catalog/{서비스ID}.yaml` | 서비스 컨텍스트 |
 | 팀원/오너 | `$TEAM2_HARNESS_PATH/policies/team-members.md` | 담당자 매핑 |
 
+## 검증 순서 원칙
+
+[policies/hypothesis-verification-order.md](../../../policies/hypothesis-verification-order.md) 적용. 요지:
+
+1. 코드 레벨 (§3.5) → 2. 데이터 레벨 (§11) → 3. 잔여 항목만 보고자/오너 컨펌
+2. dev DB 읽기 쿼리는 사전 동의됨 — 즉시 실행
+3. 위키 노트 `## 미확정 질문`에는 1·2로 풀리지 않은 항목만 남긴다
+
 ## 실행 흐름
 
 ### 1. 입력 분기
@@ -66,6 +74,25 @@ curl -s -H "$AUTH" \
 - 추정된 서비스가 있으면 `$TEAM2_HARNESS_PATH/catalog/{서비스}.yaml` 을 로드해 owner·repo·tech stack을 컨텍스트로 묶는다
 - 서비스 추정 불가 시 사용자에게 질문
 
+### 3.5 코드 레벨 진입점 분석 (자동)
+
+서비스 카탈로그로 repo가 식별되면 **사용자 확인 없이** 코드 레벨 진입점·호출 SP·테이블을 탐색한다. 위키 노트 `연결 리소스 > 진입점 후보`와 `가설 / 영향 분리`에 결과를 반영한다. 서비스 종류와 무관하게 같은 기조로 진행하며, 도구는 서비스에 맞게 선택한다.
+
+탐색 우선순위 (도구는 서비스 환경에 따라 선택):
+
+1. **콜그래프 DB 활용** — 서비스에 sqlite 콜그래프(graphify 등) 인덱스가 있으면 우선 사용. 예) shopping은 `/Users/jm/Documents/workspace/shopping/graphify/graph.db`:
+   - aspx/엔드포인트 경로 단서: `fromAspx <path>` / `fromAlajax <name>`
+   - SP 이름 단서: `whoCalls <sp>`
+   - 영향 분석: `impact <file|sp>`
+   - 다른 서비스도 동일한 콜그래프/심볼 인덱스가 있으면 같은 방식으로 적용. 키워드만 있을 땐 grep으로 후보 진입점을 먼저 식별한 뒤 콜그래프로 체인 확장.
+2. **grep/심볼 검색 폴백** — 콜그래프 미구축 서비스 (Kotlin/Spring, Node, VB6 등):
+   - repo 루트에서 `grep -rli "{도메인 키워드}" <코드 루트>` (한·영 동시. 예: "구매제한", "BuyBlock", "PartnerCid")
+   - 진입점 후보 (`.aspx`/`.cs`/`.kt`/`.ts`/`.bas`/`.frm` 등) 5개 이하로 추림
+   - IDE 심볼 인덱스(LSP, ctags, Sourcegraph 등)가 있으면 함께 사용
+3. **테이블·SP·외부 호출 식별** — 진입점에서 호출되는 테이블/SP/HTTP 의존성을 추출해 위키 노트에 적는다. 콜그래프가 있으면 `reads_table`/`calls_sp` 엣지를 직접 인용. grep 폴백이면 호출부 5줄 컨텍스트 발췌.
+
+탐색 결과가 비면 "후보 미식별" 항목으로 명시 (감추지 않는다). 키워드 후보를 노트에 적어 다음 사이클에서 다시 시도.
+
 ### 4. 위키 노트 경로 결정
 
 | 모드 | 경로 |
@@ -86,7 +113,7 @@ curl -s -H "$AUTH" \
 type: ticket
 title: DEV2-{NNNN} {YouTrack 제목}
 canonical_id: ticket:dev2-{nnnn}
-status: canonical             # 분석·검토 완료 노트. 미검토(야간 auto-prep)는 draft (§"사전 분석")
+status: draft                 # work-prep 신규/갱신 직후 = 미검토 → draft. 본인이 분석·검증 끝낸 뒤 canonical 승격 (§"사전 분석")
 updated_at: {YYYY-MM-DD}
 ticket_id: DEV2-{NNNN}
 ticket_status: in-progress    # auto-prep | in-progress | done | backlog
@@ -269,9 +296,54 @@ cmux rename-tab --surface "$CMUX_SURFACE_ID" "NO-TICKET — {제목}"
 3. (자유글 모드인 경우) 티켓 발의: `/ad:ticket`
 ```
 
-### 11. SQL 검증 (선택, 개발 DB 한정)
+### 11. 검증 SQL 자동 작성 + 실행 (개발 DB 한정)
 
-작업 준비 단계에서 영향 범위/스키마/데이터 분포를 확인할 SQL을 작성했고, 실측이 필요하면 **개발(dev) DB에 한해** 직접 조회해 검증해도 된다. 운영 데이터 추출 요청은 별도 절차([policies/data-request-policy.md](../../../policies/data-request-policy.md))를 따른다.
+§3.5 코드 분석에서 식별된 진입점·테이블·SP 기반으로, **티켓 작업에 필요한 조회 SQL을 자동으로 초안 작성**해 위키 노트 `## 검증 SQL` 섹션에 남긴다. 이는 work-prep의 기본 산출물이다 (사용자가 요청하지 않아도 작성).
+
+SQL 작성 원칙:
+
+1. **조회 전용** (`SELECT`/`EXPLAIN`/스키마 메타). `INSERT/UPDATE/DELETE/DDL`은 절대 자동 작성하지 않는다 — 작업 본격 진행 시 별도 요청으로만.
+2. **티켓 요구 데이터를 직접 산출**하는 쿼리를 만든다 (예: "CID 하위 트리 추출" → `CategoryInfo` 재귀 CTE).
+3. **사전 검증 쿼리**도 같이 둔다 (대상 카운트, 스키마 확인, NULL/중복 여부).
+4. 운영 식별자(계정·CID·OID 등)는 SQL 파라미터로 명시. 하드코딩 OK (CID는 시스템 식별자, 개인정보 아님).
+
+위키 노트 `## 검증 SQL` 섹션 형식:
+
+```markdown
+## 검증 SQL
+
+### (1) 사전 검증 — {목적}
+- DB: WebCatalog (shopping dev)
+- SQL:
+  ```sql
+  SELECT ...
+  ```
+
+### (2) 본 산출 — {목적}
+- DB: WebCatalog (shopping dev)
+- SQL:
+  ```sql
+  WITH RECURSIVE ... SELECT ...
+  ```
+```
+
+dev DB 실행 흐름:
+
+1. 위키 노트에 SQL 초안을 기록한다 (대상 DB + SQL 전문 + 예상 행수 명시).
+2. **읽기 쿼리는 사전 동의**되어 있다 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의"). 매번 확인 묻지 않고 바로 실행한다. Keychain → `sqlcmd`/`mssql-cli` 표준 패턴 사용.
+3. 결과는 **스키마/카운트/대표 패턴**만 노트에 반영. row dump 금지.
+4. `INSERT/UPDATE/DELETE/DDL`이 필요해지면 그때만 별도 확인 게이트.
+
+허용 범위:
+
+- 대상: 카탈로그 `catalog/{서비스}.yaml`의 `dev`/`staging` DB. 운영(prod) DB는 금지.
+- 작업: `SELECT`, `EXPLAIN`, `SHOW`, 스키마 조회. `INSERT/UPDATE/DELETE/DDL`은 사용자 명시 승인 없이는 금지.
+- 접근 수단: CLI (`mssql-cli`, `psql`, `mysql` 등) 또는 사내 쿼리 도구. **DB 계열 MCP(postgres/mssql/mysql 등)는 사용하지 않는다** (글로벌 메모리 정책). 비-DB MCP는 무관.
+- 자격증명: 본인 macOS Keychain에 등록한 항목을 `security find-generic-password -s {sm-...} -a $(whoami) -w`로 변수에 캡처해 사용하고, 사용 후 `unset`. 평문 파일·위키·하네스에 기록 금지. 상세: [policies/local-credentials-policy.md](../../../policies/local-credentials-policy.md). 운영 자격증명은 [policies/aws-secrets-convention.md](../../../policies/aws-secrets-convention.md) 절차로만 다루며 본 스킬에서는 사용하지 않는다.
+
+> 운영(prod) 데이터 추출 요청은 별도 절차([policies/data-request-policy.md](../../../policies/data-request-policy.md))를 따른다.
+
+(legacy) 사용자가 직접 작성한 SQL이 있는 경우에도 동일 흐름 적용.
 
 허용 범위:
 
@@ -303,8 +375,11 @@ cmux rename-tab --surface "$CMUX_SURFACE_ID" "NO-TICKET — {제목}"
 
 **확인 필수 항목**:
 
-- **개발 DB SQL 실행**: 대상/SQL/예상 결과를 보여주고 확인 후 실행 (§11)
+- **dev DB 쓰기 쿼리**(`INSERT/UPDATE/DELETE/DDL`): SQL 전문 + 영향 row + 롤백 계획 후 확인 (§11)
+- 운영(prod) DB 조회/변경: 본 스킬에서 직접 수행 금지 — [data-request-policy.md](../../../policies/data-request-policy.md) 절차
 - 브랜치 생성, git 명령, YouTrack 변경: **하지 않는다** — 제안만
+
+> dev DB **읽기 쿼리**는 사전 동의되어 있어 확인 게이트 없이 실행 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의").
 
 ## 금지
 

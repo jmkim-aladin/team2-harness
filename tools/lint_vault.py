@@ -4,7 +4,7 @@
 룰:
 1. frontmatter `type` 필수 + type별 필수 필드
 2. 파일 위치 = type 기반 결정 트리 일치
-3. 파일명 = kebab-case, 서비스 prefix 금지 (단 {name}-index.md는 stem uniqueness 위해 허용)
+3. 파일명 = kebab-case, 서비스 prefix 금지 (예외: {name}-index.md, storefront-ddd-* 시리즈)
 4. file size warn (≥500 line)
 5. {name}-index.md 안 <!-- llm-hint --> 블록 의무
 
@@ -55,9 +55,10 @@ TYPE_RULES: dict[str, dict] = {
         "filename": r"^\d{4}-\d{2}(-\d{2})?-[a-z0-9-]+\.md$",
     },
     "okr": {
-        "required": ["year", "quarter", "scope"],
+        # taxonomy: okr/ = 분기/연간 OKR. 분기 문서는 frontmatter에 quarter, 연간(예: 2026-team-okr)은 quarter 없음.
+        "required": ["year", "scope"],
         "location": r"^wiki/processes/okr/",
-        "filename": r"^\d{4}-q[1-4](-[a-z0-9-]+)?\.md$",
+        "filename": r"^\d{4}-(q[1-4](-[a-z0-9-]+)?|[a-z][a-z0-9-]+)\.md$",
     },
     "incident": {
         "required": ["date"],
@@ -145,7 +146,14 @@ TYPE_RULES: dict[str, dict] = {
 SERVICE_PREFIX = ("tobe-", "max-", "naru-", "bazaar-", "aasm-", "shopping-",
                   "caravan-", "blog-", "storefront-", "web-aladin-")
 
+# prefix 룰 예외: storefront-ddd-* 는 prefixed HTML 렌더 시리즈의 source .md.
+# .md↔.html stem parity 유지 위해 디렉터리-표현 룰에서 제외.
+PREFIX_EXEMPT = re.compile(r"^storefront-ddd-")
+
 SIZE_WARN_LINES = 500
+
+# advisory 태그. 이 문자열을 포함한 violation은 경고로 분류 — exit code에 영향 없음.
+WARN_TAG = "WARN —"
 
 
 def parse_frontmatter(text: str) -> dict[str, str] | None:
@@ -210,7 +218,7 @@ def lint_file(rel: str, abs_path: Path) -> list[str]:
             f"{rel}: type=`{t}` 파일명 패턴 위반. 기대=`{rules['filename']}`, 실제=`{fname}`"
         )
     # 3b. 서비스 prefix 금지 (단 {name}-index.md는 stem uniqueness 위해 허용)
-    if not fname.endswith("-index.md") and fname != "_log.md":
+    if not fname.endswith("-index.md") and fname != "_log.md" and not PREFIX_EXEMPT.match(fname):
         for p in SERVICE_PREFIX:
             if fname.startswith(p):
                 violations.append(
@@ -222,7 +230,7 @@ def lint_file(rel: str, abs_path: Path) -> list[str]:
     line_count = text.count("\n")
     if line_count >= SIZE_WARN_LINES:
         violations.append(
-            f"{rel}: WARN — {line_count} lines (≥{SIZE_WARN_LINES}). atomic 분리 권장"
+            f"{rel}: {WARN_TAG} {line_count} lines (≥{SIZE_WARN_LINES}). atomic 분리 권장"
         )
 
     # 5. {name}-index.md llm-hint 블록
@@ -290,16 +298,23 @@ def main():
             rel = str(abs_path)
         all_violations.extend(lint_file(rel, abs_path))
 
-    if all_violations:
-        for v in all_violations:
-            print(v, file=sys.stderr)
+    hard = [v for v in all_violations if WARN_TAG not in v]
+    warns = [v for v in all_violations if WARN_TAG in v]
+
+    for v in all_violations:
+        print(v, file=sys.stderr)
+
+    if hard:
         print(
-            f"\nlint_vault: 위반 {len(all_violations)}건, 검사 파일 {len(files)}건",
+            f"\nlint_vault: 위반 {len(hard)}건, 경고 {len(warns)}건, 검사 파일 {len(files)}건",
             file=sys.stderr,
         )
         return 1
 
-    print(f"lint_vault: OK — 검사 파일 {len(files)}건", file=sys.stderr)
+    ok = f"lint_vault: OK — 검사 파일 {len(files)}건"
+    if warns:
+        ok = f"lint_vault: OK (경고 {len(warns)}건) — 검사 파일 {len(files)}건"
+    print(ok, file=sys.stderr)
     return 0
 
 

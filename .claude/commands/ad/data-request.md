@@ -12,6 +12,10 @@ YouTrack 데이터 추출 요청의 SQL과 산출물을 [`AladinCommunication/da
 |---|---|---|
 | 운영 데이터 추출 정책 | `policies/data-request-policy.md` | SSOT, 디렉터리 구조, 케이스 분기 |
 | 데이터 추출 레포 README | [data-requests-dev2/README.md](https://github.com/AladinCommunication/data-requests-dev2/blob/main/README.md) | 브랜치/커밋/디렉터리 상세 |
+| 가설 검증 순서 | `policies/hypothesis-verification-order.md` | 코드/dev DB → 잔여만 컨펌 |
+| 로컬 자격증명 | `policies/local-credentials-policy.md` | dev DB 읽기 사전 동의 |
+
+> SQL 작성 전 스키마·테이블 존재·예상 카운트는 dev DB 읽기 쿼리로 먼저 확인. 운영 의문은 코드/dev로 풀고, 잔여만 요청자에게 컨펌.
 
 ## 핵심 규칙 요약
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev2 AD Commands"
+  short_description: "Run team2 /ad commands in Codex"
+  default_prompt: "Run a development team 2 /ad command."

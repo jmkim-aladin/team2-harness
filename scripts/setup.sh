@@ -7,12 +7,40 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TEAM2_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 CLAUDE_DIR="$HOME/.claude"
+CODEX_DIR="${CODEX_HOME:-$HOME/.codex}"
+BACKUP_TS="$(date +%Y%m%d%H%M%S)"
+
+link_path() {
+    local src="$1"
+    local dest="$2"
+    local label="$3"
+
+    mkdir -p "$(dirname "$dest")"
+
+    if [ -L "$dest" ]; then
+        if [ "$(readlink "$dest")" = "$src" ]; then
+            echo "  이미 연결됨 — $label"
+            return
+        fi
+        echo "  기존 심볼릭 링크 갱신 — $label"
+        rm "$dest"
+    elif [ -e "$dest" ]; then
+        local backup="${dest}.bak-${BACKUP_TS}"
+        echo "  기존 항목 백업 — $backup"
+        mv "$dest" "$backup"
+    fi
+
+    ln -s "$src" "$dest"
+    echo "  ✓ $dest → $src"
+}
 
 echo "=== 개발 2팀 하네스 셋업 ==="
 echo ""
 
 # 0. TEAM2_HARNESS_PATH 등록
-echo "[0/4] 팀 하네스 경로 등록..."
+echo "[0/5] 팀 하네스 경로 등록..."
+
+mkdir -p "$CLAUDE_DIR" "$CODEX_DIR"
 
 if [ -f "$CLAUDE_DIR/settings.json" ]; then
     if grep -q "TEAM2_HARNESS_PATH" "$CLAUDE_DIR/settings.json"; then
@@ -47,23 +75,35 @@ fi
 
 # 1. 팀 스킬 심볼릭 링크
 echo ""
-echo "[1/4] 팀 스킬 연결..."
+echo "[1/5] Claude Code /ad 명령 연결..."
 mkdir -p "$CLAUDE_DIR/commands"
 
-if [ -L "$CLAUDE_DIR/commands/ad" ]; then
-    echo "  이미 심볼릭 링크 존재 — 갱신합니다."
-    rm "$CLAUDE_DIR/commands/ad"
-elif [ -d "$CLAUDE_DIR/commands/ad" ]; then
-    echo "  기존 ad/ 디렉토리를 백업합니다 → ad.bak/"
-    mv "$CLAUDE_DIR/commands/ad" "$CLAUDE_DIR/commands/ad.bak"
+link_path "$TEAM2_DIR/.claude/commands/ad" "$CLAUDE_DIR/commands/ad" "~/.claude/commands/ad"
+
+# 2. Codex 진입점/스킬 심볼릭 링크
+echo ""
+echo "[2/5] Codex 하네스 연결..."
+
+if [ -f "$TEAM2_DIR/AGENTS.md" ]; then
+    link_path "$TEAM2_DIR/AGENTS.md" "$CODEX_DIR/AGENTS.md" "~/.codex/AGENTS.md"
+else
+    echo "  ⚠ $TEAM2_DIR/AGENTS.md 파일이 없습니다."
 fi
 
-ln -s "$TEAM2_DIR/.claude/commands/ad" "$CLAUDE_DIR/commands/ad"
-echo "  ✓ ~/.claude/commands/ad → team2/.claude/commands/ad"
+if [ -d "$TEAM2_DIR/.codex/skills" ]; then
+    mkdir -p "$CODEX_DIR/skills"
+    for skill_dir in "$TEAM2_DIR"/.codex/skills/*; do
+        [ -d "$skill_dir" ] || continue
+        skill_name="$(basename "$skill_dir")"
+        link_path "$skill_dir" "$CODEX_DIR/skills/$skill_name" "~/.codex/skills/$skill_name"
+    done
+else
+    echo "  ⚠ $TEAM2_DIR/.codex/skills 디렉토리가 없습니다."
+fi
 
-# 2. YouTrack 토큰 확인
+# 3. YouTrack 토큰 확인
 echo ""
-echo "[2/3] YouTrack 토큰 확인..."
+echo "[3/5] YouTrack 토큰 확인..."
 
 if [ -f "$CLAUDE_DIR/settings.json" ]; then
     if grep -q "YOUTRACK_TOKEN" "$CLAUDE_DIR/settings.json"; then
@@ -87,9 +127,9 @@ else
     echo '  }'
 fi
 
-# 3. gh CLI 확인
+# 4. gh CLI 확인
 echo ""
-echo "[3/3] gh CLI 확인..."
+echo "[4/5] gh CLI 확인..."
 
 if command -v gh &> /dev/null; then
     echo "  ✓ gh CLI 설치됨: $(gh --version | head -1)"
@@ -105,6 +145,19 @@ else
 fi
 
 echo ""
+echo "[5/5] 연결 상태 확인..."
+if [ -L "$CLAUDE_DIR/commands/ad" ]; then
+    echo "  ✓ Claude Code /ad command 연결됨"
+else
+    echo "  ⚠ Claude Code /ad command 연결 확인 필요"
+fi
+if [ -L "$CODEX_DIR/AGENTS.md" ] && [ -L "$CODEX_DIR/skills/dev2-ad-commands-ko" ]; then
+    echo "  ✓ Codex 하네스 진입점/스킬 연결됨"
+else
+    echo "  ⚠ Codex 하네스 연결 확인 필요"
+fi
+
+echo ""
 echo "ℹ YouTrack은 REST API(YOUTRACK_TOKEN)로만 호출합니다. MCP는 사용하지 않습니다."
 
 echo ""
@@ -117,3 +170,7 @@ echo "  /ad:code-review     — PR 코드 리뷰"
 echo "  /ad:team2-kb-read   — KB 문서 조회"
 echo "  /ad:team2-kb-list   — KB 문서 목록"
 echo "  /ad:team2-kb-sync   — KB → 하네스 동기화"
+echo ""
+echo "Codex:"
+echo "  다음 세션부터 ~/.codex/AGENTS.md와 ~/.codex/skills/*가 team2 하네스를 직접 참조합니다."
+echo "  /ad:* 요청은 Codex Skill이 team2/.claude/commands/ad/*.md를 읽고 같은 절차로 수행합니다."

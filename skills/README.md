@@ -6,6 +6,7 @@
 |-------------|------|------|
 | `ad:` | 개발 2팀 공통 스킬 | `.claude/commands/ad/` (이 레포) |
 | `ad:team2` | 팀 운영 스킬 (하네스, KB 연동 등) | `.claude/commands/ad/` (이 레포) |
+| Codex Skill | Codex용 team2 하네스 진입점 | `.codex/skills/` (이 레포 → `~/.codex/skills` symlink) |
 
 ## 필요 인증
 
@@ -50,3 +51,14 @@
 | `ad:migration` | DB 마이그레이션 가이드 |
 | `ad:api-check` | API 스펙 정합성 검증 |
 | `ad:env-setup` | 로컬 환경 셋업 가이드 |
+
+## Codex 호환
+
+Codex는 `.claude/commands/ad/*.md`를 slash command로 직접 로드하지 않는다.
+`scripts/setup.sh`가 `.codex/skills/*`를 `~/.codex/skills/*`로 연결하고, Codex Skill이 같은 command 파일을 읽어서 절차를 수행한다.
+
+| Codex Skill | 역할 |
+|-------------|------|
+| `dev2-team-harness-ko` | 정책/카탈로그/KB/스프린트 등 team2 컨텍스트 로드 |
+| `dev2-ad-commands-ko` | `/ad:*` 전체를 `.claude/commands/ad/{name}.md`에 위임 |
+| `youtrack-ticket-5w1h-ko` | `/ad:ticket` 티켓 작성 진입점 |

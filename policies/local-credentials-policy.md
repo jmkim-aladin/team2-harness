@@ -62,9 +62,39 @@ mssql-cli -S dev-host -d webcatalog -U readonly_user -P "$PW" -Q "SELECT TOP 10 
 unset PW                              # 사용 후 즉시 해제
 ```
 
+```bash
+# SQL 검증 (sqlcmd / go-sqlcmd 예시) — 비밀번호는 -P 대신 SQLCMDPASSWORD env로 전달
+PW=$(security find-generic-password -s "sm-max-admin-dev-database-read" -a "$(whoami)" -w)
+SQLCMDPASSWORD="$PW" sqlcmd -S dev-host -d webcatalog -U readonly_user -Q "SELECT TOP 10 ..."
+unset PW
+```
+
 - 환경변수에 두고 즉시 `unset`. 셸 history에 평문이 남지 않도록 한다.
+- `sqlcmd`는 `-P <암호>`로 넘기면 `ps`에 평문이 노출된다. `SQLCMDPASSWORD` env로 전달해 프로세스 인자 노출을 막는다.
 - `tee`, `>` 리다이렉트, 임시 파일 저장 금지.
 - 결과 화면에 비밀번호가 echo되지 않도록 `-w`만 캡처해 변수로 받는다.
+
+여러 dev DB를 자주 쓰면 위 패턴을 셸 함수로 감싼다. account 필드는 등록한 값(DB 사용자명 또는 사번/이메일)과 일치시킨다 — `$(whoami)`와 다를 수 있다. 자격증명·host는 함수에 박지 말고 Keychain 조회 + target→host 매핑만 둔다.
+
+## 등록된 dev DB 매핑 (target → host)
+
+각자 머신 기준. 비밀번호는 아래 keychain `service`에서 조회, host는 이 표에서 찾는다. **read-only 강제**는 `.claude/hooks/sqlcmd-readonly.sh`(쓰기 키워드 차단)에 걸려 있다.
+
+| keychain service | account | host | 비고 |
+|------------------|---------|------|------|
+| `cool-dev` | `jmkim` | `rds-cluster-cool-dev.cleuiesc8bqi.ap-northeast-2.rds.amazonaws.com` | 공유 MSSQL dev. DB: `WebCatalog`, `ToBe`, `Community`, `WebLog`, `WebMarket` (tobe/max/shopping/blog 공유) |
+| `lego-dev` | `jmkim` | (Lego 링크드 서버 dev — `Lego.WebStat` 등) | 통계/로그 계열. host는 본인 등록값 |
+
+클라이언트는 go-`sqlcmd`(`/opt/homebrew/bin/sqlcmd`). tools18 미설치 시 `-C`(서버 인증서 신뢰) 필요.
+
+```bash
+PW=$(security find-generic-password -s "cool-dev" -a "jmkim" -w)
+SQLCMDPASSWORD="$PW" sqlcmd -S "rds-cluster-cool-dev.cleuiesc8bqi.ap-northeast-2.rds.amazonaws.com" \
+  -U jmkim -C -d WebCatalog -h -1 -W -Q "SELECT TOP 10 ..."
+unset PW
+```
+
+> 신규 항목은 `sm-{서비스}-{모듈}-{환경}-{리소스}` 컨벤션 권장. `cool-dev`/`lego-dev`는 기존 단축 등록명(레거시) — 이 표로 매핑 보존.
 
 ## 금지
 
@@ -79,6 +109,22 @@ unset PW                              # 사용 후 즉시 해제
 - DB 계열 MCP 서버(postgres/mssql/mysql 등)는 사용하지 않는다 (글로벌 메모리 정책). 자격증명을 MCP 설정에 박아두는 패턴 금지.
 - AI 스킬이 자격증명을 조회해야 할 때는 `security find-generic-password ... -w` 한 줄 호출로 캡처해 즉시 소비. 응답·로그·위키 노트에 평문이 남지 않도록 한다.
 - AI에게 키체인 항목을 새로 등록(`add-generic-password`)시키지 않는다 — 본인이 직접 등록.
+
+### dev/staging DB 읽기 쿼리: 사전 동의
+
+dev/staging DB 대상의 **읽기 전용 쿼리**(`SELECT`/`EXPLAIN`/`SHOW`/스키마 메타)는 본 정책 등록 시점에 **사전 동의된 것으로 간주**한다. 모든 `/ad:*` 스킬(work-prep, data-request, code-review 등)은 매 쿼리마다 사용자 확인을 받지 않고 바로 실행해도 된다.
+
+근거:
+- read-only 쿼리는 데이터 변경 없음. 실수 cost 낮음.
+- 잦은 확인 인터럽트는 워크플로를 끊는다 — 사용자가 명시적으로 거부했다.
+- read-only 강제는 `.claude/hooks/sqlcmd-readonly.sh`(쓰기 키워드 차단)로 자동 게이트.
+
+**여전히 확인 필수**인 항목:
+
+- `INSERT/UPDATE/DELETE/MERGE/DDL` — dev/staging 포함. 매번 SQL 전문 + 영향 예상 row 수 + 롤백 계획을 보여주고 확인.
+- 운영(prod) DB — 본 정책 범위 밖. [data-request-policy.md](./data-request-policy.md) 절차로만 다룬다.
+- 결과 row 수가 폭주(>10만)할 가능성이 있는 SELECT — 사전에 카운트 쿼리로 가늠 후 본 쿼리 실행.
+- 위키/노트에 결과 row dump를 남기는 행위 — 항상 요약(스키마/카운트/대표 패턴)만.
 
 ## 분실/회전
 

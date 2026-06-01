@@ -236,24 +236,36 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 1. **기존 보고서 조회**: KB(DEV2-A-696) 현재 내용 가져오기
 2. **상태 동기화**: 보고서 내 모든 티켓ID + 담당자별 In Progress + 최근 14일 resolved 일괄 조회
 3. **필터 적용**: Type=Feature/Epic only. 운영성 Task/Bug 제외 (위 "기록 대상 필터" 참조)
+   - **월별 계획 스냅샷("N월거만") 작성 시**: YouTrack 태그 `YYMM-planned`(예: 2026년 6월 = `2606-planned`) + dev 4인(jmkim/heum2/pms0905/hyeryun) assignee 로 필터. 디자인/기획/외주 제외. 이전 달 누적 완료분은 태그 없으면 자동 제외됨. 상태별 섹션 매핑: In Progress→진행중, Open/Reopened→계획, Backlog→백로그, Fixed/Closed/Verified→완료된. 하위 Task는 dev-planned 내 최상위 조상 Feature/Epic 아래 본문 라인으로 롤업
 4. **양식 정렬**: 위 "항목 형식" 패턴 그대로 적용
    - 제목 라인: `*` + 이중 `**` 분할 + 원문제목 `\[`/`\]` escape
    - 본문 라인: `  : ` + 본문 + `(일정정보, 담당자 DEV2-xxxx [원문제목])`
    - Feature 하위 없거나 단일 Task인 경우 본문에 동일 티켓 정보 반복
-5. **저장 경로**: 옵시디언 vault — `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/weekly/YYYY-MM-NW-draft.md`
+   - **Obsidian 줄바꿈**: 제목 라인·`: ` 본문 라인 끝에 공백 2칸(markdown hard break) 추가. 미적용 시 `: ` 하위 라인이 bullet lazy-continuation으로 한 단락에 합쳐져 줄바꿈이 사라짐 (KB/YouTrack 렌더와 달리 Obsidian에서 필요)
+5. **저장 경로**: 옵시디언 vault — `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/weekly/YYYY-MM-NW-{assignee}.md` (예: `2026-06-1W-jmkim.md`)
+   - 파일명은 Tolaria weekly-report 규약(`templates/vault-notes/weekly-report.md`) 준수 — assignee 슬러그 사용, `-draft` 금지. 초안 여부는 frontmatter `status: draft`로 표기
+   - 파일명·frontmatter `title`·`canonical_id` 는 동일 키(`YYYY-MM-NW-{assignee}`)로 통일
    - W 번호 = 해당 월 N주차 (월 첫 월요일 시작 기준)
    - 임시본은 vault 외부 작성 금지 (CLAUDE.md "도메인 분석 결과는 로컬 Obsidian 운영 지식 위키" 정책)
-6. **frontmatter 포함**:
+6. **frontmatter 포함** (Tolaria weekly-report 규약):
    ```yaml
    ---
-   title: YYYY-MM-NW 주간업무 초안
-   date: YYYY-MM-DD
+   type: weekly-report
+   title: YYYY-MM-NW {담당자} 주간업무
+   canonical_id: weekly-report:YYYY-MM-NW-{assignee}
    status: draft
-   source: YouTrack DEV2-A-696 + N일 상태 동기화
+   updated_at: YYYY-MM-DD
+   assignee: {assignee}
+   year: YYYY
+   month: M
+   week_in_month: N
+   sprint: YYYY-MM
+   source: YouTrack DEV2-A-696 + N일 상태 동기화 (또는 YYMM-planned 태그)
    filter: Type=Epic/Feature only. 운영대응(Task/Bug) 제외
    note: 옵시디언 임시 저장본. KB 반영은 사용자 수동
    ---
    ```
+   - `type`/`year`/`month`/`week_in_month`/`assignee` 는 Tolaria weekly-report 필수 필드(`tools/lint_vault.py`). 본문은 KB(DEV2-A-696) 원본 모양 그대로 — H1·llm-hint 없이 `## **백로그 항목**`부터 시작. 저장 후 `python3 tools/lint_vault.py --vault <vault> --files <경로>` 로 검증
 7. **KB 자동 반영 금지** — TODO 섹션에 검토 포인트 명시 후 사용자가 수동으로 합침
 8. **이슈사항/기타** 섹션에 일정 리스크·합류·제외 사유 등 자유 기록
 
