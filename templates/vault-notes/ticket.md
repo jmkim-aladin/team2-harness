@@ -18,39 +18,59 @@ okr_kr: ""
 <!-- llm-hint -->
 DEV2 티켓 작업 노트. YouTrack이 공식 상태 SoT, vault는 진행·분석·결정 누적용.
 status: auto-prep | in-progress | done | backlog (디렉터리와 일치).
+첫 50줄 안에 문제, 현재 판단, 해결 방향, 다음 행동을 모두 남긴다. 운영 검증 전달용 SQL은 검증 SQL 섹션에 남기고, 전수검사/콜그래프 출력은 근거 위치만 링크한다.
 <!-- /llm-hint -->
 
 # {{ticket_id}} {{title}}
 
-## 한눈 요약 (TL;DR)
+## 판단 요약
 
-- 무엇을: 
-- 왜: 
-- 어디서: 
+- 문제:
+- 현재 판단:
+- 해결 방향:
+- 다음 행동:
 
 ## 요청 요약
 
-- 보고자: 
-- 담당자: {{user}}
-- 유형/상태/우선순위/스프린트: 
-- 발생 사실: 
-- 원 요청: 
-- 추가 회신/맥락: 
+- 보고자/담당자: / {{user}}
+- 원 요청:
+- 제약/주의:
 
-## 연결 리소스
+## 비즈니스 로직
+
+- 트리거:
+- 정책/예외:
+- 영향 범위:
+- 결정 필요:
+
+## 기술 근거
 
 - YouTrack: https://aladincommunication.youtrack.cloud/issue/{{ticket_id}}
 - 서비스: [[../../services/{{service_id}}/{{service_id}}-index|{{service_id}}]]
-- 관련 도메인: 
-- 관련 KB: 
+- 관련 도메인:
+- 관련 KB:
+- 진입점:
+- 의존성:
+- 근거 위치:
 
-## 가설 / 영향 분리
+## 검증
 
-- 
+- 확인함:
+- 남음:
+
+## 검증 SQL
+
+- 목적:
+- 실행 환경:
+- 기대 결과:
+
+```sql
+-- 조회 전용 SQL
+```
 
 ## 미확정 질문
 
-- 
+-
 
 ## 진행 메모
 
@@ -68,17 +88,13 @@ status: auto-prep | in-progress | done | backlog (디렉터리와 일치).
 
 지원 type: domain / analysis / decision / proposal / glossary.
 
-## 검증
-
-- 검증 SQL / 회귀 테스트 항목: 
-
 ## Actions
 
 - [ ] 첫 단계
 - [ ] 담당자 컨펌
-- [ ] 검증 작성
+- [ ] 검증 결과 또는 회귀 테스트 정리
 - [ ] PR / 배포
 
 ## 완료 기록
 
-- 
+-
