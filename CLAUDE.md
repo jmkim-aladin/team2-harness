@@ -8,7 +8,7 @@
 - `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, AWS Secrets, 로컬 자격증명/Keychain, DB 이관/CDC, 위키 문서 언어/제목, 데이터 추출 요청)
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, storefront, caravan, shopping, blog)
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
-- `.claude/commands/ad/` — 팀 스킬 (ticket, work-prep, code-review, kb-read, kb-list, kb-sync, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan)
+- `.claude/commands/ad/` — 팀 스킬 (ticket, work-prep, code-review, kb-read, kb-list, kb-sync, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan, granola-sync)
 - `scripts/setup.sh` — 원커맨드 셋업
 - `docs/` — 가이드 문서
 - `docs/designs/` — 설계 문서 (스토어프론트 플랫폼 방향, 테넌트 모델, 인증, 스코프 등)
@@ -70,6 +70,7 @@ Key routing rules:
 - 데이터 추출 요청, SQL 등록, data-requests-dev2 → invoke ad:data-request
 - 서비스별 작업 활동 조회, "지난주 max/tobe/shopping 작업" → invoke ad:service-activity
 - 다음달 가용 맨데이/velocity, capacity plan, SP 초과 판정 → invoke ad:capacity-plan
+- Granola 회의록 가져오기, Tolaría 회의록 동기화 → invoke ad:granola-sync
 - Product ideas, "is this worth building", brainstorming → invoke office-hours
 - Bugs, errors, "why is this broken", 500 errors → invoke investigate
 - Ship, deploy, push, create PR → invoke ship

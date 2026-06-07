@@ -40,6 +40,7 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 | 개발2팀 정책/카탈로그/KB/OKR/주간업무/코드리뷰 컨텍스트 | `$dev2-team-harness-ko` |
 | YouTrack 티켓 생성 (DEV2), `/ad:ticket` | `$youtrack-ticket-5w1h-ko` |
 | Claude Code `/ad:*` 명령 호환 실행 | `$dev2-ad-commands-ko` |
+| Granola 회의록 가져오기/동기화, Tolaría 회의록 반영 | `$ad-granola-sync` |
 | Product ideas, "is this worth building", brainstorming | `$office-hours` |
 | Bugs, errors, "why is this broken", 500 errors | `$investigate` |
 | Ship, deploy, push, create PR | `$ship` |
@@ -72,6 +73,7 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 - `$ad-data-request` → `/ad:data-request`
 - `$ad-service-activity` → `/ad:service-activity`
 - `$ad-capacity-plan` → `/ad:capacity-plan`
+- `$ad-granola-sync` → `/ad:granola-sync`
 - `$ad-new-note` → `/ad:new-note`
 
 - 티켓 생성, YouTrack 티켓: `/ad:ticket`
@@ -85,6 +87,7 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 - 데이터 추출 요청, SQL 등록: `/ad:data-request`
 - 서비스별 작업 활동 조회: `/ad:service-activity`
 - 다음달 가용 맨데이/velocity, capacity plan: `/ad:capacity-plan`
+- Granola 회의록 가져오기, Tolaría 회의록 동기화: `/ad:granola-sync`
 - 신규 운영 위키 노트 작성: `/ad:new-note`
 
 ## gstack 스킬

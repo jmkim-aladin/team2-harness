@@ -6,7 +6,7 @@
 |-------------|------|------|
 | `ad:` | 개발 2팀 공통 스킬 | `.claude/commands/ad/` (이 레포) |
 | `ad:team2` | 팀 운영 스킬 (하네스, KB 연동 등) | `.claude/commands/ad/` (이 레포) |
-| Codex Skill | Codex용 team2 하네스 진입점 | `.codex/skills/` (이 레포 → `~/.codex/skills` symlink) |
+| Codex Skill | Codex용 team2 하네스 진입점 | `.codex/skills/` (이 레포, repo-local) |
 
 ## 필요 인증
 
@@ -55,7 +55,8 @@
 ## Codex 호환
 
 Codex는 `.claude/commands/ad/*.md`를 slash command로 직접 로드하지 않는다.
-`scripts/setup.sh`가 `.codex/skills/*`를 `~/.codex/skills/*`로 연결하고, Codex Skill이 같은 command 파일을 읽어서 절차를 수행한다.
+Codex Skill은 team2 레포의 `.codex/skills/*`에 repo-local로 두고, 같은 command 파일을 읽어서 절차를 수행한다.
+전역 `~/.codex/skills/*`에는 team2 전용 스킬을 복제하거나 symlink하지 않는다.
 
 | Codex Skill | 역할 |
 |-------------|------|

@@ -34,6 +34,25 @@ link_path() {
     echo "  ✓ $dest → $src"
 }
 
+remove_stale_codex_skill() {
+    local skill_name="$1"
+    local dest="$CODEX_DIR/skills/$skill_name"
+
+    if [ -L "$dest" ] || [ -d "$dest" ]; then
+        echo "  기존 전역 Codex Skill 제거 — ~/.codex/skills/$skill_name"
+        rm -rf "$dest"
+    fi
+}
+
+remove_stale_codex_agents() {
+    local dest="$CODEX_DIR/AGENTS.md"
+
+    if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$TEAM2_DIR/AGENTS.md" ]; then
+        echo "  기존 전역 Codex AGENTS 링크 제거 — ~/.codex/AGENTS.md"
+        rm "$dest"
+    fi
+}
+
 echo "=== 개발 2팀 하네스 셋업 ==="
 echo ""
 
@@ -80,22 +99,17 @@ mkdir -p "$CLAUDE_DIR/commands"
 
 link_path "$TEAM2_DIR/.claude/commands/ad" "$CLAUDE_DIR/commands/ad" "~/.claude/commands/ad"
 
-# 2. Codex 진입점/스킬 심볼릭 링크
+# 2. 전역 Codex team2 항목 정리
 echo ""
-echo "[2/5] Codex 하네스 연결..."
+echo "[2/5] Codex 전역 중복 정리..."
 
-if [ -f "$TEAM2_DIR/AGENTS.md" ]; then
-    link_path "$TEAM2_DIR/AGENTS.md" "$CODEX_DIR/AGENTS.md" "~/.codex/AGENTS.md"
-else
-    echo "  ⚠ $TEAM2_DIR/AGENTS.md 파일이 없습니다."
-fi
+remove_stale_codex_agents
 
 if [ -d "$TEAM2_DIR/.codex/skills" ]; then
-    mkdir -p "$CODEX_DIR/skills"
     for skill_dir in "$TEAM2_DIR"/.codex/skills/*; do
         [ -d "$skill_dir" ] || continue
         skill_name="$(basename "$skill_dir")"
-        link_path "$skill_dir" "$CODEX_DIR/skills/$skill_name" "~/.codex/skills/$skill_name"
+        remove_stale_codex_skill "$skill_name"
     done
 else
     echo "  ⚠ $TEAM2_DIR/.codex/skills 디렉토리가 없습니다."
@@ -151,10 +165,10 @@ if [ -L "$CLAUDE_DIR/commands/ad" ]; then
 else
     echo "  ⚠ Claude Code /ad command 연결 확인 필요"
 fi
-if [ -L "$CODEX_DIR/AGENTS.md" ] && [ -L "$CODEX_DIR/skills/dev2-ad-commands-ko" ]; then
-    echo "  ✓ Codex 하네스 진입점/스킬 연결됨"
+if [ -f "$TEAM2_DIR/AGENTS.md" ]; then
+    echo "  ✓ Codex repo-local 진입점 확인됨"
 else
-    echo "  ⚠ Codex 하네스 연결 확인 필요"
+    echo "  ⚠ Codex repo-local 진입점 확인 필요"
 fi
 
 echo ""
@@ -172,5 +186,7 @@ echo "  /ad:team2-kb-list   — KB 문서 목록"
 echo "  /ad:team2-kb-sync   — KB → 하네스 동기화"
 echo ""
 echo "Codex:"
-echo "  다음 세션부터 ~/.codex/AGENTS.md와 ~/.codex/skills/*가 team2 하네스를 직접 참조합니다."
-echo "  /ad:* 요청은 Codex Skill이 team2/.claude/commands/ad/*.md를 읽고 같은 절차로 수행합니다."
+echo "  AGENTS.md와 .codex/skills/*는 team2 레포 안의 repo-local 항목을 사용합니다."
+echo "  team2 전용 Codex Skill은 이 레포의 .codex/skills/*만 source of truth로 사용합니다."
+echo "  전역 ~/.codex/AGENTS.md 및 ~/.codex/skills 아래의 team2 항목은 중복 노출 방지를 위해 제거됩니다."
+echo "  /ad:* 요청은 repo-local Codex Skill이 team2/.claude/commands/ad/*.md를 읽고 같은 절차로 수행합니다."

@@ -1,6 +1,6 @@
 ---
 name: dev2-ad-commands-ko
-description: "Use when the user invokes or refers to any development team 2 Claude Code ad command in Codex, including /ad:ticket, /ad:work-prep, /ad:code-review, /ad:weekly-report, /ad:weekly-planned, /ad:sprint-close-check, /ad:okr, /ad:team2-kb-read, /ad:team2-kb-list, /ad:team2-kb-sync, /ad:harness-optimize, /ad:data-request, /ad:service-activity, /ad:capacity-plan, or /ad:new-note."
+description: "Use when the user invokes or refers to any development team 2 Claude Code ad command in Codex, including /ad:ticket, /ad:work-prep, /ad:code-review, /ad:weekly-report, /ad:weekly-planned, /ad:sprint-close-check, /ad:okr, /ad:team2-kb-read, /ad:team2-kb-list, /ad:team2-kb-sync, /ad:harness-optimize, /ad:data-request, /ad:service-activity, /ad:capacity-plan, /ad:granola-sync, or /ad:new-note."
 ---
 
 # 개발 2팀 `/ad:*` 명령 호환
@@ -32,6 +32,7 @@ Codex에서는 Claude Code slash command를 직접 로드하지 않는다. 대�
 | 운영 데이터 추출 요청 SQL 등록 | `data-request.md` |
 | 서비스별 작업 활동 조회 | `service-activity.md` |
 | 가용 용량 분석, capacity plan | `capacity-plan.md` |
+| Granola 회의록 가져오기, Tolaría 회의록 동기화 | `granola-sync.md` |
 | 신규 운영 위키 노트 작성 | `new-note.md` |
 
 ## Codex `$` alias
@@ -52,6 +53,7 @@ Codex에서는 Claude Code slash command를 직접 로드하지 않는다. 대�
 | `$ad-data-request` | `data-request.md` |
 | `$ad-service-activity` | `service-activity.md` |
 | `$ad-capacity-plan` | `capacity-plan.md` |
+| `$ad-granola-sync` | `granola-sync.md` |
 | `$ad-new-note` | `new-note.md` |
 
 ## 자격증명 패턴
