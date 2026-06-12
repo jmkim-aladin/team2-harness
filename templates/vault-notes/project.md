@@ -5,14 +5,19 @@ canonical_id: project:{{slug}}
 status: active        # active | planning | done | paused
 updated_at: {{date}}
 lead: jmkim
-services:             # 연관 서비스 (다중) — 각 항목 서비스 노트 wikilink (graph 엣지)
+related_services:     # 연관 서비스 (다중) — 각 항목 서비스 노트 wikilink (graph 엣지)
   - "[[{{service_id}}]]"
 related_tickets: []
+related_okrs: []
+related_meetings: []
 target_quarter: ""    # 예: 2026-q3
+relation_status: confirmed
+relation_sources:
+  - manual
 ---
 
 <!-- llm-hint -->
-다중 서비스에 걸친 프로젝트. services[]로 관련 서비스 노트에 연결(그래프 허브). 개별 작업은 티켓으로 분해.
+다중 서비스에 걸친 프로젝트. related_services[]로 관련 서비스 노트에 연결(그래프 허브). 개별 작업은 티켓으로 분해.
 <!-- /llm-hint -->
 
 # {{title}}

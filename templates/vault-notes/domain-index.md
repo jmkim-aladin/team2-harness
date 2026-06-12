@@ -4,8 +4,14 @@ title: {{service_id}} {{domain}}
 canonical_id: domain:{{service_id}}/{{domain}}
 status: canonical
 updated_at: {{date}}
-service_id: "[[{{service_id}}]]"
+service_id: {{service_id}}
 domain: {{domain}}
+related_services:
+  - "[[{{service_id}}]]"
+related_tickets: []
+relation_status: confirmed
+relation_sources:
+  - manual
 ---
 
 <!-- llm-hint -->

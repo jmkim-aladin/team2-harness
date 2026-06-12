@@ -9,6 +9,12 @@ year: {{year}}
 month: {{month}}
 week_in_month: {{week_in_month}}
 sprint: {{sprint}}
+related_tickets: []
+related_services: []
+related_okrs: []
+relation_status: inferred
+relation_sources:
+  - manual
 ---
 
 <!-- llm-hint -->

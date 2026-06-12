@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes + DEV2 하네스 운영 루프</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f4ef;
+      --surface: #ffffff;
+      --surface-2: #fdf9ed;
+      --ink: #1d2428;
+      --muted: #657078;
+      --line: #d7d2c7;
+      --line-strong: #aaa397;
+      --blue: #2f6f9f;
+      --blue-soft: #e5f0f6;
+      --green: #2f7d62;
+      --green-soft: #e3f1ea;
+      --gold: #9a6a12;
+      --gold-soft: #f6ead0;
+      --red: #a4463d;
+      --red-soft: #f4e2de;
+      --violet: #6d5a9c;
+      --violet-soft: #ece7f4;
+      --shadow: 0 18px 50px rgba(31, 35, 39, 0.08);
+      --radius: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      letter-spacing: 0;
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand strong {
+      font-size: clamp(20px, 2.2vw, 32px);
+      font-weight: 760;
+      line-height: 1.15;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .brand span,
+    .topbar .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .meta {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+      gap: 20px;
+      align-items: stretch;
+      padding: 26px 0;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    h1 {
+      max-width: 920px;
+      font-size: clamp(32px, 5vw, 64px);
+      line-height: 1.04;
+      font-weight: 820;
+    }
+
+    .lead {
+      max-width: 870px;
+      margin-top: 18px;
+      color: #3b464c;
+      font-size: clamp(16px, 1.5vw, 20px);
+    }
+
+    .summary-panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      min-width: 0;
+    }
+
+    .intro > *,
+    .band-header > *,
+    .operating-map > *,
+    .split-grid > *,
+    .loop-diagram > *,
+    .loop > *,
+    .boundaries > *,
+    .security-strip > * {
+      min-width: 0;
+    }
+
+    .summary-panel h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+    }
+
+    .rules {
+      display: grid;
+      gap: 10px;
+    }
+
+    .rule {
+      display: grid;
+      grid-template-columns: 14px 1fr;
+      gap: 10px;
+      align-items: start;
+      font-size: 14px;
+      color: #3d474d;
+    }
+
+    .rule span:last-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 7px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    .dot.green { background: var(--green); }
+    .dot.gold { background: var(--gold); }
+    .dot.red { background: var(--red); }
+
+    .band {
+      margin-top: 24px;
+      padding: 26px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .band-header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .band-header h2 {
+      font-size: clamp(22px, 2vw, 34px);
+      line-height: 1.15;
+    }
+
+    .band-header p {
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .operating-map {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(135px, 1fr));
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      padding: 12px 0 2px;
+    }
+
+    .stage {
+      min-height: 238px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfbf8;
+      position: relative;
+      z-index: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .stage::after {
+      content: "";
+      position: absolute;
+      top: 28px;
+      right: -15px;
+      width: 17px;
+      height: 2px;
+      background: var(--line-strong);
+    }
+
+    .stage:last-child::after {
+      display: none;
+    }
+
+    .stage.request { background: var(--blue-soft); border-color: #bfd7e5; }
+    .stage.gate { background: var(--gold-soft); border-color: #dfc890; }
+    .stage.context { background: var(--green-soft); border-color: #bdddcf; }
+    .stage.hermes { background: var(--violet-soft); border-color: #d5cce8; }
+    .stage.knowledge { background: #eff3e4; border-color: #cfd9b8; }
+    .stage.verify { background: #eef0f3; border-color: #ccd2d8; }
+    .stage.reinforce { background: var(--red-soft); border-color: #ddbdb7; }
+
+    .stage-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      margin-bottom: 12px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .stage h3 {
+      min-height: 48px;
+      font-size: 18px;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    .stage p {
+      color: #3f4a4f;
+      font-size: 14px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 7px;
+      border: 1px solid rgba(29, 36, 40, 0.16);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.66);
+      color: #354148;
+      font-size: 12px;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .lane {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fbfbf8;
+      min-width: 0;
+    }
+
+    .lane-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f3f0e8;
+      font-weight: 760;
+    }
+
+    .lane-title span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .lane-body {
+      padding: 16px;
+    }
+
+    .swimlane {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step-row {
+      display: grid;
+      grid-template-columns: 146px 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .step-label {
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: #eef0f3;
+      border: 1px solid #d2d7dd;
+      font-weight: 720;
+      font-size: 14px;
+    }
+
+    .step-copy {
+      padding: 10px 12px;
+      border-left: 3px solid var(--blue);
+      background: #fff;
+      color: #3e484e;
+      font-size: 14px;
+    }
+
+    .loop-diagram {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 20px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .loop {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .loop-step {
+      min-height: 150px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfbf8;
+      position: relative;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .loop-step::before {
+      content: "";
+      position: absolute;
+      top: 21px;
+      right: -13px;
+      width: 14px;
+      height: 2px;
+      background: var(--line-strong);
+    }
+
+    .loop-step:nth-child(3)::before,
+    .loop-step:nth-child(6)::before {
+      display: none;
+    }
+
+    .loop-step strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .loop-step span {
+      color: #4c565c;
+      font-size: 14px;
+    }
+
+    .hermes-core {
+      border: 1px solid #d5cce8;
+      border-radius: var(--radius);
+      background: var(--violet-soft);
+      padding: 22px;
+      min-width: 0;
+    }
+
+    .hermes-core h3 {
+      font-size: 24px;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .hermes-core p {
+      color: #3f4650;
+      font-size: 15px;
+    }
+
+    .boundaries {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .boundary {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfbf8;
+      min-height: 220px;
+      padding: 14px;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .boundary h3 {
+      font-size: 17px;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    .boundary .tag {
+      display: inline-flex;
+      padding: 3px 7px;
+      margin-bottom: 10px;
+      border-radius: 999px;
+      background: #eef0f3;
+      color: #53606a;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .boundary p {
+      color: #445057;
+      font-size: 14px;
+    }
+
+    .boundary ul,
+    .security-list {
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+
+    .boundary li,
+    .security-list li {
+      position: relative;
+      padding-left: 14px;
+      color: #4a555c;
+      font-size: 13px;
+    }
+
+    .boundary li::before,
+    .security-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 9px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--line-strong);
+    }
+
+    .service-matrix {
+      display: grid;
+      grid-template-columns: 230px repeat(4, minmax(0, 1fr));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 18px;
+      background: var(--surface);
+    }
+
+    .matrix-cell {
+      min-height: 78px;
+      padding: 12px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      color: #445057;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .matrix-cell:nth-child(5n) {
+      border-right: 0;
+    }
+
+    .matrix-head {
+      background: #f3f0e8;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .matrix-service {
+      background: #fbfbf8;
+      font-weight: 760;
+      color: var(--ink);
+    }
+
+    .security-strip {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-top: 18px;
+    }
+
+    .security-panel {
+      border: 1px solid #ddbdb7;
+      border-radius: var(--radius);
+      background: var(--red-soft);
+      padding: 18px;
+    }
+
+    .security-panel h3 {
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+
+    .security-panel p {
+      color: #4c3d3b;
+      font-size: 14px;
+    }
+
+    .callout {
+      border: 1px solid #bfd7e5;
+      border-radius: var(--radius);
+      background: var(--blue-soft);
+      padding: 18px;
+    }
+
+    .callout h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .callout p {
+      color: #344b58;
+      font-size: 14px;
+    }
+
+    .footer-note {
+      margin: 24px 0 8px;
+      padding: 16px 0 0;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.95em;
+      background: rgba(29, 36, 40, 0.07);
+      padding: 1px 4px;
+      border-radius: 4px;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 1180px) {
+      .operating-map {
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+      }
+
+      .stage::after,
+      .loop-step::before {
+        display: none;
+      }
+
+      .boundaries {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .service-matrix {
+        grid-template-columns: 190px repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        padding: 18px;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: clip;
+      }
+
+      .topbar,
+      .intro,
+      .summary-panel,
+      .band,
+      .operating-map,
+      .stage,
+      .split-grid,
+      .loop-diagram,
+      .loop,
+      .loop-step,
+      .hermes-core,
+      .boundaries,
+      .boundary,
+      .security-strip,
+      .security-panel,
+      .callout {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      li,
+      span,
+      .rule,
+      .matrix-cell,
+      .step-label,
+      .step-copy {
+        line-break: anywhere;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      code {
+        line-break: auto;
+        overflow-wrap: normal;
+        word-break: normal;
+      }
+
+      .topbar,
+      .band-header {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .meta {
+        text-align: left;
+        white-space: normal;
+      }
+
+      .intro,
+      .split-grid,
+      .loop-diagram,
+      .security-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .operating-map {
+        grid-template-columns: 1fr;
+      }
+
+      .stage {
+        min-height: auto;
+      }
+
+      .band {
+        padding: 20px 16px;
+      }
+
+      .stage h3 {
+        min-height: 0;
+      }
+
+      .loop {
+        grid-template-columns: 1fr;
+      }
+
+      .boundaries {
+        grid-template-columns: 1fr;
+      }
+
+      .service-matrix {
+        display: block;
+        border: 0;
+        background: transparent;
+      }
+
+      .matrix-cell {
+        display: block;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        margin-bottom: 8px;
+        min-height: auto;
+        background: #fff;
+      }
+
+      .chip {
+        white-space: normal;
+      }
+
+      .matrix-head {
+        display: none;
+      }
+
+      .matrix-service {
+        background: #f3f0e8;
+        margin-top: 16px;
+      }
+
+      .step-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .page {
+        max-width: none;
+        padding: 0;
+      }
+
+      .band,
+      .summary-panel {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">
+        <strong>Hermes + DEV2 하네스 운영 루프</strong>
+        <span>요청 처리, 서비스 지식, 강화되는 에이전트 프로세스</span>
+      </div>
+      <div class="meta">작성 기준 2026-06-12<br>team2 repo + Obsidian vault</div>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <h1 id="page-title">Hermes는 실행을 빠르게 하고, 하네스와 위키가 팀 지식을 고정한다.</h1>
+        <p class="lead">
+          전체 구조의 핵심은 저장 경계다. Hermes의 세션, 메모리, 자동 스킬은 개인 런타임 상태이고,
+          서비스 분석과 요청 처리 결과는 DEV2 운영 위키와 팀 하네스의 정해진 위치로 승격될 때 팀 지식이 된다.
+        </p>
+      </div>
+      <aside class="summary-panel" aria-labelledby="rules-title">
+        <h2 id="rules-title">운영 원칙</h2>
+        <div class="rules">
+          <div class="rule"><span class="dot"></span><span>요청은 YouTrack 5W1H 또는 회의/운영 맥락에서 시작한다.</span></div>
+          <div class="rule"><span class="dot green"></span><span>분석 결과는 vault의 서비스·티켓 구조에 맞춰 <code>draft</code>로 저장한다.</span></div>
+          <div class="rule"><span class="dot gold"></span><span>정책, 스킬, 카탈로그는 team2 repo가 <code>source of truth</code>다.</span></div>
+          <div class="rule"><span class="dot red"></span><span>티켓 변경, KB 변경, 커밋, 푸시, PR은 사람 승인 후 실행한다.</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="band" aria-labelledby="loop-title">
+      <div class="band-header">
+        <h2 id="loop-title">1. 요청 처리 순환</h2>
+        <p>요청이 들어오면 Hermes는 맥락을 조립하고 초안을 만든다. 팀 지식으로 남는 것은 검증 후 vault 또는 하네스에 저장된 산출물이다.</p>
+      </div>
+      <div class="operating-map">
+        <article class="stage request">
+          <span class="stage-num">1</span>
+          <h3>요청 유입</h3>
+          <p>DEV2 티켓, 회의, 장애, 운영 문의, 리팩터링 후보가 시작점이다.</p>
+          <div class="chips"><span class="chip">YouTrack</span><span class="chip">회의록</span><span class="chip">운영 문의</span></div>
+        </article>
+        <article class="stage gate">
+          <span class="stage-num">2</span>
+          <h3>작업 게이트</h3>
+          <p>5W1H, 승인 필요 여부, DB/SP 영향, 서비스 경계를 먼저 확인한다.</p>
+          <div class="chips"><span class="chip">승인선</span><span class="chip">브랜치 규칙</span><span class="chip">보안 정책</span></div>
+        </article>
+        <article class="stage context">
+          <span class="stage-num">3</span>
+          <h3>맥락 조립</h3>
+          <p>팀 하네스, 서비스 하네스, 레포, vault의 기존 분석을 읽어 작업 프레임을 만든다.</p>
+          <div class="chips"><span class="chip">AGENTS.md</span><span class="chip">catalog</span><span class="chip">vault</span></div>
+        </article>
+        <article class="stage hermes">
+          <span class="stage-num">4</span>
+          <h3>Hermes 실행</h3>
+          <p>격리된 프로파일에서 탐색, 요약, 초안, 반복 분석을 수행한다.</p>
+          <div class="chips"><span class="chip">profile</span><span class="chip">Docker</span><span class="chip">tools</span></div>
+        </article>
+        <article class="stage knowledge">
+          <span class="stage-num">5</span>
+          <h3>지식 후보 저장</h3>
+          <p>서비스 분석, 티켓 prep, 결정 후보를 vault 구조에 맞춰 draft로 기록한다.</p>
+          <div class="chips"><span class="chip">analysis</span><span class="chip">ticket</span><span class="chip">decision</span></div>
+        </article>
+        <article class="stage verify">
+          <span class="stage-num">6</span>
+          <h3>검증과 반영</h3>
+          <p>테스트, 코드 리뷰, 사람 검토를 통과한 내용만 canonical 지식으로 승격한다.</p>
+          <div class="chips"><span class="chip">tests</span><span class="chip">review</span><span class="chip">confirmed</span></div>
+        </article>
+        <article class="stage reinforce">
+          <span class="stage-num">7</span>
+          <h3>하네스 강화</h3>
+          <p>반복 실수와 새 운영 규칙은 정책, 서비스 하네스, 스킬로 되돌린다.</p>
+          <div class="chips"><span class="chip">policy</span><span class="chip">skill</span><span class="chip">runbook</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="knowledge-title">
+      <div class="band-header">
+        <h2 id="knowledge-title">2. 서비스별 지식 연결</h2>
+        <p>서비스 지식은 레포 원본을 복제하지 않고, 해석·결정·함정·진행 상태만 vault에 축적한다.</p>
+      </div>
+      <div class="service-matrix" role="table" aria-label="서비스별 지식 저장소 연결">
+        <div class="matrix-cell matrix-head" role="columnheader">서비스 단위</div>
+        <div class="matrix-cell matrix-head" role="columnheader">팀 하네스</div>
+        <div class="matrix-cell matrix-head" role="columnheader">서비스 레포</div>
+        <div class="matrix-cell matrix-head" role="columnheader">운영 위키</div>
+        <div class="matrix-cell matrix-head" role="columnheader">요청 처리</div>
+
+        <div class="matrix-cell matrix-service">max, naru, tobe, bazaar 등</div>
+        <div class="matrix-cell"><code>catalog/{service}.yaml</code><br>서비스 책임, 위험도, 의존 시스템</div>
+        <div class="matrix-cell"><code>AGENTS.md</code>, <code>RUNBOOK.md</code>, 코드, 테스트, 서비스 전용 매뉴얼</div>
+        <div class="matrix-cell"><code>wiki/services/{service}/analysis</code><br><code>domains</code>, <code>decisions</code>, <code>proposals</code></div>
+        <div class="matrix-cell"><code>processes/tickets/{status}</code><br>티켓 prep, 진행 기록, 완료 근거</div>
+
+        <div class="matrix-cell matrix-service">코드와 강결합된 사실</div>
+        <div class="matrix-cell">서비스 카탈로그 링크만 보유</div>
+        <div class="matrix-cell">OpenAPI, migration, schema, 빌드 방법의 원본</div>
+        <div class="matrix-cell">원본 복제 금지. repo 경로와 해석만 기록</div>
+        <div class="matrix-cell">영향 파일, 테스트 후보, PR 본문 초안</div>
+
+        <div class="matrix-cell matrix-service">운영·도메인 해석</div>
+        <div class="matrix-cell">정책과 분류 기준 제공</div>
+        <div class="matrix-cell">근거 source path 제공</div>
+        <div class="matrix-cell">canonical 도메인 지식, 함정, 결정, 분석</div>
+        <div class="matrix-cell">사람 확인 전 <code>draft</code>, 확인 후 <code>canonical</code></div>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="hermes-title">
+      <div class="band-header">
+        <h2 id="hermes-title">3. Hermes의 강화 루프</h2>
+        <p>강점은 “대화 기억” 자체가 아니라, 반복 작업에서 절차를 추출하고 다음 작업의 초기 맥락 품질을 높이는 것이다.</p>
+      </div>
+      <div class="loop-diagram">
+        <div class="loop">
+          <div class="loop-step"><strong>관찰</strong><span>요청, 레포 구조, 서비스 하네스, 기존 vault 노트를 읽는다.</span></div>
+          <div class="loop-step"><strong>패턴화</strong><span>반복되는 조회 경로, 검증 순서, 위험 신호를 작업 패턴으로 묶는다.</span></div>
+          <div class="loop-step"><strong>초안화</strong><span>티켓 prep, 분석 노트, PR 본문, 테스트 계획을 빠르게 만든다.</span></div>
+          <div class="loop-step"><strong>검증</strong><span>테스트, 코드 근거, 사용자 확인, 리뷰로 추론을 걸러낸다.</span></div>
+          <div class="loop-step"><strong>승격</strong><span>검증된 지식만 vault canonical 또는 하네스 정책으로 옮긴다.</span></div>
+          <div class="loop-step"><strong>재사용</strong><span>다음 요청에서 더 짧은 맥락 탐색과 더 정확한 체크리스트로 시작한다.</span></div>
+        </div>
+        <aside class="hermes-core">
+          <h3>개인 런타임과 팀 지식은 분리한다</h3>
+          <p>
+            Hermes의 <code>sessions</code>, <code>memories</code>, <code>skills</code>는 빠른 실행을 돕는 개인 상태다.
+            팀 기준으로 남길 내용은 vault frontmatter와 하네스 정책 경계를 통과해야 한다.
+          </p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="boundary-title">
+      <div class="band-header">
+        <h2 id="boundary-title">4. 저장 경계</h2>
+        <p>같은 분석 결과라도 어디에 저장하느냐에 따라 의미가 달라진다. 이 경계를 지켜야 Hermes 결과물이 팀 운영 지식과 충돌하지 않는다.</p>
+      </div>
+      <div class="boundaries">
+        <article class="boundary">
+          <span class="tag">개인 런타임</span>
+          <h3>Hermes profile</h3>
+          <p>대화, 임시 기억, 자동 스킬, 작업 캐시.</p>
+          <ul>
+            <li><code>~/.hermes/profiles/team2</code></li>
+            <li>팀 canonical 지식 아님</li>
+            <li>초안 생성과 반복 실행에 사용</li>
+          </ul>
+        </article>
+        <article class="boundary">
+          <span class="tag">업무 내용</span>
+          <h3>Obsidian vault</h3>
+          <p>도메인 분석, 티켓 산출물, 회의록, 결정 후보.</p>
+          <ul>
+            <li><code>wiki/services/{service}</code></li>
+            <li><code>wiki/processes/tickets</code></li>
+            <li>frontmatter로 관계 연결</li>
+          </ul>
+        </article>
+        <article class="boundary">
+          <span class="tag">일하는 법</span>
+          <h3>team2 repo</h3>
+          <p>정책, 스킬, 카탈로그, 운영 가이드.</p>
+          <ul>
+            <li><code>policies/</code></li>
+            <li><code>docs/</code></li>
+            <li><code>.codex/skills/</code></li>
+          </ul>
+        </article>
+        <article class="boundary">
+          <span class="tag">코드 원본</span>
+          <h3>Service repo</h3>
+          <p>구현, 테스트, OpenAPI, 배포와 강결합된 문서.</p>
+          <ul>
+            <li><code>AGENTS.md</code></li>
+            <li><code>LEGACY_BOUNDARY.md</code></li>
+            <li><code>RUNBOOK.md</code></li>
+          </ul>
+        </article>
+        <article class="boundary">
+          <span class="tag">공유 원천</span>
+          <h3>YouTrack KB</h3>
+          <p>전사·팀 공통 지식. 변경은 사람 승인 후 REST API로만.</p>
+          <ul>
+            <li>전사 보안/개발 규칙</li>
+            <li>팀 공통 온보딩</li>
+            <li>하네스는 링크와 매핑 유지</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="request-title">
+      <div class="band-header">
+        <h2 id="request-title">5. 실제 요청 처리 예시</h2>
+        <p>서비스 분석 요청이 들어왔을 때 어느 지식이 읽히고, 무엇이 어디에 남는지 한 번에 보는 흐름이다.</p>
+      </div>
+      <div class="split-grid">
+        <div class="lane">
+          <div class="lane-title">분석 실행 흐름 <span>Hermes가 빠르게 처리</span></div>
+          <div class="lane-body">
+            <div class="swimlane">
+              <div class="step-row"><div class="step-label">입력</div><div class="step-copy">“max 주문 흐름 분석해줘” 또는 DEV2 티켓 번호.</div></div>
+              <div class="step-row"><div class="step-label">읽기</div><div class="step-copy">team2 정책, max catalog, 서비스 하네스, 관련 vault 노트, 코드 경로.</div></div>
+              <div class="step-row"><div class="step-label">분석</div><div class="step-copy">API, SP, table, UI 흐름의 근거를 source path 중심으로 추적.</div></div>
+              <div class="step-row"><div class="step-label">초안</div><div class="step-copy">영향 범위, 위험, 테스트 후보, 결정 대기 항목을 정리.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="lane">
+          <div class="lane-title">지식 반영 흐름 <span>팀 구조에 맞춰 저장</span></div>
+          <div class="lane-body">
+            <div class="swimlane">
+              <div class="step-row"><div class="step-label">티켓 단위</div><div class="step-copy"><code>processes/tickets/in-progress/DEV2-xxxx.md</code></div></div>
+              <div class="step-row"><div class="step-label">서비스 분석</div><div class="step-copy"><code>services/max/analysis/order-flow-code-review.md</code></div></div>
+              <div class="step-row"><div class="step-label">도메인 지식</div><div class="step-copy"><code>services/max/domains/order/</code> 아래 business-rules, traps, relations.</div></div>
+              <div class="step-row"><div class="step-label">정책 승격</div><div class="step-copy">반복 가능한 규칙만 team2 <code>policies/</code>, <code>docs/</code>, skill로 이동.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="security-title">
+      <div class="band-header">
+        <h2 id="security-title">6. 보안과 승인 게이트</h2>
+        <p>Hermes가 강해질수록 권한을 줄여야 한다. 실행 능력은 sandbox로 제한하고, 팀 상태 변경은 사람 승인으로 잠근다.</p>
+      </div>
+      <div class="security-strip">
+        <article class="security-panel">
+          <h3>항상 잠긴 작업</h3>
+          <p>아래 작업은 Hermes가 초안과 분석까지만 수행하고, 실제 변경은 명시 승인 후 별도 실행한다.</p>
+          <ul class="security-list">
+            <li>YouTrack 티켓/Task 생성, 상태 변경, 필드 변경</li>
+            <li>YouTrack KB 생성, 수정, 삭제, 이동</li>
+            <li>git 커밋, 푸시, 머지, PR 생성/머지</li>
+            <li>DB/SP 변경, 프로덕션 배포</li>
+            <li>시크릿 조회 결과를 로그, 위키, 티켓에 남기는 행위</li>
+          </ul>
+        </article>
+        <article class="callout">
+          <h3>권장 Hermes 실행 자세</h3>
+          <p>
+            <code>team2</code> 전용 프로파일, Docker 백엔드, 빈 <code>docker_forward_env</code>,
+            vault read-only mount에서 시작한다. 쓰기가 필요하면 특정 inbox 또는 대상 analysis 경로만 열고,
+            생성물은 <code>draft</code>로 저장한다.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <p class="footer-note">
+      이 문서는 team2 하네스의 지식 경계와 AI 사용 정책을 시각화한 운영 가이드다. 실제 자동화 도입 시 서비스별 하네스와 보안 정책을 우선 적용한다.
+    </p>
+  </main>
+</body>
+</html>

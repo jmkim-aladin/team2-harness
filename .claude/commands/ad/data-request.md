@@ -20,7 +20,7 @@ YouTrack 데이터 추출 요청의 SQL과 산출물을 [`AladinCommunication/da
 ## 핵심 규칙 요약
 
 - **브랜치**: `sprint/YYYY-MM` (당월). 없으면 `main`에서 분기 생성.
-- **커밋 메시지**: `[DEV2-####] {설명}`. 마지막 커밋에 `요청 완료` 표기.
+- **커밋 메시지**: `[DEV2-####] {요청 제목 또는 핵심 산출물 요약}`. 예: `[DEV2-6654] 합산 구매내역 통계 요청`. 기본값으로 `[DEV2-####] 요청 완료` 같은 범용 문구를 쓰지 않는다.
 - **경로**:
   - 일반 단건: `요청부서/{부서}/DEV2-####/`
   - 만권당투비팀은 서비스별 하위 폴더(`만권당/`, `투비/`) 유지
@@ -140,16 +140,16 @@ fi
 **경로 표기 규칙** — 본 레포는 팀 공용이므로 작업자 로컬 환경 정보를 노출하지 않는다.
 
 - ❌ 금지: 작업자 로컬 절대경로 (`/Users/jm/Documents/workspace/shopping/shop-db-script/...`, `~/Documents/workspace/...`)
-- ❌ 금지: 다른 레포의 상대 경로 (`shop-db-script/databases/WebCatalog/Tables/Foo.sql`, `dev1-web-aladin/WebRelease/...`)
+- ❌ 금지: 다른 레포의 상대 경로 (`shop-db-script/databases/WebCatalog/Tables/Foo.sql`, `aladin-mall-migration/WebRelease/...`)
 - ✓ 권장: **DB/스키마 식별자**로 표기 — `WebCatalog.dbo.Foo` (테이블), `WebCatalog.dbo.Foo_Get_SP` (SP), `Community.dbo.Bar` 등
 - ✓ 운영 도구 URL은 그대로 (예: `https://www.aladin.co.kr/aaintraweb/...`)
-- ✓ 외부 레포 식별이 꼭 필요하면 레포 루트 기준으로 단축: `shop-db-script` → `WebCatalog 스키마` / `dev1-web-aladin` → `AaIntraWeb 페이지` 식으로 의미 단위 표현
+- ✓ 외부 레포 식별이 꼭 필요하면 레포 루트 기준으로 단축: `shop-db-script` → `WebCatalog 스키마` / `aladin-mall-migration` → `AaIntraWeb 페이지` 식으로 의미 단위 표현
 
 예시:
 
 ```diff
 - 추적 경로:
-- - `/Users/jm/Documents/workspace/shopping/dev1-web-aladin/WebRelease/AaIntraWeb/PageTracker/CustomerInBox.aspx.cs:52`
+- - `/Users/jm/Documents/workspace/shopping/aladin-mall-migration/WebRelease/AaIntraWeb/PageTracker/CustomerInBox.aspx.cs:52`
 - - `shop-db-script/databases/WebCatalog/StoredProcedures/Customer_InBox_Timeline_V2.sql:195-256`
 - - `shop-db-script/databases/WebCatalog/Tables/CustomerLoginHistory.sql`
 + 추적 경로:
@@ -172,13 +172,19 @@ git diff --cached
 사용자에게 diff 확인 받은 후:
 
 ```bash
-git commit -m "[DEV2-####] {커밋 설명}"
+git commit -m "[DEV2-####] {요청 제목 또는 핵심 산출물 요약}"
 ```
 
 **커밋 메시지 예시**:
-- 작성: `[DEV2-1234] 매출 데이터 추출 쿼리 작성`
-- 수정: `[DEV2-1234] 기간 조건 수정`
-- 완료: `[DEV2-1234] 요청 완료` (마지막 커밋)
+- `[DEV2-6654] 합산 구매내역 통계 요청`
+- `[DEV2-6807] 앱푸시 발송 리스트 쿼리 작성`
+- `[DEV2-1234] 회원 등급별 구매주기 통계 요청`
+
+규칙:
+
+- 티켓 제목이나 요청자가 보는 산출물명을 짧게 요약한다.
+- `요청 완료`, `쿼리 작성`, `수정`처럼 단독으로 봤을 때 내용을 알 수 없는 범용 문구는 기본값으로 쓰지 않는다.
+- 조건 보정/후속 수정 커밋은 `[DEV2-####] {무엇을 바꿨는지}`로 쓴다. 예: `[DEV2-6807] 조건 AND 교집합 정정 + 19세·본인인증 필터 추가`.
 
 ### 5단계: 푸시
 
@@ -194,7 +200,7 @@ git push -u origin "$SPRINT"     # 신규 브랜치 첫 푸시
 사용자에게 다음을 보고한다.
 
 - 등록 경로: `요청부서/{부서}/...`
-- 커밋 해시 및 메시지
+- 커밋 해시 및 메시지 (`[DEV2-####] {요청 제목 또는 핵심 산출물 요약}`)
 - 브랜치 (`sprint/YYYY-MM`)
 - 후속 작업 제안:
   - YouTrack 티켓 상태 업데이트 (사용자 확인 필요)
@@ -208,7 +214,7 @@ git push -u origin "$SPRINT"     # 신규 브랜치 첫 푸시
 - 커밋/푸시 전 사용자 확인 생략
 - 티켓 ID 없는 커밋
 - 정책에 없는 부서 폴더 신규 생성 (필요 시 사용자에게 확인)
-- 설명.md / query.sql 주석에 작업자 로컬 절대경로(`/Users/jm/...`, `~/Documents/...`) 또는 외부 레포 상대경로(`shop-db-script/...`, `dev1-web-aladin/...`) 기록 — DB 식별자(`WebCatalog.dbo.Foo`)로만 표기
+- 설명.md / query.sql 주석에 작업자 로컬 절대경로(`/Users/jm/...`, `~/Documents/...`) 또는 외부 레포 상대경로(`shop-db-script/...`, `aladin-mall-migration/...`) 기록 — DB 식별자(`WebCatalog.dbo.Foo`)로만 표기
 
 ## 예외 처리
 

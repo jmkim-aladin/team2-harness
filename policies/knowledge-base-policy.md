@@ -56,8 +56,20 @@ vault **내부** 결정 트리(어느 디렉터리에 둘지)는 vault 측 [`wik
 | "repo 클론 안 하면 쓸모없다" | 그 서비스 repo |
 | 특정 티켓 산출물 (DEV2-* 등) | vault |
 | 도메인 가이드, 도메인 분석 | vault |
+| 운영·도메인 노트의 근거 이미지/PDF/HTML | vault 노트 리소스 |
 | 회의록 | vault `wiki/meetings/` |
 | OKR 본문 | vault `wiki/okr/` |
+
+## 정적 파일 리소스 경계
+
+이미지, PDF, HTML 같은 정적 파일은 그 자체가 운영·도메인 판단의 근거이면 Obsidian vault에 보관한다. 노트가 외부 다운로드 경로, 임시 로컬 경로, 메신저 첨부, 브라우저 export만 가리키면 vault가 업무 맥락을 완전히 재현할 수 없기 때문이다.
+
+보관 기준:
+- 노트의 판단·회의·분석을 뒷받침하는 정적 파일은 vault 내부로 복사하고, 소유 노트의 `resources` frontmatter에 등록한다.
+- 새 리소스는 소유 노트와 같은 주제 디렉터리의 `assets/` 아래에 둔다. vault 내부 세부 규칙은 vault `wiki/guides/taxonomy.md`, `wiki/guides/frontmatter-spec.md`를 따른다.
+- 코드, SQL, 스키마, API 원본처럼 다른 repo가 SSOT인 파일은 vault에 복제하지 않는다. 이 경우 노트에는 repo 경로나 링크만 남긴다.
+- 민감정보, 개인정보, 계약서, 운영 데이터가 포함된 파일은 마스킹하거나 별도 승인 후 보관한다.
+- 대용량 파일은 무조건 vault에 넣지 않고, 요약·추출본을 노트에 남긴 뒤 보관 위치를 명시한다.
 
 ## YouTrack Knowledge Base 용도
 

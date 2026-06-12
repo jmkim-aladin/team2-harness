@@ -6,6 +6,7 @@
 
 | 가이드 | 용도 |
 |--------|------|
+| [에이전트 런타임 DEV2 운영 지침](./hermes-agent-operating-guide.md) | Hermes 등 상시 에이전트로 서비스/SP/아키텍처 지식을 발견하고 확정 지식으로 승격하는 기준 |
 | [Ralph Loop 도메인 지식 고도화 요청 기준](./ralph-loop-domain-knowledge-guide.md) | 도메인 지식 고도화 작업 요청 기준 |
 | [Ralph Loop 서비스 확장 기준](./ralph-loop-service-expansion-guide.md) | Ralph Loop 대상 서비스를 확장할 때의 기준 |
 

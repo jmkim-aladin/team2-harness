@@ -9,6 +9,12 @@ participants:
   - {{user}}
 related_tickets: []
 related_services: []
+related_okrs: []
+related_domains: []
+related_projects: []
+relation_status: inferred
+relation_sources:
+  - manual
 ---
 
 <!-- llm-hint -->
@@ -48,5 +54,7 @@ related_services: []
 ## 관련 자료
 
 - 티켓: 
+- 서비스:
+- OKR:
 - 도메인: 
 - 이전 회의: 

@@ -4,23 +4,26 @@
 
 ```
 ~/.claude/commands/ad/  →  team2/.claude/commands/ad/ (심볼릭 링크)
-~/.codex/AGENTS.md      →  team2/AGENTS.md (심볼릭 링크)
-~/.codex/skills/*       →  team2/.codex/skills/* (심볼릭 링크)
 
 어떤 서비스 레포에서든 Claude Code 실행 시:
 ├── 팀 스킬 (/ad:ticket 등)   ← 글로벌 ~/.claude/commands/ad/ 에서 로드
 ├── 서비스 CLAUDE.md           ← 현재 레포에서 로드
 └── 서비스 코드                 ← 작업 대상
 
-Codex 실행 시:
-├── 팀 하네스 진입점            ← 글로벌 ~/.codex/AGENTS.md 에서 로드
-├── Codex Skill                 ← 글로벌 ~/.codex/skills/* 에서 로드
-└── 서비스 AGENTS.md            ← 현재 레포에서 로드
+team2 레포에서 Codex 실행 시:
+├── 팀 하네스 진입점            ← repo-local AGENTS.md 에서 로드
+├── Codex Skill                 ← ~/.codex/skills/* → team2/.codex/skills/* symlink
+└── 팀 하네스 파일              ← 현재 레포에서 로드
+
+어떤 터미널에서든 Claude Code 실행 시:
+├── 팀 스킬 (/ad:ticket 등)     ← 글로벌 ~/.claude/commands/ad/ symlink
+└── Claude Code Skill           ← ~/.claude/skills/* → team2/.codex/skills/* symlink
 ```
 
-- **team2 레포에서 실행할 필요 없음** — 팀 스킬은 심볼릭 링크로 어디서든 사용 가능
-- **각 서비스 레포에서 평소처럼 Claude Code/Codex 실행** — 코드 작업 + 팀 스킬 모두 사용
+- **Claude Code는 team2 레포에서 실행할 필요 없음** — `/ad` command는 심볼릭 링크로 어디서든 사용 가능
+- **Codex는 repo-local 진입점 + 전역 Skill symlink 기준** — team2 전용 Skill은 team2 레포의 `.codex/skills/*`가 source of truth
 - **team2 레포**는 스킬/정책의 source of truth — 스킬 수정은 여기서 PR로 관리
+- **Skill은 전역 홈에 복제하지 않음** — `~/.codex/skills/*`, `~/.claude/skills/*`에는 team2 원본을 가리키는 symlink만 둔다
 
 ---
 
@@ -37,7 +40,7 @@ cd team2
 스크립트가 자동으로:
 1. `TEAM2_HARNESS_PATH`, `YOUTRACK_BASE_URL` 등록
 2. Claude Code `/ad` command 심볼릭 링크 생성
-3. Codex `AGENTS.md`와 Skill 심볼릭 링크 생성
+3. `~/.codex/skills/*`, `~/.claude/skills/*`에 team2 Skill 심볼릭 링크 생성
 4. YouTrack 토큰 설정 확인
 5. gh CLI 설치/인증 확인
 
@@ -57,18 +60,21 @@ mv ~/.claude/commands/ad ~/.claude/commands/ad.bak 2>/dev/null
 ln -s /path/to/team2/.claude/commands/ad ~/.claude/commands/ad
 ```
 
-#### 3. Codex 하네스 링크
+#### 3. Codex / Claude Code Skill 심볼릭 링크
 ```bash
-mkdir -p ~/.codex/skills
-mv ~/.codex/AGENTS.md ~/.codex/AGENTS.md.bak 2>/dev/null
-ln -s /path/to/team2/AGENTS.md ~/.codex/AGENTS.md
-
 for skill in /path/to/team2/.codex/skills/*; do
   name="$(basename "$skill")"
-  mv "$HOME/.codex/skills/$name" "$HOME/.codex/skills/$name.bak" 2>/dev/null
-  ln -s "$skill" "$HOME/.codex/skills/$name"
+  ln -sfn "$skill" "$HOME/.codex/skills/$name"
+  ln -sfn "$skill" "$HOME/.claude/skills/$name"
 done
+
+if [ -L "$HOME/.codex/AGENTS.md" ] &&
+   [ "$(readlink "$HOME/.codex/AGENTS.md")" = "/path/to/team2/AGENTS.md" ]; then
+  rm "$HOME/.codex/AGENTS.md"
+fi
 ```
+
+team2 스킬 원본은 team2 레포의 `.codex/skills/*`다. 전역 홈에는 복제하지 않고 symlink만 둔다.
 
 #### 4. YouTrack 토큰 등록
 `~/.claude/settings.json`의 `env`에 추가:
@@ -178,7 +184,7 @@ team2 레포에서 스킬이 업데이트되면:
 cd ~/workspace/team2
 git pull    # 최신 스킬 가져오기
 ```
-심볼릭 링크이므로 **즉시 반영** — 별도 작업 불필요.
+Claude Code `/ad` command와 Codex/Claude Code Skill은 심볼릭 링크이므로 즉시 반영된다. 새 터미널 또는 새 세션에서 목록이 갱신된다.
 
 ---
 
@@ -189,15 +195,17 @@ git pull    # 최신 스킬 가져오기
 | `.claude/commands/ad/*.md` | team2 레포 | 팀 (git → symlink) | 팀 스킬 정의 |
 | `~/.claude/settings.json` | 개인 홈 | 개인 | `YOUTRACK_TOKEN`, `YOUTRACK_BASE_URL`, `TEAM2_HARNESS_PATH` |
 | `~/.claude/commands/ad` | 개인 홈 | symlink → team2 | 팀 스킬 자동 연결 |
-| `~/.codex/AGENTS.md` | 개인 홈 | symlink → team2 | Codex용 팀 하네스 진입점 |
-| `~/.codex/skills/dev2-team-harness-ko` | 개인 홈 | symlink → team2 | Codex용 개발2팀 하네스 Skill |
-| `~/.codex/skills/dev2-ad-commands-ko` | 개인 홈 | symlink → team2 | Codex용 `/ad:*` 호환 Skill |
-| `~/.codex/skills/youtrack-ticket-5w1h-ko` | 개인 홈 | symlink → team2 | Codex용 DEV2 티켓 Skill |
+| `~/.claude/skills/ad-*` | 개인 홈 | symlink → team2 | Claude Code Skill 자동 연결 |
+| `~/.codex/skills/ad-*` | 개인 홈 | symlink → team2 | Codex Skill 자동 연결 |
+| `AGENTS.md` | team2 레포 | 팀 (git) | Codex용 팀 하네스 진입점 |
+| `.codex/skills/dev2-team-harness-ko` | team2 레포 | 팀 (git) | Codex용 개발2팀 하네스 Skill |
+| `.codex/skills/dev2-ad-commands-ko` | team2 레포 | 팀 (git) | Codex용 `/ad:*` 호환 Skill |
+| `.codex/skills/youtrack-ticket-5w1h-ko` | team2 레포 | 팀 (git) | Codex용 DEV2 티켓 Skill |
 
 ## Codex 사용
 
 Codex는 Claude Code의 `.claude/commands/ad/*.md`를 자동 명령으로 로드하지 않는다.
-Codex에서는 `~/.codex/skills/*`에 연결된 얇은 Skill이 team2의 command 파일을 읽어서 같은 하네스 기준을 적용한다.
+Codex에서는 team2 레포의 `.codex/skills/*`에 있는 얇은 Skill이 team2의 command 파일을 읽어서 같은 하네스 기준을 적용한다.
 
 | 요청 | Codex Skill |
 |------|-------------|
@@ -226,7 +234,9 @@ Codex Skill도 YouTrack은 REST API(`$YOUTRACK_TOKEN`)로만 호출한다.
 | 증상 | 원인 | 해결 |
 |------|------|------|
 | `/ad:ticket`이 안 보임 | Claude Code 심볼릭 링크 없음 | `./scripts/setup.sh` 실행 |
-| Codex에서 `/ad:*`가 하네스를 안 따름 | `~/.codex/skills/*` 링크 없음 또는 세션 재시작 필요 | `./scripts/setup.sh` 실행 후 Codex 재시작 |
+| Codex에서 `ad-*` Skill이 안 보임 | `~/.codex/skills/ad-*` symlink 없음 또는 세션 재시작 필요 | `./scripts/setup.sh` 실행 후 Codex 재시작 |
+| Claude Code에서 `ad-*` Skill이 안 보임 | `~/.claude/skills/ad-*` symlink 없음 또는 세션 재시작 필요 | `./scripts/setup.sh` 실행 후 Claude Code 재시작 |
+| Codex에서 `/ad:*`가 하네스를 안 따름 | AGENTS 로드 안 됨 또는 세션 재시작 필요 | `TEAM2_HARNESS_PATH` 확인 후 Codex 재시작 |
 | KB 조회 시 인증 오류 | `YOUTRACK_TOKEN` 미설정 | `~/.claude/settings.json` env 확인 |
 | 티켓 생성 시 401/403 | `YOUTRACK_TOKEN` 만료/오타 | YouTrack에서 토큰 재발급 후 settings.json 갱신 |
 | PR 리뷰 시 gh 오류 | gh CLI 미설치/미인증 | `brew install gh` → `gh auth login` |

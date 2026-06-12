@@ -10,6 +10,12 @@ service: "[[{{service_id}}]]"
 duration: ""
 affected_users: ""
 related_tickets: []
+related_services:
+  - "[[{{service_id}}]]"
+related_meetings: []
+relation_status: confirmed
+relation_sources:
+  - manual
 ---
 
 <!-- llm-hint -->

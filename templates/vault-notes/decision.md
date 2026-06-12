@@ -4,7 +4,9 @@ title: {{service_id}} {{title}}
 canonical_id: decision:{{service_id}}/{{slug}}
 status: canonical
 updated_at: {{date}}
-service_id: "[[{{service_id}}]]"
+service_id: {{service_id}}
+related_services:
+  - "[[{{service_id}}]]"
 decision_date: {{date}}
 deciders:
   - {{user}}
@@ -12,6 +14,11 @@ status_label: accepted     # proposed | accepted | superseded | deprecated
 supersedes: ""
 superseded_by: ""
 related_tickets: []
+related_domains: []
+related_okrs: []
+relation_status: confirmed
+relation_sources:
+  - manual
 ---
 
 <!-- llm-hint -->

@@ -90,6 +90,11 @@ repos:
   # 신규 전환용
   max-server: "https://github.com/AladinCommunication/MaxServer"
 
+  # 관련 레포 (shopping/WebCatalog 공유)
+  shopping-db-script: "shop-db-script (DBSourceTemplate fork)" # local: /Users/jm/Documents/workspace/shopping/shop-db-script
+  aladin-mall-migration: "https://github.com/AladinCommunication/aladin-mall-migration" # 주문/땡큐 웹 (구 dev1-web-aladin)
+  dev1-backoffice-thanks: "https://github.com/AladinCommunication/dev1-backoffice-thanks" # 땡큐 VB6 백오피스
+
   # 관련 레포 (타팀 관리)
   max-search: "https://github.com/AladinCommunication/max-search" # 검색 AI 팀 관리
   ebook-web-viewer: "https://github.com/AladinCommunication/Ebook_Web_Viewer" # 개발 4팀 관리 (뷰어)
