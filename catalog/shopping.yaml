@@ -1,5 +1,5 @@
 # 알라딘 쇼핑 (shopping) 서비스 프로파일
-# 소스: /Users/user/Documents/workspace/shopping
+# 소스: /Users/jm/Documents/workspace/shopping (웹 코드 레포: aladin-mall-migration)
 
 service_id: shopping
 name: 알라딘 쇼핑 (shopping)
@@ -11,7 +11,7 @@ owners:
 
 # 멀티 컴포넌트 서비스
 components:
-  dev1-web-aladin:
+  aladin-mall-migration: # 구 dev1-web-aladin
     description: "알라딘 쇼핑 웹 — B2B/C2C/중고매장 통합 (소비자/매장/거래 업무 혼재)"
     runtime:
       type: dotnet-framework
@@ -70,7 +70,8 @@ components:
       - "해외배송 (LA 도착 / USA)"
 
 repos:
-  dev1-web-aladin: "https://github.com/AladinCommunication/dev1-web-aladin"
+  # 쇼핑 웹 코드 레포 — 구 dev1-web-aladin 대체. 로컬: /Users/jm/Documents/workspace/shopping/aladin-mall-migration
+  aladin-mall-migration: "https://github.com/AladinCommunication/aladin-mall-migration"
   dev1-backoffice-thanks: "https://github.com/AladinCommunication/dev1-backoffice-thanks"
   dev1-backoffice-packman: "https://github.com/AladinCommunication/dev1-backoffice-packman"
   # DB 스크립트는 별도 레포로 분리됨 (DBSourceTemplate 기반 fork)

@@ -4,9 +4,15 @@ title: {{service_id}} {{title}}
 canonical_id: analysis:{{service_id}}/{{slug}}
 status: draft
 updated_at: {{date}}
-service_id: "[[{{service_id}}]]"
+service_id: {{service_id}}
+related_services:
+  - "[[{{service_id}}]]"
 related_domains: []
 related_tickets: []
+related_okrs: []
+relation_status: inferred
+relation_sources:
+  - manual
 ---
 
 <!-- llm-hint -->

@@ -1,0 +1,103 @@
+# POD 콘텐츠 서비스 프로파일
+# 소스: /Users/jm/Documents/workspace/pod/pod-content-service
+
+service_id: pod
+name: POD 콘텐츠 서비스 (pod)
+type: new
+description: "POD 콘텐츠 업로드/암호화/OTP 다운로드 API - S3 Presigned URL 직접 업로드, KMS Envelope Encryption, OTP 기반 안전 다운로드"
+
+owners:
+  primary: "jmkim@aladin.co.kr" # 김정민
+  backup: ""
+
+components:
+  content-upload-api:
+    description: "POD PDF 콘텐츠 업로드/암호화/다운로드 REST API"
+    runtime:
+      type: spring-boot
+      version: "3.5.1"
+      language: "Kotlin 2.3.10"
+      jvm: "Java 17"
+      hosting: "TODO (AWS 실행 환경 확정 필요)"
+      port: 8080
+      web_framework: "Spring MVC"
+
+repo: "https://github.com/AladinCommunication/pod-content-service.git"
+
+youtrack:
+  project_key: DEV2
+
+architecture:
+  pattern: "Spring Boot layered service (Controller -> Service -> Repository/JPA)"
+  key_patterns:
+    - "S3 Presigned PUT URL로 서버 경유 없이 콘텐츠 업로드"
+    - "KMS Envelope Encryption + AES-256-GCM 부분 암호화"
+    - "OTP 기반 다운로드, 시도 횟수 제한, IP 화이트리스트"
+    - "감사 로그 기반 발급/다운로드/실패 추적"
+
+data:
+  db_type: postgresql
+  hosting:
+    dev: "AWS RDS common contents dev cluster"
+    prod: "환경변수 DB_HOST/DB_PORT/DB_NAME 기반"
+    local: "Docker PostgreSQL 17"
+  database: pod
+  orm: "Spring Data JPA / Hibernate"
+  migration: "src/main/resources/db/ddl.sql"
+  tables:
+    - pod_content
+    - pod_presign_log
+    - pod_download_otp
+    - pod_download_history
+  shared_db: false
+  direct_sp_write: false
+  storage:
+    type: "AWS S3"
+    encryption: "AWS KMS Envelope Encryption"
+    local: "LocalStack (S3, KMS)"
+
+api_endpoints:
+  upload:
+    - "POST /api/v1/upload/presign"
+    - "POST /api/v1/upload/complete"
+  downloads:
+    - "POST /api/v1/downloads/request"
+    - "GET /api/v1/downloads/history"
+    - "POST /api/v1/downloads/decrypt"
+
+dev:
+  root_path: "/Users/jm/Documents/workspace/pod/pod-content-service"
+  build: "./gradlew build"
+  test: "./gradlew test"
+  run_dev: "./gradlew bootRun --args=\"--spring.profiles.active=dev\""
+  docker_local: "docker compose up -d"
+  profiles: [dev, prod]
+  required_env:
+    - DB_USER
+    - DB_PASSWORD
+    - S3_BUCKET
+    - KMS_KEY_ID
+    - AWS_REGION
+    - DOWNLOAD_ALLOWED_IPS
+
+docker:
+  local:
+    - "LocalStack (S3, KMS)"
+    - "PostgreSQL 17"
+  ci: "TODO"
+  deployment: "TODO"
+
+risk:
+  change_frequency: TODO
+  incident_impact: "POD 콘텐츠 업로드/다운로드 장애 및 다운로드 보안 정책 영향"
+  data_coupling: low
+  security_sensitivity: high
+
+modernization:
+  track: observe
+  status: "not-started"
+  notes: |
+    신규 Spring Boot/Kotlin 서비스. 독립 PostgreSQL 스키마와 S3/KMS 기반 콘텐츠 저장소를 사용한다.
+    우선 하네스 문서화, 배포 경로 확정, 운영 지표/감사 로그 기준 정립이 필요하다.
+
+harness_status: "not-started"

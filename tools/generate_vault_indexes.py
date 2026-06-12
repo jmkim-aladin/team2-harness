@@ -30,16 +30,47 @@ HARNESS_LINK_BLOCK_RE = re.compile(
     re.DOTALL,
 )
 
+RELATED_NOTES_BLOCK_RE = re.compile(
+    r'<!-- generated:related-notes[^>]*-->.*?<!-- /generated -->',
+    re.DOTALL,
+)
+
 SERVICE_SUB_CATEGORIES = [
     "domains", "analysis", "decisions", "proposals", "processes",
 ]
 
+SERVICE_TITLES = {
+    "aasm": "AASM",
+    "bazaar": "바자르",
+    "blog": "알라딘 블로그/북플",
+    "caravan": "캐러밴",
+    "max": "만권당",
+    "naru": "나루",
+    "shopping": "알라딘 쇼핑",
+    "storefront": "스토어프론트",
+    "tobe": "투비컨티뉴드",
+}
+
 # processes/{type} 별 정렬 방식
 DATE_SORT_TYPES = {"daily", "weekly", "meetings", "tickets"}
+
+RELATED_SECTIONS = [
+    ("ticket", "관련 티켓"),
+    ("meeting", "관련 회의"),
+    ("okr", "관련 OKR"),
+    ("decision", "관련 결정"),
+    ("analysis", "관련 분석"),
+    ("proposal", "관련 제안"),
+    ("project", "관련 프로젝트"),
+]
 
 
 def today() -> str:
     return datetime.now().strftime("%Y-%m-%d")
+
+
+def service_title(svc: str) -> str:
+    return SERVICE_TITLES.get(svc, svc)
 
 
 def list_md_files(dir: Path, sort_by_date_desc: bool = False) -> list[Path]:
@@ -52,6 +83,98 @@ def list_md_files(dir: Path, sort_by_date_desc: bool = False) -> list[Path]:
     else:
         files.sort(key=lambda p: p.stem)
     return files
+
+
+def parse_frontmatter(text: str) -> dict[str, list[str] | str]:
+    if not text.startswith("---\n"):
+        return {}
+    end = text.find("\n---", 4)
+    if end < 0:
+        return {}
+    out: dict[str, list[str] | str] = {}
+    current = ""
+    for raw in text[4:end].splitlines():
+        if not raw.strip():
+            continue
+        item = re.match(r"^\s*-\s+(.+)$", raw)
+        if item and current:
+            out.setdefault(current, [])
+            if not isinstance(out[current], list):
+                out[current] = [str(out[current])]
+            out[current].append(clean_value(item.group(1)))
+            continue
+        if ":" not in raw:
+            continue
+        key, _, value = raw.partition(":")
+        current = key.strip()
+        value = clean_value(value)
+        out[current] = [] if value == "[]" else value
+    return out
+
+
+def clean_value(value: str) -> str:
+    return value.strip().strip('"').strip("'")
+
+
+def field_values(fm: dict[str, list[str] | str], key: str) -> list[str]:
+    value = fm.get(key)
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str) and value:
+        return [value]
+    return []
+
+
+def wikilink_target(value: str) -> str:
+    match = re.search(r"\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]", value)
+    return match.group(1).strip() if match else value.strip()
+
+
+def note_title(path: Path, fm: dict[str, list[str] | str]) -> str:
+    value = fm.get("title")
+    return str(value).strip() if isinstance(value, str) and value.strip() else path.stem
+
+
+def note_links_service(fm: dict[str, list[str] | str], svc: str) -> bool:
+    for field in ("related_services", "service", "service_id"):
+        for value in field_values(fm, field):
+            if wikilink_target(value).lower() == svc.lower():
+                return True
+    return False
+
+
+def render_note_link(path: Path, title: str) -> str:
+    return f"[[{path.stem}|{title}]]"
+
+
+def render_service_related_notes_block(vault: Path, svc: str) -> str:
+    groups: dict[str, list[str]] = {key: [] for key, _ in RELATED_SECTIONS}
+    for path in sorted((vault / "wiki").rglob("*.md")):
+        if path.name.endswith("-index.md") or path.name == "_index.md":
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        fm = parse_frontmatter(text)
+        note_type = fm.get("type")
+        if not isinstance(note_type, str) or note_type not in groups:
+            continue
+        if not note_links_service(fm, svc):
+            continue
+        groups[note_type].append(render_note_link(path, note_title(path, fm)))
+
+    lines = [f"<!-- generated:related-notes source=vault-relations/{svc} updated={today()} -->"]
+    for note_type, heading in RELATED_SECTIONS:
+        lines.append(f"## {heading}")
+        values = sorted(set(groups[note_type]), reverse=note_type in {"ticket", "meeting", "okr"})
+        if values:
+            lines.extend(f"- {value}" for value in values)
+        else:
+            lines.append("- (없음)")
+        lines.append("")
+    lines.append("<!-- /generated -->")
+    return "\n".join(lines).rstrip()
 
 
 def list_subdir_indexes(dir: Path) -> list[tuple[str, Path]]:
@@ -151,27 +274,30 @@ def llm_hint_block(scope: str, examples: str = "") -> str:
     return f"<!-- llm-hint -->\n{body}\n<!-- /llm-hint -->"
 
 
-def new_service_index(svc: str, block: str) -> str:
+def new_service_index(svc: str, block: str, related_block: str | None = None) -> str:
     today_s = today()
+    title = service_title(svc)
     hint = llm_hint_block(
         f"`{svc}` 서비스의 도메인·해석·결정·개선·운영 절차 산출물",
         "domains/, analysis/, decisions/, proposals/, processes/"
     )
+    related = f"\n\n{related_block}" if related_block else ""
     return (
         f"---\n"
         f"type: service\n"
-        f"title: {svc}\n"
+        f"title: {title}\n"
         f"canonical_id: service:{svc}\n"
         f"status: canonical\n"
         f"updated_at: {today_s}\n"
         f"service_id: {svc}\n"
         f"---\n\n"
-        f"# {svc}\n\n"
+        f"# {title}\n\n"
         f"{hint}\n\n"
         f"{block}\n\n"
         f"<!-- generated:harness-link source=team2/catalog/{svc}.yaml updated=N/A -->\n"
         f"(Sub 5에서 채움)\n"
-        f"<!-- /generated -->\n"
+        f"<!-- /generated -->"
+        f"{related}\n"
     )
 
 
@@ -279,9 +405,37 @@ def update_existing(text: str, block: str, file_kind: str,
     return text, "skipped"
 
 
+def upsert_related_notes_block(text: str, block: str) -> tuple[str, bool]:
+    """서비스 노트에 관련 노트 projection 블록을 교체 또는 추가한다."""
+    if RELATED_NOTES_BLOCK_RE.search(text):
+        new_text = RELATED_NOTES_BLOCK_RE.sub(block, text, count=1)
+        return new_text, new_text != text
+    if HARNESS_LINK_BLOCK_RE.search(text):
+        new_text = HARNESS_LINK_BLOCK_RE.sub(lambda m: m.group(0).rstrip() + "\n\n" + block, text, count=1)
+        return new_text, True
+    if VAULT_INDEX_BLOCK_RE.search(text):
+        new_text = VAULT_INDEX_BLOCK_RE.sub(lambda m: m.group(0).rstrip() + "\n\n" + block, text, count=1)
+        return new_text, True
+    return text.rstrip() + "\n\n" + block + "\n", True
+
+
+def normalize_service_title(text: str, svc: str) -> tuple[str, bool]:
+    title = service_title(svc)
+    new_text = re.sub(
+        r'^(title:\s*).*$',
+        lambda m: f"{m.group(1)}{title}",
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    new_text = re.sub(r'^# .+$', f"# {title}", new_text, count=1, flags=re.MULTILINE)
+    return new_text, new_text != text
+
+
 def process_service(vault: Path, svc: str, dry_run: bool) -> dict:
     idx_path = vault / "wiki/services" / svc / f"{svc}.md"
     block = render_service_index_block(vault, svc)
+    related_block = render_service_related_notes_block(vault, svc)
     hint = llm_hint_block(
         f"`{svc}` 서비스의 도메인·해석·결정·개선·운영 절차 산출물",
         "domains/, analysis/, decisions/, proposals/, processes/"
@@ -293,12 +447,14 @@ def process_service(vault: Path, svc: str, dry_run: bool) -> dict:
             return {"file": str(idx_path.relative_to(vault)),
                     "status": "skipped",
                     "reason": "기존 _index.md에 generated block 없음 (사람 본문 보존)"}
+        new_text, related_changed = upsert_related_notes_block(new_text, related_block)
+        new_text, title_changed = normalize_service_title(new_text, svc)
         if not dry_run:
             idx_path.write_text(new_text, encoding="utf-8")
-        return {"file": str(idx_path.relative_to(vault)), "status": status}
+        return {"file": str(idx_path.relative_to(vault)), "status": status if status != "replaced" or related_changed or title_changed else status}
     if not dry_run:
         idx_path.parent.mkdir(parents=True, exist_ok=True)
-        idx_path.write_text(new_service_index(svc, block), encoding="utf-8")
+        idx_path.write_text(new_service_index(svc, block, related_block), encoding="utf-8")
     return {"file": str(idx_path.relative_to(vault)), "status": "created"}
 
 

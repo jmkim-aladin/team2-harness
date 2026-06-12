@@ -5,6 +5,12 @@ canonical_id: daily:{{date}}
 status: canonical
 updated_at: {{date}}
 date: {{date}}
+related_tickets: []
+related_meetings: []
+related_services: []
+relation_status: inferred
+relation_sources:
+  - manual
 ---
 
 <!-- llm-hint -->

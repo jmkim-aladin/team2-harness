@@ -14,3 +14,4 @@ description: "Use when the user invokes $ad-data-request, ad data request, /ad:d
 3. command 파일이 참조하는 데이터 추출 정책과 `AladinCommunication/data-requests-dev2` 기준만 추가로 확인한다.
 4. DB 관련 MCP 도구는 사용하지 않는다. dev RDS `sqlcmd`는 read-only 조회만 허용한다.
 5. SQL 등록, DB/SP 변경, PR/커밋/푸시는 사용자 승인 후 실행한다.
+6. data-requests-dev2 커밋명은 `[DEV2-####] {요청 제목 또는 핵심 산출물 요약}` 형식을 쓴다. 예: `[DEV2-6654] 합산 구매내역 통계 요청`. 기본값으로 `[DEV2-####] 요청 완료`처럼 범용 문구를 쓰지 않는다.

@@ -10,8 +10,16 @@ assignee: {{user}}
 service: "[[{{service_id}}]]"
 sprint: {{sprint}}
 type_yt: feature
+related_services:
+  - "[[{{service_id}}]]"
 related_domains: []
 related_tickets: []
+related_okrs: []
+related_meetings: []
+related_projects: []
+relation_status: confirmed
+relation_sources:
+  - manual
 okr_kr: ""
 ---
 
@@ -46,7 +54,7 @@ status: auto-prep | in-progress | done | backlog (디렉터리와 일치).
 ## 기술 근거
 
 - YouTrack: https://aladincommunication.youtrack.cloud/issue/{{ticket_id}}
-- 서비스: [[../../services/{{service_id}}/{{service_id}}-index|{{service_id}}]]
+- 서비스: [[{{service_id}}]]
 - 관련 도메인:
 - 관련 KB:
 - 진입점:

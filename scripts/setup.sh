@@ -34,22 +34,42 @@ link_path() {
     echo "  ✓ $dest → $src"
 }
 
-remove_stale_codex_skill() {
-    local skill_name="$1"
-    local dest="$CODEX_DIR/skills/$skill_name"
-
-    if [ -L "$dest" ] || [ -d "$dest" ]; then
-        echo "  기존 전역 Codex Skill 제거 — ~/.codex/skills/$skill_name"
-        rm -rf "$dest"
-    fi
-}
-
 remove_stale_codex_agents() {
     local dest="$CODEX_DIR/AGENTS.md"
 
     if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$TEAM2_DIR/AGENTS.md" ]; then
         echo "  기존 전역 Codex AGENTS 링크 제거 — ~/.codex/AGENTS.md"
         rm "$dest"
+    fi
+}
+
+link_team2_skills() {
+    local dest_root="$1"
+    local label="$2"
+    local skip_ad="$3"  # skip-ad: Claude Code는 /ad:* command가 있어 ad-* Skill을 중복 연결하지 않음
+
+    mkdir -p "$dest_root"
+
+    if [ -d "$TEAM2_DIR/.codex/skills" ]; then
+        for skill_dir in "$TEAM2_DIR"/.codex/skills/*; do
+            [ -d "$skill_dir" ] || continue
+            local skill_name
+            skill_name="$(basename "$skill_dir")"
+            if [ "$skip_ad" = "skip-ad" ]; then
+                case "$skill_name" in
+                ad-*)
+                    if [ -L "$dest_root/$skill_name" ]; then
+                        echo "  중복 ad Skill 링크 제거 — $label/$skill_name"
+                        rm "$dest_root/$skill_name"
+                    fi
+                    continue
+                    ;;
+                esac
+            fi
+            link_path "$skill_dir" "$dest_root/$skill_name" "$label/$skill_name"
+        done
+    else
+        echo "  ⚠ $TEAM2_DIR/.codex/skills 디렉토리가 없습니다."
     fi
 }
 
@@ -99,21 +119,14 @@ mkdir -p "$CLAUDE_DIR/commands"
 
 link_path "$TEAM2_DIR/.claude/commands/ad" "$CLAUDE_DIR/commands/ad" "~/.claude/commands/ad"
 
-# 2. 전역 Codex team2 항목 정리
+# 2. 전역 Codex/Claude Code team2 Skill 연결
 echo ""
-echo "[2/5] Codex 전역 중복 정리..."
+echo "[2/5] Codex / Claude Code 전역 Skill 연결..."
 
 remove_stale_codex_agents
 
-if [ -d "$TEAM2_DIR/.codex/skills" ]; then
-    for skill_dir in "$TEAM2_DIR"/.codex/skills/*; do
-        [ -d "$skill_dir" ] || continue
-        skill_name="$(basename "$skill_dir")"
-        remove_stale_codex_skill "$skill_name"
-    done
-else
-    echo "  ⚠ $TEAM2_DIR/.codex/skills 디렉토리가 없습니다."
-fi
+link_team2_skills "$CODEX_DIR/skills" "~/.codex/skills"
+link_team2_skills "$CLAUDE_DIR/skills" "~/.claude/skills" skip-ad
 
 # 3. YouTrack 토큰 확인
 echo ""
@@ -165,6 +178,16 @@ if [ -L "$CLAUDE_DIR/commands/ad" ]; then
 else
     echo "  ⚠ Claude Code /ad command 연결 확인 필요"
 fi
+if [ -L "$CLAUDE_DIR/skills/dev2-team-harness-ko" ] && [ -f "$CLAUDE_DIR/skills/dev2-team-harness-ko/SKILL.md" ]; then
+    echo "  ✓ Claude Code team2 Skill 연결됨"
+else
+    echo "  ⚠ Claude Code team2 Skill 연결 확인 필요"
+fi
+if [ -L "$CODEX_DIR/skills/ad-ticket" ] && [ -f "$CODEX_DIR/skills/ad-ticket/SKILL.md" ]; then
+    echo "  ✓ Codex ad Skill 연결됨"
+else
+    echo "  ⚠ Codex ad Skill 연결 확인 필요"
+fi
 if [ -f "$TEAM2_DIR/AGENTS.md" ]; then
     echo "  ✓ Codex repo-local 진입점 확인됨"
 else
@@ -186,7 +209,8 @@ echo "  /ad:team2-kb-list   — KB 문서 목록"
 echo "  /ad:team2-kb-sync   — KB → 하네스 동기화"
 echo ""
 echo "Codex:"
-echo "  AGENTS.md와 .codex/skills/*는 team2 레포 안의 repo-local 항목을 사용합니다."
-echo "  team2 전용 Codex Skill은 이 레포의 .codex/skills/*만 source of truth로 사용합니다."
-echo "  전역 ~/.codex/AGENTS.md 및 ~/.codex/skills 아래의 team2 항목은 중복 노출 방지를 위해 제거됩니다."
-echo "  /ad:* 요청은 repo-local Codex Skill이 team2/.claude/commands/ad/*.md를 읽고 같은 절차로 수행합니다."
+echo "  AGENTS.md는 team2 레포의 repo-local 항목을 사용합니다."
+echo "  team2 전용 Skill은 ~/.codex/skills, ~/.claude/skills에서 이 레포의 .codex/skills/*로 symlink됩니다."
+echo "  단, ad-* Skill은 Claude Code에서 /ad:* command와 중복이므로 ~/.claude/skills에는 연결하지 않습니다."
+echo "  Skill 원본은 항상 team2/.codex/skills/*입니다."
+echo "  /ad:* 요청은 Skill이 team2/.claude/commands/ad/*.md를 읽고 같은 절차로 수행합니다."

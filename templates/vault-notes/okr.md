@@ -8,6 +8,12 @@ year: {{year}}
 quarter: {{quarter}}
 scope: personal
 assignee: {{user}}
+related_tickets: []
+related_services: []
+related_projects: []
+relation_status: inferred
+relation_sources:
+  - manual
 ---
 
 <!-- llm-hint -->

@@ -14,6 +14,7 @@
 | [bazaar](bazaar.yaml) | new | Spring Boot 3.5.3 + Kotlin | PostgreSQL + MSSQL(읽기) | 없음 | Observe | 미시작 |
 | [aasm](aasm.yaml) | new | Next.js 16 + TypeScript | PostgreSQL (마이그레이션 중) | 없음 | Observe | 미시작 |
 | [caravan](caravan.yaml) | new | Spring Boot 3.3.7 + Kotlin + Spring Cloud Gateway + Next.js 14 | PostgreSQL + Redis 7 | 없음 | Observe | 미시작 |
+| [pod](pod.yaml) | new | Spring Boot 3.5.1 + Kotlin | PostgreSQL + S3/KMS | 없음 | Observe | 초기 등록 |
 
 ## 아키텍처 비교
 
@@ -26,6 +27,7 @@
 | naru | Hexagonal + DDD + CQRS | JPA/Hibernate | Docker multi-stage → AWS ECS | AWS ECS |
 | bazaar | Hexagonal + DDD + CQRS | JPA/Hibernate | Docker → AWS ECR → ArgoCD (K8s) | K8s (ArgoCD) |
 | caravan | Clean Architecture (domain/application/infra) + Reverse-Proxy Gateway | JPA/Hibernate (Admin) | Docker → Kubernetes | Kubernetes |
+| pod | Spring Boot layered service (Controller→Service→Repository/JPA) | JPA/Hibernate | TODO | TODO |
 
 ## 공유 DB 현황
 
@@ -44,7 +46,7 @@
 
 | 트랙 | 서비스 | 설명 |
 |------|--------|------|
-| Observe | naru, bazaar, aasm, caravan | 이미 modern stack, 하네스 문서화만 |
+| Observe | naru, bazaar, aasm, caravan, pod | 이미 modern stack, 하네스 문서화만 |
 | Wrap | tobe, max(일부), shopping, blog | adapter/facade로 감싸기, SP 확산 방지 |
 | Extract | max(일부), shopping(후보) | 신규 서비스로 도메인 추출 후보 (shopping은 B2B/C2C/중고매장 분리 식별 단계) |
 | Freeze/Retire | - | 해당 없음 |

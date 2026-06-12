@@ -164,6 +164,8 @@ def parse_frontmatter(text: str) -> dict[str, str] | None:
         return None
     fm: dict[str, str] = {}
     for line in text[4:end].splitlines():
+        if line[:1].isspace():
+            continue
         line = line.rstrip()
         if not line or line.startswith("#"):
             continue

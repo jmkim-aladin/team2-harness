@@ -86,9 +86,10 @@ python3 tools/migrate_vault.py --vault "$VAULT" --plan "...migration-plan.json" 
 - git mv 실패(untracked) 시 mv + git add fallback
 - wikilink 충돌(동명 다른 새 이름) 시 변경 안 함 + surface
 
-## generate_vault_indexes.py — vault `_index.md` 자동 생성
+## generate_vault_indexes.py — vault 인덱스와 서비스 관계 projection 자동 생성
 
-vault `services/{svc}/`, `processes/{type}/`, hub `_index.md`를 generated block 기반으로 생성·갱신.
+vault `services/{svc}/`, `processes/{type}/`, hub 인덱스를 generated block 기반으로 생성·갱신한다.
+서비스 노트에는 `related_services`를 역방향 조회한 `generated:related-notes` block도 함께 생성한다.
 
 ### 사용법
 
@@ -108,13 +109,14 @@ python3 tools/generate_vault_indexes.py --vault "$VAULT" --target services --app
 ### 동작
 
 - `<!-- generated:vault-index ... -->` 블록만 자동 갱신
+- 서비스 노트의 `<!-- generated:related-notes ... -->` 블록은 관계 필드 기반으로 자동 갱신
 - 기존 _index.md에 generated block 없으면 skip + surface (사람 본문 보존)
 - 없는 _index.md는 신규 생성 (frontmatter + block + harness-link placeholder)
 - `--apply` 시 변경 파일만 git add
 
 ### 산출
 
-- services/{svc}/_index.md
+- services/{svc}/{svc}.md
 - processes/{type}/_index.md
 - wiki/services/_index.md, wiki/processes/_index.md (hub)
 
@@ -255,6 +257,39 @@ python3 tools/sync_granola_meetings.py \
 - 회의록 원문 확인은 `granola_url`을 우선 사용하고, vault에는 Granola generated block + 사람이 보강한 결정·후속 액션 중심으로 정리한다.
 - `--title-map`을 사용하면 기존 회의록의 frontmatter `title`, H1, daily note 링크 alias도 갱신한다. 파일명과 `canonical_id`는 기존 링크 안정성을 위해 유지한다.
 - 저장 후 `tools/lint_vault.py`와 `tools/generate_vault_indexes.py --target processes --apply`를 실행하면 Tolaría 탐색성이 좋아진다.
+
+## enrich_vault_relations.py — LLM 위키 관계 필드 보강
+
+vault 노트의 본문/frontmatter에서 확실한 관계를 추출해 `related_*` 필드를 보강한다.
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+
+# dry-run
+python3 tools/enrich_vault_relations.py --vault "$VAULT"
+
+# 전체 적용
+python3 tools/enrich_vault_relations.py --vault "$VAULT" --apply
+
+# 일부 파일만
+python3 tools/enrich_vault_relations.py \
+  --vault "$VAULT" \
+  --files wiki/processes/meetings/2026-06-05-order-and-payment-process-review.md \
+  --apply
+```
+
+### 동작
+
+- `DEV2-NNNN` 본문 참조 → `related_tickets`
+- 티켓의 `service` / `service_id` → `related_services`
+- OKR 본문의 DEV2 티켓 → `related_tickets` + 티켓 서비스 연결
+- daily의 회의 wikilink → `related_meetings`
+- Granola 회의 제목/요약의 서비스 키워드 → `related_services` 후보
+- 자동 보강 관계는 `relation_status: inferred`, `relation_sources: [auto-backfill, ...]`로 남긴다.
+
+실행 기준은 `docs/llm-wiki-operating-guide.md`를 따른다.
 
 ## import_from_archive.py — 옛 vault → 새 vault (Sub C)
 
