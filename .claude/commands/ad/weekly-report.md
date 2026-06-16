@@ -57,6 +57,7 @@ DEV2-A-692 (주간업무)
 ```
 
 - H2 헤더 안에 `**` bold 처리 (KB 원본 패턴)
+- `## **백로그 항목**`은 KB 양식 호환용 섹션이다. 최종 주간보고 후보 생성 시 Backlog 상태 티켓은 제외하고, 새 항목을 넣지 않는다.
 
 ### 항목 형식 (KB 원본 패턴)
 
@@ -108,7 +109,7 @@ DEV2-A-692 (주간업무)
 
 **일정 형식**:
 
-- 백로그: 일정 없음 (보류 메모만 필요 시 추가)
+- 백로그: 최종 주간보고 후보에서는 제외 (기존 KB 양식 조회용으로만 참고)
 - 계획(예정): 시작 예상 일자~
 - 진행중: ~완료 예상 일자
 - 완료: 완료 일자
@@ -120,12 +121,19 @@ DEV2-A-692 (주간업무)
 
 **포함**:
 
-- 팀 구성원 작성 Feature/Epic 중심
+- 개발자 담당 Feature/Epic 중심
 - Type=Feature 또는 Epic
+- 대상 월 스프린트와 일치하는 항목
+  - 예: 2026년 6월 보고서는 `Sprints=2026.06` 또는 `2606-planned`
 - 하위 Task는 부모 Feature 컨텍스트로만 본문 라인에 표기
+- 기획자/디자이너 Feature라도 하위 Task가 개발자 담당이면 부모 Feature를 컨텍스트로 포함하고, 본문 라인은 개발자 담당 Task만 표기
+- 완료 항목은 대상 월 완료분 유지. 같은 달 완료분은 최근 7/14일 범위로 자르지 않음
 
 **제외**:
 
+- Backlog 상태 티켓
+- 대상 월 스프린트가 아닌 티켓
+- 기획자/디자이너 담당 Feature 중 개발자 하위 Task가 없는 항목
 - 사업부 작성 운영성 단발 Task/Bug (통계요청·점검요청·팀장승인·앱푸시 발송 리스트 등)
 - 단발 운영 대응 (DB 정산 오류 확인, 사용자 개별 문의 등)
 - 가이드 §1 "예외적으로 포함"은 **이슈 규모가 크거나 팀 차원 공유가 필요한 운영성 업무**로만 한정
@@ -134,10 +142,23 @@ DEV2-A-692 (주간업무)
 
 | 항목 | 포함 여부 |
 |------|----------|
-| Type=Feature/Epic, 팀 구성원 작성 | 포함 |
-| Type=Feature, 사업부 작성 운영 (예: 멀티캠퍼스 IF) | 검토 후 결정 (계획 업무 성격이면 포함) |
+| Type=Feature/Epic, 개발자 담당, 대상 월 스프린트 일치 | 포함 |
+| Type=Feature/Epic, 기획자/디자이너 담당, 개발자 하위 Task 있음 | 부모는 컨텍스트로 포함, 개발자 Task만 본문 표기 |
+| Type=Feature/Epic, 기획자/디자이너 담당, 개발자 하위 Task 없음 | 제외 |
+| Type=Feature/Epic, Backlog | 제외 |
+| Type=Feature/Epic, 대상 월 스프린트 불일치 | 제외 |
+| Type=Feature, 사업부 작성 운영 (예: 멀티캠퍼스 IF) | 개발자 담당 + 대상 월 스프린트 일치 시 검토 후 포함 |
 | Type=Task, 사업부 단발 운영 요청 | 제외 |
 | Type=Bug, 단발 장애/점검 | 제외 |
+
+### 최종본 중복 제거 규칙
+
+- `DEV2-*` ID 중복은 같은 레벨에서만 제거한다.
+- top-level 항목끼리 같은 ID가 반복되면 하나만 남긴다.
+- 하위 본문 라인끼리 같은 ID가 반복되면 하나만 남긴다.
+- top-level과 하위 본문 라인의 같은 ID 반복은 계층 표현으로 허용한다. 단일 Task나 하위가 없는 Feature는 제목과 본문 라인에 같은 ID가 반복될 수 있다.
+- 중복 점검은 저장 전 `DEV2-*` ID의 레벨별 빈도 기준으로 수행한다.
+- 사용자가 "현재 KB가 최종"이라고 하면 YouTrack KB `DEV2-A-696`은 비교 기준이다. 별도 명시 승인 없이는 KB `POST` 업데이트를 하지 않는다.
 
 ## 환경변수
 
@@ -194,7 +215,8 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 3. **티켓 상태 확인**: 언급된 티켓ID가 있으면 YouTrack에서 실제 상태 조회하여 교차 검증
 4. **보고서 갱신**: 항목 이동 및 내용 추가
    - 완료된 항목: 진행중 → 완료로 이동, 완료 일자 기재
-   - 새로 시작: 계획/백로그 → 진행중으로 이동
+   - 새로 시작: 계획 → 진행중으로 이동
+   - Backlog 상태는 최종 주간보고 후보에서 제외
    - 신규 항목: 해당 섹션에 추가
    - Task 말머리: (예정) → (진행 중) → (완료) 갱신
 5. **마크다운 출력**: 갱신된 보고서를 마크다운으로 출력
@@ -234,9 +256,12 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 사용자가 `/ad:weekly-report 초안` 또는 `이번주 초안 작성해줘` 류를 입력하면:
 
 1. **기존 보고서 조회**: KB(DEV2-A-696) 현재 내용 가져오기
-2. **상태 동기화**: 보고서 내 모든 티켓ID + 담당자별 In Progress + 최근 14일 resolved 일괄 조회
+2. **상태 동기화**: 보고서 내 모든 티켓ID + 담당자별 In Progress + 대상 월 resolved 일괄 조회
 3. **필터 적용**: Type=Feature/Epic only. 운영성 Task/Bug 제외 (위 "기록 대상 필터" 참조)
-   - **월별 계획 스냅샷("N월거만") 작성 시**: YouTrack 태그 `YYMM-planned`(예: 2026년 6월 = `2606-planned`) + dev 4인(jmkim/heum2/pms0905/hyeryun) assignee 로 필터. 디자인/기획/외주 제외. 이전 달 누적 완료분은 태그 없으면 자동 제외됨. 상태별 섹션 매핑: In Progress→진행중, Open/Reopened→계획, Backlog→백로그, Fixed/Closed/Verified→완료된. 하위 Task는 dev-planned 내 최상위 조상 Feature/Epic 아래 본문 라인으로 롤업
+   - **월별 계획 스냅샷("N월거만") 작성 시**: YouTrack 태그 `YYMM-planned`(예: 2026년 6월 = `2606-planned`) 또는 `Sprints=YYYY.MM` + 개발자 assignee 로 필터. 디자인/기획 상위 Feature는 기본 제외하되, 하위 Task가 개발자 담당이면 부모 Feature를 컨텍스트로만 포함하고 개발자 Task만 본문 라인으로 롤업. 이전 달 누적 완료분은 태그/스프린트가 대상 월과 맞지 않으면 제외됨. 상태별 섹션 매핑: In Progress→진행중, Open/Reopened→계획, Fixed/Closed/Verified→완료된. **Backlog는 제외.**
+   - **개발자 assignee 기준**: 김정민(jmkim), 조은흠(heum2), 박민석(pms0905), 안혜련(hyeryun), 박희수(heesoo), 조주영(jjy), 강인용(iyk; YouTrack 검색 가능 시). 팀원 변동 시 `policies/team-members.md`를 우선한다.
+   - **완료 항목**: 대상 월에 완료된 항목은 유지한다. 최근 7/14일 완료분만 남기지 않는다.
+   - **중복 제거**: 저장 전 `DEV2-*` ID의 레벨별 빈도를 점검하고, 같은 레벨의 중복 top-level 또는 본문 라인만 제거한다. top-level과 하위 본문 라인의 반복은 허용한다.
 4. **양식 정렬**: 위 "항목 형식" 패턴 그대로 적용
    - 제목 라인: `*` + 이중 `**` 분할 + 원문제목 `\[`/`\]` escape
    - 본문 라인: `  : ` + 본문 + `(일정정보, 담당자 DEV2-xxxx [원문제목])`
@@ -299,7 +324,8 @@ Feature는 총 기간 1주일 이내가 필수 규칙 (`docs/sprint/ticket-guide
 ---
 type: ticket
 ticket_id: DEV2-XXXX
-ticket_status: auto-prep | in-progress | done | backlog
+ticket_status: auto-prep | in-progress | blocked | review-needed | done-candidate | done | backlog
+decision_status: none | decision-needed | approval-needed | blocked | review-needed
 assignee: jmkim
 service: "[[max]]"
 sprint: 2026-05

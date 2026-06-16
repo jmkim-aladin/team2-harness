@@ -92,17 +92,14 @@ graph/generated/graphify/{service_id}/{run_id}/
 1. 최신 `metadata.json`에서 target path, file count, semantic extraction 여부를 확인한다.
 2. `GRAPH_REPORT.md`의 god node, surprise edge, suggested questions를 읽고 P0 후보를 좁힌다.
 3. Graphify 후보 edge는 source path/hash와 DEV2 `contract-graph.json`으로 재검증한다.
-4. sidecar가 없거나 stale이면 직접 실행하지 않고 queue에 등록한다.
-
-```bash
-cd "/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
-python3 scripts/plan_graphify_runs.py
-```
+4. sidecar가 없거나 stale이면 직접 실행하지 않는다. Graphify queue 도구가 연결된 환경에서는 queue에 등록하고, 없으면 서비스 unresolved evidence에 후보로 남긴다.
 
 티켓/스킬 분석 중 graph 누락을 발견한 경우:
 
-```bash
-python3 scripts/enqueue_graphify_trigger.py --service {service_id} --trigger ticket-graph-missing --reason "{누락된 API/SP/Table/도메인}"
+```yaml
+trigger: ticket-graph-missing
+service_id: {service_id}
+reason: "{누락된 API/SP/Table/도메인}"
 ```
 
 자동 실행은 `code-ast-local` 항목만 허용한다. docs/images/PDF semantic extraction은 redaction gate와 사용자 승인이 없으면 `gated`로 둔다.
@@ -134,9 +131,11 @@ PRD는 다음 story를 기본으로 둔다.
 링크 유지 명령:
 
 ```bash
-cd "/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
-python3 scripts/generate_wiki.py
-python3 scripts/lint_wiki.py
+TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"
+LOCAL_WIKI_PATH="${LOCAL_WIKI_PATH:-/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2}"
+
+python3 "$TEAM2_HARNESS_PATH/tools/generate_vault_indexes.py" --vault "$LOCAL_WIKI_PATH"
+python3 "$TEAM2_HARNESS_PATH/tools/lint_vault.py" --vault "$LOCAL_WIKI_PATH" --all
 ```
 
 팀 하네스 템플릿:
@@ -178,7 +177,7 @@ Ralph Loop로 {service_id} 서비스를 운영 지식 위키에 온보딩해줘.
 - Graphify sidecar queue가 최신 source hash 기준으로 갱신됨
 - P0 도메인 후보가 최소 1개 이상 선정됨
 - `wiki/tasks/discovery-queue.md` 또는 `graph/unresolved-queue.json`에 미해결 항목이 남음
-- `python3 scripts/lint_wiki.py` 실행 결과 error 0
+- `python3 tools/lint_vault.py --vault "$LOCAL_WIKI_PATH" --all` 실행 결과 error 0
 
 ## 주의
 

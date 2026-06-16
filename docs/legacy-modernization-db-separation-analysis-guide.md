@@ -160,7 +160,7 @@ Controller나 API 산출물은 겉으로 보이는 action 이름만으로 DB 영
 - 원장 table과 write owner가 명시되어 있다
 - read path 분리 후보와 write path 보류 영역이 구분되어 있다
 - reconciliation query 또는 검증 절차가 있다
-- `python3 scripts/lint_wiki.py`가 error 0이다
+- `python3 tools/lint_vault.py --vault "$LOCAL_WIKI_PATH" --all`이 error 0이다
 - 사람 검토 전에는 `review_state: needs-review`를 유지한다
 
 ## Unresolved Evidence Gate
@@ -175,11 +175,13 @@ Controller나 API 산출물은 겉으로 보이는 action 이름만으로 DB 영
 - evidence template은 header, enum, redaction 기준을 통과해야 한다.
 - coverage registry는 현재 unresolved queue와 1:1로 맞아야 하며 stale/missing 항목이 있으면 goal 완료로 표시하지 않는다.
 
-로컬 Obsidian 위키에서는 아래 검증을 `run_all.py`에 포함한다.
+로컬 Obsidian 위키에서는 lint와 unresolved evidence 검증을 함께 수행한다. 전용 unresolved validator가 설치된 환경에서는 해당 validator를 실행하고, 없으면 unresolved queue와 coverage registry를 수동 대조해 결과를 실행 기록에 남긴다.
 
 ```bash
-python3 scripts/validate_unresolved_evidence_imports.py
-python3 scripts/validate_unresolved_coverage.py
+TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"
+LOCAL_WIKI_PATH="${LOCAL_WIKI_PATH:-/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2}"
+
+python3 "$TEAM2_HARNESS_PATH/tools/lint_vault.py" --vault "$LOCAL_WIKI_PATH" --all
 ```
 
 ## 금지 표현

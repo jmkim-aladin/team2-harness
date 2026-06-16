@@ -62,6 +62,8 @@ team2 레포에서 실행할 필요 없이, 평소처럼 각 서비스 레포에
 - 금지 패턴 갱신
 
 운영 지식 위키 설계는 [operational-knowledge-wiki.md](./designs/operational-knowledge-wiki.md)를 따른다. 이 위키는 System Discovery Loop와 Ticket Execution Loop를 분리하여 전체 서비스 분석과 티켓 기반 실행을 같은 graph/wiki에 연결한다.
+Hermes, gbrain, Codex/Claude Code를 함께 쓰는 자동 prep, decision board, 야간 도메인 분석 루프는 [agentic-ticket-domain-loop-guide.md](./agentic-ticket-domain-loop-guide.md)를 따른다.
+Hermes에 연결된 기존 Discord bot을 control surface로 쓰는 역할 프로필 orchestration은 [discord-agent-orchestration-guide.md](./discord-agent-orchestration-guide.md)와 `configs/discord-agent-profiles.yaml`을 따른다. Claude Code와 Codex는 모두 같은 team2 `tools/` 명령과 vault 산출물 계약을 사용한다.
 
 운영 지식 위키의 Obsidian vault 경로는 `/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`로 둔다.
 
@@ -100,28 +102,64 @@ wiki/indexes/domains.md
 wiki/indexes/graphify.md
 ```
 
-링크 유지는 로컬 위키의 `generate_wiki.py`가 담당한다. 문서 파일명을 바꾸거나 새 서비스/도메인/인벤토리 문서를 추가한 뒤에는 `python3 scripts/generate_wiki.py`와 `python3 scripts/lint_wiki.py`를 실행해 wikilink, index, related-links block을 확인한다.
+링크와 projection 유지는 팀 하네스의 `tools/generate_vault_indexes.py`와 `tools/lint_vault.py`가 담당한다. 문서 파일명을 바꾸거나 새 서비스/도메인/인벤토리 문서를 추가한 뒤에는 아래 명령으로 index, related-links block, frontmatter를 확인한다.
 
-Graphify sidecar가 없거나 stale이면 직접 full pipeline을 실행하지 않고 queue에 등록한다.
+Graphify sidecar가 없거나 stale이면 직접 full pipeline을 실행하지 않는다. Graphify queue 도구가 연결된 환경에서는 queue에 등록하고, 없으면 티켓 노트나 서비스 unresolved evidence에 `ticket-graph-missing` 후보로 남긴다.
 
 ```bash
-cd "/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
-python3 scripts/generate_wiki.py
-python3 scripts/lint_wiki.py
-python3 scripts/plan_graphify_runs.py
-python3 scripts/enqueue_graphify_trigger.py --service {service_id} --trigger ticket-graph-missing --reason "{탐색 중 graph 누락 사유}"
+TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"
+LOCAL_WIKI_PATH="${LOCAL_WIKI_PATH:-/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2}"
+
+python3 "$TEAM2_HARNESS_PATH/tools/generate_vault_indexes.py" --vault "$LOCAL_WIKI_PATH"
+python3 "$TEAM2_HARNESS_PATH/tools/lint_vault.py" --vault "$LOCAL_WIKI_PATH" --all
 ```
+
+Hermes/Discord decision board projection은 아래 명령으로 갱신한다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/generate_decision_board.py" --vault "$LOCAL_WIKI_PATH" --apply
+python3 "$TEAM2_HARNESS_PATH/tools/generate_discord_orchestrator_payload.py" --vault "$LOCAL_WIKI_PATH" --apply
+```
+
+Claude Code와 Codex에서는 위 두 명령 대신 공통 진입점 `/ad:work-board` 또는 `$ad-work-board`를 사용한다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/run_work_board.py" --vault "$LOCAL_WIKI_PATH" --apply
+```
+
+Hermes가 dispatch request를 처리한 뒤 남기는 ack 계약은 `configs/hermes-discord-consumer.yaml`과 `tools/ack_hermes_dispatch.py`를 따른다.
+Hermes runtime에서는 아래 cycle runner를 주기 실행 단위로 사용한다. 이 명령은 board projection과 dispatch request를 갱신하고, 기존 ack를 읽어 중복 전송을 막은 pending batch를 만든다. Discord API는 직접 호출하지 않는다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/run_hermes_dispatch_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply --default-batch-output --default-outbox
+```
+
+보낼 payload만 따로 계산할 때는 아래 reference consumer를 사용한다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/hermes_dispatch_consumer.py" --vault "$LOCAL_WIKI_PATH"
+```
+
+Hermes가 기존 Discord bot으로 전송을 완료한 뒤에는 아래처럼 ack를 남긴다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/run_hermes_discord_adapter.py" --vault "$LOCAL_WIKI_PATH" --adapter-command "/path/to/hermes-discord-send" --apply
+python3 "$TEAM2_HARNESS_PATH/tools/hermes_dispatch_consumer.py" --vault "$LOCAL_WIKI_PATH" --mark-dispatched --apply
+python3 "$TEAM2_HARNESS_PATH/tools/import_hermes_discord_receipt.py" --vault "$LOCAL_WIKI_PATH" --apply
+```
+
+자동 adapter 연동에서는 수동 `--mark-dispatched`보다 `run_hermes_discord_adapter.py`로 delivery receipt를 남기고 `import_hermes_discord_receipt.py`로 ack를 갱신한다. receipt의 실패 행은 pending으로 남기고 다음 cycle에서 재시도한다.
 
 자동 최신화는 다음 기준을 따른다.
 
 | Trigger | 처리 |
 |---------|------|
-| `scan_sources.py` 이후 source commit/hash 변경 | `plan_graphify_runs.py`가 `source-hash-changed` 후보 생성 |
-| 새 `registry/services/*.yaml` | `service-registry-added` 후보 생성 |
+| source commit/hash 변경 | Graphify queue 도구가 있으면 `source-hash-changed` 후보 생성, 없으면 unresolved evidence 기록 |
+| 새 `registry/services/*.yaml` | `service-registry-added` 후보 생성 또는 서비스 onboarding 노트에 기록 |
 | docs/claudedocs 변경 | `docs-changed` 후보 생성, semantic extraction은 gated |
 | unresolved queue 급증 | `unresolved-spike` 후보 생성 |
-| 티켓/스킬 분석 중 graph 누락 | `enqueue_graphify_trigger.py --trigger ticket-graph-missing`로 후보 생성 |
-| 동기화/주기 실행 이후 | `python3 scripts/run_all.py --run-graphify`로 eligible 항목만 처리 |
+| 티켓/스킬 분석 중 graph 누락 | `ticket-graph-missing` 후보를 티켓 노트 또는 unresolved evidence에 남김 |
+| 동기화/주기 실행 이후 | index/projection/lint는 하네스 `tools/`로 실행하고, Graphify full pipeline은 별도 승인된 환경에서만 처리 |
 
 git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙일 경우 queue item 생성까지만 허용한다.
 
@@ -186,6 +224,7 @@ PR 생성 (체크리스트 포함)
 | 스킬 | 설명 | 상태 |
 |------|------|------|
 | `/ad:ticket` | YouTrack 티켓 생성 (5W1H) | 구현됨 |
+| `/ad:work-board` | Hermes work board projection + dispatch request 갱신 | 구현됨 |
 | `/ad:ticket-split` | 2일 초과 이슈 분할 | 미구현 |
 | `/ad:time-log` | 소요시간 기록 | 미구현 |
 | `/ad:code-review` | GitHub PR 코드 리뷰 (팀 체크리스트 기반) | 구현됨 |

@@ -172,7 +172,8 @@ curl -s -H "$AUTH" \
 ---
 type: ticket
 ticket_id: DEV2-XXXX
-ticket_status: auto-prep | in-progress | done | backlog
+ticket_status: auto-prep | in-progress | blocked | review-needed | done-candidate | done | backlog
+decision_status: none | decision-needed | approval-needed | blocked | review-needed
 assignee: jmkim
 service: "[[max]]"
 sprint: 2026-05

@@ -124,9 +124,20 @@ canonical_id: ticket:dev2-{nnnn}
 status: draft                 # work-prep 신규/갱신 직후 = 미검토 → draft. 본인이 분석·검증 끝낸 뒤 canonical 승격 (§"사전 분석")
 updated_at: {YYYY-MM-DD}
 ticket_id: DEV2-{NNNN}
-ticket_status: in-progress    # auto-prep | in-progress | done | backlog
+ticket_status: in-progress    # auto-prep | in-progress | blocked | review-needed | done-candidate | done | backlog
+decision_status: none         # none | decision-needed | approval-needed | blocked | review-needed
 assignee: {jmkim 등 id}
 service: "[[{서비스ID}]]"      # 서비스 노트로 graph 엣지 (Tolaria 호환, bare stem)
+related_services:
+  - "[[{서비스ID}]]"
+related_tickets: []
+related_domains: []
+related_meetings: []
+related_okrs: []
+relation_status: inferred
+relation_sources:
+  - youtrack
+  - harness
 sprint: {YYYY-MM}
 type_yt: feature              # feature | task | bug
 youtrack_state: {YouTrack 상태}
@@ -151,7 +162,16 @@ canonical_id: proposal:{서비스ID}/{kebab-slug}
 status: draft
 updated_at: {YYYY-MM-DD}
 service_id: "[[{서비스ID}]]"   # 서비스 노트로 graph 엣지
+related_services:
+  - "[[{서비스ID}]]"
 related_tickets: []          # 후속 티켓 발의 시 채움
+related_domains: []
+related_meetings: []
+related_okrs: []
+relation_status: inferred
+relation_sources:
+  - manual
+decision_status: none
 ---
 ```
 
@@ -165,8 +185,17 @@ status: draft
 updated_at: {YYYY-MM-DD}
 ticket_id: TBD
 ticket_status: backlog
+decision_status: none
 assignee: jmkim
 service: unknown
+related_services: []
+related_tickets: []
+related_domains: []
+related_meetings: []
+related_okrs: []
+relation_status: inferred
+relation_sources:
+  - manual
 sprint: {YYYY-MM}
 type_yt: task
 ---
@@ -185,6 +214,14 @@ type_yt: task
 - 현재 판단: {확정/유력 가설 한 문장}
 - 해결 방향: {바꿀 정책/로직/운영 조치 한 문장}
 - 다음 행동: {바로 실행할 첫 단계}
+
+## 현재 상태
+
+- 상태: in-progress
+- 결정 상태: none
+- 마지막 판단: {요약}
+- 다음 행동: {사용자 개입 없이 가능한 다음 단계}
+- 확인 필요: {없으면 "없음"}
 
 ## 요청 요약
 
@@ -224,6 +261,10 @@ type_yt: task
 ## 미확정 질문
 
 -
+
+## 결정 패킷
+
+- 현재 없음
 
 ## Actions
 
@@ -462,9 +503,16 @@ dev DB 실행 흐름:
 ---
 type: ticket
 ticket_id: DEV2-XXXX
-ticket_status: auto-prep | in-progress | done | backlog
+ticket_status: auto-prep | in-progress | blocked | review-needed | done-candidate | done | backlog
+decision_status: none | decision-needed | approval-needed | blocked | review-needed
 assignee: jmkim
 service: "[[max]]"
+related_services:
+  - "[[max]]"
+related_tickets: []
+related_domains: []
+related_meetings: []
+relation_status: inferred | confirmed
 sprint: 2026-05
 type_yt: feature | task | bug
 ---

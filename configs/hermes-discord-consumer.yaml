@@ -1,0 +1,85 @@
+version: 1
+name: dev2-hermes-discord-consumer
+description: Hermes consumer contract for the existing Discord bot integration.
+
+paths:
+  vault_root: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2
+  request: wiki/projects/agentic-os/hermes-discord-dispatch-request.json
+  ack: wiki/projects/agentic-os/hermes-discord-dispatch-ack.json
+  receipt: wiki/projects/agentic-os/hermes-discord-delivery-receipt.json
+  batch: wiki/projects/agentic-os/hermes-discord-dispatch-batch.json
+  outbox: wiki/projects/agentic-os/hermes-discord-outbox
+  board_json: wiki/projects/agentic-os/hermes-decision-board.json
+  board_markdown: wiki/projects/agentic-os/hermes-decision-board.md
+  cycle_runner: tools/run_hermes_dispatch_cycle.py
+  adapter_runner: tools/run_hermes_discord_adapter.py
+  reference_consumer: tools/hermes_dispatch_consumer.py
+  outbox_exporter: tools/export_hermes_discord_outbox.py
+  receipt_importer: tools/import_hermes_discord_receipt.py
+
+request_contract:
+  schema: team2.hermes_discord_dispatch_request.v1
+  target: hermes
+  transport: hermes-existing-discord-bot
+  status_field: dispatch_status
+  pending_status: pending-hermes
+  idempotency:
+    request_id: stable hash over payload list
+    payload_id: stable hash over each channel/content payload
+
+ack_contract:
+  schema: team2.hermes_discord_dispatch_ack.v1
+  status_field: dispatch_status
+  statuses:
+    - dispatched
+    - partial
+  payload_statuses:
+    - dispatched
+    - pending
+
+receipt_contract:
+  schema: team2.hermes_discord_delivery_receipt.v1
+  generated_by: Hermes Discord bot adapter
+  purpose: adapter delivery result imported into ack state
+  result_statuses:
+    - dispatched
+    - failed
+    - skipped
+
+batch_contract:
+  schema: team2.hermes_discord_dispatch_batch.v1
+  generated_by: tools/hermes_dispatch_consumer.py
+  purpose: pending payload list for the existing Hermes Discord bot adapter
+
+cycle_contract:
+  schema: team2.hermes_dispatch_cycle.v1
+  generated_by: tools/run_hermes_dispatch_cycle.py
+  purpose: one safe board refresh plus pending batch calculation cycle
+
+outbox_contract:
+  manifest_schema: team2.hermes_discord_outbox.v1
+  item_schema: team2.hermes_discord_outbox_item.v1
+  generated_by: tools/export_hermes_discord_outbox.py
+  purpose: file-based handoff for the existing Hermes Discord bot adapter
+
+adapter_runner_contract:
+  generated_by: tools/run_hermes_discord_adapter.py
+  purpose: run an explicit Hermes Discord bot adapter command for each outbox item
+  command_contract: adapter command receives the outbox item JSON path as its final argument
+  success: exit code 0 creates a dispatched receipt row
+  failure: nonzero exit code creates a failed receipt row
+
+rules:
+  - Hermes reads request and writes ack; team2 tools do not call Discord directly.
+  - If ack.request_id equals request.request_id and all payloads are dispatched, do not resend.
+  - If ack.request_id differs from request.request_id, treat request as new.
+  - If ack.dispatch_status is partial, send only payload_id values with pending status.
+  - Hermes may use tools/run_hermes_dispatch_cycle.py as the periodic runtime entry point.
+  - Hermes may use tools/hermes_dispatch_consumer.py to calculate pending payloads before sending.
+  - Hermes may read outbox item files when the bot adapter prefers one file per message.
+  - Hermes may use tools/run_hermes_discord_adapter.py only with an explicit adapter command.
+  - Hermes may write delivery receipt results and import them with tools/import_hermes_discord_receipt.py.
+  - Hermes writes ack only after the existing Discord bot adapter reports successful dispatch.
+  - Failed or skipped receipt rows remain pending in ack and are retried by the next cycle.
+  - Discord channel routing is logical; the existing bot decides actual channel mapping.
+  - No token, webhook URL, cookie, or DB credential is stored in this manifest.
