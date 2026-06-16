@@ -75,6 +75,38 @@ gbrain sync
 | Codex/Claude Code | 티켓별 구현, 리뷰, 문서 초안 | 원장 아님 |
 | herdr | 티켓별 작업 셀과 control pane 실행 표면 | 원장 아님 |
 
+## 사용자 인터페이스 분리
+
+| 상황 | 주 인터페이스 | 원칙 |
+|---|---|---|
+| 컴퓨터 앞 | `desktop-decision-cockpit.md` + Hermes Board | 깊게 읽고, board action을 직접 지시한다 |
+| 외부/모바일 | Discord 1:1 오케스트레이터 | 요약 요청, 결정 전달, 상태 확인만 한다 |
+| 공통 | vault note | 결정/근거/상태의 원장이다 |
+
+Agent Board는 지휘/승인 UI다. 보드 댓글이나 cockpit에서 내린 지시는 action queue 이벤트로 남기고, 최종 상태는 원본 vault note frontmatter와 결정 기록에 반영한다.
+
+지원 action:
+
+| Action | 의미 |
+|---|---|
+| `brief` | 결정 브리프 작성 |
+| `ask` | 추가 질문 또는 근거 요청 |
+| `delegate` | planner/dev/qa/designer 등에게 위임 |
+| `decide` | 사용자가 선택한 결정을 위키에 기록 |
+| `approve` | 승인 후 다음 단계 진행 |
+| `revise` | 방향 수정 요청 |
+| `split` | 작업 분할 |
+| `snooze` | 보류 |
+| `done` | 확인 완료, 상태 해소 후보 |
+
+Hermes Board에서 직접 지시할 때는 task 댓글에 아래처럼 남긴다.
+
+```text
+/brief 결정 브리프 만들어줘
+/delegate planner에게 맡겨서 다음 액션까지 정리해줘
+/decide A안으로 결정. 원본 위키에 결정 기록 남겨줘
+```
+
 ## Ticket Execution Loop
 
 ### 1. 티켓 유입
@@ -229,10 +261,12 @@ Claude Code와 Codex에서는 공통으로 `/ad:work-board apply` 또는 `$ad-wo
 - `wiki/projects/agentic-os/hermes-discord-delivery-receipt.json` (Hermes bot adapter 전송 결과)
 - `wiki/projects/agentic-os/hermes-discord-dispatch-ack.json` (Hermes 처리 후)
 - `wiki/projects/agentic-os/hermes-kanban-sync-state.json` (Hermes Kanban task 매핑)
+- `wiki/projects/agentic-os/hermes-board-action-queue.jsonl` / `.json` (보드 지시 이벤트)
+- `wiki/projects/agentic-os/desktop-decision-cockpit.md` / `.json` (컴퓨터 앞 decision cockpit)
 
 `json`에는 Hermes orchestrator가 역할 프로필에 넘길 `work_id`, optional `ticket_id`, `suggested_roles`가 포함된다. board 파일은 projection이므로 직접 원장처럼 수정하지 않는다.
 dispatch request와 ack의 중복 전송 방지 규칙은 `configs/hermes-discord-consumer.yaml`을 따른다.
-Hermes runtime은 `tools/run_hermes_dispatch_cycle.py`로 board 갱신, pending payload batch 계산, outbox export를 한 번에 수행한다. Hermes Kanban UI는 `tools/sync_hermes_kanban.py`가 projection을 읽어 task 생성/blocked 유지/done 이동을 처리한다. `tools/run_hermes_discord_adapter.py`는 명시된 외부 adapter command에 outbox item을 넘겨 delivery receipt를 만들고, `tools/import_hermes_discord_receipt.py`가 성공한 payload만 ack에 반영한다.
+Hermes runtime은 `tools/run_hermes_dispatch_cycle.py`로 board 갱신, pending payload batch 계산, outbox export를 한 번에 수행한다. Hermes Kanban UI는 `tools/sync_hermes_kanban.py`가 projection을 읽어 task 생성/blocked 유지/done 이동을 처리한다. Hermes Board 댓글 지시는 `tools/import_hermes_board_actions.py`가 action queue로 가져오고, 컴퓨터 앞 cockpit은 `tools/generate_decision_cockpit.py`가 생성한다. `tools/run_hermes_discord_adapter.py`는 명시된 외부 adapter command에 outbox item을 넘겨 delivery receipt를 만들고, `tools/import_hermes_discord_receipt.py`가 성공한 payload만 ack에 반영한다.
 
 ### Hermes Runtime Cycle
 
@@ -245,14 +279,14 @@ python3 "$TEAM2_HARNESS_PATH/tools/run_team2_knowledge_cycle.py" \
   --apply
 ```
 
-이 cycle은 dispatch request 생성 뒤 Hermes Kanban `team2` 보드를 자동 동기화한다. 새 decision/review card는 task로 생기고 `blocked` 상태에서 사용자 결정을 기다린다. source card가 해결되어 projection에서 빠지면 연결된 task는 `done`으로 이동한다.
+이 cycle은 dispatch request 생성 뒤 Hermes Kanban `team2` 보드를 자동 동기화하고, 보드 댓글 지시를 action queue로 가져오며, desktop decision cockpit을 갱신한다. 새 decision/review card는 task로 생기고 `blocked` 상태에서 사용자 결정을 기다린다. source card가 해결되어 projection에서 빠지면 연결된 task는 `done`으로 이동한다.
 
 이 runner는 한 번의 cycle에서 다음만 수행한다.
 
 - harness link projection 갱신
 - vault relation backfill
 - vault index projection 갱신
-- Hermes decision board, Discord dispatch batch, outbox, Kanban projection 갱신
+- Hermes decision board, Discord dispatch batch, outbox, Kanban projection, action queue, desktop cockpit 갱신
 - 공유 GBrain health 확인
 - cycle status note 저장
 

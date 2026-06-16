@@ -128,7 +128,7 @@ python3 "$TEAM2_HARNESS_PATH/tools/run_work_board.py" --vault "$LOCAL_WIKI_PATH"
 ```
 
 Hermes가 dispatch request를 처리한 뒤 남기는 ack 계약은 `configs/hermes-discord-consumer.yaml`과 `tools/ack_hermes_dispatch.py`를 따른다.
-Hermes runtime에서는 아래 knowledge cycle runner를 주기 실행 단위로 사용한다. 이 명령은 harness link, vault relation/index, board projection, dispatch request, pending batch, outbox, Hermes Kanban sync, cycle status를 갱신한다. Discord API는 직접 호출하지 않는다.
+Hermes runtime에서는 아래 knowledge cycle runner를 주기 실행 단위로 사용한다. 이 명령은 harness link, vault relation/index, board projection, dispatch request, pending batch, outbox, Hermes Kanban sync, board action queue import, desktop decision cockpit, cycle status를 갱신한다. Discord API는 직접 호출하지 않는다.
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/run_team2_knowledge_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply
@@ -144,6 +144,13 @@ Hermes Kanban 화면은 아래 동기화 도구가 관리한다. source card가 
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/sync_hermes_kanban.py" --vault "$LOCAL_WIKI_PATH" --apply
+```
+
+컴퓨터 앞에서는 Discord 대신 desktop decision cockpit을 주 화면으로 사용한다. Hermes Board 댓글의 `/brief`, `/ask`, `/delegate`, `/decide`, `/approve`, `/revise`, `/split`, `/snooze`, `/done` 지시는 action queue로 수집된다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/import_hermes_board_actions.py" --vault "$LOCAL_WIKI_PATH" --apply
+python3 "$TEAM2_HARNESS_PATH/tools/generate_decision_cockpit.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
 
 보낼 payload만 따로 계산할 때는 아래 reference consumer를 사용한다.

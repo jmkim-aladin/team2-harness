@@ -32,6 +32,8 @@ class Team2KnowledgeCycleTests(unittest.TestCase):
                 "generate_vault_indexes",
                 "run_hermes_dispatch_cycle",
                 "sync_hermes_kanban",
+                "import_hermes_board_actions",
+                "generate_decision_cockpit",
             ],
         )
         commands = "\n".join(" ".join(step["command"]) for step in steps)
@@ -67,6 +69,20 @@ class Team2KnowledgeCycleTests(unittest.TestCase):
                             '"summary":{"ensure_active":2,"block_active":1,"complete_stale":0}}'
                         )
                     )
+                if Path(command[1]).name == "import_hermes_board_actions.py":
+                    return completed(
+                        stdout=(
+                            '{"schema":"team2.hermes_board_action_import.v1",'
+                            '"summary":{"imported":1,"seen":1,"skipped":0}}'
+                        )
+                    )
+                if Path(command[1]).name == "generate_decision_cockpit.py":
+                    return completed(
+                        stdout=(
+                            '{"schema":"team2.desktop_decision_cockpit.v1",'
+                            '"cards":2,"pending_actions":1}'
+                        )
+                    )
                 return completed(stderr="ok")
 
             result = cycle.run_cycle(
@@ -79,9 +95,11 @@ class Team2KnowledgeCycleTests(unittest.TestCase):
             )
 
             self.assertEqual(result["status"], "ok")
-            self.assertEqual(seen[-1], "sync_hermes_kanban.py")
+            self.assertEqual(seen[-1], "generate_decision_cockpit.py")
             self.assertEqual(cycle.dispatch_summary(result)["pending_payloads"], 1)
             self.assertEqual(cycle.kanban_summary(result)["ensure_active"], 2)
+            self.assertEqual(cycle.action_summary(result)["imported"], 1)
+            self.assertEqual(cycle.cockpit_summary(result)["pending_actions"], 1)
             self.assertTrue((vault / cycle.DEFAULT_STATUS_JSON).exists())
             self.assertTrue((vault / cycle.DEFAULT_STATUS_MD).exists())
             status_text = (vault / cycle.DEFAULT_STATUS_MD).read_text(encoding="utf-8")

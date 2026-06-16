@@ -4,7 +4,7 @@
 
 ## run_team2_knowledge_cycle.py — Hermes 지식 사이클 runner
 
-Hermes cron에서 주기 실행하는 deterministic runner. harness link, vault relation/index, Hermes board, Discord dispatch batch/outbox, Hermes Kanban, GBrain health, cycle status note를 한 번에 갱신한다.
+Hermes cron에서 주기 실행하는 deterministic runner. harness link, vault relation/index, Hermes board, Discord dispatch batch/outbox, Hermes Kanban, board action queue, desktop decision cockpit, GBrain health, cycle status note를 한 번에 갱신한다.
 
 ### 사용법
 
@@ -34,6 +34,7 @@ python3 /workspace/team2/tools/run_team2_knowledge_cycle.py \
 - YouTrack, YouTrack KB, DB, 배포, git commit/push를 호출하지 않는다.
 - vault draft/projection 파일만 갱신한다.
 - Hermes Kanban은 projection view로만 동기화한다. active decision/review task는 `blocked`로 유지하고, source card가 사라진 task는 `done`으로 이동한다.
+- Hermes Board 댓글 지시는 action queue로 수집한다. queue는 실행 요청 이벤트이지 원장이 아니다.
 - canonical 승격은 하지 않는다.
 
 ## sync_hermes_kanban.py — Hermes Kanban projection sync
@@ -57,6 +58,53 @@ python3 tools/sync_hermes_kanban.py --vault "$VAULT" --apply
 - board에 새 card가 있으면 Hermes task를 만든다.
 - active card는 사람 결정/검토 대기이므로 `blocked` 상태로 유지한다.
 - 이전 sync state에는 있지만 현재 board에 없는 card는 Hermes task를 `done`으로 이동한다.
+
+## import_hermes_board_actions.py — Hermes Board comment import
+
+Hermes Kanban task 댓글에서 operator 지시를 읽어 vault action queue로 가져온다.
+
+지원하는 댓글 형식:
+
+```text
+/brief 결정 브리프 만들어줘
+/delegate planner에게 맡겨서 진행해줘
+/decide A안으로 결정. 위키에 기록해줘
+```
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+
+python3 tools/import_hermes_board_actions.py --vault "$VAULT"
+python3 tools/import_hermes_board_actions.py --vault "$VAULT" --apply
+```
+
+## queue_agent_board_action.py — action queue writer
+
+터미널이나 cockpit에서 특정 Hermes task/card에 대한 지시를 queue에 기록한다. `--comment-hermes`를 붙이면 같은 지시를 Hermes task 댓글에도 남긴다.
+
+```bash
+python3 tools/queue_agent_board_action.py \
+  --vault "$VAULT" \
+  --task-id t_36a47508 \
+  --action brief \
+  --instruction "결정 브리프 만들어줘" \
+  --apply --comment-hermes
+```
+
+## generate_decision_cockpit.py — desktop decision cockpit
+
+컴퓨터 앞에서 보는 통합 decision cockpit projection을 생성한다.
+
+출력:
+
+- `wiki/projects/agentic-os/desktop-decision-cockpit.md`
+- `wiki/projects/agentic-os/desktop-decision-cockpit.json`
+
+```bash
+python3 tools/generate_decision_cockpit.py --vault "$VAULT" --apply
+```
 
 ## audit_vault.py — vault 분류 매트릭스 생성
 
