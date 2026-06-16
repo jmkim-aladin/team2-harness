@@ -3,8 +3,9 @@
 
 This is the deterministic job Hermes should run on a schedule. It updates the
 vault projections that agents share, refreshes generated relation/index blocks,
-and verifies that the shared GBrain service is reachable. It does not call
-YouTrack, mutate YouTrack KB, touch DBs, deploy, commit, or push.
+syncs the Hermes Kanban projection, and verifies that the shared GBrain service
+is reachable. It does not call YouTrack, mutate YouTrack KB, touch DBs, deploy,
+commit, or push.
 """
 from __future__ import annotations
 
@@ -94,6 +95,17 @@ def build_steps(harness: Path, vault: Path, *, apply: bool) -> list[dict[str, An
                 *apply_flag,
             ],
         },
+        {
+            "name": "sync_hermes_kanban",
+            "command": [
+                python,
+                str(tools / "sync_hermes_kanban.py"),
+                "--vault",
+                str(vault),
+                "--json",
+                *apply_flag,
+            ],
+        },
     ]
 
 
@@ -132,6 +144,16 @@ def parse_dispatch_result(stdout: str) -> dict[str, Any] | None:
     return payload
 
 
+def parse_kanban_result(stdout: str) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(stdout)
+    except json.JSONDecodeError:
+        return None
+    if payload.get("schema") != "team2.hermes_kanban_sync.v1":
+        return None
+    return payload
+
+
 def result_from_process(name: str, command: Sequence[str], proc: subprocess.CompletedProcess[str]) -> dict[str, Any]:
     result = {
         "name": name,
@@ -149,6 +171,16 @@ def result_from_process(name: str, command: Sequence[str], proc: subprocess.Comp
                 "request_id": dispatch.get("dispatch_request", {}).get("request_id"),
                 "pending_payloads": dispatch.get("batch", {}).get("payload_count"),
                 "dispatch_required": dispatch.get("batch", {}).get("dispatch_required"),
+            }
+    if name == "sync_hermes_kanban" and proc.returncode == 0:
+        kanban = parse_kanban_result(proc.stdout)
+        if kanban:
+            summary = kanban.get("summary", {})
+            result["kanban"] = {
+                "cards": kanban.get("cards"),
+                "ensure_active": summary.get("ensure_active"),
+                "block_active": summary.get("block_active"),
+                "complete_stale": summary.get("complete_stale"),
             }
     return result
 
@@ -190,6 +222,19 @@ def render_status_markdown(result: dict[str, Any]) -> str:
                 f"- request id: {dispatch.get('request_id')}",
             ]
         )
+    kanban = kanban_summary(result)
+    if kanban:
+        lines.extend(
+            [
+                "",
+                "## Hermes Kanban",
+                "",
+                f"- 카드: {kanban.get('cards')}",
+                f"- active sync: {kanban.get('ensure_active')}",
+                f"- blocked sync: {kanban.get('block_active')}",
+                f"- completed stale: {kanban.get('complete_stale')}",
+            ]
+        )
     lines.extend(
         [
             "",
@@ -228,6 +273,13 @@ def dispatch_summary(result: dict[str, Any]) -> dict[str, Any] | None:
     for step in result["steps"]:
         if step.get("name") == "run_hermes_dispatch_cycle":
             return step.get("dispatch")
+    return None
+
+
+def kanban_summary(result: dict[str, Any]) -> dict[str, Any] | None:
+    for step in result["steps"]:
+        if step.get("name") == "sync_hermes_kanban":
+            return step.get("kanban")
     return None
 
 
@@ -279,6 +331,15 @@ def print_summary(result: dict[str, Any]) -> None:
             f"cards={dispatch.get('cards')} "
             f"pending_payloads={dispatch.get('pending_payloads')} "
             f"dispatch_required={dispatch.get('dispatch_required')}"
+        )
+    kanban = kanban_summary(result)
+    if kanban:
+        print(
+            "kanban: "
+            f"cards={kanban.get('cards')} "
+            f"ensure_active={kanban.get('ensure_active')} "
+            f"block_active={kanban.get('block_active')} "
+            f"complete_stale={kanban.get('complete_stale')}"
         )
     files = result.get("status_files") or {}
     if files:

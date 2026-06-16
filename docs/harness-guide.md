@@ -128,7 +128,7 @@ python3 "$TEAM2_HARNESS_PATH/tools/run_work_board.py" --vault "$LOCAL_WIKI_PATH"
 ```
 
 Hermes가 dispatch request를 처리한 뒤 남기는 ack 계약은 `configs/hermes-discord-consumer.yaml`과 `tools/ack_hermes_dispatch.py`를 따른다.
-Hermes runtime에서는 아래 knowledge cycle runner를 주기 실행 단위로 사용한다. 이 명령은 harness link, vault relation/index, board projection, dispatch request, pending batch, outbox, cycle status를 갱신한다. Discord API는 직접 호출하지 않는다.
+Hermes runtime에서는 아래 knowledge cycle runner를 주기 실행 단위로 사용한다. 이 명령은 harness link, vault relation/index, board projection, dispatch request, pending batch, outbox, Hermes Kanban sync, cycle status를 갱신한다. Discord API는 직접 호출하지 않는다.
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/run_team2_knowledge_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply
@@ -138,6 +138,12 @@ board projection과 dispatch request만 갱신할 때는 아래 runner를 사용
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/run_hermes_dispatch_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply --default-batch-output --default-outbox
+```
+
+Hermes Kanban 화면은 아래 동기화 도구가 관리한다. source card가 새로 생기면 `team2` 보드에 task를 만들고, 사람 결정/검토 대기이므로 `blocked` 상태로 유지한다. source card가 projection에서 사라지면 기존 task를 `done`으로 이동한다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/sync_hermes_kanban.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
 
 보낼 payload만 따로 계산할 때는 아래 reference consumer를 사용한다.

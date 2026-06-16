@@ -4,7 +4,7 @@
 
 ## run_team2_knowledge_cycle.py — Hermes 지식 사이클 runner
 
-Hermes cron에서 주기 실행하는 deterministic runner. harness link, vault relation/index, Hermes board, Discord dispatch batch/outbox, GBrain health, cycle status note를 한 번에 갱신한다.
+Hermes cron에서 주기 실행하는 deterministic runner. harness link, vault relation/index, Hermes board, Discord dispatch batch/outbox, Hermes Kanban, GBrain health, cycle status note를 한 번에 갱신한다.
 
 ### 사용법
 
@@ -33,7 +33,30 @@ python3 /workspace/team2/tools/run_team2_knowledge_cycle.py \
 
 - YouTrack, YouTrack KB, DB, 배포, git commit/push를 호출하지 않는다.
 - vault draft/projection 파일만 갱신한다.
+- Hermes Kanban은 projection view로만 동기화한다. active decision/review task는 `blocked`로 유지하고, source card가 사라진 task는 `done`으로 이동한다.
 - canonical 승격은 하지 않는다.
+
+## sync_hermes_kanban.py — Hermes Kanban projection sync
+
+`wiki/projects/agentic-os/hermes-decision-board.json`을 읽어 Hermes Kanban `team2` 보드에 task를 생성/동기화한다. 매핑 state는 vault의 `wiki/projects/agentic-os/hermes-kanban-sync-state.json`에 저장한다.
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+
+# dry-run
+python3 tools/sync_hermes_kanban.py --vault "$VAULT"
+
+# 실 실행
+python3 tools/sync_hermes_kanban.py --vault "$VAULT" --apply
+```
+
+### 상태 이동
+
+- board에 새 card가 있으면 Hermes task를 만든다.
+- active card는 사람 결정/검토 대기이므로 `blocked` 상태로 유지한다.
+- 이전 sync state에는 있지만 현재 board에 없는 card는 Hermes task를 `done`으로 이동한다.
 
 ## audit_vault.py — vault 분류 매트릭스 생성
 

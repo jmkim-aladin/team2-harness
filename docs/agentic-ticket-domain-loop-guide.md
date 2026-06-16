@@ -228,10 +228,11 @@ Claude Code와 Codex에서는 공통으로 `/ad:work-board apply` 또는 `$ad-wo
 - `wiki/projects/agentic-os/hermes-discord-outbox/{request_id}/manifest.json` (Hermes bot adapter용 파일 handoff)
 - `wiki/projects/agentic-os/hermes-discord-delivery-receipt.json` (Hermes bot adapter 전송 결과)
 - `wiki/projects/agentic-os/hermes-discord-dispatch-ack.json` (Hermes 처리 후)
+- `wiki/projects/agentic-os/hermes-kanban-sync-state.json` (Hermes Kanban task 매핑)
 
 `json`에는 Hermes orchestrator가 역할 프로필에 넘길 `work_id`, optional `ticket_id`, `suggested_roles`가 포함된다. board 파일은 projection이므로 직접 원장처럼 수정하지 않는다.
 dispatch request와 ack의 중복 전송 방지 규칙은 `configs/hermes-discord-consumer.yaml`을 따른다.
-Hermes runtime은 `tools/run_hermes_dispatch_cycle.py`로 board 갱신, pending payload batch 계산, outbox export를 한 번에 수행한다. `tools/run_hermes_discord_adapter.py`는 명시된 외부 adapter command에 outbox item을 넘겨 delivery receipt를 만들고, `tools/import_hermes_discord_receipt.py`가 성공한 payload만 ack에 반영한다.
+Hermes runtime은 `tools/run_hermes_dispatch_cycle.py`로 board 갱신, pending payload batch 계산, outbox export를 한 번에 수행한다. Hermes Kanban UI는 `tools/sync_hermes_kanban.py`가 projection을 읽어 task 생성/blocked 유지/done 이동을 처리한다. `tools/run_hermes_discord_adapter.py`는 명시된 외부 adapter command에 outbox item을 넘겨 delivery receipt를 만들고, `tools/import_hermes_discord_receipt.py`가 성공한 payload만 ack에 반영한다.
 
 ### Hermes Runtime Cycle
 
@@ -244,12 +245,14 @@ python3 "$TEAM2_HARNESS_PATH/tools/run_team2_knowledge_cycle.py" \
   --apply
 ```
 
+이 cycle은 dispatch request 생성 뒤 Hermes Kanban `team2` 보드를 자동 동기화한다. 새 decision/review card는 task로 생기고 `blocked` 상태에서 사용자 결정을 기다린다. source card가 해결되어 projection에서 빠지면 연결된 task는 `done`으로 이동한다.
+
 이 runner는 한 번의 cycle에서 다음만 수행한다.
 
 - harness link projection 갱신
 - vault relation backfill
 - vault index projection 갱신
-- Hermes decision board, Discord dispatch batch, outbox 갱신
+- Hermes decision board, Discord dispatch batch, outbox, Kanban projection 갱신
 - 공유 GBrain health 확인
 - cycle status note 저장
 

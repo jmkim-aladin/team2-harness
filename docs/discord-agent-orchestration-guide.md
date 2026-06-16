@@ -146,6 +146,8 @@ Hermes runtime의 기본 주기 실행 단위는 아래 cycle runner다. 이 명
 python3 "$TEAM2_HARNESS_PATH/tools/run_hermes_dispatch_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply --default-batch-output --default-outbox
 ```
 
+Hermes Kanban UI까지 함께 갱신하려면 주기 실행에서는 `run_team2_knowledge_cycle.py --apply`를 사용한다. 이 runner는 dispatch cycle 뒤에 `sync_hermes_kanban.py --apply`를 실행해 새 decision/review card를 `team2` 보드 task로 만들고 `blocked` 상태로 유지한다. projection에서 빠진 card의 기존 task는 `done`으로 이동한다.
+
 Hermes bot adapter는 stdout의 `batch.payloads`, `wiki/projects/agentic-os/hermes-discord-dispatch-batch.json`, 또는 `wiki/projects/agentic-os/hermes-discord-outbox/{request_id}/` 아래 item 파일을 읽어 전송한다.
 
 외부 adapter command가 준비된 환경에서는 아래 runner로 outbox item을 하나씩 넘기고 delivery receipt를 만들 수 있다. adapter command는 item JSON 경로를 마지막 인자로 받는다. 이 runner는 Discord token, webhook URL, channel id를 저장하지 않는다.

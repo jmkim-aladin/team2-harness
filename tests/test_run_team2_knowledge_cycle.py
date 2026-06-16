@@ -31,10 +31,13 @@ class Team2KnowledgeCycleTests(unittest.TestCase):
                 "enrich_vault_relations",
                 "generate_vault_indexes",
                 "run_hermes_dispatch_cycle",
+                "sync_hermes_kanban",
             ],
         )
         commands = "\n".join(" ".join(step["command"]) for step in steps)
         self.assertIn("--apply", commands)
+        self.assertIn("sync_hermes_kanban.py", commands)
+        self.assertIn("--json", commands)
         self.assertNotIn("youtrack", commands.lower())
         self.assertNotIn("curl", commands.lower())
 
@@ -57,6 +60,13 @@ class Team2KnowledgeCycleTests(unittest.TestCase):
                             '"batch":{"payload_count":1,"dispatch_required":true}}'
                         )
                     )
+                if Path(command[1]).name == "sync_hermes_kanban.py":
+                    return completed(
+                        stdout=(
+                            '{"schema":"team2.hermes_kanban_sync.v1",'
+                            '"summary":{"ensure_active":2,"block_active":1,"complete_stale":0}}'
+                        )
+                    )
                 return completed(stderr="ok")
 
             result = cycle.run_cycle(
@@ -69,8 +79,9 @@ class Team2KnowledgeCycleTests(unittest.TestCase):
             )
 
             self.assertEqual(result["status"], "ok")
-            self.assertEqual(seen[-1], "run_hermes_dispatch_cycle.py")
+            self.assertEqual(seen[-1], "sync_hermes_kanban.py")
             self.assertEqual(cycle.dispatch_summary(result)["pending_payloads"], 1)
+            self.assertEqual(cycle.kanban_summary(result)["ensure_active"], 2)
             self.assertTrue((vault / cycle.DEFAULT_STATUS_JSON).exists())
             self.assertTrue((vault / cycle.DEFAULT_STATUS_MD).exists())
             status_text = (vault / cycle.DEFAULT_STATUS_MD).read_text(encoding="utf-8")
