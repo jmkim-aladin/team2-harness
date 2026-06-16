@@ -85,6 +85,7 @@ class GenerateDecisionCockpitTests(unittest.TestCase):
             self.assertIn("# DEV2 Desktop Decision Cockpit", markdown)
             self.assertIn("t_1001", markdown)
             self.assertIn("wiki/processes/tickets/dev2-1001.md", markdown)
+            self.assertIn("team2-agent brief t_1001", markdown)
             stored = json.loads((vault / cockpit.DEFAULT_JSON_PATH).read_text(encoding="utf-8"))
             self.assertEqual(stored["items"][0]["pending_actions"][0]["action_id"], "hba-test")
 

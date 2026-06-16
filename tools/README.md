@@ -2,6 +2,30 @@
 
 팀 하네스 보조 도구 모음. 일회성 또는 정기 실행용 스크립트.
 
+## team2-agent.py / bin/team2-agent — 터미널 조작면
+
+컴퓨터 앞에서 쓰는 짧은 control pane 명령. 내부적으로는 아래 Python 도구들을 호출하지만, 사용자는 긴 `python3 tools/...` 명령을 직접 치지 않는다.
+
+### 사용법
+
+```bash
+export PATH="/Users/jm/Documents/workspace/team2/bin:$PATH"
+
+team2-agent board
+team2-agent cockpit
+team2-agent cycle
+team2-agent brief t_36a47508
+team2-agent delegate t_36a47508 planner "추천안과 리스크 정리"
+team2-agent decide t_36a47508 "A안으로 결정. 원본 위키에 기록"
+```
+
+### 역할
+
+- `board`: Hermes `team2` 보드 상태 확인
+- `cockpit`: desktop decision cockpit 갱신
+- `cycle`: 전체 지식 사이클 실행
+- `brief`, `ask`, `delegate`, `decide`, `approve`, `revise`, `split`, `snooze`, `done`: action queue 기록 + Hermes task 댓글 기록
+
 ## run_team2_knowledge_cycle.py — Hermes 지식 사이클 runner
 
 Hermes cron에서 주기 실행하는 deterministic runner. harness link, vault relation/index, Hermes board, Discord dispatch batch/outbox, Hermes Kanban, board action queue, desktop decision cockpit, GBrain health, cycle status note를 한 번에 갱신한다.

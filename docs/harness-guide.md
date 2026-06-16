@@ -134,6 +134,14 @@ Hermes runtime에서는 아래 knowledge cycle runner를 주기 실행 단위로
 python3 "$TEAM2_HARNESS_PATH/tools/run_team2_knowledge_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
 
+컴퓨터 앞 control pane에서는 같은 작업을 짧게 실행한다.
+
+```bash
+team2-agent cycle
+team2-agent board
+team2-agent cockpit
+```
+
 board projection과 dispatch request만 갱신할 때는 아래 runner를 사용한다. 기존 ack를 읽어 중복 전송을 막은 pending batch를 만든다.
 
 ```bash
@@ -151,6 +159,14 @@ python3 "$TEAM2_HARNESS_PATH/tools/sync_hermes_kanban.py" --vault "$LOCAL_WIKI_P
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/import_hermes_board_actions.py" --vault "$LOCAL_WIKI_PATH" --apply
 python3 "$TEAM2_HARNESS_PATH/tools/generate_decision_cockpit.py" --vault "$LOCAL_WIKI_PATH" --apply
+```
+
+직접 지시는 아래처럼 짧게 남긴다.
+
+```bash
+team2-agent brief t_36a47508
+team2-agent delegate t_36a47508 planner "추천안과 리스크 정리"
+team2-agent decide t_36a47508 "A안으로 결정. 원본 위키에 기록"
 ```
 
 보낼 payload만 따로 계산할 때는 아래 reference consumer를 사용한다.

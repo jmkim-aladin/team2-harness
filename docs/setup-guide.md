@@ -44,6 +44,20 @@ cd team2
 4. YouTrack 토큰 설정 확인
 5. gh CLI 설치/인증 확인
 
+터미널 control pane에서 `team2-agent`를 짧게 쓰려면 shell profile에 team2 `bin/`을 추가한다.
+
+```bash
+export PATH="/Users/jm/Documents/workspace/team2/bin:$PATH"
+```
+
+확인:
+
+```bash
+team2-agent board
+team2-agent cockpit
+team2-agent cycle
+```
+
 ### 수동 셋업
 
 #### 1. 레포 클론

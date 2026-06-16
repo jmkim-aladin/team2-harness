@@ -107,6 +107,16 @@ Hermes Board에서 직접 지시할 때는 task 댓글에 아래처럼 남긴다
 /decide A안으로 결정. 원본 위키에 결정 기록 남겨줘
 ```
 
+터미널 control pane에서는 같은 지시를 `team2-agent`로 남긴다.
+
+```bash
+team2-agent board
+team2-agent cockpit
+team2-agent brief t_36a47508
+team2-agent delegate t_36a47508 planner "추천안과 리스크 정리"
+team2-agent decide t_36a47508 "A안으로 결정. 원본 위키에 기록"
+```
+
 ## Ticket Execution Loop
 
 ### 1. 티켓 유입

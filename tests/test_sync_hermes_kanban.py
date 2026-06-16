@@ -192,6 +192,48 @@ class SyncHermesKanbanTests(unittest.TestCase):
             state = json.loads(state_path.read_text(encoding="utf-8"))
             self.assertEqual(state["cards"]["wiki/processes/tickets/dev2-1001.md"]["status"], "done")
 
+    def test_apply_blocks_new_task_even_when_create_reports_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp)
+            write_board(
+                vault,
+                [
+                    {
+                        "id": "wiki/processes/tickets/dev2-1001.md",
+                        "column": "Review Needed",
+                        "title": "DEV2-1001 검토",
+                        "work_id": "DEV2-1001",
+                        "ticket_id": "DEV2-1001",
+                        "service": "[[max]]",
+                        "type": "ticket",
+                        "path": "wiki/processes/tickets/dev2-1001.md",
+                        "summary": "검토 필요",
+                        "suggested_roles": ["orchestrator"],
+                    }
+                ],
+            )
+            calls: list[list[str]] = []
+
+            def runner(command: Sequence[str]) -> subprocess.CompletedProcess[str]:
+                calls.append(list(command))
+                text = " ".join(command)
+                if "boards list" in text:
+                    return completed(stdout="team2 DEV2 Team2 blocked=1\n")
+                if " create " in text and "--json" in command:
+                    return completed(stdout='{"id":"t_new","status":"blocked"}')
+                return completed(stdout="ok\n")
+
+            result = sync.sync_from_vault(
+                vault,
+                apply=True,
+                command_runner=runner,
+                hermes_cli="/tmp/hermes",
+                updated_at="2026-06-17T00:00:00+09:00",
+            )
+
+            self.assertEqual(result["summary"]["block_active"], 1)
+            self.assertTrue(any("block" in call and "t_new" in call for call in calls))
+
 
 if __name__ == "__main__":
     unittest.main()

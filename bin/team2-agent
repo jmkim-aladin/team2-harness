@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"
+exec python3 "$TEAM2_HARNESS_PATH/tools/team2_agent.py" "$@"

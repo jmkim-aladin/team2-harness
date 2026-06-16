@@ -151,12 +151,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
                 "지시 예시:",
                 "",
                 "```bash",
-                'python3 "$TEAM2_HARNESS_PATH/tools/queue_agent_board_action.py" \\',
-                '  --vault "$LOCAL_WIKI_PATH" \\',
-                f"  --task-id {item['task_id'] or '<task-id>'} \\",
-                f"  --action {item['recommended_actions'][0]} \\",
-                '  --instruction "필요한 지시를 여기에 작성" \\',
-                "  --apply --comment-hermes",
+                f"team2-agent {item['recommended_actions'][0]} {item['task_id'] or '<task-id>'} \"필요한 지시를 여기에 작성\"",
                 "```",
             ]
         )

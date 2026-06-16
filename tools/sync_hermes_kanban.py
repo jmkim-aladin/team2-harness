@@ -330,7 +330,8 @@ def sync_from_vault(
                 "last_synced_at": timestamp,
             }
             operations.append(operation)
-            if task_id and task_status != spec["desired_status"]:
+            is_new_mapping = spec["card_id"] not in previous_cards
+            if task_id and (is_new_mapping or task_status != spec["desired_status"]):
                 block_command = [
                     hermes_cli,
                     "kanban",

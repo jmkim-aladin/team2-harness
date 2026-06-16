@@ -26,6 +26,17 @@ python3 "$TEAM2_HARNESS_PATH/tools/import_hermes_board_actions.py" --vault "$LOC
 python3 "$TEAM2_HARNESS_PATH/tools/generate_decision_cockpit.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
 
+컴퓨터 앞 control pane에서는 아래 짧은 명령을 우선 사용한다.
+
+```bash
+team2-agent board
+team2-agent cockpit
+team2-agent cycle
+team2-agent brief t_36a47508
+team2-agent delegate t_36a47508 planner "추천안과 리스크 정리"
+team2-agent decide t_36a47508 "A안으로 결정"
+```
+
 ## 생성 산출물
 
 - `wiki/projects/agentic-os/hermes-decision-board.md`
