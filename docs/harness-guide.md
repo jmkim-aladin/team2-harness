@@ -128,7 +128,13 @@ python3 "$TEAM2_HARNESS_PATH/tools/run_work_board.py" --vault "$LOCAL_WIKI_PATH"
 ```
 
 Hermes가 dispatch request를 처리한 뒤 남기는 ack 계약은 `configs/hermes-discord-consumer.yaml`과 `tools/ack_hermes_dispatch.py`를 따른다.
-Hermes runtime에서는 아래 cycle runner를 주기 실행 단위로 사용한다. 이 명령은 board projection과 dispatch request를 갱신하고, 기존 ack를 읽어 중복 전송을 막은 pending batch를 만든다. Discord API는 직접 호출하지 않는다.
+Hermes runtime에서는 아래 knowledge cycle runner를 주기 실행 단위로 사용한다. 이 명령은 harness link, vault relation/index, board projection, dispatch request, pending batch, outbox, cycle status를 갱신한다. Discord API는 직접 호출하지 않는다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/run_team2_knowledge_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply
+```
+
+board projection과 dispatch request만 갱신할 때는 아래 runner를 사용한다. 기존 ack를 읽어 중복 전송을 막은 pending batch를 만든다.
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/run_hermes_dispatch_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply --default-batch-output --default-outbox

@@ -85,3 +85,37 @@ Key routing rules:
 - Code quality, health check → invoke health
 - 새 문서 작성, 어디에 둘지 결정 → [policies/knowledge-base-policy.md](./policies/knowledge-base-policy.md) 결정 트리 즉시 적용 (사용자에게 매번 묻지 않음)
 - 드리프트 점검, repo↔vault 경계 위반 → invoke ad:harness-optimize
+
+## GBrain Configuration (configured by /setup-gbrain)
+
+- Mode: remote-http shared team2 brain
+- Local agent MCP URL: `http://127.0.0.1:3131/mcp`
+- Hermes MCP URL: `http://gbrain-team2:3131/mcp`
+- Server: Docker service `gbrain-team2` in `/Users/jm/.hermes-team2/docker-compose.yml`
+- Engine: pglite at `/Users/jm/.hermes-team2/.gbrain/brain.pglite` (container path: `/opt/data/.gbrain/brain.pglite`)
+- Setup date: 2026-06-17
+- MCP registered: Hermes `cli`/`discord`, Codex global, Claude Code user scope
+- Token storage: `/Users/jm/.hermes-team2/.env` and local agent config only. Do not commit tokens.
+- Indexed sources: `team2-harness`, `team2-vault`; code files are indexed under `team2-harness`.
+- Embeddings: enabled with ZeroEntropy `zembed-1`; run shared maintenance from the Docker service, not the Mac-local `~/.gbrain` PGLite.
+- Hermes runtime: cron runs `tools/run_team2_knowledge_cycle.py`; nightly agent jobs use GBrain MCP for domain hardening drafts. Hermes may write vault draft/projection files but must not mutate YouTrack/KB/DB/prod or promote canonical state without approval.
+- GBrain PGLite sync maintenance: host LaunchAgent `com.team2.gbrain-maintenance` runs `/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh` at 01:40 KST. This stops `gbrain-team2`, runs `gbrain sync --all`, writes `/Users/jm/.hermes-team2/gbrain-maintenance-status.json`, then restarts the server.
+
+## GBrain Search Guidance (configured by /sync-gbrain)
+<!-- gstack-gbrain-search-guidance:start -->
+
+GBrain is available through the shared team2 HTTP MCP. The agent should prefer gbrain over Grep when the question is semantic, cross-document, or when the exact identifier is unknown.
+
+Current indexed corpora:
+- DEV2 harness markdown, policies, command documentation, and code files.
+- Local Obsidian team2 vault notes for tickets, analyses, meetings, and domain knowledge.
+
+Prefer gbrain when:
+- "Where is X handled?" or intent-based lookup: use MCP `search` or `query`.
+- "Where is symbol Y defined?" or "Who references Y?": use MCP `code_def` or `code_refs`.
+- "What calls Y?" / "What does Y depend on?": use MCP `code_callers` / `code_callees`.
+- "What did we decide about X?": use MCP `search` or `think`, then verify against source documents.
+
+Grep is still right for exact strings, regex, multiline patterns, and file globs. gbrain results are retrieval candidates, not confirmed source of truth. For shared brain CLI maintenance, run commands inside the Docker service, for example `docker exec gbrain-team2 sh -lc 'HOME=/opt/data /opt/data/.local/bin/gbrain stats'`.
+
+<!-- gstack-gbrain-search-guidance:end -->

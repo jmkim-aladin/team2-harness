@@ -233,6 +233,30 @@ Claude Code와 Codex에서는 공통으로 `/ad:work-board apply` 또는 `$ad-wo
 dispatch request와 ack의 중복 전송 방지 규칙은 `configs/hermes-discord-consumer.yaml`을 따른다.
 Hermes runtime은 `tools/run_hermes_dispatch_cycle.py`로 board 갱신, pending payload batch 계산, outbox export를 한 번에 수행한다. `tools/run_hermes_discord_adapter.py`는 명시된 외부 adapter command에 outbox item을 넘겨 delivery receipt를 만들고, `tools/import_hermes_discord_receipt.py`가 성공한 payload만 ack에 반영한다.
 
+### Hermes Runtime Cycle
+
+상시 운영의 실행 주체는 Hermes다. 별도 오케스트레이터 서비스를 만들지 않고, Hermes cron이 아래 deterministic runner를 실행한다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/run_team2_knowledge_cycle.py" \
+  --harness "$TEAM2_HARNESS_PATH" \
+  --vault "$LOCAL_WIKI_PATH" \
+  --apply
+```
+
+이 runner는 한 번의 cycle에서 다음만 수행한다.
+
+- harness link projection 갱신
+- vault relation backfill
+- vault index projection 갱신
+- Hermes decision board, Discord dispatch batch, outbox 갱신
+- 공유 GBrain health 확인
+- cycle status note 저장
+
+Hermes cron에서는 같은 명령을 `/workspace/team2`, `/workspace/team2-vault`, `http://gbrain-team2:3131/health` 기준으로 호출한다. GBrain MCP 검색과 야간 도메인 분석은 Hermes agent job이 담당하고, deterministic runner는 사용자 승인 없이 YouTrack, KB, git commit/push, DB, 배포, canonical 승격을 수행하지 않는다.
+
+현재 로컬 PGLite 기반 GBrain은 `serve --http` 실행 중에 같은 DB로 `gbrain sync --all`을 직접 돌리면 lock 경합이 생긴다. 따라서 인덱스 최신화는 Hermes 컨테이너 안에서 Docker socket을 열어 처리하지 않고, host LaunchAgent `com.team2.gbrain-maintenance`가 매일 01:40 KST에 짧게 `gbrain-team2`를 멈춘 뒤 `sync --all`과 doctor snapshot을 실행하고 다시 올린다. 장기적으로 무중단 sync가 필요하면 GBrain을 Supabase/Postgres/Railway 구성으로 옮긴다.
+
 ## Discord Role Profile Orchestration
 
 Discord를 붙일 때 사용자는 오케스트레이터에게만 업무를 전달한다. Hermes는 기존 Discord bot 1개를 통해 board card를 역할 프로필에 분배한다. 역할 프로필은 `configs/discord-agent-profiles.yaml`을 기준으로 한다.
@@ -291,6 +315,8 @@ relation_status: inferred
 현대화나 DB 분리 판단은 최소 E3가 필요하다. 구현 착수는 E5 또는 별도 승인된 예외가 필요하다.
 
 ## gbrain 사용 기준
+
+현재 DEV2 공유 gbrain은 Hermes Docker의 `gbrain-team2` 서비스가 제공하는 HTTP MCP를 기준으로 한다. 로컬 Codex/Claude Code는 `http://127.0.0.1:3131/mcp`, Hermes 내부에서는 `http://gbrain-team2:3131/mcp`를 사용한다. Mac의 직접 `gbrain` CLI는 개인 로컬 PGLite일 수 있으므로 공유 brain sync, embed, dream 같은 운영 명령은 `docker exec gbrain-team2 ...`로 실행한다.
 
 gbrain은 아래 질문에 답하는 데 사용한다.
 

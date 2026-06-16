@@ -2,6 +2,39 @@
 
 팀 하네스 보조 도구 모음. 일회성 또는 정기 실행용 스크립트.
 
+## run_team2_knowledge_cycle.py — Hermes 지식 사이클 runner
+
+Hermes cron에서 주기 실행하는 deterministic runner. harness link, vault relation/index, Hermes board, Discord dispatch batch/outbox, GBrain health, cycle status note를 한 번에 갱신한다.
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+REPO="/Users/jm/Documents/workspace/team2"
+
+# dry-run
+python3 tools/run_team2_knowledge_cycle.py --harness "$REPO" --vault "$VAULT"
+
+# 실 실행
+python3 tools/run_team2_knowledge_cycle.py --harness "$REPO" --vault "$VAULT" --apply
+```
+
+### Hermes Docker
+
+```bash
+python3 /workspace/team2/tools/run_team2_knowledge_cycle.py \
+  --harness /workspace/team2 \
+  --vault /workspace/team2-vault \
+  --gbrain-health-url http://gbrain-team2:3131/health \
+  --apply
+```
+
+### 경계
+
+- YouTrack, YouTrack KB, DB, 배포, git commit/push를 호출하지 않는다.
+- vault draft/projection 파일만 갱신한다.
+- canonical 승격은 하지 않는다.
+
 ## audit_vault.py — vault 분류 매트릭스 생성
 
 vault 내 모든 md를 새 택소노미에 대응시킨 분류표 생성.
