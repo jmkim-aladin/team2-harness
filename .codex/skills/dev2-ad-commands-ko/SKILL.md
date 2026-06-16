@@ -1,6 +1,6 @@
 ---
 name: dev2-ad-commands-ko
-description: "Use when the user invokes or refers to any development team 2 Claude Code ad command in Codex, including /ad:ticket, /ad:work-prep, /ad:code-review, /ad:weekly-report, /ad:weekly-planned, /ad:sprint-close-check, /ad:okr, /ad:team2-kb-read, /ad:team2-kb-list, /ad:team2-kb-sync, /ad:harness-optimize, /ad:data-request, /ad:service-activity, /ad:capacity-plan, /ad:granola-sync, or /ad:new-note."
+description: "Use when the user invokes or refers to any development team 2 Claude Code ad command in Codex, including /ad:ticket, /ad:work-prep, /ad:work-board, /ad:code-review, /ad:weekly-report, /ad:weekly-planned, /ad:sprint-close-check, /ad:okr, /ad:team2-kb-read, /ad:team2-kb-list, /ad:team2-kb-sync, /ad:harness-optimize, /ad:data-request, /ad:service-activity, /ad:capacity-plan, /ad:granola-sync, or /ad:new-note."
 ---
 
 # 개발 2팀 `/ad:*` 명령 호환
@@ -22,6 +22,7 @@ Codex에서는 Claude Code slash command를 직접 로드하지 않는다. 대�
 |------|--------------|
 | 티켓 생성, YouTrack 티켓, 5W1H | `ticket.md` |
 | 작업 준비, 티켓번호/할일로 위키 노트 생성 | `work-prep.md` |
+| Hermes work board projection 갱신 | `work-board.md` |
 | GitHub PR 코드 리뷰 | `code-review.md` |
 | 주간업무 보고 | `weekly-report.md` |
 | 주간 계획 스냅샷 | `weekly-planned.md` |
@@ -41,6 +42,7 @@ Codex에서는 Claude Code slash command를 직접 로드하지 않는다. 대�
 |-------|--------------|
 | `$ad-ticket` | `ticket.md` |
 | `$ad-work-prep` | `work-prep.md` |
+| `$ad-work-board` | `work-board.md` |
 | `$ad-code-review` | `code-review.md` |
 | `$ad-weekly-report` | `weekly-report.md` |
 | `$ad-weekly-planned` | `weekly-planned.md` |

@@ -1,0 +1,211 @@
+version: 1
+name: dev2-discord-agent-profiles
+description: DEV2 role profiles for the existing Discord bot mediated by Hermes.
+
+source_of_truth:
+  tickets: YouTrack
+  execution_notes: local Obsidian vault
+  policies: team2 harness
+  board_projection: wiki/projects/agentic-os/hermes-decision-board.json
+  dispatch_request: wiki/projects/agentic-os/hermes-discord-dispatch-request.json
+
+global_rules:
+  - Discord is a control surface, not a source of truth.
+  - Hermes owns the existing Discord bot integration.
+  - A single connected Discord bot is used; roles are profiles, not separate bots.
+  - Claude Code and Codex must use the same team2 tools and output contracts.
+  - Role profiles must read the vault note before acting on a work item.
+  - Role profiles must write durable findings to vault draft notes, not only Discord.
+  - Only the orchestrator asks the user for decisions unless explicitly delegated.
+  - YouTrack, KB, git, DB write, deploy, and canonical promotion require user approval.
+  - Raw logs, grep output, and speculative reasoning stay out of user-facing channels.
+
+roles:
+  orchestrator:
+    purpose: Receives user work, updates the board projection, assigns role profiles through Hermes, and asks only decision-ready questions.
+    reads:
+      - YouTrack ticket metadata
+      - vault ticket and analysis notes
+      - Hermes decision board JSON
+      - team2 harness policies
+    writes:
+      - vault draft ticket notes
+      - Hermes decision board projection
+      - Discord decision packets
+    may_trigger:
+      - ad-work-prep
+      - generate-decision-board
+      - gbrain-briefing
+      - role-profile-handoff
+    approval_required_for:
+      - YouTrack mutation
+      - KB mutation
+      - commit_or_push
+      - PR creation or merge
+      - DB write
+      - production deploy
+      - canonical promotion
+    output_contract:
+      - Task Brief
+      - Decision Packet
+      - Approval Request
+      - Daily Control Summary
+
+  architect:
+    purpose: Reviews service boundaries, data ownership, migration direction, and technical risk.
+    reads:
+      - service catalog
+      - architecture and design docs
+      - relevant source paths
+      - vault domain and decision notes
+    writes:
+      - architecture analysis draft
+      - risk and option comparison
+      - unresolved evidence items
+    may_trigger:
+      - read-only source analysis
+      - gbrain lookup
+    output_contract:
+      - Architecture Brief
+      - Decision Option Set
+      - Risk Register
+
+  developer:
+    purpose: Implements scoped ticket work inside a ticket-specific work cell.
+    reads:
+      - vault ticket note
+      - service harness
+      - source code
+      - test output
+    writes:
+      - code changes in the assigned worktree
+      - vault verification notes
+      - PR draft text
+    may_trigger:
+      - local tests
+      - read-only code search
+      - dev/staging read-only SQL when policy allows
+    approval_required_for:
+      - branch creation when not already approved
+      - commit_or_push
+      - PR creation
+      - DB write
+    output_contract:
+      - Implementation Evidence
+      - Test Result
+      - Approval Request
+
+  planner:
+    purpose: Turns vague user intent into YouTrack-ready 5W1H tickets and task splits.
+    reads:
+      - user request
+      - YouTrack existing tickets
+      - sprint guide
+      - OKR and capacity notes
+    writes:
+      - ticket draft
+      - task split proposal
+      - priority or scope question
+    may_trigger:
+      - ad-ticket draft
+      - capacity lookup
+    approval_required_for:
+      - YouTrack ticket creation
+      - YouTrack field mutation
+    output_contract:
+      - Ticket Draft
+      - Scope Split
+      - Priority Decision Packet
+
+  qa:
+    purpose: Verifies behavior, regression risk, acceptance criteria, and completion evidence.
+    reads:
+      - ticket note
+      - changed files
+      - test plans
+      - local app or service output
+    writes:
+      - QA result
+      - missing test or reproduction note
+      - done-candidate review
+    may_trigger:
+      - local tests
+      - browser QA when relevant
+      - read-only log review
+    output_contract:
+      - QA Evidence
+      - Review Needed Card
+      - Done Candidate Verdict
+
+  designer:
+    purpose: Reviews UX, visual hierarchy, copy, and workflow fit for frontend work.
+    reads:
+      - user workflow
+      - screenshots or browser state
+      - design docs
+      - frontend diff
+    writes:
+      - design review notes
+      - UX risk and recommendation
+      - copy or layout suggestions
+    may_trigger:
+      - screenshot capture
+      - visual QA
+    output_contract:
+      - Design Review
+      - UX Decision Packet
+
+  domain_analyst:
+    purpose: Hardens service, SP, API, and table domain knowledge outside urgent ticket execution.
+    reads:
+      - source code
+      - SP and DB metadata allowed by policy
+      - existing vault analysis
+      - gbrain search results
+    writes:
+      - draft domain analysis
+      - unresolved evidence
+      - relation backfill suggestions
+    may_trigger:
+      - read-only source scan
+      - relation enrichment
+      - gbrain sync
+    output_contract:
+      - Domain Analysis Draft
+      - Evidence Gap
+      - Promotion Candidate
+
+handoff_contracts:
+  task_brief:
+    required_fields:
+      - card_id
+      - work_id
+      - ticket_id_optional
+      - service
+      - goal
+      - current_status
+      - source_note
+      - allowed_actions
+      - forbidden_actions
+      - expected_output
+
+  decision_packet:
+    required_fields:
+      - id
+      - work_id
+      - ticket_id_optional
+      - service
+      - recommendation
+      - options
+      - evidence_links
+      - impact
+      - required_answer
+
+  completion_evidence:
+    required_fields:
+      - work_id
+      - ticket_id_optional
+      - changed_artifacts
+      - verification
+      - remaining_risk
+      - approval_needed

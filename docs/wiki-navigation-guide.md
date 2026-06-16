@@ -40,19 +40,23 @@
 
 ### 링크/인덱스가 낡았을 때
 
-운영 위키에서 다음을 실행한다.
+팀 하네스에서 다음을 실행한다.
 
 ```bash
-python3 scripts/generate_wiki.py
-python3 scripts/lint_wiki.py
+TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"
+LOCAL_WIKI_PATH="${LOCAL_WIKI_PATH:-/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2}"
+
+python3 "$TEAM2_HARNESS_PATH/tools/generate_vault_indexes.py" --vault "$LOCAL_WIKI_PATH"
+python3 "$TEAM2_HARNESS_PATH/tools/lint_vault.py" --vault "$LOCAL_WIKI_PATH" --all
 ```
 
 ### Graphify sidecar 없음/stale
 
-직접 실행하지 **않는다**. 대신 운영 위키에서 queue에 등록한다.
+직접 실행하지 **않는다**. Graphify queue 도구가 연결된 환경에서는 queue에 등록하고, 없으면 티켓 노트나 서비스 unresolved evidence에 `ticket-graph-missing` 후보로 남긴다.
 
 ```bash
-python3 scripts/plan_graphify_runs.py
-# 또는
-python3 scripts/enqueue_graphify_trigger.py --service {service_id} --trigger ticket-graph-missing --reason "{이유}"
+# 예: 티켓 노트 또는 서비스 unresolved evidence에 남길 후보
+trigger: ticket-graph-missing
+service_id: {service_id}
+reason: "{이유}"
 ```

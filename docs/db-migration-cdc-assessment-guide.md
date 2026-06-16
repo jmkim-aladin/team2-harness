@@ -90,10 +90,13 @@ source scan에서는 아래 패턴을 우선 찾는다.
 권장 검증:
 
 ```bash
-python3 scripts/validate_unresolved_evidence_imports.py
-python3 scripts/validate_unresolved_coverage.py
-python3 scripts/run_all.py
+TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"
+LOCAL_WIKI_PATH="${LOCAL_WIKI_PATH:-/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2}"
+
+python3 "$TEAM2_HARNESS_PATH/tools/lint_vault.py" --vault "$LOCAL_WIKI_PATH" --all
 ```
+
+전용 unresolved validator가 설치된 환경에서는 import file header와 coverage registry를 추가 검증한다. 없으면 unresolved queue와 coverage registry를 수동 대조해 실행 기록에 남긴다.
 
 ## 다음 서비스 분석 요청 문구
 

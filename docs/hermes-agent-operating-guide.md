@@ -102,6 +102,9 @@ Claude Code와 Codex는 기존 개발·리뷰·수정 흐름에 그대로 둔다
 5. 모든 결론은 `confirmed`, `inferred`, `needs-review`로 나눈다.
 6. 사용자에게 확인을 요청할 때는 원자료 덤프가 아니라 결정 가능한 요약과 근거 링크를 제공한다.
 
+Hermes board를 사용할 때도 같은 원칙을 적용한다. board는 vault, YouTrack, gbrain 결과를 사람이 볼 수 있게 투영한 화면이며 원장이 아니다. board 카드에는 사용자 결정, 승인, 리뷰, blocked 항목만 올리고, 단순 진행 로그와 조사로 해결 가능한 질문은 티켓 노트 또는 agent 작업 셀에 남긴다. 전체 루프 기준은 [에이전트 티켓 실행과 도메인 지식 강화 루프](./agentic-ticket-domain-loop-guide.md)를 따른다.
+Hermes에 연결된 기존 Discord bot을 agent 표면으로 붙일 때는 [Discord 에이전트 오케스트레이션 가이드](./discord-agent-orchestration-guide.md)와 `configs/discord-agent-profiles.yaml`을 따른다. Claude Code와 Codex는 모두 같은 team2 하네스 도구와 vault 파일 계약을 사용한다.
+
 ## 발견에서 확정까지의 지식 승격 흐름
 
 ```text
@@ -454,6 +457,8 @@ Claude Code와 Codex는 이 Docker 구성에 묶지 않는다. 기존처럼 host
 ## 관련 문서
 
 - [하네스 운영 가이드](./harness-guide.md)
+- [에이전트 티켓 실행과 도메인 지식 강화 루프](./agentic-ticket-domain-loop-guide.md)
+- [Discord 에이전트 오케스트레이션 가이드](./discord-agent-orchestration-guide.md)
 - [LLM 위키 운영 가이드](./llm-wiki-operating-guide.md)
 - [레거시 현대화와 DB 분리 분석 기준](./legacy-modernization-db-separation-analysis-guide.md)
 - [운영 위키 문서 언어와 제목 정책](../policies/wiki-document-language-and-title-policy.md)

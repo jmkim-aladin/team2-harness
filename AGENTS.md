@@ -81,6 +81,7 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 
 - `$ad-ticket` → `/ad:ticket`
 - `$ad-work-prep` → `/ad:work-prep`
+- `$ad-work-board` → `/ad:work-board`
 - `$ad-code-review` → `/ad:code-review`
 - `$ad-weekly-report` → `/ad:weekly-report`
 - `$ad-weekly-planned` → `/ad:weekly-planned`
@@ -98,6 +99,7 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 
 - 티켓 생성, YouTrack 티켓: `/ad:ticket`
 - 작업 준비, 티켓번호/할일로 위키 노트 + 업무 컨텍스트 묶기: `/ad:work-prep`
+- Hermes work board와 Discord dispatch request 갱신: `/ad:work-board`
 - 주간업무 보고: `/ad:weekly-report`
 - 주간 계획 스냅샷: `/ad:weekly-planned`
 - 스프린트 마감 자가점검: `/ad:sprint-close-check`

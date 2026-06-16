@@ -5,7 +5,7 @@ spec: docs/superpowers/specs/2026-05-27-harness-link-sync-design.md
 
 생성·갱신 대상:
 - services/{svc}/_index.md 의 generated:harness-link 블록
-- processes/team/_index.md 의 generated:team-members 블록 (없으면 파일 신규 생성)
+- processes/team/team-index.md 의 generated:team-members 블록 (없으면 파일 신규 생성)
 - wiki/_index.md 의 generated:policy-index 블록
 """
 from __future__ import annotations
@@ -237,6 +237,8 @@ def replace_or_skip(text: str, block_re: re.Pattern, new_block: str) -> tuple[st
             lambda m: f"{m.group(1)}{today()}",
             new_text, count=1, flags=re.MULTILINE,
         )
+        if new_text == text:
+            return text, "unchanged"
         return new_text, "replaced"
     return text, "skipped"
 
@@ -262,7 +264,7 @@ def update_service_index(vault: Path, svc: str, cat: dict,
 def update_team_index(vault: Path, name_map: dict[str, str],
                        rows: list[dict], catalog: dict[str, dict],
                        harness: Path, dry_run: bool) -> dict:
-    idx = vault / "wiki/processes/team/_index.md"
+    idx = vault / "wiki/processes/team/team-index.md"
     block = build_team_members_block(rows, catalog, harness)
     if idx.exists():
         text = idx.read_text(encoding="utf-8")
@@ -280,13 +282,16 @@ def update_team_index(vault: Path, name_map: dict[str, str],
     today_s = today()
     body = (
         f"---\n"
-        f"type: process-index\n"
+        f"type: index\n"
         f"title: 팀\n"
         f"canonical_id: process:team\n"
         f"status: canonical\n"
         f"updated_at: {today_s}\n"
         f"---\n\n"
         f"# 팀\n\n"
+        f"<!-- llm-hint -->\n"
+        f"이 디렉터리는 팀 멤버 메타 (harness team-members.md 미러).\n"
+        f"<!-- /llm-hint -->\n\n"
         f"{block}\n"
     )
     if not dry_run:
@@ -354,7 +359,7 @@ def main():
     for r in results:
         by_status.setdefault(r["status"], []).append(r)
     print(f"mode: {'dry-run' if dry_run else 'apply'}", file=sys.stderr)
-    for st in ("created", "replaced", "inserted", "skipped", "missing"):
+    for st in ("created", "replaced", "inserted", "unchanged", "skipped", "missing"):
         rs = by_status.get(st, [])
         print(f"{st}: {len(rs)}", file=sys.stderr)
         for r in rs:
