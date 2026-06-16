@@ -154,11 +154,13 @@ def result_from_process(name: str, command: Sequence[str], proc: subprocess.Comp
 
 
 def render_status_markdown(result: dict[str, Any]) -> str:
+    review_state = "needs-review" if result["status"] != "ok" else "none"
     lines = [
         "---",
         "type: project",
         "status: draft",
-        "review_state: needs-review",
+        f"review_state: {review_state}",
+        "decision_status: none",
         "canonical_id: project:agentic-os/team2-knowledge-cycle-status",
         f"updated_at: {result['updated_at']}",
         "---",

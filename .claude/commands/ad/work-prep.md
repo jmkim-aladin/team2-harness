@@ -31,6 +31,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 | SP 가이드 | `$TEAM2_HARNESS_PATH/docs/sprint/story-point-guide.md` | SP 산정 |
 | 위키 탐색 가이드 | `$TEAM2_HARNESS_PATH/docs/wiki-navigation-guide.md` | graph 우선, indexes, Graphify |
 | 위키 문서 언어/제목 정책 | `$TEAM2_HARNESS_PATH/policies/wiki-document-language-and-title-policy.md` | H1/title 규칙 |
+| Work Prep 노트 템플릿 | `$TEAM2_HARNESS_PATH/docs/sprint/work-prep-note-template.md` | frontmatter, 본문, 검증 SQL 상세 형식 |
 | Daily 운영 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/daily-meeting-operating-rule.md` | daily 아젠다 등록 |
 | 도메인 용어 링크 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/domain-term-linking-rule.md` | canonical 용어 링크 |
 | 서비스 카탈로그 | `$TEAM2_HARNESS_PATH/catalog/{서비스ID}.yaml` | 서비스 컨텍스트 |
@@ -112,173 +113,18 @@ curl -s -H "$AUTH" \
 
 **기본 동작 (사용자 확인 없이 진행)**: 위키 노트 신규 생성·기존 노트 frontmatter 갱신·Daily 아젠다 추가는 미리보기를 출력한 뒤 바로 진행한다. 별도 확인 질문을 두지 않는다. 단, dev DB 쓰기 쿼리(§11)·브랜치 생성·YouTrack 변경은 여전히 사용자 확인 게이트를 유지한다.
 
-### 5. 위키 노트 템플릿
+### 5. 위키 노트 작성
 
-#### 5.1 티켓 모드 frontmatter
+상세 frontmatter와 본문 템플릿은 [Work Prep 노트 템플릿](../../../docs/sprint/work-prep-note-template.md)을 따른다.
 
-```yaml
----
-type: ticket
-title: DEV2-{NNNN} {YouTrack 제목}
-canonical_id: ticket:dev2-{nnnn}
-status: draft                 # work-prep 신규/갱신 직후 = 미검토 → draft. 본인이 분석·검증 끝낸 뒤 canonical 승격 (§"사전 분석")
-updated_at: {YYYY-MM-DD}
-ticket_id: DEV2-{NNNN}
-ticket_status: in-progress    # auto-prep | in-progress | blocked | review-needed | done-candidate | done | backlog
-decision_status: none         # none | decision-needed | approval-needed | blocked | review-needed
-assignee: {jmkim 등 id}
-service: "[[{서비스ID}]]"      # 서비스 노트로 graph 엣지 (Tolaria 호환, bare stem)
-related_services:
-  - "[[{서비스ID}]]"
-related_tickets: []
-related_domains: []
-related_meetings: []
-related_okrs: []
-relation_status: inferred
-relation_sources:
-  - youtrack
-  - harness
-sprint: {YYYY-MM}
-type_yt: feature              # feature | task | bug
-youtrack_state: {YouTrack 상태}
-youtrack_synced_at: "{YYYY-MM-DD}"
-sources:
-  - youtrack: {BASE}/issue/DEV2-{NNNN}
-  - harness: $TEAM2_HARNESS_PATH/catalog/{서비스}.yaml
-  - repo: {서비스 repo 경로 (catalog에서)}
----
-```
+필수 유지:
 
-#### 5.2 자유글 모드 frontmatter
-
-서비스 추정 시 `proposal` type, 추정 불가 시 `ticket` type (backlog status):
-
-서비스 추정 → `wiki/services/{서비스ID}/proposals/{slug}.md`:
-```yaml
----
-type: proposal
-title: {사람용 제목}
-canonical_id: proposal:{서비스ID}/{kebab-slug}
-status: draft
-updated_at: {YYYY-MM-DD}
-service_id: "[[{서비스ID}]]"   # 서비스 노트로 graph 엣지
-related_services:
-  - "[[{서비스ID}]]"
-related_tickets: []          # 후속 티켓 발의 시 채움
-related_domains: []
-related_meetings: []
-related_okrs: []
-relation_status: inferred
-relation_sources:
-  - manual
-decision_status: none
----
-```
-
-서비스 추정 불가 → `wiki/processes/tickets/{slug}.md`:
-```yaml
----
-type: ticket
-title: {사람용 제목}
-canonical_id: ticket:backlog/{kebab-slug}
-status: draft
-updated_at: {YYYY-MM-DD}
-ticket_id: TBD
-ticket_status: backlog
-decision_status: none
-assignee: jmkim
-service: unknown
-related_services: []
-related_tickets: []
-related_domains: []
-related_meetings: []
-related_okrs: []
-relation_status: inferred
-relation_sources:
-  - manual
-sprint: {YYYY-MM}
-type_yt: task
----
-```
-
-(둘 다 후속 `/ad:ticket`으로 정식 발의 권장)
-
-#### 5.3 본문 (두 모드 공통)
-
-````markdown
-# {제목}
-
-## 판단 요약
-
-- 문제: {사용자/운영 관점 문제 한 문장}
-- 현재 판단: {확정/유력 가설 한 문장}
-- 해결 방향: {바꿀 정책/로직/운영 조치 한 문장}
-- 다음 행동: {바로 실행할 첫 단계}
-
-## 현재 상태
-
-- 상태: in-progress
-- 결정 상태: none
-- 마지막 판단: {요약}
-- 다음 행동: {사용자 개입 없이 가능한 다음 단계}
-- 확인 필요: {없으면 "없음"}
-
-## 요청 요약
-
-- 보고자/담당자: {보고자} / {담당자}
-- 원 요청: {요청을 1-2줄로 압축}
-- 제약/주의: {외부 티켓 원문 보존, DB 승인, 운영 영향 등}
-
-## 비즈니스 로직
-
-- 트리거: {언제 문제가 발생하거나 기능이 동작하는지}
-- 정책/예외: {허용/제한/제외/정산/노출 등 판단 기준}
-- 영향 범위: {사용자, 운영, 데이터, 정산, 노출 등}
-- 결정 필요: {오너/보고자 확인이 필요한 정책 판단}
-
-## 기술 근거
-
-- 서비스/repo: {서비스ID} / {repo 경로}
-- 진입점: {화면/API/배치/모듈 1-3개}
-- 의존성: {핵심 SP/API/Table/외부 호출 1-5개}
-- 근거 위치: {전수검사/콜그래프 결과가 있으면 링크만}
-
-## 검증
-
-- 확인함: {grep/콜그래프/dev DB 읽기/테스트 결과 요약}
-- 남음: {추가 검증 또는 운영 확인}
-
-## 검증 SQL
-
-- 목적: {운영/개발 서버에서 확인할 판단}
-- 실행 환경: {DB/서버}
-- 기대 결과: {사용자가 알려주면 되는 값}
-
-```sql
--- 조회 전용 SQL
-```
-
-## 미확정 질문
-
--
-
-## 결정 패킷
-
-- 현재 없음
-
-## Actions
-
-- [ ] {첫 단계}
-- [ ] 담당자/오너 컨펌
-- [ ] 검증 결과 또는 회귀 테스트 정리
-- [ ] PR / 배포 라인업
-
-## 완료 기록
-
-- {YYYY-MM-DD}: 위키 노트 초안 생성 (`ad:work-prep`).
-````
-
-본문에 SP 원문, 운영 실데이터, 시크릿을 저장하지 않는다 (vault `AGENTS.md` 금지 항목). 운영 검증 전달용 조회 SQL은 예외적으로 `검증 SQL`에 남긴다. 본문은 완료 기록과 링크를 제외하고 120줄 이내를 기본 목표로 한다.
+- 첫 50줄 안에 문제, 현재 판단, 해결 방향, 다음 행동이 보여야 한다.
+- `status`는 문서 신뢰도, `ticket_status`는 작업 흐름, `decision_status`는 Hermes board 노출 조건으로 분리한다.
+- 사용자 결정/승인/검토/blocked 항목이 남으면 `decision_status`를 `decision-needed | approval-needed | review-needed | blocked` 중 하나로 둔다.
+- `비즈니스 로직`은 트리거/정책/예외/영향을 3-5개 bullet로 요약한다.
+- `기술 근거`는 재탐색용 식별자만 남긴다. raw evidence는 티켓 하위 근거 파일이나 별도 분석 노트로 분리한다.
+- 본문에 SP 원문, 운영 실데이터, 시크릿, 개인정보를 저장하지 않는다.
 
 ### 6. 관련 KB 검색
 
@@ -392,72 +238,15 @@ fi
 
 ### 11. 검증 SQL 작성 + 실행 (개발 DB 한정)
 
-§3.5 코드 분석에서 식별된 진입점·테이블·SP 기반으로, 티켓 작업에 필요한 조회 SQL을 작성하고 실행할 수 있다. 운영 서버에서 사람이 직접 검증해야 하는 경우 SQL 전문은 `## 검증 SQL` 섹션에 남긴다.
+§3.5에서 식별된 진입점·테이블·SP 기반으로 조회 SQL을 작성할 수 있다. 상세 형식과 기록 기준은 [Work Prep 노트 템플릿](../../../docs/sprint/work-prep-note-template.md) `검증 SQL 기준`을 따른다.
 
-SQL 작성 원칙:
+요약:
 
-1. **조회 전용** (`SELECT`/`EXPLAIN`/스키마 메타). `INSERT/UPDATE/DELETE/DDL`은 절대 자동 작성하지 않는다 — 작업 본격 진행 시 별도 요청으로만.
-2. **티켓 요구 데이터를 직접 산출**하는 쿼리를 만든다 (예: "CID 하위 트리 추출" → `CategoryInfo` 재귀 CTE).
-3. **사전 검증 쿼리**도 같이 둔다 (대상 카운트, 스키마 확인, NULL/중복 여부).
-4. **데이터 검증은 모수를 줄여 시작한다.** dev/staging 검증용 쿼리는 대상 식별자를 작게(`TOP 10`~`100`, 특정 1~3개 그룹, 빈 임시 테이블 컴파일 검증 등) 잡고, 기간도 요구 기간 전체가 아니라 1일~7일 또는 가장 짧게 의미 있는 범위로 먼저 실행한다. 문법·shape·조인·집계 기준이 확인된 뒤에만 단계적으로 대상을 늘린다.
-5. 운영 식별자(계정·CID·OID 등)는 SQL 파라미터로 명시. 하드코딩 OK (CID는 시스템 식별자, 개인정보 아님).
-6. SQL이 길어도 운영 검증 전달물이라면 본문 뒤쪽 `검증 SQL`에 남긴다. 단, 여러 목적의 SQL이 3개를 넘으면 티켓 하위 근거 파일 또는 별도 Querybook/data-request 산출물로 분리하고 본문에는 핵심 SQL과 링크만 남긴다.
-7. **검증 SQL은 위키가 먼저다.** dev/staging에서 문법·shape 또는 핵심 집계가 확인된 SQL은 data-requests-dev2 등록 전에 티켓 위키 노트에 `검증 SQL` 또는 `추출 SQL (검증 완료, data-request 등록 전 원본)` 섹션으로 남긴다. data-requests-dev2 등록은 위키에 정리된 완료 정보를 기반으로 다음 단계에서 수행한다.
-
-위키 노트 `## 검증` 섹션 형식:
-
-```markdown
-## 검증
-
-- 목적: {확인하려는 판단}
-- 방법: {grep/콜그래프/dev DB 읽기/테스트}
-- 결과: {카운트, 패턴, 통과/실패 요약}
-- 판단: {이 결과로 확정/기각/보류한 내용}
-- 근거 위치: {SQL/Querybook/전수검사 링크. 없으면 생략}
-```
-
-위키 노트 `## 검증 SQL` 섹션 형식:
-
-````markdown
-## 검증 SQL
-
-- 목적: {확인하려는 판단}
-- 실행 환경: {DB/서버}
-- 기대 결과: {사용자가 알려주면 되는 값}
-
-```sql
-SELECT ...
-```
-````
-
-dev DB 실행 흐름:
-
-1. SQL 초안은 운영 검증 전달용이면 티켓 본문 `검증 SQL`에 둔다. 내부 근거용 장문 SQL이면 티켓 하위 근거 파일에 둔다.
-2. 먼저 `COUNT`/스키마/인덱스 확인으로 대략 모수를 파악한다. 대량 테이블이면 바로 전체 기간 집계를 실행하지 않고, 대상 키 수와 기간을 줄인 검증 쿼리를 별도로 만든다.
-3. dev/staging에서 읽기 쿼리로 SQL 문법·출력 shape·핵심 집계 가능성을 확인한다. 검증 쿼리는 작은 대상(`TOP 10`~`100`, 특정 그룹 일부, 빈 임시 테이블)과 짧은 기간(1일~7일 또는 최소 의미 범위)을 기본값으로 한다. 대상 데이터가 운영 첨부/PII라 dev에서 전체 결과를 재현할 수 없으면 빈 임시 테이블 또는 합성 키로 컴파일·shape 검증을 수행하고 그 한계를 명시한다.
-4. 검증 결과를 노트에 쓸 때는 **검증 모수**를 함께 남긴다: 대상 수, 기간, 샘플/빈 테이블 여부, 전체 기간으로 확대하지 않은 이유.
-5. 검증된 SQL 전문은 **먼저 위키 노트에 저장**한다. 운영 데이터 추출 SQL/결과물의 최종 SSOT는 data-requests-dev2지만, work-prep 단계에서는 위키가 판단·전제·미확정 질문을 함께 보관하는 staging area다.
-6. **읽기 쿼리는 사전 동의**되어 있다 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의"). 매번 확인 묻지 않고 바로 실행한다. Keychain → `sqlcmd`/`mssql-cli` 표준 패턴 사용.
-7. 결과는 **스키마/카운트/대표 패턴**만 노트에 반영. row dump 금지.
-8. `INSERT/UPDATE/DELETE/DDL`이 필요해지면 그때만 별도 확인 게이트.
-
-허용 범위:
-
-- 대상: 카탈로그 `catalog/{서비스}.yaml`의 `dev`/`staging` DB. 운영(prod) DB는 금지.
-- 작업: `SELECT`, `EXPLAIN`, `SHOW`, 스키마 조회. `INSERT/UPDATE/DELETE/DDL`은 사용자 명시 승인 없이는 금지.
-- 접근 수단: CLI (`mssql-cli`, `psql`, `mysql` 등) 또는 사내 쿼리 도구. **DB 계열 MCP(postgres/mssql/mysql 등)는 사용하지 않는다** (글로벌 메모리 정책). 비-DB MCP는 무관.
-- 자격증명: 본인 macOS Keychain에 등록한 항목을 `security find-generic-password -s {sm-...} -a $(whoami) -w`로 변수에 캡처해 사용하고, 사용 후 `unset`. 평문 파일·위키·하네스에 기록 금지. 상세: [policies/local-credentials-policy.md](../../../policies/local-credentials-policy.md). 운영 자격증명은 [policies/aws-secrets-convention.md](../../../policies/aws-secrets-convention.md) 절차로만 다루며 본 스킬에서는 사용하지 않는다.
-
-> 운영(prod) 데이터 추출 요청은 별도 절차([policies/data-request-policy.md](../../../policies/data-request-policy.md))를 따른다.
-
-(legacy) 사용자가 직접 작성한 SQL이 있는 경우에도 동일 흐름 적용.
-
-결과 처리:
-
-- 위키 노트 `검증`에는 **결과 요약(스키마/카운트/대표 패턴)과 판단**만 남긴다. 사용자가 실행해야 하는 SQL 전문은 `검증 SQL`에 남긴다.
-- data-requests-dev2 등록은 work-prep의 자동 후속 작업이 아니다. 위키의 검증 SQL, 전제, 미확정 질문이 정리된 뒤 별도 `/ad:data-request` 또는 사용자 지시로 진행한다.
-- 운영 실데이터(개인정보·결제·이메일·전화·구매내역 등)는 **요약 수치/구조**로만 기록하고 row dump를 붙여 넣지 않는다.
-- dev 환경이라도 실데이터 일부가 마스킹되지 않은 채 남아있을 수 있으므로 동일 원칙을 적용한다.
+- `SELECT`/스키마 조회만 자동 허용한다. `INSERT/UPDATE/DELETE/DDL`은 별도 승인 전 금지.
+- dev/staging 읽기 쿼리는 사전 동의 범위다. Keychain에서 credential을 읽고 사용 후 unset한다.
+- 검증은 작은 모수와 짧은 기간으로 시작하고, 결과는 스키마/카운트/대표 패턴/판단만 노트에 남긴다.
+- 운영(prod) 조회·추출은 직접 실행하지 않고 [data-request-policy.md](../../../policies/data-request-policy.md) 절차로 전환한다.
+- 검증 SQL은 data-requests-dev2 등록 전에 먼저 티켓 노트나 티켓 하위 근거 파일에 저장한다.
 
 ## 사용자 확인 게이트
 
@@ -496,29 +285,6 @@ dev DB 실행 흐름:
 - 운영 데이터 추출 SQL/결과물 → data-requests-dev2 repo
 - 특정 서비스 코드와만 의미 있는 매뉴얼 → 그 서비스 repo
 - 그 외 (프로젝트 진행·운영·도메인·회의·일지·티켓 산출물·OKR) → Obsidian vault
-
-## frontmatter 표준 (티켓 산출물)
-
-```yaml
----
-type: ticket
-ticket_id: DEV2-XXXX
-ticket_status: auto-prep | in-progress | blocked | review-needed | done-candidate | done | backlog
-decision_status: none | decision-needed | approval-needed | blocked | review-needed
-assignee: jmkim
-service: "[[max]]"
-related_services:
-  - "[[max]]"
-related_tickets: []
-related_domains: []
-related_meetings: []
-relation_status: inferred | confirmed
-sprint: 2026-05
-type_yt: feature | task | bug
----
-```
-
-상세: vault `wiki/guides/frontmatter-spec.md`.
 
 ## 사전 분석 (auto-prep) 활용
 

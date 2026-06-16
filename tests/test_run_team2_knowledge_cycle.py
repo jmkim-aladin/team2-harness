@@ -75,6 +75,8 @@ class Team2KnowledgeCycleTests(unittest.TestCase):
             self.assertTrue((vault / cycle.DEFAULT_STATUS_MD).exists())
             status_text = (vault / cycle.DEFAULT_STATUS_MD).read_text(encoding="utf-8")
             self.assertIn("DEV2 지식 사이클 상태", status_text)
+            self.assertIn("review_state: none", status_text)
+            self.assertIn("decision_status: none", status_text)
             self.assertIn("youtrack_mutation", status_text)
 
     def test_run_cycle_stops_on_failed_step(self) -> None:
