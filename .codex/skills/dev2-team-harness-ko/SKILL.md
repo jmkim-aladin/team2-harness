@@ -43,6 +43,8 @@ description: "Use when a request needs development team 2 context from the team2
 - git 커밋, 푸시, 머지, PR 생성/머지
 - DB/SP 변경 및 프로덕션 배포
 
+로컬 Obsidian vault의 티켓 노트 생성·갱신·종료 반영은 사용자 확인 없이 진행한다. 사용자가 티켓 종료/완료/마감/닫힘을 요청하거나 완료 사실을 보고하면 `$ad-work-prep`/`work-prep.md`의 티켓 종료 모드에 따라 `ticket_status: done`, 필요 시 `decision_status: resolved`, 완료 기록을 바로 반영한다. 이는 YouTrack 상태 변경이 아니다.
+
 ## 저장 위치
 
 | 산출물 | 위치 |
