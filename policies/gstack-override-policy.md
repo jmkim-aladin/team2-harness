@@ -8,11 +8,13 @@ gstack 스킬 사용 시 팀 정책이 gstack 기본값보다 우선한다.
 ### 브랜치 네이밍
 - gstack 기본: 제한 없음
 - **팀 규칙**: `feature/{이슈ID}` (예: `feature/T2-123`)
-- `/ship` 실행 시 현재 브랜치가 `feature/` 접두사인지 확인
+- **하네스 예외**: 개발2팀 하네스(`team2`) 자체 변경은 `team2/{작업-slug}` 또는 현재 하네스 작업 브랜치를 허용
+- `/ship` 실행 시 현재 브랜치가 `feature/` 접두사인지 확인하되, 하네스 예외 작업은 `team2/` 브랜치도 허용
 
 ### 커밋 메시지 형식
 - gstack 기본: `<type>: <summary>` (conventional commits)
 - **팀 규칙**: `[{이슈ID}] 작업 내용` (예: `[T2-123] 로그인 API 구현`)
+- **하네스 예외**: 개발2팀 하네스 자체 변경은 `[TEAM2] 작업 내용`
 - `/ship`의 bisected commit에도 이 형식 적용
 - VERSION/CHANGELOG 커밋도 동일: `[{이슈ID}] 버전 범프 및 변경 로그 갱신`
 
@@ -57,6 +59,7 @@ gstack 스킬 사용 시 팀 정책이 gstack 기본값보다 우선한다.
 ### 커밋 분류
 - gstack 기본: conventional commits (feat/fix/refactor 등) 기준 분류
 - **팀 규칙**: 커밋 메시지가 `[이슈ID]` 형식이므로, YouTrack 이슈 타입 기준으로 분류
+- **하네스 예외**: `[TEAM2]` 커밋은 개발2팀 하네스/운영 자동화 변경으로 분류
 - 이슈 ID에서 프로젝트 코드 추출하여 서비스별 분석 지원
 
 ## 적용 범위

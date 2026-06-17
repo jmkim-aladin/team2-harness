@@ -65,6 +65,7 @@ class HerdrWorkspace(NamedTuple):
     pane_count: int
     label: str = ""
     active_tab_id: str = ""
+    root_pane_id: str = ""
 
 
 class HerdrPane(NamedTuple):
@@ -77,6 +78,7 @@ class HerdrTab(NamedTuple):
     tab_id: str
     label: str
     workspace_id: str
+    root_pane_id: str = ""
 
 
 class HerdrAgentInfo(NamedTuple):
@@ -284,6 +286,14 @@ def service_workspace_label(service: str) -> str:
     return normalized
 
 
+def service_workspace_cwd(service: str, config: Config) -> Path:
+    label = service_workspace_label(service)
+    if label == TRIAGE_WORKSPACE_LABEL:
+        return config.harness
+    candidate = config.harness.parent / label
+    return candidate.resolve() if candidate.exists() else config.harness
+
+
 def ticket_tab_label(ticket_id: str) -> str:
     return ticket_id
 
@@ -477,11 +487,13 @@ def herdr_created_workspace(output: str) -> HerdrCreatedWorkspace | None:
         return None
     result = payload.get("result", {})
     workspace = result.get("workspace", {})
+    root_pane = result.get("root_pane", {})
     workspace_id = workspace.get("workspace_id")
-    root_pane_id = result.get("root_pane", {}).get("pane_id")
+    root_pane_id = root_pane.get("pane_id")
     if not workspace_id or not root_pane_id:
         return None
-    return HerdrCreatedWorkspace(str(workspace_id), str(root_pane_id), str(workspace.get("active_tab_id") or ""))
+    active_tab_id = workspace.get("active_tab_id") or root_pane.get("tab_id") or ""
+    return HerdrCreatedWorkspace(str(workspace_id), str(root_pane_id), str(active_tab_id))
 
 
 def herdr_agent_info(output: str) -> HerdrAgentInfo | None:
@@ -560,14 +572,16 @@ def start_ticket_lead_command(
     ticket_id: str,
     service: str = "triage",
     engine: str = "codex",
+    cwd: Path | None = None,
 ) -> list[str]:
+    agent_cwd = cwd or config.harness
     command = [
         HERDR,
         "agent",
         "start",
         ticket_cell_name(ticket_id),
         "--cwd",
-        str(config.harness),
+        str(agent_cwd),
     ]
     if tab_id:
         command.extend(["--tab", tab_id])
@@ -586,14 +600,16 @@ def start_work_lead_command(
     service: str = "triage",
     instruction: str = "",
     engine: str = "codex",
+    cwd: Path | None = None,
 ) -> list[str]:
+    agent_cwd = cwd or config.harness
     command = [
         HERDR,
         "agent",
         "start",
         work_cell_name(work_id),
         "--cwd",
-        str(config.harness),
+        str(agent_cwd),
     ]
     if tab_id:
         command.extend(["--tab", tab_id])
@@ -613,14 +629,16 @@ def start_role_agent_command(
     instruction: str = "",
     service: str = "triage",
     engine: str = "codex",
+    cwd: Path | None = None,
 ) -> list[str]:
+    agent_cwd = cwd or config.harness
     command = [
         HERDR,
         "agent",
         "start",
         role_agent_name(ticket_id, role),
         "--cwd",
-        str(config.harness),
+        str(agent_cwd),
     ]
     if tab_id:
         command.extend(["--tab", tab_id])
@@ -628,6 +646,55 @@ def start_role_agent_command(
         command.extend(["--workspace", workspace_id])
     command.extend(["--split", "down", "--", *ai_argv(engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config)])
     return command
+
+
+def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, service: str, cwd: Path) -> list[ExecutionStep]:
+    if tab.root_pane_id:
+        return [
+            ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, ticket_cell_name(ticket_id)], config.harness),
+            ExecutionStep(
+                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", ticket_lead_prompt(config, ticket_id, service=service), config)],
+                config.harness,
+            ),
+        ]
+    return [ExecutionStep(start_ticket_lead_command(config, tab_id=tab.tab_id, ticket_id=ticket_id, service=service, cwd=cwd), config.harness)]
+
+
+def start_work_lead_steps(config: Config, tab: HerdrTab, work_id: str, *, service: str, instruction: str, cwd: Path) -> list[ExecutionStep]:
+    if tab.root_pane_id:
+        return [
+            ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, work_cell_name(work_id)], config.harness),
+            ExecutionStep(
+                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", work_lead_prompt(config, work_id, service=service, instruction=instruction), config)],
+                config.harness,
+            ),
+        ]
+    return [ExecutionStep(start_work_lead_command(config, tab_id=tab.tab_id, work_id=work_id, service=service, instruction=instruction, cwd=cwd), config.harness)]
+
+
+def start_role_agent_steps(config: Config, tab: HerdrTab, ticket_id: str, role: str, *, service: str, instruction: str, cwd: Path) -> list[ExecutionStep]:
+    if tab.root_pane_id:
+        return [
+            ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, role_agent_name(ticket_id, role)], config.harness),
+            ExecutionStep(
+                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", role_agent_prompt(config, ticket_id, role, instruction, service=service), config)],
+                config.harness,
+            ),
+        ]
+    return [
+        ExecutionStep(
+            start_role_agent_command(
+                config,
+                tab_id=tab.tab_id,
+                ticket_id=ticket_id,
+                role=role,
+                instruction=instruction,
+                service=service,
+                cwd=cwd,
+            ),
+            config.harness,
+        )
+    ]
 
 
 def start_board_command(config: Config, *, workspace_id: str | None = None) -> list[str]:
@@ -772,7 +839,8 @@ def new_workspace_setup_steps(created: HerdrCreatedWorkspace, config: Config) ->
     ]
 
 
-def ensure_workspace(label: str, config: Config, execute, *, known_output: str | None = None) -> HerdrWorkspace | None:
+def ensure_workspace(label: str, config: Config, execute, *, cwd: Path | None = None, known_output: str | None = None) -> HerdrWorkspace | None:
+    workspace_cwd = cwd or config.harness
     workspace = workspace_by_label(known_output or "", label) if known_output is not None else None
     if workspace:
         proc = execute([HERDR, "workspace", "focus", workspace.workspace_id], config.harness)
@@ -790,7 +858,7 @@ def ensure_workspace(label: str, config: Config, execute, *, known_output: str |
                 return None
             return workspace
     create_proc = execute(
-        [HERDR, "workspace", "create", "--cwd", str(config.harness), "--label", label, "--focus"],
+        [HERDR, "workspace", "create", "--cwd", str(workspace_cwd), "--label", label, "--focus"],
         config.harness,
     )
     if create_proc.returncode != 0:
@@ -798,10 +866,11 @@ def ensure_workspace(label: str, config: Config, execute, *, known_output: str |
     created = herdr_created_workspace(create_proc.stdout or "")
     if not created:
         return None
-    return HerdrWorkspace(created.workspace_id, 0, label, created.active_tab_id)
+    return HerdrWorkspace(created.workspace_id, 0, label, created.active_tab_id, created.root_pane_id)
 
 
-def ensure_ticket_tab(workspace: HerdrWorkspace, ticket_id: str, config: Config, execute) -> HerdrTab | None:
+def ensure_ticket_tab(workspace: HerdrWorkspace, ticket_id: str, config: Config, execute, *, cwd: Path | None = None) -> HerdrTab | None:
+    tab_cwd = cwd or config.harness
     label = ticket_tab_label(ticket_id)
     list_proc = execute([HERDR, "tab", "list", "--workspace", workspace.workspace_id], config.harness)
     if list_proc.returncode != 0:
@@ -809,8 +878,13 @@ def ensure_ticket_tab(workspace: HerdrWorkspace, ticket_id: str, config: Config,
     existing = tab_by_label(list_proc.stdout or "", label)
     if existing:
         return existing
+    if workspace.root_pane_id and workspace.active_tab_id:
+        rename_proc = execute([HERDR, "tab", "rename", workspace.active_tab_id, label], config.harness)
+        if rename_proc.returncode != 0:
+            return None
+        return HerdrTab(workspace.active_tab_id, label, workspace.workspace_id, workspace.root_pane_id)
     create_proc = execute(
-        [HERDR, "tab", "create", "--workspace", workspace.workspace_id, "--cwd", str(config.harness), "--label", label, "--focus"],
+        [HERDR, "tab", "create", "--workspace", workspace.workspace_id, "--cwd", str(tab_cwd), "--label", label, "--focus"],
         config.harness,
     )
     if create_proc.returncode != 0:
@@ -910,19 +984,17 @@ def run_herdr_work(args: argparse.Namespace, config: Config, execute=None) -> in
     if list_proc.returncode != 0:
         return int(list_proc.returncode)
     service = args.service
-    workspace = ensure_workspace(service_workspace_label(service), config, execute, known_output=list_proc.stdout or "")
+    workspace_cwd = service_workspace_cwd(service, config)
+    workspace = ensure_workspace(service_workspace_label(service), config, execute, cwd=workspace_cwd, known_output=list_proc.stdout or "")
     if not workspace:
         return 2
-    tab = ensure_ticket_tab(workspace, args.work_id, config, execute)
+    tab = ensure_ticket_tab(workspace, args.work_id, config, execute, cwd=workspace_cwd)
     if not tab:
         return 2
     instruction = instruction_text(args.instruction, "")
-    proc = execute(
-        start_work_lead_command(config, tab_id=tab.tab_id, work_id=args.work_id, service=service, instruction=instruction),
-        config.harness,
-    )
-    if proc.returncode != 0:
-        return int(proc.returncode)
+    code = run_steps(start_work_lead_steps(config, tab, args.work_id, service=service, instruction=instruction, cwd=workspace_cwd), execute)
+    if code != 0:
+        return code
     return run_steps(
         [
             ExecutionStep(
@@ -943,22 +1015,22 @@ def run_herdr_tickets(args: argparse.Namespace, config: Config, execute=None) ->
     if list_proc.returncode != 0:
         return int(list_proc.returncode)
     service = args.service
-    workspace = ensure_workspace(service_workspace_label(service), config, execute, known_output=list_proc.stdout or "")
+    workspace_cwd = service_workspace_cwd(service, config)
+    workspace = ensure_workspace(service_workspace_label(service), config, execute, cwd=workspace_cwd, known_output=list_proc.stdout or "")
     if not workspace:
         return 2
     ticket_ids = list(args.ticket_ids)
     active_ticket_ids = ticket_ids[: args.concurrency]
     queued_count = len(ticket_ids) - len(active_ticket_ids)
     for ticket_id in active_ticket_ids:
-        tab = ensure_ticket_tab(workspace, ticket_id, config, execute)
+        tab = ensure_ticket_tab(workspace, ticket_id, config, execute, cwd=workspace_cwd)
         if not tab:
             return 2
-        proc = execute(
-            start_ticket_lead_command(config, tab_id=tab.tab_id, ticket_id=ticket_id, service=service),
-            config.harness,
-        )
-        if proc.returncode != 0:
-            return int(proc.returncode)
+        code = run_steps(start_ticket_lead_steps(config, tab, ticket_id, service=service, cwd=workspace_cwd), execute)
+        if code != 0:
+            return code
+        if tab.root_pane_id:
+            workspace = workspace._replace(active_tab_id="", root_pane_id="")
     return run_steps(
         [
             ExecutionStep(
@@ -977,27 +1049,16 @@ def run_herdr_role(args: argparse.Namespace, config: Config, execute=None) -> in
     if list_proc.returncode != 0:
         return int(list_proc.returncode)
     service = args.service
-    workspace = ensure_workspace(service_workspace_label(service), config, execute, known_output=list_proc.stdout or "")
+    workspace_cwd = service_workspace_cwd(service, config)
+    workspace = ensure_workspace(service_workspace_label(service), config, execute, cwd=workspace_cwd, known_output=list_proc.stdout or "")
     if not workspace:
         return 2
-    tab = ensure_ticket_tab(workspace, args.ticket_id, config, execute)
+    tab = ensure_ticket_tab(workspace, args.ticket_id, config, execute, cwd=workspace_cwd)
     if not tab:
         return 2
     instruction = instruction_text(args.instruction, "")
     return run_steps(
-        [
-            ExecutionStep(
-                start_role_agent_command(
-                    config,
-                    tab_id=tab.tab_id,
-                    ticket_id=args.ticket_id,
-                    role=args.role,
-                    instruction=instruction,
-                    service=service,
-                ),
-                config.harness,
-            )
-        ],
+        start_role_agent_steps(config, tab, args.ticket_id, args.role, service=service, instruction=instruction, cwd=workspace_cwd),
         execute,
     )
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 from typing import Sequence
@@ -216,6 +217,18 @@ class Team2AgentTests(unittest.TestCase):
         prompt = agent.worker_prompt(config, "DEV2-6509 브리프")
 
         self.assertIn("초기 위임 작업: DEV2-6509 브리프", prompt)
+
+    def test_service_workspace_cwd_uses_service_repo_when_present(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            harness = workspace / "team2"
+            service_repo = workspace / "max"
+            harness.mkdir()
+            service_repo.mkdir()
+            config = agent.Config(harness=harness, vault=Path("/vault"), hermes_cli="/hermes", board="team2")
+
+            self.assertEqual(agent.service_workspace_cwd("max", config), service_repo.resolve())
+            self.assertEqual(agent.service_workspace_cwd("triage", config), harness)
 
     def test_herdr_ask_packet_includes_routing_contract(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
@@ -732,6 +745,120 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("aasm space", prompt)
         self.assertIn("/repo/bin/team2-agent herdr role --service aasm aasm-resource-url-copy developer", prompt)
         self.assertIn("경로복사에도 resource URL 템플릿 적용", prompt)
+
+    def test_run_herdr_tickets_reuses_root_pane_when_service_workspace_is_created(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[]}}'
+        create_stdout = (
+            '{"result":{'
+            '"workspace":{"workspace_id":"w-max","active_tab_id":"t-root"},'
+            '"root_pane":{"pane_id":"p-root","tab_id":"t-root"}'
+            '}}'
+        )
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-root","label":"","workspace_id":"w-max"}]}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "max", "--focus"]:
+                return completed(stdout=create_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
+                return completed(stdout=tabs_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "tickets", "--service", "max", "--concurrency", "1", "DEV2-6509"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
+                ["herdr", "workspace", "list"],
+                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "max", "--focus"],
+                ["herdr", "tab", "list", "--workspace", "w-max"],
+                ["herdr", "tab", "rename", "t-root", "DEV2-6509"],
+                ["herdr", "pane", "rename", "p-root", "ticket-DEV2-6509"],
+                [
+                    "herdr",
+                    "pane",
+                    "run",
+                    "p-root",
+                    agent.ai_shell_command("codex", agent.ticket_lead_prompt(config, "DEV2-6509", service="max"), config),
+                ],
+                [
+                    "herdr",
+                    "notification",
+                    "show",
+                    "team2-agent",
+                    "--body",
+                    "Started 1 ticket cells; queued 0",
+                    "--sound",
+                    "done",
+                ],
+            ],
+        )
+
+    def test_run_herdr_work_reuses_root_pane_when_service_workspace_is_created(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[]}}'
+        create_stdout = (
+            '{"result":{'
+            '"workspace":{"workspace_id":"w-aasm","active_tab_id":"t-root"},'
+            '"root_pane":{"pane_id":"p-root","tab_id":"t-root"}'
+            '}}'
+        )
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-root","label":"","workspace_id":"w-aasm"}]}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "aasm", "--focus"]:
+                return completed(stdout=create_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
+                return completed(stdout=tabs_stdout)
+            return completed()
+
+        code = agent.run(
+            ["herdr", "work", "--service", "aasm", "aasm-resource-url-copy", "경로복사에도", "resource", "URL", "템플릿", "적용"],
+            config=config,
+            runner=runner,
+        )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
+                ["herdr", "workspace", "list"],
+                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "aasm", "--focus"],
+                ["herdr", "tab", "list", "--workspace", "w-aasm"],
+                ["herdr", "tab", "rename", "t-root", "aasm-resource-url-copy"],
+                ["herdr", "pane", "rename", "p-root", "work-aasm-resource-url-copy"],
+                [
+                    "herdr",
+                    "pane",
+                    "run",
+                    "p-root",
+                    agent.ai_shell_command(
+                        "codex",
+                        agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"),
+                        config,
+                    ),
+                ],
+                [
+                    "herdr",
+                    "notification",
+                    "show",
+                    "team2-agent",
+                    "--body",
+                    "Started work cell aasm-resource-url-copy",
+                    "--sound",
+                    "done",
+                ],
+            ],
+        )
 
     def test_run_herdr_tickets_starts_ticket_cells_up_to_concurrency(self) -> None:
         seen: list[list[str]] = []

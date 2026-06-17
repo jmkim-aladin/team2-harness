@@ -43,6 +43,8 @@ description: "Use when a request needs development team 2 context from the team2
 - git 커밋, 푸시, 머지, PR 생성/머지
 - DB/SP 변경 및 프로덕션 배포
 
+개발2팀 하네스(`team2`) 자체 변경은 YouTrack 티켓 없이 진행할 수 있다. 정책, 카탈로그, 스킬, 템플릿, 하네스 도구, 에이전트 오케스트레이션, 운영 문서 변경이 대상이며, 서비스 제품 코드 변경은 제외한다. 하네스 예외 작업은 `policies/branching-strategy.md` 기준으로 `team2/{작업-slug}` 브랜치와 `[TEAM2] 작업 내용` 커밋을 사용할 수 있고, 사용자 명시 지시가 있으면 DEV2 티켓 없이 commit/merge/push 가능하다.
+
 로컬 Obsidian vault의 티켓 노트 생성·갱신·종료 반영은 사용자 확인 없이 진행한다. 사용자가 티켓 종료/완료/마감/닫힘을 요청하거나 완료 사실을 보고하면 `$ad-work-prep`/`work-prep.md`의 티켓 종료 모드에 따라 `ticket_status: done`, 필요 시 `decision_status: resolved`, 완료 기록을 바로 반영한다. 이는 YouTrack 상태 변경이 아니다.
 
 ## 저장 위치
