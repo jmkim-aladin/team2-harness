@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import os
+import shutil
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -10,6 +13,8 @@ from unittest.mock import patch
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "tools" / "team2_agent.py"
+ROOT = MODULE_PATH.parents[1]
+WRAPPER_PATH = ROOT / "bin" / "team2-agent"
 spec = importlib.util.spec_from_file_location("team2_agent", MODULE_PATH)
 agent = importlib.util.module_from_spec(spec)
 assert spec and spec.loader
@@ -29,6 +34,86 @@ def seeds_orch_worker(command: Sequence[str]) -> bool:
 
 
 class Team2AgentTests(unittest.TestCase):
+    def test_default_config_uses_container_paths_when_mounted(self) -> None:
+        mounted = {"/workspace/team2", "/workspace/team2-vault", "/opt/hermes/.venv/bin/hermes"}
+
+        def exists(path: Path) -> bool:
+            return str(path) in mounted
+
+        with patch.dict(os.environ, {}, clear=True), patch.object(agent.Path, "exists", exists):
+            config = agent.default_config()
+
+        self.assertEqual(config.harness, Path("/workspace/team2").resolve())
+        self.assertEqual(config.vault, Path("/workspace/team2-vault").resolve())
+        self.assertEqual(config.hermes_cli, "/opt/hermes/.venv/bin/hermes")
+
+    def test_default_config_prefers_explicit_environment_over_container_paths(self) -> None:
+        mounted = {"/workspace/team2", "/workspace/team2-vault", "/opt/hermes/.venv/bin/hermes"}
+
+        def exists(path: Path) -> bool:
+            return str(path) in mounted
+
+        env = {
+            "TEAM2_HARNESS_PATH": "/custom/team2",
+            "LOCAL_WIKI_PATH": "/custom/vault",
+            "HERMES_CLI": "/custom/hermes",
+        }
+        with patch.dict(os.environ, env, clear=True), patch.object(agent.Path, "exists", exists):
+            config = agent.default_config()
+
+        self.assertEqual(config.harness, Path("/custom/team2").resolve())
+        self.assertEqual(config.vault, Path("/custom/vault").resolve())
+        self.assertEqual(config.hermes_cli, "/custom/hermes")
+
+    def test_wrapper_defaults_to_repo_root_relative_to_script(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            repo = tmp_path / "mounted-team2"
+            wrapper = repo / "bin" / "team2-agent"
+            wrapper.parent.mkdir(parents=True)
+            (repo / "tools").mkdir()
+            shutil.copy2(WRAPPER_PATH, wrapper)
+            capture = tmp_path / "argv.txt"
+            fake_python = tmp_path / "python3"
+            fake_python.write_text(
+                "#!/usr/bin/env sh\n"
+                "printf '%s\\n' \"$@\" > \"$TEAM2_WRAPPER_CAPTURE\"\n",
+                encoding="utf-8",
+            )
+            fake_python.chmod(fake_python.stat().st_mode | stat.S_IXUSR)
+            env = os.environ.copy()
+            env.pop("TEAM2_HARNESS_PATH", None)
+            env["PATH"] = f"{tmp_path}:{env['PATH']}"
+            env["TEAM2_WRAPPER_CAPTURE"] = str(capture)
+
+            subprocess.run([str(wrapper), "board"], cwd=repo, env=env, check=True, text=True)
+
+            lines = capture.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(lines[0], str(repo / "tools" / "team2_agent.py"))
+            self.assertEqual(lines[1:], ["board"])
+
+    def test_wrapper_allows_team2_harness_path_override(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            capture = tmp_path / "argv.txt"
+            fake_python = tmp_path / "python3"
+            fake_python.write_text(
+                "#!/usr/bin/env sh\n"
+                "printf '%s\\n' \"$@\" > \"$TEAM2_WRAPPER_CAPTURE\"\n",
+                encoding="utf-8",
+            )
+            fake_python.chmod(fake_python.stat().st_mode | stat.S_IXUSR)
+            env = os.environ.copy()
+            env["TEAM2_HARNESS_PATH"] = "/custom/team2"
+            env["PATH"] = f"{tmp_path}:{env['PATH']}"
+            env["TEAM2_WRAPPER_CAPTURE"] = str(capture)
+
+            subprocess.run([str(WRAPPER_PATH), "board"], cwd=ROOT, env=env, check=True, text=True)
+
+            lines = capture.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(lines[0], "/custom/team2/tools/team2_agent.py")
+            self.assertEqual(lines[1:], ["board"])
+
     def test_cycle_builds_knowledge_cycle_apply_command(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
         parsed = agent.parse_args(["cycle"])

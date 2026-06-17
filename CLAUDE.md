@@ -100,7 +100,7 @@ Key routing rules:
 - Indexed sources: `team2-harness`, `team2-vault`; code files are indexed under `team2-harness`.
 - Embeddings: enabled with ZeroEntropy `zembed-1`; run shared maintenance from the Docker service, not the Mac-local `~/.gbrain` PGLite.
 - Hermes runtime: cron runs `tools/run_team2_knowledge_cycle.py`; nightly agent jobs use GBrain MCP for domain hardening drafts. Hermes may write vault draft/projection files but must not mutate YouTrack/KB/DB/prod or promote canonical state without approval.
-- GBrain PGLite sync maintenance: host LaunchAgent `com.team2.gbrain-maintenance` runs `/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh` at 01:40 KST. This stops `gbrain-team2`, runs `gbrain sync --all`, writes `/Users/jm/.hermes-team2/gbrain-maintenance-status.json`, then restarts the server.
+- GBrain PGLite maintenance: host LaunchAgent `com.team2.gbrain-maintenance` runs `/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh` at 01:40 KST. This stops `gbrain-team2`, runs `sync --all`, `extract --stale`, `embed --stale`, source-level `dream`, writes `/Users/jm/.hermes-team2/gbrain-maintenance-status.json`, then restarts the server.
 
 ## GBrain Search Guidance (configured by /sync-gbrain)
 <!-- gstack-gbrain-search-guidance:start -->

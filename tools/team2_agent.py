@@ -16,6 +16,9 @@ from typing import Callable, NamedTuple, Sequence
 DEFAULT_HARNESS = "/Users/jm/Documents/workspace/team2"
 DEFAULT_VAULT = "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
 DEFAULT_HERMES_CLI = "/Users/jm/.hermes-team2/bin/cli"
+CONTAINER_HARNESS = "/workspace/team2"
+CONTAINER_VAULT = "/workspace/team2-vault"
+CONTAINER_HERMES_CLI = "/opt/hermes/.venv/bin/hermes"
 DEFAULT_BOARD = "team2"
 HERDR = "herdr"
 ORCHESTRATION_WORKSPACE_LABEL = "team2-orchestration"
@@ -101,12 +104,29 @@ class HerdrCreatedWorkspace(NamedTuple):
 
 def default_config() -> Config:
     return Config(
-        harness=Path(os.environ.get("TEAM2_HARNESS_PATH", DEFAULT_HARNESS)).resolve(),
-        vault=Path(os.environ.get("LOCAL_WIKI_PATH", DEFAULT_VAULT)).resolve(),
-        hermes_cli=os.environ.get("HERMES_CLI", DEFAULT_HERMES_CLI),
+        harness=default_path("TEAM2_HARNESS_PATH", DEFAULT_HARNESS, CONTAINER_HARNESS),
+        vault=default_path("LOCAL_WIKI_PATH", DEFAULT_VAULT, CONTAINER_VAULT),
+        hermes_cli=default_cli("HERMES_CLI", DEFAULT_HERMES_CLI, CONTAINER_HERMES_CLI),
         board=os.environ.get("HERMES_KANBAN_BOARD", DEFAULT_BOARD),
         agent_engine=normalise_agent_engine(os.environ.get("TEAM2_HERDR_ENGINE")),
     )
+
+
+def default_path(env_name: str, host_default: str, container_default: str) -> Path:
+    configured = os.environ.get(env_name)
+    if configured:
+        return Path(configured).resolve()
+    container_path = Path(container_default)
+    if container_path.exists():
+        return container_path.resolve()
+    return Path(host_default).resolve()
+
+
+def default_cli(env_name: str, host_default: str, container_default: str) -> str:
+    configured = os.environ.get(env_name)
+    if configured:
+        return configured
+    return container_default if Path(container_default).exists() else host_default
 
 
 def normalise_agent_engine(engine: str | None) -> str:

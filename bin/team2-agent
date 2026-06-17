@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_TEAM2_HARNESS_PATH="$(cd "$SCRIPT_DIR/.." && pwd)"
+export TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-$DEFAULT_TEAM2_HARNESS_PATH}"
 exec python3 "$TEAM2_HARNESS_PATH/tools/team2_agent.py" "$@"
