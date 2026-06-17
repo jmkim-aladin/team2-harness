@@ -119,6 +119,18 @@ fi
   └── DEV2-####_{작업명}.sql
 ```
 
+### 공통 SQL 템플릿: 만권당 실제 사용 여부 확인
+
+만권당 CS 구독취소/환불 문의에서 "결제 후 실제 사용 여부" 확인이 필요하면 아래 vault 템플릿을 먼저 읽고 같은 판정 기준으로 SQL을 작성한다.
+
+- 템플릿: `$LOCAL_WIKI_PATH/wiki/services/max/analysis/subscription-usage-check-sql.md`
+- 기본 경로: `요청부서/만권당투비팀/만권당/DEV2-####/`
+- 주요 파라미터: `@Custkey`, `@MaxPassId`, `@OrderId`, `@FromDate`, `@ToDate`
+- 판정 기준: `MaxPass.IsConsumed`, `MaxConsumeHistory`, `EbookReading`, `MaxEbookDownload`, `MaxEbookReadingQueue_Lazy`, `MaxEbookDownloadQueue_Lazy`, `MaxLibrary`, `MaxSettleHistory`
+- 결과 기록: row dump가 아니라 소비 여부, row 수, 최초/최종 사용일, lazy queue 대기 여부만 요약한다.
+
+이 템플릿은 운영 데이터 추출 SQL shape이다. 운영 DB 직접 조회는 하지 않고, 본 command의 data-requests-dev2 등록/승인 절차를 따른다.
+
 `설명.md`/`DEV2-####.md` 권장 형식:
 
 ```markdown

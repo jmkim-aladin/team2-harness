@@ -106,6 +106,28 @@ def build_steps(harness: Path, vault: Path, *, apply: bool) -> list[dict[str, An
                 *apply_flag,
             ],
         },
+        {
+            "name": "import_hermes_board_actions",
+            "command": [
+                python,
+                str(tools / "import_hermes_board_actions.py"),
+                "--vault",
+                str(vault),
+                "--json",
+                *apply_flag,
+            ],
+        },
+        {
+            "name": "generate_decision_cockpit",
+            "command": [
+                python,
+                str(tools / "generate_decision_cockpit.py"),
+                "--vault",
+                str(vault),
+                "--json",
+                *apply_flag,
+            ],
+        },
     ]
 
 
@@ -154,6 +176,26 @@ def parse_kanban_result(stdout: str) -> dict[str, Any] | None:
     return payload
 
 
+def parse_action_import_result(stdout: str) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(stdout)
+    except json.JSONDecodeError:
+        return None
+    if payload.get("schema") != "team2.hermes_board_action_import.v1":
+        return None
+    return payload
+
+
+def parse_cockpit_result(stdout: str) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(stdout)
+    except json.JSONDecodeError:
+        return None
+    if payload.get("schema") != "team2.desktop_decision_cockpit.v1":
+        return None
+    return payload
+
+
 def result_from_process(name: str, command: Sequence[str], proc: subprocess.CompletedProcess[str]) -> dict[str, Any]:
     result = {
         "name": name,
@@ -181,6 +223,22 @@ def result_from_process(name: str, command: Sequence[str], proc: subprocess.Comp
                 "ensure_active": summary.get("ensure_active"),
                 "block_active": summary.get("block_active"),
                 "complete_stale": summary.get("complete_stale"),
+            }
+    if name == "import_hermes_board_actions" and proc.returncode == 0:
+        imported = parse_action_import_result(proc.stdout)
+        if imported:
+            summary = imported.get("summary", {})
+            result["actions"] = {
+                "seen": summary.get("seen"),
+                "imported": summary.get("imported"),
+                "skipped": summary.get("skipped"),
+            }
+    if name == "generate_decision_cockpit" and proc.returncode == 0:
+        cockpit = parse_cockpit_result(proc.stdout)
+        if cockpit:
+            result["cockpit"] = {
+                "cards": cockpit.get("cards"),
+                "pending_actions": cockpit.get("pending_actions"),
             }
     return result
 
@@ -235,6 +293,29 @@ def render_status_markdown(result: dict[str, Any]) -> str:
                 f"- completed stale: {kanban.get('complete_stale')}",
             ]
         )
+    actions = action_summary(result)
+    if actions:
+        lines.extend(
+            [
+                "",
+                "## Board Actions",
+                "",
+                f"- seen: {actions.get('seen')}",
+                f"- imported: {actions.get('imported')}",
+                f"- skipped: {actions.get('skipped')}",
+            ]
+        )
+    cockpit = cockpit_summary(result)
+    if cockpit:
+        lines.extend(
+            [
+                "",
+                "## Desktop Cockpit",
+                "",
+                f"- cards: {cockpit.get('cards')}",
+                f"- pending actions: {cockpit.get('pending_actions')}",
+            ]
+        )
     lines.extend(
         [
             "",
@@ -280,6 +361,20 @@ def kanban_summary(result: dict[str, Any]) -> dict[str, Any] | None:
     for step in result["steps"]:
         if step.get("name") == "sync_hermes_kanban":
             return step.get("kanban")
+    return None
+
+
+def action_summary(result: dict[str, Any]) -> dict[str, Any] | None:
+    for step in result["steps"]:
+        if step.get("name") == "import_hermes_board_actions":
+            return step.get("actions")
+    return None
+
+
+def cockpit_summary(result: dict[str, Any]) -> dict[str, Any] | None:
+    for step in result["steps"]:
+        if step.get("name") == "generate_decision_cockpit":
+            return step.get("cockpit")
     return None
 
 
@@ -340,6 +435,21 @@ def print_summary(result: dict[str, Any]) -> None:
             f"ensure_active={kanban.get('ensure_active')} "
             f"block_active={kanban.get('block_active')} "
             f"complete_stale={kanban.get('complete_stale')}"
+        )
+    actions = action_summary(result)
+    if actions:
+        print(
+            "actions: "
+            f"seen={actions.get('seen')} "
+            f"imported={actions.get('imported')} "
+            f"skipped={actions.get('skipped')}"
+        )
+    cockpit = cockpit_summary(result)
+    if cockpit:
+        print(
+            "cockpit: "
+            f"cards={cockpit.get('cards')} "
+            f"pending_actions={cockpit.get('pending_actions')}"
         )
     files = result.get("status_files") or {}
     if files:

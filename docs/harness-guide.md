@@ -128,11 +128,33 @@ python3 "$TEAM2_HARNESS_PATH/tools/run_work_board.py" --vault "$LOCAL_WIKI_PATH"
 ```
 
 Hermes가 dispatch request를 처리한 뒤 남기는 ack 계약은 `configs/hermes-discord-consumer.yaml`과 `tools/ack_hermes_dispatch.py`를 따른다.
-Hermes runtime에서는 아래 knowledge cycle runner를 주기 실행 단위로 사용한다. 이 명령은 harness link, vault relation/index, board projection, dispatch request, pending batch, outbox, Hermes Kanban sync, cycle status를 갱신한다. Discord API는 직접 호출하지 않는다.
+Hermes runtime에서는 아래 knowledge cycle runner를 주기 실행 단위로 사용한다. 이 명령은 harness link, vault relation/index, board projection, dispatch request, pending batch, outbox, Hermes Kanban sync, board action queue import, desktop decision cockpit, cycle status를 갱신한다. Discord API는 직접 호출하지 않는다.
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/run_team2_knowledge_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
+
+컴퓨터 앞 control pane에서는 같은 작업을 짧게 실행한다.
+
+```bash
+team2-agent cycle
+team2-agent board
+team2-agent cockpit
+```
+
+herdr를 사용하는 로컬 작업실에서는 `team2-agent`가 Hermes/wiki 상태와 herdr 실행 표면을 연결한다. `herdr open`은 `team2-orchestration` space를 focus하고, 기본 작업실이 부족하면 `global-orchestrator`, `orch-worker-1`, `orch-worker-2` 역할을 보정한 뒤 herdr session에 attach한다. 서비스 작업은 서비스별 space, 티켓/작업별 tab, 임시 role agent pane으로 나눈다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. 이미 herdr 안에서 실행 중이거나 attach가 필요 없으면 `--no-attach`를 붙인다. herdr는 원장이 아니므로 상태 판단은 Hermes Board와 vault note를 기준으로 한다.
+
+```bash
+team2-agent herdr doctor
+team2-agent herdr install-hooks
+team2-agent herdr open
+team2-agent herdr sync
+team2-agent herdr tickets --service max --concurrency 4 DEV2-6509 DEV2-6510
+team2-agent herdr worker orch-worker-3 "추가 분석 작업"
+team2-agent herdr role --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
+```
+
+사용자는 `global-orchestrator` pane에 자연어로 지시한다. 오래 걸리거나 병렬 처리할 일은 orchestrator가 `orch-worker-1`, `orch-worker-2` 또는 추가 worker 슬롯에 넘긴다. 티켓 묶음은 `team2-agent herdr tickets --service {service}`로 서비스 space 안에 ticket tab을 만들며, 각 tab의 `ticket-lead`가 `/ad:work-prep` 기준으로 분석하고 필요한 role agent만 `team2-agent herdr role --service {service}`로 띄운다. `team2-agent board`, `cockpit`, `brief`, `ask`, `delegate`, `decide`, `done` 등은 orchestrator/worker/ticket-lead가 내부 도구로 사용한다.
 
 board projection과 dispatch request만 갱신할 때는 아래 runner를 사용한다. 기존 ack를 읽어 중복 전송을 막은 pending batch를 만든다.
 
@@ -144,6 +166,21 @@ Hermes Kanban 화면은 아래 동기화 도구가 관리한다. source card가 
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/sync_hermes_kanban.py" --vault "$LOCAL_WIKI_PATH" --apply
+```
+
+컴퓨터 앞에서는 Discord 대신 desktop decision cockpit을 주 화면으로 사용한다. Hermes Board 댓글의 `/brief`, `/ask`, `/delegate`, `/decide`, `/approve`, `/revise`, `/split`, `/snooze`, `/done` 지시는 action queue로 수집된다.
+
+```bash
+python3 "$TEAM2_HARNESS_PATH/tools/import_hermes_board_actions.py" --vault "$LOCAL_WIKI_PATH" --apply
+python3 "$TEAM2_HARNESS_PATH/tools/generate_decision_cockpit.py" --vault "$LOCAL_WIKI_PATH" --apply
+```
+
+직접 지시는 아래처럼 짧게 남긴다.
+
+```bash
+team2-agent brief t_36a47508
+team2-agent delegate t_36a47508 planner "추천안과 리스크 정리"
+team2-agent decide t_36a47508 "A안으로 결정. 원본 위키에 기록"
 ```
 
 보낼 payload만 따로 계산할 때는 아래 reference consumer를 사용한다.

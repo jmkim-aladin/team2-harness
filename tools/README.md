@@ -2,9 +2,52 @@
 
 팀 하네스 보조 도구 모음. 일회성 또는 정기 실행용 스크립트.
 
+## team2-agent.py / bin/team2-agent — 터미널 조작면
+
+컴퓨터 앞에서 쓰는 짧은 control pane 명령. 내부적으로는 아래 Python 도구들을 호출하지만, 사용자는 긴 `python3 tools/...` 명령을 직접 치지 않는다.
+
+### 사용법
+
+```bash
+export PATH="/Users/jm/Documents/workspace/team2/bin:$PATH"
+
+team2-agent board
+team2-agent cockpit
+team2-agent cycle
+team2-agent brief t_36a47508
+team2-agent delegate t_36a47508 planner "추천안과 리스크 정리"
+team2-agent decide t_36a47508 "A안으로 결정. 원본 위키에 기록"
+team2-agent herdr doctor
+team2-agent herdr install-hooks
+team2-agent herdr open
+team2-agent herdr open --no-attach
+team2-agent herdr tickets --service max --concurrency 4 DEV2-6509 DEV2-6510
+team2-agent herdr worker orch-worker-3 "추가 분석 작업"
+team2-agent herdr role --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
+team2-agent herdr sync
+```
+
+herdr 작업실이 열린 뒤 사용자는 `team2-orchestration` space의 `global-orchestrator` pane에 자연어로 지시한다. 기본 작업실은 `global-orchestrator`, `orch-worker-1`, `orch-worker-2`를 확보하고, 티켓 묶음은 서비스 space 안의 티켓별 tab으로 나눈다. 각 tab의 ticket-lead는 analyst/developer/reviewer/QA/designer/data/architect role agent pane을 필요한 만큼만 띄운다. Hermes board와 desktop cockpit은 orchestrator가 필요할 때 조회하는 내부 상태 도구로 둔다. CLI action 명령은 사람용 주 인터페이스가 아니라 orchestrator/worker/ticket-lead가 쓰는 내부 도구다.
+
+### 역할
+
+- `board`: Hermes `team2` 보드 상태 확인
+- `cockpit`: desktop decision cockpit 갱신
+- `cycle`: 전체 지식 사이클 실행
+- `brief`, `ask`, `delegate`, `decide`, `approve`, `revise`, `split`, `snooze`, `done`: action queue 기록 + Hermes task 댓글 기록
+- `herdr doctor`: herdr server, integration, workspace 상태 확인
+- `herdr install-hooks`: Codex/Claude Code herdr hook 설치
+- `herdr open`: `team2-orchestration` space를 focus하고 `global-orchestrator`/`orch-worker-1`/`orch-worker-2` 기본 작업실을 보정하거나, 없으면 새 작업실을 만든 뒤 herdr session attach
+- `herdr open --no-attach`: herdr session attach 없이 workspace focus/준비만 수행
+- `herdr worker`: `team2-orchestration` space에 추가 worker 슬롯 시작
+- `herdr tickets`: 서비스 space에 티켓별 tab을 만들고 ticket-lead를 concurrency 한도만큼 시작
+- `herdr role`: 특정 서비스 space의 티켓 tab 안에 role agent 시작
+- `herdr sync`: 전체 cycle과 cockpit 갱신 후 herdr 알림 표시
+- `herdr notify`: herdr 알림 직접 표시
+
 ## run_team2_knowledge_cycle.py — Hermes 지식 사이클 runner
 
-Hermes cron에서 주기 실행하는 deterministic runner. harness link, vault relation/index, Hermes board, Discord dispatch batch/outbox, Hermes Kanban, GBrain health, cycle status note를 한 번에 갱신한다.
+Hermes cron에서 주기 실행하는 deterministic runner. harness link, vault relation/index, Hermes board, Discord dispatch batch/outbox, Hermes Kanban, board action queue, desktop decision cockpit, GBrain health, cycle status note를 한 번에 갱신한다.
 
 ### 사용법
 
@@ -34,6 +77,7 @@ python3 /workspace/team2/tools/run_team2_knowledge_cycle.py \
 - YouTrack, YouTrack KB, DB, 배포, git commit/push를 호출하지 않는다.
 - vault draft/projection 파일만 갱신한다.
 - Hermes Kanban은 projection view로만 동기화한다. active decision/review task는 `blocked`로 유지하고, source card가 사라진 task는 `done`으로 이동한다.
+- Hermes Board 댓글 지시는 action queue로 수집한다. queue는 실행 요청 이벤트이지 원장이 아니다.
 - canonical 승격은 하지 않는다.
 
 ## sync_hermes_kanban.py — Hermes Kanban projection sync
@@ -57,6 +101,53 @@ python3 tools/sync_hermes_kanban.py --vault "$VAULT" --apply
 - board에 새 card가 있으면 Hermes task를 만든다.
 - active card는 사람 결정/검토 대기이므로 `blocked` 상태로 유지한다.
 - 이전 sync state에는 있지만 현재 board에 없는 card는 Hermes task를 `done`으로 이동한다.
+
+## import_hermes_board_actions.py — Hermes Board comment import
+
+Hermes Kanban task 댓글에서 operator 지시를 읽어 vault action queue로 가져온다.
+
+지원하는 댓글 형식:
+
+```text
+/brief 결정 브리프 만들어줘
+/delegate planner에게 맡겨서 진행해줘
+/decide A안으로 결정. 위키에 기록해줘
+```
+
+### 사용법
+
+```bash
+VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+
+python3 tools/import_hermes_board_actions.py --vault "$VAULT"
+python3 tools/import_hermes_board_actions.py --vault "$VAULT" --apply
+```
+
+## queue_agent_board_action.py — action queue writer
+
+터미널이나 cockpit에서 특정 Hermes task/card에 대한 지시를 queue에 기록한다. `--comment-hermes`를 붙이면 같은 지시를 Hermes task 댓글에도 남긴다.
+
+```bash
+python3 tools/queue_agent_board_action.py \
+  --vault "$VAULT" \
+  --task-id t_36a47508 \
+  --action brief \
+  --instruction "결정 브리프 만들어줘" \
+  --apply --comment-hermes
+```
+
+## generate_decision_cockpit.py — desktop decision cockpit
+
+컴퓨터 앞에서 보는 통합 decision cockpit projection을 생성한다.
+
+출력:
+
+- `wiki/projects/agentic-os/desktop-decision-cockpit.md`
+- `wiki/projects/agentic-os/desktop-decision-cockpit.json`
+
+```bash
+python3 tools/generate_decision_cockpit.py --vault "$VAULT" --apply
+```
 
 ## audit_vault.py — vault 분류 매트릭스 생성
 

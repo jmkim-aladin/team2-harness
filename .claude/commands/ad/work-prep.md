@@ -9,10 +9,12 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 ```
 /ad:work-prep DEV2-6127
 /ad:work-prep 알라딘 앱 환불 정보 섹션 C2C 분기 누락 패치
+/ad:work-prep DEV2-6127 종료
 /ad:work-prep                   # 아무 입력 없으면 무엇을 준비할지 질문
 ```
 
 `ARGUMENTS`가 `^DEV2-\d+$` 패턴이면 **티켓 모드**, 그 외 텍스트면 **자유글 모드**로 분기한다.
+`ARGUMENTS`에 DEV2 티켓번호와 `종료`, `완료`, `마감`, `닫`, `done`, `closed`, `fixed`, `resolved`가 함께 있으면 **티켓 종료 모드**로 분기한다.
 
 ## 환경변수
 
@@ -111,7 +113,7 @@ curl -s -H "$AUTH" \
 
 기존 파일이 있으면 **읽어서** frontmatter `youtrack_synced_at`/`updated_at` 갱신만 하고, 본문은 보존한다. 사용자에게 "이미 있음 → 갱신" / "처음 생성" 인지 보고한다.
 
-**기본 동작 (사용자 확인 없이 진행)**: 위키 노트 신규 생성·기존 노트 frontmatter 갱신·Daily 아젠다 추가는 미리보기를 출력한 뒤 바로 진행한다. 별도 확인 질문을 두지 않는다. 단, dev DB 쓰기 쿼리(§11)·브랜치 생성·YouTrack 변경은 여전히 사용자 확인 게이트를 유지한다.
+**기본 동작 (사용자 확인 없이 진행)**: 위키 노트 신규 생성·기존 노트 frontmatter 갱신·티켓 종료 반영·Daily 아젠다 추가는 미리보기를 출력한 뒤 바로 진행한다. 별도 확인 질문을 두지 않는다. 단, dev DB 쓰기 쿼리(§11)·브랜치 생성·YouTrack 변경은 여전히 사용자 확인 게이트를 유지한다.
 
 ### 5. 위키 노트 작성
 
@@ -247,6 +249,29 @@ fi
 - 검증은 작은 모수와 짧은 기간으로 시작하고, 결과는 스키마/카운트/대표 패턴/판단만 노트에 남긴다.
 - 운영(prod) 조회·추출은 직접 실행하지 않고 [data-request-policy.md](../../../policies/data-request-policy.md) 절차로 전환한다.
 - 검증 SQL은 data-requests-dev2 등록 전에 먼저 티켓 노트나 티켓 하위 근거 파일에 저장한다.
+- 만권당 CS 구독취소/환불에서 실제 사용 여부 확인이 필요하면 vault `wiki/services/max/analysis/subscription-usage-check-sql.md` 템플릿을 우선 사용한다.
+
+### 12. 티켓 종료 모드 (로컬 위키 자동 반영)
+
+사용자가 `DEV2-#### 종료`, `티켓 종료했어`, `완료 처리해줘`, `마감해줘`처럼 요청하거나 완료 사실을 보고하면 로컬 위키 티켓 노트를 자동 갱신한다. 이는 **Obsidian vault 기록 정리**이며 YouTrack 상태 변경이 아니다.
+
+절차:
+
+1. `$LOCAL_WIKI_PATH/wiki/processes/tickets/dev2-{nnnn}.md`를 찾는다. 없으면 티켓 모드 절차로 최소 노트를 만든 뒤 종료 반영한다.
+2. 기존 노트를 읽고, 운영 raw row/개인정보/시크릿은 추가하지 않는다.
+3. frontmatter를 갱신한다.
+   - `ticket_status: done`
+   - `decision_status: resolved` (열린 사용자 결정이 남아 있지 않을 때)
+   - `updated_at: {오늘 YYYY-MM-DD}`
+   - `status: canonical`은 결론·근거가 정리된 경우에만 유지/승격한다.
+   - `youtrack_state`/`youtrack_synced_at`은 YouTrack API로 실제 조회한 경우에만 갱신한다. 사용자 보고만 있으면 완료 기록에 "사용자 보고 기준"이라고 남긴다.
+4. 본문을 정리한다.
+   - 판단 요약의 `다음 행동`을 `없음` 또는 `후속 후보`로 바꾼다.
+   - `미확정 질문`은 `종료 시점 결정`으로 바꾸거나, 남은 항목을 `(후속 후보)`로 분리한다.
+   - `Actions`에서 실제 완료된 항목만 `[x]`로 바꾸고, 별도 개발/개선은 `[ ] (후속 후보)`로 남긴다.
+   - `완료 기록`에 `{오늘}: 사용자 안내/결과 전달 및 티켓 종료 반영. YouTrack API/KB/git 변경 없음.`을 추가한다.
+5. `python3 tools/lint_vault.py --vault "$LOCAL_WIKI_PATH" --files "wiki/processes/tickets/dev2-{nnnn}.md"`를 실행해 검증한다.
+6. 사용자에게 위키 파일, 변경 상태, lint 결과, 수행하지 않은 외부 변경(YouTrack/KB/git/DB)을 짧게 보고한다.
 
 ## 사용자 확인 게이트
 
@@ -254,6 +279,7 @@ fi
 
 - 위키 노트 **신규 생성**: 경로 + frontmatter 미리보기를 출력한 뒤 바로 작성
 - 위키 노트 **갱신**: frontmatter 변경 내역을 출력한 뒤 바로 작성 (본문은 보존)
+- 위키 노트 **종료 반영**: 사용자가 티켓 종료/완료/마감/닫힘을 요청하거나 완료 사실을 보고하면 §12 기준으로 `ticket_status: done`과 종료 기록을 바로 반영
 - Daily 아젠다 **추가**: 추가할 한 줄을 출력한 뒤 바로 추가 (idempotent — 중복 시 스킵)
 - **cmux/herdr 작업 라벨 변경**: cmux/herdr 안에서 실행 중일 때만 (§9), 변경 전후 이름을 출력에 명시. 외부면 스킵
 
