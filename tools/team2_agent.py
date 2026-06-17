@@ -372,22 +372,23 @@ def role_agent_prompt(config: Config, ticket_id: str, role: str, instruction: st
     return prompt
 
 
-def ai_argv(engine: str, prompt: str, config: Config) -> list[str]:
-    return ["zsh", "-ic", ai_command_text(engine, prompt, config)]
+def ai_argv(engine: str, prompt: str, config: Config, *, cwd: Path | None = None) -> list[str]:
+    return ["zsh", "-ic", ai_command_text(engine, prompt, config, cwd=cwd)]
 
 
-def ai_command_text(engine: str, prompt: str, config: Config) -> str:
+def ai_command_text(engine: str, prompt: str, config: Config, *, cwd: Path | None = None) -> str:
+    run_cwd = cwd or config.harness
     if engine == "codex":
         argv = [engine, "--sandbox", "danger-full-access", "--ask-for-approval", "never", prompt]
     elif engine == "claude":
         argv = [engine, "--dangerously-skip-permissions", prompt]
     else:
         argv = [engine, prompt]
-    return f"cd {shlex.quote(str(config.harness))}; {shlex.join(argv)}"
+    return f"cd {shlex.quote(str(run_cwd))}; {shlex.join(argv)}"
 
 
-def ai_shell_command(engine: str, prompt: str, config: Config) -> str:
-    return shlex.join(ai_argv(engine, prompt, config))
+def ai_shell_command(engine: str, prompt: str, config: Config, *, cwd: Path | None = None) -> str:
+    return shlex.join(ai_argv(engine, prompt, config, cwd=cwd))
 
 
 def herdr_workspaces(output: str) -> list[HerdrWorkspace]:
@@ -587,7 +588,7 @@ def start_ticket_lead_command(
         command.extend(["--tab", tab_id])
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
-    command.extend(["--split", "down", "--", *ai_argv(engine, ticket_lead_prompt(config, ticket_id, service=service), config)])
+    command.extend(["--split", "down", "--", *ai_argv(engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=agent_cwd)])
     return command
 
 
@@ -615,7 +616,7 @@ def start_work_lead_command(
         command.extend(["--tab", tab_id])
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
-    command.extend(["--split", "down", "--", *ai_argv(engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config)])
+    command.extend(["--split", "down", "--", *ai_argv(engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=agent_cwd)])
     return command
 
 
@@ -644,7 +645,7 @@ def start_role_agent_command(
         command.extend(["--tab", tab_id])
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
-    command.extend(["--split", "down", "--", *ai_argv(engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config)])
+    command.extend(["--split", "down", "--", *ai_argv(engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=agent_cwd)])
     return command
 
 
@@ -653,7 +654,7 @@ def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, se
         return [
             ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, ticket_cell_name(ticket_id)], config.harness),
             ExecutionStep(
-                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", ticket_lead_prompt(config, ticket_id, service=service), config)],
+                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", ticket_lead_prompt(config, ticket_id, service=service), config, cwd=cwd)],
                 config.harness,
             ),
         ]
@@ -665,7 +666,7 @@ def start_work_lead_steps(config: Config, tab: HerdrTab, work_id: str, *, servic
         return [
             ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, work_cell_name(work_id)], config.harness),
             ExecutionStep(
-                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", work_lead_prompt(config, work_id, service=service, instruction=instruction), config)],
+                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=cwd)],
                 config.harness,
             ),
         ]
@@ -677,7 +678,7 @@ def start_role_agent_steps(config: Config, tab: HerdrTab, ticket_id: str, role: 
         return [
             ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, role_agent_name(ticket_id, role)], config.harness),
             ExecutionStep(
-                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", role_agent_prompt(config, ticket_id, role, instruction, service=service), config)],
+                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=cwd)],
                 config.harness,
             ),
         ]

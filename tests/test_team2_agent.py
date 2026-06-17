@@ -281,6 +281,15 @@ class Team2AgentTests(unittest.TestCase):
         self.assertEqual(argv[:2], ["zsh", "-ic"])
         self.assertIn("codex --sandbox danger-full-access --ask-for-approval never hello", argv[2])
 
+    def test_ai_argv_can_run_from_service_workspace(self) -> None:
+        config = agent.Config(harness=Path("/workspace/team2"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
+
+        argv = agent.ai_argv("codex", "hello", config, cwd=Path("/workspace/max"))
+
+        self.assertEqual(argv[:2], ["zsh", "-ic"])
+        self.assertIn("cd /workspace/max;", argv[2])
+        self.assertNotIn("cd /workspace/team2;", argv[2])
+
     def test_herdr_sync_runs_cycle_cockpit_and_notifies(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
         parsed = agent.parse_args(["herdr", "sync"])
