@@ -25,6 +25,8 @@ DEFAULT_TICKET_CONCURRENCY = 4
 GLOBAL_REFRESH_SAFE_STATUSES = {"done", "idle"}
 DEFAULT_HERDR_ASK_TIMEOUT_MS = 600000
 DEFAULT_HERDR_ASK_READ_LINES = 160
+DEFAULT_AGENT_ENGINE = "codex"
+AGENT_ENGINES = ("codex", "claude")
 TICKET_CELL_ROLES = {
     "analyst",
     "architect",
@@ -53,6 +55,7 @@ class Config(NamedTuple):
     vault: Path
     hermes_cli: str
     board: str
+    agent_engine: str = DEFAULT_AGENT_ENGINE
 
 
 class ExecutionStep(NamedTuple):
@@ -99,7 +102,21 @@ def default_config() -> Config:
         vault=Path(os.environ.get("LOCAL_WIKI_PATH", DEFAULT_VAULT)).resolve(),
         hermes_cli=os.environ.get("HERMES_CLI", DEFAULT_HERMES_CLI),
         board=os.environ.get("HERMES_KANBAN_BOARD", DEFAULT_BOARD),
+        agent_engine=normalise_agent_engine(os.environ.get("TEAM2_HERDR_ENGINE")),
     )
+
+
+def normalise_agent_engine(engine: str | None) -> str:
+    return engine if engine in AGENT_ENGINES else DEFAULT_AGENT_ENGINE
+
+
+def add_engine_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--engine", choices=AGENT_ENGINES, default=None, help="AI engine for newly started herdr agents")
+
+
+def config_with_engine(config: Config, args: argparse.Namespace) -> Config:
+    engine = getattr(args, "engine", None)
+    return config._replace(agent_engine=engine) if engine else config
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
@@ -126,9 +143,12 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     herdr_sub.add_parser("install-hooks", help="Install herdr hooks for Codex and Claude Code")
     refresh_global_parser = herdr_sub.add_parser("refresh-global", help="Restart global-orchestrator when it is idle/done")
     refresh_global_parser.add_argument("--force", action="store_true", help="Restart even when global-orchestrator is working")
+    add_engine_option(refresh_global_parser)
     open_parser = herdr_sub.add_parser("open", help="Open and attach a team2 herdr workspace")
     open_parser.add_argument("--no-attach", action="store_true", help="Prepare/focus workspace without attaching the herdr UI")
+    add_engine_option(open_parser)
     worker_parser = herdr_sub.add_parser("worker", help="Start an additional herdr worker in the orchestration workspace")
+    add_engine_option(worker_parser)
     worker_parser.add_argument("name")
     worker_parser.add_argument("instruction", nargs="*")
     ask_parser = herdr_sub.add_parser("ask", help="Send a structured work packet to an agent, wait, and read the result")
@@ -139,14 +159,17 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     ask_parser.add_argument("--read-lines", type=int, default=DEFAULT_HERDR_ASK_READ_LINES)
     ask_parser.add_argument("instruction", nargs="+")
     tickets_parser = herdr_sub.add_parser("tickets", help="Start one ticket-lead cell per ticket")
+    add_engine_option(tickets_parser)
     tickets_parser.add_argument("--service", default="triage")
     tickets_parser.add_argument("--concurrency", type=int, default=DEFAULT_TICKET_CONCURRENCY)
     tickets_parser.add_argument("ticket_ids", nargs="+")
     work_parser = herdr_sub.add_parser("work", help="Start a service-scoped work-lead cell for non-ticket work")
+    add_engine_option(work_parser)
     work_parser.add_argument("--service", default="triage")
     work_parser.add_argument("work_id")
     work_parser.add_argument("instruction", nargs="*")
     role_parser = herdr_sub.add_parser("role", help="Start a role agent inside a ticket cell")
+    add_engine_option(role_parser)
     role_parser.add_argument("--service", default="triage")
     role_parser.add_argument("ticket_id")
     role_parser.add_argument("role", choices=sorted(TICKET_CELL_ROLES))
@@ -235,12 +258,12 @@ def orchestrator_prompt(config: Config) -> str:
         "팀 서비스 기준의 강제 구조는 서비스 space -> ticket/work tab -> worker pane이다. "
         "티켓/서비스 작업은 직접 처리하지 않는다. DEV2 티켓을 받으면 "
         "서비스 판정에 필요한 최소 정보만 확인하고, 티켓 상세 정리/분석/상태 판단은 ticket-lead가 담당한다. "
-        f"`{team2_agent} herdr tickets --service {{service|triage}} --concurrency N DEV2-1234 ...`를 실행해 "
+        f"`{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency N DEV2-1234 ...`를 실행해 "
         "서비스 space와 티켓별 ticket tab을 만들고 ticket-lead에게 넘긴다. DEV2 티켓이 아닌 서비스 작업은 "
-        f"`{team2_agent} herdr work --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 work tab을 만든다. "
+        f"`{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 work tab을 만든다. "
         "서비스가 불명확하면 triage를 쓴다. 분석/개발/정리처럼 서비스 소속이 아닌 오래 걸리는 일은 "
         "worker를 필요할 때만 동적으로 띄운다. "
-        f"새 worker가 필요하면 `{team2_agent} herdr worker orch-worker-1 \"작업 설명\"`로 생성해 결과를 받고 자동으로 닫는다. "
+        f"새 worker가 필요하면 `{team2_agent} herdr worker --engine {config.agent_engine} orch-worker-1 \"작업 설명\"`로 생성해 결과를 받고 자동으로 닫는다. "
         f"이미 떠 있는 idle worker가 있으면 `{team2_agent} herdr ask orch-worker-N --expect result \"작업 설명\"`로 작업 패킷을 보낸다. "
         "동시에 여러 비서비스 작업이 필요하면 orch-worker-2, orch-worker-3처럼 이름을 늘려 추가 worker를 띄운다. "
         "사용자에게는 넘긴 내용과 다음 결정 질문만 짧게 말한 뒤 다시 대기한다. "
@@ -254,12 +277,12 @@ def worker_prompt(config: Config, instruction: str = "") -> str:
     team2_agent = config.harness / "bin" / "team2-agent"
     prompt = (
         f"너는 개발 2팀 worker다. global-orchestrator가 `{team2_agent} herdr ask orch-worker-N ...` 또는 "
-        f"`{team2_agent} herdr worker orch-worker-N \"...\"`로 넘긴 단일 작업만 처리한다. "
+        f"`{team2_agent} herdr worker --engine {config.agent_engine} orch-worker-N \"...\"`로 넘긴 단일 작업만 처리한다. "
         "팀 서비스 기준의 강제 구조는 서비스 space -> ticket/work tab -> worker pane이다. "
         "티켓/서비스 작업은 직접 처리하지 않는다. DEV2 티켓을 받으면 "
-        f"`{team2_agent} herdr tickets --service {{service|triage}} --concurrency 1 DEV2-1234`로 서비스 space와 ticket tab을 만들고 넘긴다. "
+        f"`{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency 1 DEV2-1234`로 서비스 space와 ticket tab을 만들고 넘긴다. "
         "DEV2 티켓이 아닌 서비스 작업은 "
-        f"`{team2_agent} herdr work --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 work tab을 만든다. "
+        f"`{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 work tab을 만든다. "
         "서비스가 불명확하면 triage를 쓴다. "
         f"하네스 경로는 {config.harness} 이고, 작업 전 관련 vault note와 하네스 정책을 확인한다. "
         "사용자 또는 orchestrator의 명시 지시 전에는 YouTrack/KB/git commit/push/PR/DB/prod 변경을 하지 않는다. "
@@ -311,8 +334,8 @@ def herdr_ask_packet(config: Config, *, task_id: str = "", expect: str = "result
             f"instruction: {instruction}",
             "routing_contract:",
             "- 팀 서비스 기준 강제 구조는 서비스 space -> ticket/work tab -> worker pane이다.",
-            f"- DEV2 티켓 작업이면 `{team2_agent} herdr tickets --service {{service|triage}} --concurrency 1 DEV2-1234`로 재라우팅한다.",
-            f"- DEV2 티켓이 아닌 서비스 작업이면 `{team2_agent} herdr work --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 재라우팅한다.",
+            f"- DEV2 티켓 작업이면 `{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency 1 DEV2-1234`로 재라우팅한다.",
+            f"- DEV2 티켓이 아닌 서비스 작업이면 `{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 재라우팅한다.",
             "- 서비스가 불명확하면 triage를 사용한다.",
             "- orchestration worker pane에서 서비스 작업을 장시간 직접 처리하지 않는다.",
             "response_contract:",
@@ -331,7 +354,7 @@ def ticket_lead_prompt(config: Config, ticket_id: str, *, service: str = "triage
         f"너는 {ticket_id} ticket-lead다. Global orchestrator가 {service_label} space의 이 티켓 tab을 맡겼다. "
         "/ad:work-prep 기준으로 YouTrack을 읽기 전용 조회하고, 서비스 카탈로그/하네스 정책/관련 vault note를 확인한다. "
         "작업 유형을 판단해서 analyst, planner, architect, developer, reviewer, qa, designer, data 중 필요한 role agent만 생성한다. "
-        f"role agent는 `{team2_agent} herdr role --service {service} {ticket_id} analyst \"요구사항과 코드 진입점 분석\"`처럼 띄운다. "
+        f"role agent는 `{team2_agent} herdr role --engine {config.agent_engine} --service {service} {ticket_id} analyst \"요구사항과 코드 진입점 분석\"`처럼 띄운다. "
         "각 role agent의 결과를 티켓별 위키 note에 모으고, Decision Needed/Approval Needed/Blocked만 Global orchestrator에게 짧게 반환한다. "
         "사용자 확인 없이 YouTrack/KB/git commit/push/PR/DB/prod 변경을 하지 않는다."
     )
@@ -344,7 +367,7 @@ def work_lead_prompt(config: Config, work_id: str, *, service: str = "triage", i
         f"너는 {work_id} work-lead다. Global orchestrator 또는 worker가 {service_label} space의 이 work tab을 맡겼다. "
         "팀 서비스 기준 강제 구조는 서비스 space -> ticket/work tab -> worker pane이다. "
         "서비스 카탈로그/하네스 정책/관련 vault note를 확인하고, 필요한 role agent만 생성한다. "
-        f"role agent는 `{team2_agent} herdr role --service {service} {work_id} developer \"구현 후보와 검증 방법 정리\"`처럼 띄운다. "
+        f"role agent는 `{team2_agent} herdr role --engine {config.agent_engine} --service {service} {work_id} developer \"구현 후보와 검증 방법 정리\"`처럼 띄운다. "
         "각 role agent의 결과를 작업별 위키 note에 모으고, Decision Needed/Approval Needed/Blocked만 Global orchestrator에게 짧게 반환한다. "
         "사용자 확인 없이 YouTrack/KB/git commit/push/PR/DB/prod 변경을 하지 않는다."
     )
@@ -520,7 +543,7 @@ def start_orchestrator_command(
     config: Config,
     *,
     workspace_id: str | None = None,
-    engine: str = "codex",
+    engine: str | None = None,
     split: str = "right",
     focus: bool | None = None,
 ) -> list[str]:
@@ -537,7 +560,8 @@ def start_orchestrator_command(
     command.extend(["--split", split])
     if focus is not None:
         command.append("--focus" if focus else "--no-focus")
-    command.extend(["--", *ai_argv(engine, orchestrator_prompt(config), config)])
+    selected_engine = engine or config.agent_engine
+    command.extend(["--", *ai_argv(selected_engine, orchestrator_prompt(config), config)])
     return command
 
 
@@ -545,7 +569,7 @@ def start_worker_command(
     config: Config,
     *,
     workspace_id: str | None = None,
-    engine: str = "codex",
+    engine: str | None = None,
     name: str = DEFAULT_ORCHESTRATION_WORKERS[0],
     instruction: str = "",
     split: str = "down",
@@ -564,7 +588,8 @@ def start_worker_command(
     command.extend(["--split", split])
     if focus is not None:
         command.append("--focus" if focus else "--no-focus")
-    command.extend(["--", *ai_argv(engine, worker_prompt(config, instruction), config)])
+    selected_engine = engine or config.agent_engine
+    command.extend(["--", *ai_argv(selected_engine, worker_prompt(config, instruction), config)])
     return command
 
 
@@ -575,7 +600,7 @@ def start_ticket_lead_command(
     tab_id: str | None = None,
     ticket_id: str,
     service: str = "triage",
-    engine: str = "codex",
+    engine: str | None = None,
     cwd: Path | None = None,
 ) -> list[str]:
     agent_cwd = cwd or config.harness
@@ -591,7 +616,8 @@ def start_ticket_lead_command(
         command.extend(["--tab", tab_id])
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
-    command.extend(["--split", "down", "--", *ai_argv(engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=agent_cwd)])
+    selected_engine = engine or config.agent_engine
+    command.extend(["--split", "down", "--", *ai_argv(selected_engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=agent_cwd)])
     return command
 
 
@@ -603,7 +629,7 @@ def start_work_lead_command(
     work_id: str,
     service: str = "triage",
     instruction: str = "",
-    engine: str = "codex",
+    engine: str | None = None,
     cwd: Path | None = None,
 ) -> list[str]:
     agent_cwd = cwd or config.harness
@@ -619,7 +645,8 @@ def start_work_lead_command(
         command.extend(["--tab", tab_id])
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
-    command.extend(["--split", "down", "--", *ai_argv(engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=agent_cwd)])
+    selected_engine = engine or config.agent_engine
+    command.extend(["--split", "down", "--", *ai_argv(selected_engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=agent_cwd)])
     return command
 
 
@@ -632,7 +659,7 @@ def start_role_agent_command(
     role: str,
     instruction: str = "",
     service: str = "triage",
-    engine: str = "codex",
+    engine: str | None = None,
     cwd: Path | None = None,
 ) -> list[str]:
     agent_cwd = cwd or config.harness
@@ -648,7 +675,8 @@ def start_role_agent_command(
         command.extend(["--tab", tab_id])
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
-    command.extend(["--split", "down", "--", *ai_argv(engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=agent_cwd)])
+    selected_engine = engine or config.agent_engine
+    command.extend(["--split", "down", "--", *ai_argv(selected_engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=agent_cwd)])
     return command
 
 
@@ -657,7 +685,7 @@ def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, se
         return [
             ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, ticket_cell_name(ticket_id)], config.harness),
             ExecutionStep(
-                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", ticket_lead_prompt(config, ticket_id, service=service), config, cwd=cwd)],
+                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command(config.agent_engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=cwd)],
                 config.harness,
             ),
         ]
@@ -669,7 +697,7 @@ def start_work_lead_steps(config: Config, tab: HerdrTab, work_id: str, *, servic
         return [
             ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, work_cell_name(work_id)], config.harness),
             ExecutionStep(
-                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=cwd)],
+                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command(config.agent_engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=cwd)],
                 config.harness,
             ),
         ]
@@ -681,7 +709,7 @@ def start_role_agent_steps(config: Config, tab: HerdrTab, ticket_id: str, role: 
         return [
             ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, role_agent_name(ticket_id, role)], config.harness),
             ExecutionStep(
-                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command("codex", role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=cwd)],
+                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command(config.agent_engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=cwd)],
                 config.harness,
             ),
         ]
@@ -717,6 +745,7 @@ def start_board_command(config: Config, *, workspace_id: str | None = None) -> l
 
 
 def herdr_steps_for(args: argparse.Namespace, config: Config) -> list[ExecutionStep]:
+    config = config_with_engine(config, args)
     if args.herdr_command == "doctor":
         commands = [
             [HERDR, "status"],
@@ -1102,6 +1131,8 @@ def run(
 ) -> int:
     cfg = config or default_config()
     parsed = parse_args(argv)
+    if parsed.command == "herdr":
+        cfg = config_with_engine(cfg, parsed)
     if parsed.command == "herdr" and parsed.herdr_command == "open":
         return run_herdr_open(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "refresh-global":

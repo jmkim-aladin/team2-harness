@@ -20,14 +20,15 @@ team2-agent decide t_36a47508 "A안으로 결정. 원본 위키에 기록"
 team2-agent herdr doctor
 team2-agent herdr install-hooks
 team2-agent herdr open
+team2-agent herdr open --engine claude
 team2-agent herdr open --no-attach
-team2-agent herdr tickets --service max --concurrency 4 DEV2-6509 DEV2-6510
-team2-agent herdr worker orch-worker-3 "추가 분석 작업"
-team2-agent herdr role --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
+team2-agent herdr tickets --engine claude --service max --concurrency 4 DEV2-6509 DEV2-6510
+team2-agent herdr worker --engine claude orch-worker-3 "추가 분석 작업"
+team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
 team2-agent herdr sync
 ```
 
-herdr 작업실이 열린 뒤 사용자는 `team2-orchestration` space의 `global-orchestrator` pane에 자연어로 지시한다. 기본 작업실은 `global-orchestrator`, `orch-worker-1`, `orch-worker-2`를 확보하고, 티켓 묶음은 서비스 space 안의 티켓별 tab으로 나눈다. 각 tab의 ticket-lead는 analyst/developer/reviewer/QA/designer/data/architect role agent pane을 필요한 만큼만 띄운다. Hermes board와 desktop cockpit은 orchestrator가 필요할 때 조회하는 내부 상태 도구로 둔다. CLI action 명령은 사람용 주 인터페이스가 아니라 orchestrator/worker/ticket-lead가 쓰는 내부 도구다.
+herdr 작업실이 열린 뒤 사용자는 `team2-orchestration` space의 `global-orchestrator` pane에 자연어로 지시한다. 기본 작업실은 `global-orchestrator`만 확보하고, `--engine {codex|claude}`로 새 agent engine을 선택한다. 티켓 묶음은 서비스 space 안의 티켓별 tab으로 나눈다. 각 tab의 ticket-lead는 analyst/developer/reviewer/QA/designer/data/architect role agent pane을 필요한 만큼만 띄운다. Hermes board와 desktop cockpit은 orchestrator가 필요할 때 조회하는 내부 상태 도구로 둔다. CLI action 명령은 사람용 주 인터페이스가 아니라 orchestrator/worker/ticket-lead가 쓰는 내부 도구다.
 
 ### 역할
 
@@ -37,9 +38,9 @@ herdr 작업실이 열린 뒤 사용자는 `team2-orchestration` space의 `globa
 - `brief`, `ask`, `delegate`, `decide`, `approve`, `revise`, `split`, `snooze`, `done`: action queue 기록 + Hermes task 댓글 기록
 - `herdr doctor`: herdr server, integration, workspace 상태 확인
 - `herdr install-hooks`: Codex/Claude Code herdr hook 설치
-- `herdr open`: `team2-orchestration` space를 focus하고 `global-orchestrator`/`orch-worker-1`/`orch-worker-2` 기본 작업실을 보정하거나, 없으면 새 작업실을 만든 뒤 herdr session attach
+- `herdr open`: `team2-orchestration` space를 focus하고 `global-orchestrator`만 보정하거나, 없으면 새 작업실을 만든 뒤 herdr session attach
 - `herdr open --no-attach`: herdr session attach 없이 workspace focus/준비만 수행
-- `herdr worker`: `team2-orchestration` space에 추가 worker 슬롯 시작
+- `herdr worker`: `team2-orchestration` space에 작업 단위 worker 시작
 - `herdr tickets`: 서비스 space에 티켓별 tab을 만들고 ticket-lead를 concurrency 한도만큼 시작
 - `herdr role`: 특정 서비스 space의 티켓 tab 안에 role agent 시작
 - `herdr sync`: 전체 cycle과 cockpit 갱신 후 herdr 알림 표시

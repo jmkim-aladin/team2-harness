@@ -64,10 +64,11 @@ herdr를 로컬 작업실로 쓸 때는 hook을 한 번 설치하고 `team2-orch
 team2-agent herdr doctor
 team2-agent herdr install-hooks
 team2-agent herdr open
-team2-agent herdr tickets --service max --concurrency 4 DEV2-6509 DEV2-6510
+team2-agent herdr open --engine claude
+team2-agent herdr tickets --engine claude --service max --concurrency 4 DEV2-6509 DEV2-6510
 ```
 
-`open` 후에는 `team2-orchestration` space의 `global-orchestrator` pane에 자연어로 지시한다. herdr 계층은 `space=오케스트레이션/서비스 경계`, `tab=티켓/작업 단위`, `pane=임시 role agent`로 쓴다. 여러 티켓을 병렬 분석할 때는 orchestrator가 서비스 판정에 필요한 최소 정보만 확인해 서비스 space에 티켓별 tab을 만들고, 티켓 상세 정리와 상태 판단은 각 tab의 `ticket-lead`가 맡는다. `ticket-lead`는 업무 유형에 따라 analyst/developer/reviewer/QA/designer/data/architect role agent를 필요한 만큼만 띄운다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. `team2-agent brief ...` 같은 내부 명령은 사용자가 직접 치기보다 orchestrator가 필요할 때 실행한다.
+`open` 후에는 `team2-orchestration` space의 `global-orchestrator` pane에 자연어로 지시한다. 기본 agent engine은 codex이고, Claude Code로 시작하려면 `team2-agent herdr open --engine claude`를 사용한다. `open` 때 선택한 engine은 orchestrator가 후속으로 띄우는 `worker`/`tickets`/`work`/`role` 명령 예시에 반영된다. herdr 계층은 `space=오케스트레이션/서비스 경계`, `tab=티켓/작업 단위`, `pane=임시 role agent`로 쓴다. 여러 티켓을 병렬 분석할 때는 orchestrator가 서비스 판정에 필요한 최소 정보만 확인해 서비스 space에 티켓별 tab을 만들고, 티켓 상세 정리와 상태 판단은 각 tab의 `ticket-lead`가 맡는다. `ticket-lead`는 업무 유형에 따라 analyst/developer/reviewer/QA/designer/data/architect role agent를 필요한 만큼만 띄운다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. `team2-agent brief ...` 같은 내부 명령은 사용자가 직접 치기보다 orchestrator가 필요할 때 실행한다.
 
 ```text
 지금 내가 결정해야 할 것만 순서대로 보여줘.
@@ -80,13 +81,13 @@ DEV2-6509는 자동결제인지 재가입인지 판단해서 선택지만 줘.
 동시에 맡길 비서비스 작업이 더 많으면 orchestrator가 아래 형식으로 작업 단위 worker를 동적으로 띄운다. instruction이 있는 worker는 결과를 읽은 뒤 자동으로 pane을 닫는다.
 
 ```bash
-team2-agent herdr worker orch-worker-3 "분석 범위와 산출물 기준을 정리해줘"
+team2-agent herdr worker --engine claude orch-worker-3 "분석 범위와 산출물 기준을 정리해줘"
 ```
 
 ticket-lead가 cell 안의 협업자를 직접 띄워야 할 때는 아래 형식을 사용한다.
 
 ```bash
-team2-agent herdr role --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
+team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
 ```
 
 ### 수동 셋업

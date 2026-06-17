@@ -152,6 +152,32 @@ class Team2AgentTests(unittest.TestCase):
             ],
         )
 
+    def test_herdr_open_can_start_orchestrator_with_claude_engine(self) -> None:
+        config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
+        parsed = agent.parse_args(["herdr", "open", "--engine", "claude"])
+        engine_config = config._replace(agent_engine="claude")
+
+        steps = agent.steps_for(parsed, config)
+
+        self.assertEqual(
+            [step.command for step in steps],
+            [
+                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--focus"],
+                [
+                    "herdr",
+                    "agent",
+                    "start",
+                    "global-orchestrator",
+                    "--cwd",
+                    "/repo",
+                    "--split",
+                    "right",
+                    "--",
+                    *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config),
+                ],
+            ],
+        )
+
     def test_board_shell_command_uses_absolute_team2_agent_path(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
 
@@ -167,7 +193,7 @@ class Team2AgentTests(unittest.TestCase):
 
         self.assertIn("자연어", prompt)
         self.assertIn("team2-agent board", prompt)
-        self.assertIn("/repo/bin/team2-agent herdr worker orch-worker-1", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr worker --engine codex orch-worker-1", prompt)
         self.assertIn("Decision Needed", prompt)
         self.assertIn("사용자 확인 없이", prompt)
         self.assertIn("inbox/router", prompt)
@@ -175,7 +201,7 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("필요할 때만", prompt)
         self.assertIn("자동으로 닫", prompt)
         self.assertNotIn("기존 worker", prompt)
-        self.assertIn("/repo/bin/team2-agent herdr tickets --service", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr tickets --engine codex --service", prompt)
         self.assertIn("서비스 space", prompt)
         self.assertIn("ticket tab", prompt)
         self.assertIn("worker pane", prompt)
@@ -186,14 +212,24 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("티켓 상세 정리", prompt)
         self.assertIn("ticket-lead가 담당", prompt)
 
+    def test_orchestrator_prompt_passes_selected_engine_to_new_panes(self) -> None:
+        config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")._replace(agent_engine="claude")
+
+        prompt = agent.orchestrator_prompt(config)
+
+        self.assertIn("/repo/bin/team2-agent herdr worker --engine claude orch-worker-1", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr tickets --engine claude", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr work --engine claude", prompt)
+
     def test_worker_prompt_accepts_delegated_work_from_orchestrator(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
 
         prompt = agent.worker_prompt(config)
 
         self.assertIn("global-orchestrator가 `/repo/bin/team2-agent herdr ask", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr worker --engine codex orch-worker-N", prompt)
         self.assertIn("완료/막힘/결정 필요", prompt)
-        self.assertIn("/repo/bin/team2-agent herdr tickets --service", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr tickets --engine codex --service", prompt)
         self.assertIn("서비스 space", prompt)
         self.assertIn("ticket tab", prompt)
         self.assertIn("worker pane", prompt)
@@ -228,8 +264,8 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("task_id: DEV2-6509", packet)
         self.assertIn("expect: decision-brief", packet)
         self.assertIn("instruction: 만권당 구독취소 자동결제 판별", packet)
-        self.assertIn("/repo/bin/team2-agent herdr tickets --service", packet)
-        self.assertIn("/repo/bin/team2-agent herdr work --service", packet)
+        self.assertIn("/repo/bin/team2-agent herdr tickets --engine codex --service", packet)
+        self.assertIn("/repo/bin/team2-agent herdr work --engine codex --service", packet)
         self.assertIn("서비스 space", packet)
         self.assertIn("ticket/work tab", packet)
         self.assertIn("worker pane", packet)
@@ -556,6 +592,44 @@ class Team2AgentTests(unittest.TestCase):
             ],
         )
 
+    def test_run_herdr_worker_uses_requested_engine(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":3}]}}'
+        agent_stdout = '{"result":{"agent":{"name":"orch-worker-3","pane_id":"p-worker","agent_status":"idle","workspace_id":"w2"}}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        engine_config = config._replace(agent_engine="claude")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "agent", "get", "orch-worker-3"]:
+                return completed(stdout=agent_stdout)
+            if command == ["herdr", "agent", "read", "orch-worker-3", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"]:
+                return completed(stdout="RESULT_PACKET status=done")
+            return completed()
+
+        code = agent.run(["herdr", "worker", "--engine", "claude", "orch-worker-3", "DEV2-6509", "브리프"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertIn(
+            [
+                "herdr",
+                "agent",
+                "start",
+                "orch-worker-3",
+                "--cwd",
+                "/repo",
+                "--workspace",
+                "w2",
+                "--split",
+                "down",
+                "--",
+                *agent.ai_argv("claude", agent.worker_prompt(engine_config, "DEV2-6509 브리프"), engine_config),
+            ],
+            seen,
+        )
+
     def test_run_herdr_worker_without_instruction_keeps_manual_worker_open(self) -> None:
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":3}]}}'
@@ -707,7 +781,7 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("ticket-lead", prompt)
         self.assertIn("DEV2-6509", prompt)
         self.assertIn("/ad:work-prep", prompt)
-        self.assertIn("/repo/bin/team2-agent herdr role --service max DEV2-6509 analyst", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr role --engine codex --service max DEV2-6509 analyst", prompt)
         self.assertIn("필요한 role agent만", prompt)
         self.assertIn("사용자 확인 없이", prompt)
 
@@ -719,7 +793,7 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("work-lead", prompt)
         self.assertIn("aasm-resource-url-copy", prompt)
         self.assertIn("aasm space", prompt)
-        self.assertIn("/repo/bin/team2-agent herdr role --service aasm aasm-resource-url-copy developer", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr role --engine codex --service aasm aasm-resource-url-copy developer", prompt)
         self.assertIn("경로복사에도 resource URL 템플릿 적용", prompt)
 
     def test_run_herdr_tickets_reuses_root_pane_when_service_workspace_is_created(self) -> None:
@@ -773,6 +847,43 @@ class Team2AgentTests(unittest.TestCase):
                     "done",
                 ],
             ],
+        )
+
+    def test_run_herdr_tickets_uses_requested_engine_when_reusing_root_pane(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[]}}'
+        create_stdout = (
+            '{"result":{'
+            '"workspace":{"workspace_id":"w-max","active_tab_id":"t-root"},'
+            '"root_pane":{"pane_id":"p-root","tab_id":"t-root"}'
+            '}}'
+        )
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-root","label":"","workspace_id":"w-max"}]}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        engine_config = config._replace(agent_engine="claude")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "max", "--focus"]:
+                return completed(stdout=create_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
+                return completed(stdout=tabs_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "tickets", "--engine", "claude", "--service", "max", "--concurrency", "1", "DEV2-6509"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertIn(
+            [
+                "herdr",
+                "pane",
+                "run",
+                "p-root",
+                agent.ai_shell_command("claude", agent.ticket_lead_prompt(engine_config, "DEV2-6509", service="max"), engine_config),
+            ],
+            seen,
         )
 
     def test_run_herdr_work_reuses_root_pane_when_service_workspace_is_created(self) -> None:
@@ -969,6 +1080,52 @@ class Team2AgentTests(unittest.TestCase):
             ],
         )
 
+    def test_run_herdr_work_uses_requested_engine(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-aasm","label":"aasm","focused":false,"pane_count":1}]}}'
+        empty_tabs_stdout = '{"result":{"tabs":[]}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        engine_config = config._replace(agent_engine="claude")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
+                return completed(stdout=empty_tabs_stdout)
+            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--focus"]:
+                return completed(stdout='{"result":{"tab":{"tab_id":"t-work","label":"aasm-resource-url-copy","workspace_id":"w-aasm"}}}')
+            return completed()
+
+        code = agent.run(
+            ["herdr", "work", "--engine", "claude", "--service", "aasm", "aasm-resource-url-copy", "경로복사에도", "resource", "URL", "템플릿", "적용"],
+            config=config,
+            runner=runner,
+        )
+
+        self.assertEqual(code, 0)
+        self.assertIn(
+            [
+                "herdr",
+                "agent",
+                "start",
+                "work-aasm-resource-url-copy",
+                "--cwd",
+                "/repo",
+                "--tab",
+                "t-work",
+                "--split",
+                "down",
+                "--",
+                *agent.ai_argv(
+                    "claude",
+                    agent.work_lead_prompt(engine_config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"),
+                    engine_config,
+                ),
+            ],
+            seen,
+        )
+
     def test_run_herdr_role_starts_ticket_role_agent(self) -> None:
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-max","label":"max","focused":false,"pane_count":3}]}}'
@@ -1012,6 +1169,42 @@ class Team2AgentTests(unittest.TestCase):
                     *agent.ai_argv("codex", agent.role_agent_prompt(config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"), config),
                 ],
             ],
+        )
+
+    def test_run_herdr_role_uses_requested_engine(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-max","label":"max","focused":false,"pane_count":3}]}}'
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-6509","label":"DEV2-6509","workspace_id":"w-max"}]}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        engine_config = config._replace(agent_engine="claude")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
+                return completed(stdout=tabs_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "role", "--engine", "claude", "--service", "max", "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertIn(
+            [
+                "herdr",
+                "agent",
+                "start",
+                "ticket-DEV2-6509-analyst",
+                "--cwd",
+                "/repo",
+                "--tab",
+                "t-6509",
+                "--split",
+                "down",
+                "--",
+                *agent.ai_argv("claude", agent.role_agent_prompt(engine_config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"), engine_config),
+            ],
+            seen,
         )
 
     def test_run_herdr_open_adds_only_orchestrator_when_existing_workspace_has_one_pane(self) -> None:

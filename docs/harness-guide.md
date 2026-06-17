@@ -142,19 +142,20 @@ team2-agent board
 team2-agent cockpit
 ```
 
-herdr를 사용하는 로컬 작업실에서는 `team2-agent`가 Hermes/wiki 상태와 herdr 실행 표면을 연결한다. `herdr open`은 `team2-orchestration` space를 focus하고, 기본 작업실이 부족하면 `global-orchestrator`만 보정한 뒤 herdr session에 attach한다. 서비스 작업은 서비스별 space, 티켓/작업별 tab, 임시 role agent pane으로 나눈다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. 이미 herdr 안에서 실행 중이거나 attach가 필요 없으면 `--no-attach`를 붙인다. herdr는 원장이 아니므로 상태 판단은 Hermes Board와 vault note를 기준으로 한다.
+herdr를 사용하는 로컬 작업실에서는 `team2-agent`가 Hermes/wiki 상태와 herdr 실행 표면을 연결한다. `herdr open`은 `team2-orchestration` space를 focus하고, 기본 작업실이 부족하면 `global-orchestrator`만 보정한 뒤 herdr session에 attach한다. 기본 agent engine은 codex이며, Claude Code로 시작하려면 `--engine claude`를 붙인다. `open` 때 선택한 engine은 orchestrator prompt의 후속 `worker`/`tickets`/`work`/`role` 명령 예시에 반영된다. 서비스 작업은 서비스별 space, 티켓/작업별 tab, 임시 role agent pane으로 나눈다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. 이미 herdr 안에서 실행 중이거나 attach가 필요 없으면 `--no-attach`를 붙인다. herdr는 원장이 아니므로 상태 판단은 Hermes Board와 vault note를 기준으로 한다.
 
 ```bash
 team2-agent herdr doctor
 team2-agent herdr install-hooks
 team2-agent herdr open
+team2-agent herdr open --engine claude
 team2-agent herdr sync
-team2-agent herdr tickets --service max --concurrency 4 DEV2-6509 DEV2-6510
-team2-agent herdr worker orch-worker-3 "추가 분석 작업"
-team2-agent herdr role --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
+team2-agent herdr tickets --engine claude --service max --concurrency 4 DEV2-6509 DEV2-6510
+team2-agent herdr worker --engine claude orch-worker-3 "추가 분석 작업"
+team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
 ```
 
-사용자는 `global-orchestrator` pane에 자연어로 지시한다. 오래 걸리거나 병렬 처리할 비서비스 작업은 orchestrator가 `team2-agent herdr worker orch-worker-N "작업"`으로 작업 단위 worker를 동적으로 띄운다. instruction이 있는 worker는 결과를 읽은 뒤 자동으로 pane을 닫는다. DEV2 티켓 묶음은 orchestrator가 서비스 판정에 필요한 최소 정보만 확인한 뒤 `team2-agent herdr tickets --service {service}`로 서비스 space 안에 ticket tab을 만든다. 티켓 상세 정리, 분석, 상태 판단은 각 tab의 `ticket-lead`가 담당하며, `/ad:work-prep` 기준으로 필요한 role agent만 `team2-agent herdr role --service {service}`로 띄운다. `team2-agent board`, `cockpit`, `brief`, `ask`, `delegate`, `decide`, `done` 등은 orchestrator/worker/ticket-lead가 내부 도구로 사용한다.
+사용자는 `global-orchestrator` pane에 자연어로 지시한다. 오래 걸리거나 병렬 처리할 비서비스 작업은 orchestrator가 `team2-agent herdr worker --engine {codex|claude} orch-worker-N "작업"`으로 작업 단위 worker를 동적으로 띄운다. instruction이 있는 worker는 결과를 읽은 뒤 자동으로 pane을 닫는다. DEV2 티켓 묶음은 orchestrator가 서비스 판정에 필요한 최소 정보만 확인한 뒤 `team2-agent herdr tickets --engine {codex|claude} --service {service}`로 서비스 space 안에 ticket tab을 만든다. 티켓 상세 정리, 분석, 상태 판단은 각 tab의 `ticket-lead`가 담당하며, `/ad:work-prep` 기준으로 필요한 role agent만 `team2-agent herdr role --engine {codex|claude} --service {service}`로 띄운다. `team2-agent board`, `cockpit`, `brief`, `ask`, `delegate`, `decide`, `done` 등은 orchestrator/worker/ticket-lead가 내부 도구로 사용한다.
 
 board projection과 dispatch request만 갱신할 때는 아래 runner를 사용한다. 기존 ack를 읽어 중복 전송을 막은 pending batch를 만든다.
 
