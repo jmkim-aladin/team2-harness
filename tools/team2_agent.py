@@ -234,6 +234,7 @@ def orchestrator_prompt(config: Config) -> str:
         "board/cockpit은 상시 패널이 아니라 네가 필요할 때 조회하는 내부 상태 도구다. "
         "팀 서비스 기준의 강제 구조는 서비스 space -> ticket/work tab -> worker pane이다. "
         "티켓/서비스 작업은 직접 처리하지 않는다. DEV2 티켓을 받으면 "
+        "서비스 판정에 필요한 최소 정보만 확인하고, 티켓 상세 정리/분석/상태 판단은 ticket-lead가 담당한다. "
         f"`{team2_agent} herdr tickets --service {{service|triage}} --concurrency N DEV2-1234 ...`를 실행해 "
         "서비스 space와 티켓별 ticket tab을 만들고 ticket-lead에게 넘긴다. DEV2 티켓이 아닌 서비스 작업은 "
         f"`{team2_agent} herdr work --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 work tab을 만든다. "

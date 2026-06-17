@@ -139,7 +139,7 @@ DEV2-6509는 자동결제인지 재가입인지 판단해서 선택지만 줘.
 이건 A안으로 결정하고 나머지는 진행해.
 ```
 
-티켓 묶음이 들어오면 기본 단위는 서비스 space 안의 ticket tab이다. `1 ticket tab = 1 ticket-lead`를 유지하고, ticket-lead는 `/ad:work-prep` 기준으로 티켓을 분석한 뒤 업무 성격에 따라 analyst, planner, architect, developer, reviewer, QA, designer, data role agent pane을 필요한 만큼만 띄운다. 각 role agent는 해당 티켓의 근거만 만들고, 최종 요약과 Decision Needed/Approval Needed/Blocked 보고는 ticket-lead가 담당한다.
+티켓 묶음이 들어오면 기본 단위는 서비스 space 안의 ticket tab이다. orchestrator는 서비스 판정에 필요한 최소 정보만 확인하고, 티켓 상세 정리·분석·상태 판단은 ticket-lead에게 넘긴다. `1 ticket tab = 1 ticket-lead`를 유지하고, ticket-lead는 `/ad:work-prep` 기준으로 티켓을 분석한 뒤 업무 성격에 따라 analyst, planner, architect, developer, reviewer, QA, designer, data role agent pane을 필요한 만큼만 띄운다. 각 role agent는 해당 티켓의 근거만 만들고, 최종 요약과 Decision Needed/Approval Needed/Blocked 보고는 ticket-lead가 담당한다.
 
 ## Ticket Execution Loop
 

@@ -67,7 +67,7 @@ team2-agent herdr open
 team2-agent herdr tickets --service max --concurrency 4 DEV2-6509 DEV2-6510
 ```
 
-`open` 후에는 `team2-orchestration` space의 `global-orchestrator` pane에 자연어로 지시한다. herdr 계층은 `space=오케스트레이션/서비스 경계`, `tab=티켓/작업 단위`, `pane=임시 role agent`로 쓴다. 여러 티켓을 병렬 분석할 때는 서비스 space에 티켓별 tab을 만들고, 각 tab의 `ticket-lead`가 업무 유형에 따라 analyst/developer/reviewer/QA/designer/data/architect role agent를 필요한 만큼만 띄운다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. `team2-agent brief ...` 같은 내부 명령은 사용자가 직접 치기보다 orchestrator가 필요할 때 실행한다.
+`open` 후에는 `team2-orchestration` space의 `global-orchestrator` pane에 자연어로 지시한다. herdr 계층은 `space=오케스트레이션/서비스 경계`, `tab=티켓/작업 단위`, `pane=임시 role agent`로 쓴다. 여러 티켓을 병렬 분석할 때는 orchestrator가 서비스 판정에 필요한 최소 정보만 확인해 서비스 space에 티켓별 tab을 만들고, 티켓 상세 정리와 상태 판단은 각 tab의 `ticket-lead`가 맡는다. `ticket-lead`는 업무 유형에 따라 analyst/developer/reviewer/QA/designer/data/architect role agent를 필요한 만큼만 띄운다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. `team2-agent brief ...` 같은 내부 명령은 사용자가 직접 치기보다 orchestrator가 필요할 때 실행한다.
 
 ```text
 지금 내가 결정해야 할 것만 순서대로 보여줘.

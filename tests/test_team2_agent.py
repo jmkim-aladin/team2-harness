@@ -182,6 +182,9 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("팀 서비스 기준", prompt)
         self.assertIn("티켓/서비스 작업은 직접 처리하지 않는다", prompt)
         self.assertIn("오래 걸리는 작업은 직접 수행하지 않는다", prompt)
+        self.assertIn("서비스 판정에 필요한 최소 정보만", prompt)
+        self.assertIn("티켓 상세 정리", prompt)
+        self.assertIn("ticket-lead가 담당", prompt)
 
     def test_worker_prompt_accepts_delegated_work_from_orchestrator(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
