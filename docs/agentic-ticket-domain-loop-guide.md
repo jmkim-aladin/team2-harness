@@ -117,7 +117,7 @@ team2-agent delegate t_36a47508 planner "추천안과 리스크 정리"
 team2-agent decide t_36a47508 "A안으로 결정. 원본 위키에 기록"
 ```
 
-herdr 작업실에서는 아래 명령으로 상태 확인, hook 설치, orchestrator + worker pool 작업실 열기, 주기 동기화를 수행한다. herdr는 실행 화면일 뿐이고, durable record는 Hermes Board와 vault note에 남긴다. herdr 계층은 `space=오케스트레이션/서비스 경계`, `tab=티켓/작업 단위`, `pane=임시 role agent`로 쓴다. Hermes board와 desktop cockpit은 사용자가 계속 보는 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구로 둔다.
+herdr 작업실에서는 아래 명령으로 상태 확인, hook 설치, `global-orchestrator` 작업실 열기, 주기 동기화를 수행한다. herdr는 실행 화면일 뿐이고, durable record는 Hermes Board와 vault note에 남긴다. herdr 계층은 `space=오케스트레이션/서비스 경계`, `tab=티켓/작업 단위`, `pane=임시 role agent`로 쓴다. 비서비스 장기 작업은 `team2-agent herdr worker orch-worker-N "작업"`으로 작업 단위 worker를 동적으로 띄우며, instruction이 있는 worker는 결과를 읽은 뒤 자동으로 pane을 닫는다. Hermes board와 desktop cockpit은 사용자가 계속 보는 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구로 둔다.
 
 ```bash
 team2-agent herdr doctor

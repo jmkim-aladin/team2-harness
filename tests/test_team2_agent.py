@@ -20,6 +20,14 @@ def completed(returncode: int = 0, stdout: str = "", stderr: str = "") -> subpro
     return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr=stderr)
 
 
+def seeds_orch_worker(command: Sequence[str]) -> bool:
+    if command[:3] == ["herdr", "agent", "start"] and len(command) > 3:
+        return command[3].startswith("orch-worker")
+    if command[:3] in (["herdr", "agent", "rename"], ["herdr", "pane", "rename"]) and len(command) > 4:
+        return command[4].startswith("orch-worker")
+    return False
+
+
 class Team2AgentTests(unittest.TestCase):
     def test_cycle_builds_knowledge_cycle_apply_command(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
@@ -119,7 +127,7 @@ class Team2AgentTests(unittest.TestCase):
             ],
         )
 
-    def test_herdr_open_creates_team2_workspace_and_starts_orchestrator_worker_pool(self) -> None:
+    def test_herdr_open_creates_team2_workspace_and_starts_only_orchestrator(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
         parsed = agent.parse_args(["herdr", "open"])
 
@@ -141,31 +149,6 @@ class Team2AgentTests(unittest.TestCase):
                     "--",
                     *agent.ai_argv("codex", agent.orchestrator_prompt(config), config),
                 ],
-                [
-                    "herdr",
-                    "agent",
-                    "start",
-                    "orch-worker-1",
-                    "--cwd",
-                    "/repo",
-                    "--split",
-                    "right",
-                    "--focus",
-                    "--",
-                    *agent.ai_argv("codex", agent.worker_prompt(config), config),
-                ],
-                [
-                    "herdr",
-                    "agent",
-                    "start",
-                    "orch-worker-2",
-                    "--cwd",
-                    "/repo",
-                    "--split",
-                    "down",
-                    "--",
-                    *agent.ai_argv("codex", agent.worker_prompt(config), config),
-                ],
             ],
         )
 
@@ -184,11 +167,14 @@ class Team2AgentTests(unittest.TestCase):
 
         self.assertIn("자연어", prompt)
         self.assertIn("team2-agent board", prompt)
-        self.assertIn("/repo/bin/team2-agent herdr worker orch-worker-3", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr worker orch-worker-1", prompt)
         self.assertIn("Decision Needed", prompt)
         self.assertIn("사용자 확인 없이", prompt)
         self.assertIn("inbox/router", prompt)
-        self.assertIn("/repo/bin/team2-agent herdr ask orch-worker-1", prompt)
+        self.assertIn("/repo/bin/team2-agent herdr ask orch-worker-N", prompt)
+        self.assertIn("필요할 때만", prompt)
+        self.assertIn("자동으로 닫", prompt)
+        self.assertNotIn("기존 worker", prompt)
         self.assertIn("/repo/bin/team2-agent herdr tickets --service", prompt)
         self.assertIn("서비스 space", prompt)
         self.assertIn("ticket tab", prompt)
@@ -250,11 +236,14 @@ class Team2AgentTests(unittest.TestCase):
         seen: list[list[str]] = []
         config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
         expected_packet = agent.herdr_ask_packet(config, task_id="DEV2-6509", expect="decision-brief", instruction="만권당 분석")
+        agent_stdout = '{"result":{"agent":{"name":"orch-worker-1","pane_id":"p-worker","agent_status":"idle","workspace_id":"w2"}}}'
 
         def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
             seen.append(list(command))
             if command == ["herdr", "agent", "read", "orch-worker-1", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"]:
                 return completed(stdout="RESULT_PACKET status=done")
+            if command == ["herdr", "agent", "get", "orch-worker-1"]:
+                return completed(stdout=agent_stdout)
             return completed()
 
         code = agent.run(
@@ -270,6 +259,8 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "agent", "send", "orch-worker-1", expected_packet],
                 ["herdr", "agent", "wait", "orch-worker-1", "--status", "idle", "--timeout", "600000"],
                 ["herdr", "agent", "read", "orch-worker-1", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"],
+                ["herdr", "agent", "get", "orch-worker-1"],
+                ["herdr", "pane", "close", "p-worker"],
             ],
         )
 
@@ -368,26 +359,6 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "pane", "list", "--workspace", "w2"],
                 ["herdr", "workspace", "focus", "w2"],
                 ["herdr", "agent", "rename", "p1", "global-orchestrator"],
-                ["herdr", "agent", "rename", "p2", "orch-worker-1"],
-                ["herdr", "agent", "focus", "orch-worker-1"],
-                [
-                    "herdr",
-                    "agent",
-                    "start",
-                    "orch-worker-2",
-                    "--cwd",
-                    "/repo",
-                    "--workspace",
-                    "w2",
-                    "--split",
-                    "down",
-                    "--",
-                    *agent.ai_argv(
-                        "codex",
-                        agent.worker_prompt(agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")),
-                        agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2"),
-                    ),
-                ],
                 [
                     "herdr",
                     "notification",
@@ -420,7 +391,7 @@ class Team2AgentTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertNotIn(["herdr", "session", "attach", "default"], seen)
 
-    def test_run_herdr_open_adds_missing_workers_without_board_pane(self) -> None:
+    def test_run_herdr_open_does_not_seed_workers_without_board_pane(self) -> None:
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":2}]}}'
         panes_stdout = (
@@ -442,40 +413,29 @@ class Team2AgentTests(unittest.TestCase):
             code = agent.run(["herdr", "open", "--no-attach"], config=agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2"), runner=runner)
 
         self.assertEqual(code, 0)
-        self.assertIn(
-            [
-                "herdr",
-                "pane",
-                "rename",
-                "p2",
-                "orch-worker-1",
-            ],
+        self.assertEqual(
             seen,
-        )
-        self.assertIn(
             [
-                "herdr",
-                "agent",
-                "start",
-                "orch-worker-2",
-                "--cwd",
-                "/repo",
-                "--workspace",
-                "w2",
-                "--split",
-                "down",
-                "--",
-                *agent.ai_argv(
-                    "codex",
-                    agent.worker_prompt(agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")),
-                    agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2"),
-                ),
+                ["herdr", "workspace", "list"],
+                ["herdr", "pane", "list", "--workspace", "w2"],
+                ["herdr", "workspace", "focus", "w2"],
+                ["herdr", "agent", "rename", "p1", "global-orchestrator"],
+                [
+                    "herdr",
+                    "notification",
+                    "show",
+                    "team2-agent",
+                    "--body",
+                    "Focused existing team2 herdr workspace",
+                    "--sound",
+                    "done",
+                ],
             ],
-            seen,
         )
         self.assertFalse(any(command[:4] == ["herdr", "agent", "start", "board"] for command in seen))
+        self.assertFalse(any(seeds_orch_worker(command) for command in seen))
 
-    def test_run_herdr_open_reuses_shell_pane_for_second_worker_when_available(self) -> None:
+    def test_run_herdr_open_leaves_legacy_worker_panes_until_needed(self) -> None:
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":3}]}}'
         panes_stdout = (
@@ -499,20 +459,9 @@ class Team2AgentTests(unittest.TestCase):
 
         self.assertEqual(code, 0)
         self.assertIn(["herdr", "agent", "rename", "p1", "global-orchestrator"], seen)
-        self.assertIn(["herdr", "agent", "rename", "p3", "orch-worker-1"], seen)
-        self.assertIn(["herdr", "pane", "rename", "p2", "orch-worker-2"], seen)
-        self.assertIn(
-            [
-                "herdr",
-                "pane",
-                "run",
-                "p2",
-                agent.ai_shell_command("codex", agent.worker_prompt(agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")), agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")),
-            ],
-            seen,
-        )
+        self.assertFalse(any(seeds_orch_worker(command) for command in seen))
 
-    def test_run_herdr_open_bootstraps_new_workspace_as_three_pane_cockpit(self) -> None:
+    def test_run_herdr_open_bootstraps_new_workspace_with_single_orchestrator_pane(self) -> None:
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[]}}'
         create_stdout = (
@@ -556,48 +505,24 @@ class Team2AgentTests(unittest.TestCase):
                     *agent.ai_argv("codex", agent.orchestrator_prompt(config), config),
                 ],
                 ["herdr", "pane", "close", "p-root"],
-                [
-                    "herdr",
-                    "agent",
-                    "start",
-                    "orch-worker-1",
-                    "--cwd",
-                    "/repo",
-                    "--workspace",
-                    "w-new",
-                    "--split",
-                    "right",
-                    "--focus",
-                    "--",
-                    *agent.ai_argv("codex", agent.worker_prompt(config), config),
-                ],
-                [
-                    "herdr",
-                    "agent",
-                    "start",
-                    "orch-worker-2",
-                    "--cwd",
-                    "/repo",
-                    "--workspace",
-                    "w-new",
-                    "--split",
-                    "down",
-                    "--",
-                    *agent.ai_argv("codex", agent.worker_prompt(config), config),
-                ],
                 ["herdr", "notification", "show", "team2-agent", "--body", "Opened team2 orchestrator workspace", "--sound", "done"],
             ],
         )
 
-    def test_run_herdr_worker_starts_named_worker_in_orchestration_workspace(self) -> None:
+    def test_run_herdr_worker_closes_named_worker_after_instruction_result(self) -> None:
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":3}]}}'
+        agent_stdout = '{"result":{"agent":{"name":"orch-worker-3","pane_id":"p-worker","agent_status":"idle","workspace_id":"w2"}}}'
         config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
 
         def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
             seen.append(list(command))
             if command == ["herdr", "workspace", "list"]:
                 return completed(stdout=workspace_stdout)
+            if command == ["herdr", "agent", "get", "orch-worker-3"]:
+                return completed(stdout=agent_stdout)
+            if command == ["herdr", "agent", "read", "orch-worker-3", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"]:
+                return completed(stdout="RESULT_PACKET status=done")
             return completed()
 
         code = agent.run(["herdr", "worker", "orch-worker-3", "DEV2-6509", "브리프"], config=config, runner=runner)
@@ -620,6 +545,45 @@ class Team2AgentTests(unittest.TestCase):
                     "down",
                     "--",
                     *agent.ai_argv("codex", agent.worker_prompt(config, "DEV2-6509 브리프"), config),
+                ],
+                ["herdr", "agent", "wait", "orch-worker-3", "--status", "idle", "--timeout", "600000"],
+                ["herdr", "agent", "read", "orch-worker-3", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"],
+                ["herdr", "agent", "get", "orch-worker-3"],
+                ["herdr", "pane", "close", "p-worker"],
+            ],
+        )
+
+    def test_run_herdr_worker_without_instruction_keeps_manual_worker_open(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":3}]}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "worker", "orch-worker-3"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
+                ["herdr", "workspace", "list"],
+                [
+                    "herdr",
+                    "agent",
+                    "start",
+                    "orch-worker-3",
+                    "--cwd",
+                    "/repo",
+                    "--workspace",
+                    "w2",
+                    "--split",
+                    "down",
+                    "--",
+                    *agent.ai_argv("codex", agent.worker_prompt(config), config),
                 ],
             ],
         )
@@ -1047,7 +1011,7 @@ class Team2AgentTests(unittest.TestCase):
             ],
         )
 
-    def test_run_herdr_open_adds_orchestrator_and_worker_pool_when_existing_workspace_has_one_pane(self) -> None:
+    def test_run_herdr_open_adds_only_orchestrator_when_existing_workspace_has_one_pane(self) -> None:
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":1}]}}'
         panes_stdout = '{"result":{"panes":[{"pane_id":"p1"}]}}'
@@ -1087,50 +1051,8 @@ class Team2AgentTests(unittest.TestCase):
             seen,
         )
         self.assertIn(["herdr", "pane", "close", "p1"], seen)
-        self.assertIn(
-            [
-                "herdr",
-                "agent",
-                "start",
-                "orch-worker-1",
-                "--cwd",
-                "/repo",
-                "--workspace",
-                "w2",
-                "--split",
-                "right",
-                "--focus",
-                "--",
-                *agent.ai_argv(
-                    "codex",
-                    agent.worker_prompt(agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")),
-                    agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2"),
-                ),
-            ],
-            seen,
-        )
-        self.assertIn(
-            [
-                "herdr",
-                "agent",
-                "start",
-                "orch-worker-2",
-                "--cwd",
-                "/repo",
-                "--workspace",
-                "w2",
-                "--split",
-                "down",
-                "--",
-                *agent.ai_argv(
-                    "codex",
-                    agent.worker_prompt(agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")),
-                    agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2"),
-                ),
-            ],
-            seen,
-        )
         self.assertFalse(any(command[:4] == ["herdr", "agent", "start", "board"] for command in seen))
+        self.assertFalse(any(seeds_orch_worker(command) for command in seen))
 
     def test_orchestration_workspace_id_prefers_orchestration_space(self) -> None:
         workspace_stdout = (

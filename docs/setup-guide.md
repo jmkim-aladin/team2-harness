@@ -77,7 +77,7 @@ DEV2-6509는 자동결제인지 재가입인지 판단해서 선택지만 줘.
 
 이미 herdr 안에서 실행 중이거나 화면 attach 없이 workspace만 준비하려면 `team2-agent herdr open --no-attach`를 사용한다.
 
-동시에 맡길 작업이 더 많으면 orchestrator가 아래 형식으로 worker 슬롯을 추가한다.
+동시에 맡길 비서비스 작업이 더 많으면 orchestrator가 아래 형식으로 작업 단위 worker를 동적으로 띄운다. instruction이 있는 worker는 결과를 읽은 뒤 자동으로 pane을 닫는다.
 
 ```bash
 team2-agent herdr worker orch-worker-3 "분석 범위와 산출물 기준을 정리해줘"
