@@ -250,6 +250,23 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("/repo/bin/team2-agent herdr tickets --engine claude", prompt)
         self.assertIn("/repo/bin/team2-agent herdr work --engine claude", prompt)
 
+    def test_new_herdr_panes_default_to_vertical_split(self) -> None:
+        config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
+        tab = agent.HerdrTab("t-1", "DEV2-6509", "w-max")
+        commands = [
+            agent.start_orchestrator_command(config, workspace_id="w2"),
+            agent.start_worker_command(config, workspace_id="w2", name="orch-worker-3"),
+            agent.start_ticket_lead_command(config, tab_id="t-1", ticket_id="DEV2-6509", service="max"),
+            agent.start_work_lead_command(config, tab_id="t-1", work_id="aasm-resource-url-copy", service="aasm"),
+            agent.start_role_agent_command(config, tab_id="t-1", ticket_id="DEV2-6509", role="analyst", service="max"),
+            agent.start_board_command(config, workspace_id="w2"),
+            agent.start_ticket_lead_steps(config, tab, "DEV2-6509", service="max", cwd=Path("/repo"), instruction="후속")[0].command,
+        ]
+
+        for command in commands:
+            with self.subTest(command=command[:4]):
+                self.assertEqual(command[command.index("--split") + 1], "right")
+
     def test_worker_prompt_accepts_delegated_work_from_orchestrator(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
 
@@ -420,7 +437,7 @@ class Team2AgentTests(unittest.TestCase):
                     "--tab",
                     "t-work",
                     "--split",
-                    "down",
+                    "right",
                     "--",
                     *agent.ai_argv(
                         "codex",
@@ -778,7 +795,7 @@ class Team2AgentTests(unittest.TestCase):
                     "--workspace",
                     "w2",
                     "--split",
-                    "down",
+                    "right",
                     "--",
                     *agent.ai_argv("codex", agent.worker_prompt(config, "DEV2-6509 브리프"), config),
                 ],
@@ -820,7 +837,7 @@ class Team2AgentTests(unittest.TestCase):
                 "--workspace",
                 "w2",
                 "--split",
-                "down",
+                "right",
                 "--",
                 *agent.ai_argv("claude", agent.worker_prompt(engine_config, "DEV2-6509 브리프"), engine_config),
             ],
@@ -855,7 +872,7 @@ class Team2AgentTests(unittest.TestCase):
                     "--workspace",
                     "w2",
                     "--split",
-                    "down",
+                    "right",
                     "--",
                     *agent.ai_argv("codex", agent.worker_prompt(config), config),
                 ],
@@ -1187,7 +1204,7 @@ class Team2AgentTests(unittest.TestCase):
                     "--tab",
                     "t-6509",
                     "--split",
-                    "down",
+                    "right",
                     "--",
                     *agent.ai_argv("codex", agent.ticket_lead_prompt(config, "DEV2-6509", service="max"), config),
                 ],
@@ -1203,7 +1220,7 @@ class Team2AgentTests(unittest.TestCase):
                     "--tab",
                     "t-6510",
                     "--split",
-                    "down",
+                    "right",
                     "--",
                     *agent.ai_argv("codex", agent.ticket_lead_prompt(config, "DEV2-6510", service="max"), config),
                 ],
@@ -1260,7 +1277,7 @@ class Team2AgentTests(unittest.TestCase):
                     "--tab",
                     "t-work",
                     "--split",
-                    "down",
+                    "right",
                     "--",
                     *agent.ai_argv("codex", agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"), config),
                 ],
@@ -1312,7 +1329,7 @@ class Team2AgentTests(unittest.TestCase):
                 "--tab",
                 "t-work",
                 "--split",
-                "down",
+                "right",
                 "--",
                 *agent.ai_argv(
                     "claude",
@@ -1361,7 +1378,7 @@ class Team2AgentTests(unittest.TestCase):
                     "--tab",
                     "t-6509",
                     "--split",
-                    "down",
+                    "right",
                     "--",
                     *agent.ai_argv("codex", agent.role_agent_prompt(config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"), config),
                 ],
@@ -1397,7 +1414,7 @@ class Team2AgentTests(unittest.TestCase):
                 "--tab",
                 "t-6509",
                 "--split",
-                "down",
+                "right",
                 "--",
                 *agent.ai_argv("claude", agent.role_agent_prompt(engine_config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"), engine_config),
             ],

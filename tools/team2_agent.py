@@ -29,6 +29,7 @@ DEFAULT_HERDR_ASK_READ_LINES = 160
 DEFAULT_AGENT_ENGINE = "codex"
 AGENT_ENGINES = ("codex", "claude")
 TASK_KINDS = ("auto", "ticket", "work")
+DEFAULT_HERDR_PANE_SPLIT = "right"
 TICKET_CELL_ROLES = {
     "analyst",
     "architect",
@@ -634,7 +635,7 @@ def start_orchestrator_command(
     *,
     workspace_id: str | None = None,
     engine: str | None = None,
-    split: str = "right",
+    split: str = DEFAULT_HERDR_PANE_SPLIT,
     focus: bool | None = None,
 ) -> list[str]:
     command = [
@@ -662,7 +663,7 @@ def start_worker_command(
     engine: str | None = None,
     name: str = DEFAULT_ORCHESTRATION_WORKERS[0],
     instruction: str = "",
-    split: str = "down",
+    split: str = DEFAULT_HERDR_PANE_SPLIT,
     focus: bool | None = None,
 ) -> list[str]:
     command = [
@@ -707,7 +708,7 @@ def start_ticket_lead_command(
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
     selected_engine = engine or config.agent_engine
-    command.extend(["--split", "down", "--", *ai_argv(selected_engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=agent_cwd)])
+    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT, "--", *ai_argv(selected_engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=agent_cwd)])
     return command
 
 
@@ -736,7 +737,7 @@ def start_work_lead_command(
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
     selected_engine = engine or config.agent_engine
-    command.extend(["--split", "down", "--", *ai_argv(selected_engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=agent_cwd)])
+    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT, "--", *ai_argv(selected_engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=agent_cwd)])
     return command
 
 
@@ -766,7 +767,7 @@ def start_role_agent_command(
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
     selected_engine = engine or config.agent_engine
-    command.extend(["--split", "down", "--", *ai_argv(selected_engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=agent_cwd)])
+    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT, "--", *ai_argv(selected_engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=agent_cwd)])
     return command
 
 
@@ -796,7 +797,7 @@ def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, se
             "--tab",
             tab.tab_id,
             "--split",
-            "down",
+            DEFAULT_HERDR_PANE_SPLIT,
             "--",
             *ai_argv(config.agent_engine, ticket_lead_prompt(config, ticket_id, service=service, instruction=instruction), config, cwd=cwd),
         ]
@@ -852,7 +853,7 @@ def start_board_command(config: Config, *, workspace_id: str | None = None) -> l
     ]
     if workspace_id:
         command.extend(["--workspace", workspace_id])
-    command.extend(["--split", "down", "--", "zsh", "-lc", board_shell_command(config)])
+    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT, "--", "zsh", "-lc", board_shell_command(config)])
     return command
 
 
