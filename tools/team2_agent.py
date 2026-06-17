@@ -5,11 +5,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import NamedTuple, Sequence
+from typing import Callable, NamedTuple, Sequence
 
 
 DEFAULT_HARNESS = "/Users/jm/Documents/workspace/team2"
@@ -27,6 +28,7 @@ DEFAULT_HERDR_ASK_TIMEOUT_MS = 600000
 DEFAULT_HERDR_ASK_READ_LINES = 160
 DEFAULT_AGENT_ENGINE = "codex"
 AGENT_ENGINES = ("codex", "claude")
+TASK_KINDS = ("auto", "ticket", "work")
 TICKET_CELL_ROLES = {
     "analyst",
     "architect",
@@ -119,6 +121,48 @@ def config_with_engine(config: Config, args: argparse.Namespace) -> Config:
     return config._replace(agent_engine=engine) if engine else config
 
 
+def prompt_for_open_engine(config: Config, input_fn: Callable[[str], str]) -> str:
+    default_engine = config.agent_engine if config.agent_engine in AGENT_ENGINES else DEFAULT_AGENT_ENGINE
+    default_label = "Codex" if default_engine == "codex" else "Claude Code"
+    prompt = f"herdr open engine 선택 [1] Codex / [2] Claude Code (Enter={default_label}): "
+    choices = {
+        "1": "codex",
+        "c": "codex",
+        "codex": "codex",
+        "2": "claude",
+        "claude": "claude",
+        "claude code": "claude",
+        "claude-code": "claude",
+    }
+    while True:
+        answer = input_fn(prompt).strip().lower()
+        if not answer:
+            return default_engine
+        engine = choices.get(answer)
+        if engine:
+            return engine
+        sys.stderr.write("1(Codex) 또는 2(Claude Code)를 입력하세요.\n")
+
+
+def config_with_open_engine_prompt(
+    config: Config,
+    args: argparse.Namespace,
+    *,
+    input_fn: Callable[[str], str] | None = None,
+    interactive: bool | None = None,
+) -> Config:
+    if getattr(args, "engine", None):
+        return config
+    is_interactive = sys.stdin.isatty() if interactive is None else interactive
+    if not is_interactive:
+        return config
+    try:
+        engine = prompt_for_open_engine(config, input_fn or input)
+    except EOFError:
+        return config
+    return config._replace(agent_engine=engine)
+
+
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="team2-agent", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -158,6 +202,17 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     ask_parser.add_argument("--timeout-ms", type=int, default=DEFAULT_HERDR_ASK_TIMEOUT_MS)
     ask_parser.add_argument("--read-lines", type=int, default=DEFAULT_HERDR_ASK_READ_LINES)
     ask_parser.add_argument("instruction", nargs="+")
+    route_parser = herdr_sub.add_parser("route", help="Route a follow-up instruction to a ticket/work lead")
+    add_engine_option(route_parser)
+    route_parser.add_argument("--service", default="triage")
+    route_parser.add_argument("--kind", choices=TASK_KINDS, default="auto")
+    route_parser.add_argument("--expect", default="result")
+    route_parser.add_argument("work_ref")
+    route_parser.add_argument("instruction", nargs="+")
+    collect_parser = herdr_sub.add_parser("collect", help="Read recent output from a ticket/work lead without closing it")
+    collect_parser.add_argument("--kind", choices=TASK_KINDS, default="auto")
+    collect_parser.add_argument("--lines", type=int, default=DEFAULT_HERDR_ASK_READ_LINES)
+    collect_parser.add_argument("target")
     tickets_parser = herdr_sub.add_parser("tickets", help="Start one ticket-lead cell per ticket")
     add_engine_option(tickets_parser)
     tickets_parser.add_argument("--service", default="triage")
@@ -248,45 +303,40 @@ def board_shell_command(config: Config) -> str:
     return f"{team2_agent} board; {team2_agent} cockpit; exec zsh"
 
 
+STRUCTURE_RULE = "팀 서비스 기준: 서비스 space -> ticket/work tab -> worker pane."
+APPROVAL_BAN = "YouTrack/KB/git commit/push/PR/DB/prod 변경 금지"
+
+
 def orchestrator_prompt(config: Config) -> str:
     team2_agent = config.harness / "bin" / "team2-agent"
     return (
-        "너는 개발 2팀 로컬 orchestrator이며 inbox/router다. 사용자는 자연어로만 지시한다. "
-        "너는 team2-agent, Hermes Board, desktop cockpit, wiki, GBrain을 사용해 짧게 상태를 확인하고 "
-        "사용자에게는 결정이 필요한 사항만 묻는다. 오래 걸리는 작업은 직접 수행하지 않는다. "
-        "board/cockpit은 상시 패널이 아니라 네가 필요할 때 조회하는 내부 상태 도구다. "
-        "팀 서비스 기준의 강제 구조는 서비스 space -> ticket/work tab -> worker pane이다. "
-        "티켓/서비스 작업은 직접 처리하지 않는다. DEV2 티켓을 받으면 "
-        "서비스 판정에 필요한 최소 정보만 확인하고, 티켓 상세 정리/분석/상태 판단은 ticket-lead가 담당한다. "
+        "너는 개발 2팀 global-orchestrator이자 inbox/router다. 사용자는 자연어로만 지시한다. "
+        "team2-agent, Hermes Board, cockpit, wiki, GBrain으로 상태만 짧게 보고 Decision Needed만 묻는다. "
+        "오래 걸리는 작업은 직접 수행하지 않는다. "
+        f"{STRUCTURE_RULE} 티켓/서비스 작업은 직접 처리하지 않는다. "
+        "DEV2 티켓은 서비스 판정에 필요한 최소 정보만 보고, 티켓 상세 정리/분석/상태 판단은 ticket-lead가 담당한다. "
         f"`{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency N DEV2-1234 ...`를 실행해 "
-        "서비스 space와 티켓별 ticket tab을 만들고 ticket-lead에게 넘긴다. DEV2 티켓이 아닌 서비스 작업은 "
-        f"`{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 work tab을 만든다. "
-        "서비스가 불명확하면 triage를 쓴다. 분석/개발/정리처럼 서비스 소속이 아닌 오래 걸리는 일은 "
-        "worker를 필요할 때만 동적으로 띄운다. "
-        f"새 worker가 필요하면 `{team2_agent} herdr worker --engine {config.agent_engine} orch-worker-1 \"작업 설명\"`로 생성해 결과를 받고 자동으로 닫는다. "
-        f"이미 떠 있는 idle worker가 있으면 `{team2_agent} herdr ask orch-worker-N --expect result \"작업 설명\"`로 작업 패킷을 보낸다. "
-        "동시에 여러 비서비스 작업이 필요하면 orch-worker-2, orch-worker-3처럼 이름을 늘려 추가 worker를 띄운다. "
-        "사용자에게는 넘긴 내용과 다음 결정 질문만 짧게 말한 뒤 다시 대기한다. "
-        f"하네스 경로는 {config.harness} 이고, 먼저 `{team2_agent} board`와 `{team2_agent} cockpit`으로 상태를 확인한다. "
-        "Decision Needed를 최우선으로 A/B/보류/추가조사 선택지와 근거로 정리한다. "
-        "사용자 확인 없이 YouTrack/KB/git commit/push/PR/DB/prod 변경을 하지 않는다."
+        "서비스 space와 티켓별 ticket tab을 만든다. 비티켓 서비스 작업은 "
+        f"`{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`로 work tab을 만든다. "
+        "서비스 불명확하면 triage. 비서비스/단기 병렬 작업은 필요할 때만 "
+        f"`{team2_agent} herdr worker --engine {config.agent_engine} orch-worker-1 \"작업 설명\"`로 띄우고 결과 후 자동으로 닫는다. "
+        f"idle worker는 `{team2_agent} herdr ask orch-worker-N --expect result \"작업 설명\"`로 쓴다. "
+        f"후속 지시는 `{team2_agent} herdr route --engine {config.agent_engine} --service {{service|triage}} {{DEV2-1234|work-id}} \"후속 지시\"`, "
+        f"결과 확인은 `{team2_agent} herdr collect {{DEV2-1234|work-id}}`. "
+        f"먼저 `{team2_agent} board`와 `{team2_agent} cockpit` 확인. 사용자 확인 없이 {APPROVAL_BAN}."
     )
 
 
 def worker_prompt(config: Config, instruction: str = "") -> str:
     team2_agent = config.harness / "bin" / "team2-agent"
     prompt = (
-        f"너는 개발 2팀 worker다. global-orchestrator가 `{team2_agent} herdr ask orch-worker-N ...` 또는 "
-        f"`{team2_agent} herdr worker --engine {config.agent_engine} orch-worker-N \"...\"`로 넘긴 단일 작업만 처리한다. "
-        "팀 서비스 기준의 강제 구조는 서비스 space -> ticket/work tab -> worker pane이다. "
-        "티켓/서비스 작업은 직접 처리하지 않는다. DEV2 티켓을 받으면 "
-        f"`{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency 1 DEV2-1234`로 서비스 space와 ticket tab을 만들고 넘긴다. "
-        "DEV2 티켓이 아닌 서비스 작업은 "
-        f"`{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 work tab을 만든다. "
-        "서비스가 불명확하면 triage를 쓴다. "
-        f"하네스 경로는 {config.harness} 이고, 작업 전 관련 vault note와 하네스 정책을 확인한다. "
-        "사용자 또는 orchestrator의 명시 지시 전에는 YouTrack/KB/git commit/push/PR/DB/prod 변경을 하지 않는다. "
-        "대기 상태로 시작하고, 작업을 받으면 완료/막힘/결정 필요 상태와 근거, 검증 결과를 짧게 남긴다."
+        f"너는 worker다. global-orchestrator가 `{team2_agent} herdr ask orch-worker-N ...` 또는 "
+        f"`{team2_agent} herdr worker --engine {config.agent_engine} orch-worker-N \"...\"`로 준 단일 작업만 처리. "
+        f"{STRUCTURE_RULE} 티켓/서비스 작업은 직접 처리하지 않는다. "
+        f"DEV2 티켓은 `{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency 1 DEV2-1234`로 서비스 space/ticket tab 생성. "
+        f"비티켓은 `{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`로 work tab 생성. "
+        "서비스 불명확: triage. note/정책 확인. "
+        f"명시 지시 전 {APPROVAL_BAN}. 결과: 완료/막힘/결정 필요, 근거, 검증."
     )
     if instruction:
         prompt += f" 초기 위임 작업: {instruction}"
@@ -299,6 +349,27 @@ def ticket_cell_name(ticket_id: str) -> str:
 
 def work_cell_name(work_id: str) -> str:
     return f"work-{work_id}"
+
+
+def is_ticket_ref(work_ref: str) -> bool:
+    return bool(re.fullmatch(r"[A-Z][A-Z0-9]+-\d+", work_ref.strip()))
+
+
+def resolve_task_kind(kind: str, work_ref: str) -> str:
+    if kind in {"ticket", "work"}:
+        return kind
+    return "ticket" if is_ticket_ref(work_ref) else "work"
+
+
+def task_lead_name(work_ref: str, *, kind: str = "auto") -> str:
+    resolved = resolve_task_kind(kind, work_ref)
+    if resolved == "ticket":
+        if work_ref.startswith("ticket-"):
+            return work_ref
+        return ticket_cell_name(work_ref)
+    if work_ref.startswith("work-"):
+        return work_ref
+    return work_cell_name(work_ref)
 
 
 def role_agent_name(ticket_id: str, role: str) -> str:
@@ -332,44 +403,64 @@ def herdr_ask_packet(config: Config, *, task_id: str = "", expect: str = "result
             f"task_id: {task_id or 'none'}",
             f"expect: {expect or 'result'}",
             f"instruction: {instruction}",
-            "routing_contract:",
-            "- 팀 서비스 기준 강제 구조는 서비스 space -> ticket/work tab -> worker pane이다.",
-            f"- DEV2 티켓 작업이면 `{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency 1 DEV2-1234`로 재라우팅한다.",
-            f"- DEV2 티켓이 아닌 서비스 작업이면 `{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`으로 재라우팅한다.",
-            "- 서비스가 불명확하면 triage를 사용한다.",
-            "- orchestration worker pane에서 서비스 작업을 장시간 직접 처리하지 않는다.",
-            "response_contract:",
+            "routing:",
+            f"- {STRUCTURE_RULE}",
+            f"- DEV2 티켓: `{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency 1 DEV2-1234`.",
+            f"- 비티켓 서비스: `{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`.",
+            "- 서비스 불명확: triage. orchestration worker pane 장시간 처리 금지.",
+            "response:",
             "- RESULT_PACKET status=done|blocked|decision_needed",
-            "- summary: 한두 문장",
-            "- evidence: 파일/위키/명령 근거",
-            "- next: 다음 액션 또는 사용자 결정 질문",
+            "- summary/evidence/next: 짧게",
         ]
     )
 
 
-def ticket_lead_prompt(config: Config, ticket_id: str, *, service: str = "triage") -> str:
+def herdr_route_packet(config: Config, *, work_ref: str, expect: str = "result", instruction: str = "") -> str:
+    team2_agent = config.harness / "bin" / "team2-agent"
+    return "\n".join(
+        [
+            "[TEAM2_ROUTE_PACKET]",
+            f"work_ref: {work_ref}",
+            f"expect: {expect or 'result'}",
+            f"instruction: {instruction}",
+            "routing:",
+            "- 이미 생성된 ticket/work lead 후속 지시다.",
+            "- lead는 필요한 role agent만 열고 결과를 wiki/Hermes/GBrain 근거로 모은다.",
+            f"- role agent: `{team2_agent} herdr role --engine {config.agent_engine} --service {{service}} {work_ref} {{role}} \"작업\"`.",
+            "response:",
+            "- GLOBAL_RESULT_PACKET status=done|blocked|decision_needed|approval_needed",
+            "- summary/evidence/next: global이 물어볼 결정만",
+        ]
+    )
+
+
+def ticket_lead_prompt(config: Config, ticket_id: str, *, service: str = "triage", instruction: str = "") -> str:
     team2_agent = config.harness / "bin" / "team2-agent"
     service_label = service_workspace_label(service)
-    return (
-        f"너는 {ticket_id} ticket-lead다. Global orchestrator가 {service_label} space의 이 티켓 tab을 맡겼다. "
-        "/ad:work-prep 기준으로 YouTrack을 읽기 전용 조회하고, 서비스 카탈로그/하네스 정책/관련 vault note를 확인한다. "
-        "작업 유형을 판단해서 analyst, planner, architect, developer, reviewer, qa, designer, data 중 필요한 role agent만 생성한다. "
+    prompt = (
+        f"너는 {ticket_id} ticket-lead다. Global이 {service_label} space 티켓 tab 맡김. "
+        "/ad:work-prep 기준: YouTrack 읽기전용, 카탈로그/정책/vault note 확인. "
+        "필요한 role agent만 생성(analyst, planner, architect, developer, reviewer, qa, designer, data). "
         f"role agent는 `{team2_agent} herdr role --engine {config.agent_engine} --service {service} {ticket_id} analyst \"요구사항과 코드 진입점 분석\"`처럼 띄운다. "
-        "각 role agent의 결과를 티켓별 위키 note에 모으고, Decision Needed/Approval Needed/Blocked만 Global orchestrator에게 짧게 반환한다. "
-        "사용자 확인 없이 YouTrack/KB/git commit/push/PR/DB/prod 변경을 하지 않는다."
+        "TEAM2_ROUTE_PACKET은 후속 지시다. "
+        "role 결과는 위키 note에 모아 GLOBAL_RESULT_PACKET으로 Decision Needed/Approval Needed/Blocked만 반환한다. "
+        f"사용자 확인 없이 {APPROVAL_BAN}."
     )
+    if instruction:
+        prompt += f" 초기 라우팅 메시지: {instruction}"
+    return prompt
 
 
 def work_lead_prompt(config: Config, work_id: str, *, service: str = "triage", instruction: str = "") -> str:
     team2_agent = config.harness / "bin" / "team2-agent"
     service_label = service_workspace_label(service)
     prompt = (
-        f"너는 {work_id} work-lead다. Global orchestrator 또는 worker가 {service_label} space의 이 work tab을 맡겼다. "
-        "팀 서비스 기준 강제 구조는 서비스 space -> ticket/work tab -> worker pane이다. "
-        "서비스 카탈로그/하네스 정책/관련 vault note를 확인하고, 필요한 role agent만 생성한다. "
+        f"너는 {work_id} work-lead다. Global/worker가 {service_label} space work tab 맡김. "
+        f"{STRUCTURE_RULE} 카탈로그/정책/vault note 확인 후 필요한 role agent만 생성. "
         f"role agent는 `{team2_agent} herdr role --engine {config.agent_engine} --service {service} {work_id} developer \"구현 후보와 검증 방법 정리\"`처럼 띄운다. "
-        "각 role agent의 결과를 작업별 위키 note에 모으고, Decision Needed/Approval Needed/Blocked만 Global orchestrator에게 짧게 반환한다. "
-        "사용자 확인 없이 YouTrack/KB/git commit/push/PR/DB/prod 변경을 하지 않는다."
+        "TEAM2_ROUTE_PACKET은 후속 지시다. "
+        "role 결과는 위키 note에 모아 GLOBAL_RESULT_PACKET으로 Decision Needed/Approval Needed/Blocked만 반환한다. "
+        f"사용자 확인 없이 {APPROVAL_BAN}."
     )
     if instruction:
         prompt += f" 초기 작업: {instruction}"
@@ -389,9 +480,8 @@ def role_agent_prompt(config: Config, ticket_id: str, role: str, instruction: st
     }.get(role, "맡은 역할 관점에서 티켓을 분석한다.")
     prompt = (
         f"너는 {service_workspace_label(service)} space, {ticket_id} tab의 {role} role agent다. {role_hint} "
-        f"하네스 경로는 {config.harness} 이고, ticket-lead에게 보고할 근거 중심 결과만 만든다. "
-        "다른 티켓 컨텍스트와 섞지 말고, 필요한 경우 관련 vault note와 하네스 정책을 확인한다. "
-        "사용자 또는 ticket-lead의 명시 지시 전에는 YouTrack/KB/git commit/push/PR/DB/prod 변경을 하지 않는다."
+        f"하네스: {config.harness}. ticket/work lead에게 근거 중심 결과만 보고한다. "
+        f"다른 컨텍스트와 섞지 말고 필요 시 vault note/정책 확인. 명시 지시 전 {APPROVAL_BAN}."
     )
     if instruction:
         prompt += f" 위임 작업: {instruction}"
@@ -680,15 +770,37 @@ def start_role_agent_command(
     return command
 
 
-def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, service: str, cwd: Path) -> list[ExecutionStep]:
+def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, service: str, cwd: Path, instruction: str = "") -> list[ExecutionStep]:
     if tab.root_pane_id:
         return [
             ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, ticket_cell_name(ticket_id)], config.harness),
             ExecutionStep(
-                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command(config.agent_engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=cwd)],
+                [
+                    HERDR,
+                    "pane",
+                    "run",
+                    tab.root_pane_id,
+                    ai_shell_command(config.agent_engine, ticket_lead_prompt(config, ticket_id, service=service, instruction=instruction), config, cwd=cwd),
+                ],
                 config.harness,
             ),
         ]
+    if instruction:
+        command = [
+            HERDR,
+            "agent",
+            "start",
+            ticket_cell_name(ticket_id),
+            "--cwd",
+            str(cwd),
+            "--tab",
+            tab.tab_id,
+            "--split",
+            "down",
+            "--",
+            *ai_argv(config.agent_engine, ticket_lead_prompt(config, ticket_id, service=service, instruction=instruction), config, cwd=cwd),
+        ]
+        return [ExecutionStep(command, config.harness)]
     return [ExecutionStep(start_ticket_lead_command(config, tab_id=tab.tab_id, ticket_id=ticket_id, service=service, cwd=cwd), config.harness)]
 
 
@@ -952,6 +1064,68 @@ def run_herdr_ask(args: argparse.Namespace, config: Config, execute=None) -> int
     return 0
 
 
+def run_herdr_route(args: argparse.Namespace, config: Config, execute=None) -> int:
+    if execute is None:
+        execute = lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False, capture_output=True)
+    list_proc = execute([HERDR, "workspace", "list"], config.harness)
+    if list_proc.returncode != 0:
+        return int(list_proc.returncode)
+
+    service = args.service
+    work_ref = args.work_ref
+    instruction = instruction_text(args.instruction, "")
+    kind = resolve_task_kind(args.kind, work_ref)
+    lead_name = task_lead_name(work_ref, kind=kind)
+    workspace_cwd = service_workspace_cwd(service, config)
+    workspace = ensure_workspace(service_workspace_label(service), config, execute, cwd=workspace_cwd, known_output=list_proc.stdout or "")
+    if not workspace:
+        return 2
+    tab = ensure_ticket_tab(workspace, work_ref, config, execute, cwd=workspace_cwd)
+    if not tab:
+        return 2
+
+    get_proc = execute([HERDR, "agent", "get", lead_name], config.harness)
+    if get_proc.returncode == 0:
+        packet = herdr_route_packet(config, work_ref=work_ref, expect=args.expect, instruction=instruction)
+        send_proc = execute([HERDR, "agent", "send", lead_name, packet], config.harness)
+        if send_proc.returncode != 0:
+            return int(send_proc.returncode)
+    else:
+        if kind == "ticket":
+            steps = start_ticket_lead_steps(config, tab, work_ref, service=service, cwd=workspace_cwd, instruction=instruction)
+        else:
+            steps = start_work_lead_steps(config, tab, work_ref, service=service, instruction=instruction, cwd=workspace_cwd)
+        code = run_steps(steps, execute)
+        if code != 0:
+            return code
+
+    return run_steps(
+        [
+            ExecutionStep(
+                herdr_notify_command(f"Routed {work_ref} to {lead_name}", sound="done"),
+                config.harness,
+            )
+        ],
+        execute,
+    )
+
+
+def run_herdr_collect(args: argparse.Namespace, config: Config, execute=None) -> int:
+    should_emit = execute is None
+    if execute is None:
+        execute = lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False, capture_output=True)
+    target = args.target if args.target.startswith(("ticket-", "work-", "orch-worker-", ORCHESTRATOR_AGENT_NAME)) else task_lead_name(args.target, kind=args.kind)
+    read_proc = execute(
+        [HERDR, "agent", "read", target, "--source", "recent-unwrapped", "--lines", str(args.lines), "--format", "text"],
+        config.harness,
+    )
+    if read_proc.returncode != 0:
+        return int(read_proc.returncode)
+    if should_emit and read_proc.stdout:
+        sys.stdout.write(read_proc.stdout)
+    return 0
+
+
 def run_herdr_refresh_global(args: argparse.Namespace, config: Config, execute=None) -> int:
     if execute is None:
         execute = lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False, capture_output=True)
@@ -1128,11 +1302,15 @@ def run(
     *,
     config: Config | None = None,
     runner=None,
+    input_fn: Callable[[str], str] | None = None,
+    interactive: bool | None = None,
 ) -> int:
     cfg = config or default_config()
     parsed = parse_args(argv)
     if parsed.command == "herdr":
         cfg = config_with_engine(cfg, parsed)
+        if parsed.herdr_command == "open":
+            cfg = config_with_open_engine_prompt(cfg, parsed, input_fn=input_fn, interactive=interactive)
     if parsed.command == "herdr" and parsed.herdr_command == "open":
         return run_herdr_open(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "refresh-global":
@@ -1141,6 +1319,10 @@ def run(
         return run_herdr_worker(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "ask":
         return run_herdr_ask(parsed, cfg, runner)
+    if parsed.command == "herdr" and parsed.herdr_command == "route":
+        return run_herdr_route(parsed, cfg, runner)
+    if parsed.command == "herdr" and parsed.herdr_command == "collect":
+        return run_herdr_collect(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "work":
         return run_herdr_work(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "tickets":

@@ -327,6 +327,8 @@ python3 "$TEAM2_HARNESS_PATH/tools/run_team2_knowledge_cycle.py" \
 
 Hermes cron에서는 같은 명령을 `/workspace/team2`, `/workspace/team2-vault`, `http://gbrain-team2:3131/health` 기준으로 호출한다. GBrain MCP 검색과 야간 도메인 분석은 Hermes agent job이 담당하고, deterministic runner는 사용자 승인 없이 YouTrack, KB, git commit/push, DB, 배포, canonical 승격을 수행하지 않는다.
 
+컴퓨터 앞 herdr 작업실에서는 사용자가 `global-orchestrator`에게만 말한다. 글로벌은 최초 티켓/작업을 `team2-agent herdr tickets --engine {codex|claude} --service {service}` 또는 `team2-agent herdr work --engine {codex|claude} --service {service}`로 서비스 space와 ticket/work tab에 배치한다. 이미 생성된 tab에 후속 지시가 필요하면 `team2-agent herdr route --engine {codex|claude} --service {service} {DEV2-1234|work-id} "후속 지시"`로 ticket/work lead에게 보낸다. 하위 결과는 `team2-agent herdr collect {DEV2-1234|work-id}`로 읽고, 사용자는 Decision Needed, Approval Needed, Blocked만 확인한다.
+
 현재 로컬 PGLite 기반 GBrain은 `serve --http` 실행 중에 같은 DB로 `gbrain sync --all`을 직접 돌리면 lock 경합이 생긴다. 따라서 인덱스 최신화는 Hermes 컨테이너 안에서 Docker socket을 열어 처리하지 않고, host LaunchAgent `com.team2.gbrain-maintenance`가 매일 01:40 KST에 짧게 `gbrain-team2`를 멈춘 뒤 `sync --all`과 doctor snapshot을 실행하고 다시 올린다. 장기적으로 무중단 sync가 필요하면 GBrain을 Supabase/Postgres/Railway 구성으로 옮긴다.
 
 ## Discord Role Profile Orchestration

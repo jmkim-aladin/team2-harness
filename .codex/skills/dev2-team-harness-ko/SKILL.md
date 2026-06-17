@@ -1,58 +1,35 @@
 ---
 name: dev2-team-harness-ko
-description: "Use when a request needs development team 2 context from the team2 harness: policies, service catalog, KB, OKR, weekly reports, code review rules, data requests, sprint process, capacity planning, service activity, local wiki boundaries, or Claude Code ad command parity."
+description: "Use when a request needs DEV2/team2 harness context: policies, service catalog, KB, OKR, weekly reports, review rules, data requests, sprint/capacity/service activity, local wiki boundaries, or /ad:* parity."
 ---
 
 # 개발 2팀 하네스
 
-항상 `$TEAM2_HARNESS_PATH`를 source of truth로 사용한다. 기본값은 `/Users/jm/Documents/workspace/team2`다.
+`$TEAM2_HARNESS_PATH`가 source of truth다. 기본값: `/Users/jm/Documents/workspace/team2`.
 
-## 시작 절차
+## 절차
 
-1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`로 기준 경로를 잡는다.
-2. 요청 주제와 직접 관련된 하네스 파일만 읽는다.
-3. 정책에 정답이 있으면 그 기준으로 답하고, 정책이 없으면 가장 가까운 정책을 명시한 뒤 확인을 구한다.
-4. `/ad:*` 요청이면 `dev2-ad-commands-ko` 절차를 함께 적용한다.
+1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`.
+2. 요청과 직접 관련된 파일만 읽는다.
+3. 정책이 있으면 그대로 적용하고, 없으면 가장 가까운 정책을 밝히고 확인한다.
+4. `/ad:*` 요청은 `dev2-ad-commands-ko`도 적용한다.
 
-## 우선 참조 파일
+## 참조
 
-| 영역 | 파일 |
-|------|------|
-| 진입점 | `CLAUDE.md`, `AGENTS.md` |
-| 엔지니어링 | `policies/engineering-policy.md`, `policies/branching-strategy.md`, `policies/code-review-policy.md`, `policies/release-policy.md` |
-| AI/보안/장애 | `policies/ai-usage-policy.md`, `policies/security-policy.md`, `policies/incident-policy.md` |
-| 팀/KB | `policies/team-members.md`, `policies/knowledge-base-policy.md`, `policies/wiki-document-language-and-title-policy.md` |
-| 데이터 추출 | `policies/data-request-policy.md` |
-| 서비스 | `catalog/{service}.yaml` |
-| 스프린트 | `docs/sprint/*.md` |
-| 분석 | `docs/analysis-guides.md` |
+- 진입점: `CLAUDE.md`, `AGENTS.md`
+- 정책: `policies/engineering-policy.md`, `branching-strategy.md`, `code-review-policy.md`, `release-policy.md`, `ai-usage-policy.md`, `security-policy.md`, `incident-policy.md`, `team-members.md`, `knowledge-base-policy.md`, `wiki-document-language-and-title-policy.md`, `data-request-policy.md`
+- 서비스/스프린트/분석: `catalog/{service}.yaml`, `docs/sprint/*.md`, `docs/analysis-guides.md`
 
-## 외부 시스템 규칙
+## 외부·승인
 
-- YouTrack은 REST API와 `curl`만 사용한다. MCP 도구는 사용하지 않는다.
-- `YOUTRACK_TOKEN`이 shell 환경에 없으면 `~/.claude/settings.json`의 `env.YOUTRACK_TOKEN`을 `jq`로 읽되 값을 출력하지 않는다.
-- GitHub는 `gh` CLI를 사용한다.
-- DB 관련 MCP 도구는 사용하지 않는다. dev RDS `sqlcmd`는 read-only 조회만 허용한다.
-
-## 사용자 확인 게이트
-
-아래 작업은 초안 또는 계획까지만 자동 수행하고, 실행 전 명시 승인을 받는다.
-
-- YouTrack 티켓/Task 생성, 상태 전환, 담당자/필드 변경
-- YouTrack KB 생성/수정/삭제/이동
-- git 커밋, 푸시, 머지, PR 생성/머지
-- DB/SP 변경 및 프로덕션 배포
-
-개발2팀 하네스(`team2`) 자체 변경은 YouTrack 티켓 없이 진행할 수 있다. 정책, 카탈로그, 스킬, 템플릿, 하네스 도구, 에이전트 오케스트레이션, 운영 문서 변경이 대상이며, 서비스 제품 코드 변경은 제외한다. 하네스 예외 작업은 `policies/branching-strategy.md` 기준으로 `team2/{작업-slug}` 브랜치와 `[TEAM2] 작업 내용` 커밋을 사용할 수 있고, 사용자 명시 지시가 있으면 DEV2 티켓 없이 commit/merge/push 가능하다.
-
-로컬 Obsidian vault의 티켓 노트 생성·갱신·종료 반영은 사용자 확인 없이 진행한다. 사용자가 티켓 종료/완료/마감/닫힘을 요청하거나 완료 사실을 보고하면 `$ad-work-prep`/`work-prep.md`의 티켓 종료 모드에 따라 `ticket_status: done`, 필요 시 `decision_status: resolved`, 완료 기록을 바로 반영한다. 이는 YouTrack 상태 변경이 아니다.
+- YouTrack은 REST API/`curl`만 사용한다. 토큰은 env 또는 `~/.claude/settings.json`에서 읽되 출력하지 않는다.
+- GitHub는 `gh`; DB MCP 금지; dev RDS `sqlcmd`는 read-only 조회만 허용한다.
+- 승인 전 자동 실행 금지: YouTrack 티켓/Task/상태/필드, YouTrack KB, YouTrack/KB/git commit/push/merge/PR, DB/SP, 프로덕션 배포.
+- team2 하네스 자체 변경은 DEV2 티켓 없이 가능하다. 서비스 제품 코드는 제외한다. 사용자 명시 지시가 있으면 `[TEAM2]` 커밋/푸시 가능.
+- 로컬 Obsidian vault 티켓 노트 생성·갱신·종료 반영은 확인 없이 가능하다. 이는 YouTrack 상태 변경이 아니다.
 
 ## 저장 위치
 
-| 산출물 | 위치 |
-|--------|------|
-| 정책/가이드/서비스 카탈로그/스킬 | `$TEAM2_HARNESS_PATH` |
-| 도메인 분석, Querybook, daily/meetings/tickets 노트 | `$LOCAL_WIKI_PATH` 기본 `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2` |
-| 운영 데이터 추출 SQL | `AladinCommunication/data-requests-dev2` |
-| OKR | `docs/okr/` 또는 YouTrack KB 기준 |
-| 스프린트/주간 운영 산출물 | `docs/sprint/` |
+- `$TEAM2_HARNESS_PATH`: 정책, 가이드, 서비스 카탈로그, 스킬, 템플릿, 스프린트 산출물.
+- `$LOCAL_WIKI_PATH`: 도메인 분석, Querybook, daily/meetings/tickets 노트.
+- 운영 데이터 추출 SQL: `AladinCommunication/data-requests-dev2`.
