@@ -78,12 +78,14 @@ python3 /workspace/team2/tools/run_team2_knowledge_cycle.py \
 - YouTrack, YouTrack KB, DB, 배포, git commit/push를 호출하지 않는다.
 - vault draft/projection 파일만 갱신한다.
 - Hermes Kanban은 projection view로만 동기화한다. active decision/review task는 `blocked`로 유지하고, source card가 사라진 task는 `done`으로 이동한다.
-- Hermes Board 댓글 지시는 action queue로 수집한다. queue는 실행 요청 이벤트이지 원장이 아니다.
+- Hermes task 본문은 `Source of truth: wiki note`, `Projection: Hermes task`, `Vault path`를 포함한다. 기존 task에는 `TEAM2-SOURCE-LINK` 댓글을 한 번 남겨 같은 연결을 보강한다. task만 직접 완료하지 말고 wiki note 상태를 먼저 정리한다.
+- Hermes Board 댓글 지시는 action queue로 수집한다. queue는 실행 요청 이벤트이지 원장이 아니다. queue item은 `source_of_truth`, `vault_path`, `work_id`, `ticket_id`, `service`, `column`을 보존한다.
 - canonical 승격은 하지 않는다.
 
 ## sync_hermes_kanban.py — Hermes Kanban projection sync
 
 `wiki/projects/agentic-os/hermes-decision-board.json`을 읽어 Hermes Kanban `team2` 보드에 task를 생성/동기화한다. 매핑 state는 vault의 `wiki/projects/agentic-os/hermes-kanban-sync-state.json`에 저장한다.
+state item은 Hermes task id와 wiki 원장 경로를 연결하는 projection map이며, 최소 `task_id`, `card_id`, `vault_path`, `work_id`, `ticket_id`, `service`, `column`, `source_of_truth`를 보존한다.
 
 ### 사용법
 
@@ -102,6 +104,7 @@ python3 tools/sync_hermes_kanban.py --vault "$VAULT" --apply
 - board에 새 card가 있으면 Hermes task를 만든다.
 - active card는 사람 결정/검토 대기이므로 `blocked` 상태로 유지한다.
 - 이전 sync state에는 있지만 현재 board에 없는 card는 Hermes task를 `done`으로 이동한다.
+- Hermes task를 수동으로 `done` 처리하지 않는다. 먼저 source wiki note의 상태 필드를 정리하고 다음 sync가 task를 이동하게 둔다.
 
 ## import_hermes_board_actions.py — Hermes Board comment import
 
@@ -405,6 +408,27 @@ python3 tools/sync_granola_meetings.py \
 - 회의록 원문 확인은 `granola_url`을 우선 사용하고, vault에는 Granola generated block + 사람이 보강한 결정·후속 액션 중심으로 정리한다.
 - `--title-map`을 사용하면 기존 회의록의 frontmatter `title`, H1, daily note 링크 alias도 갱신한다. 파일명과 `canonical_id`는 기존 링크 안정성을 위해 유지한다.
 - 저장 후 `tools/lint_vault.py`와 `tools/generate_vault_indexes.py --target processes --apply`를 실행하면 Tolaría 탐색성이 좋아진다.
+
+## run_granola_sync_cycle.py — Hermes Granola 회의록 주기 sync
+
+Hermes cron에서 10분마다 실행하는 deterministic runner. 최근 Granola 변경분을 vault meeting note로 동기화하고, 변경된 회의록에만 `<!-- generated:granola-ai-enrichment -->` 후보 block을 추가한 뒤 process index, lint, team2 knowledge cycle을 이어서 실행한다.
+
+```bash
+# dry-run
+python3 tools/run_granola_sync_cycle.py --harness "$REPO" --vault "$VAULT" --json
+
+# 실 실행
+python3 tools/run_granola_sync_cycle.py --harness "$REPO" --vault "$VAULT" --apply
+```
+
+Hermes Docker에서는 `/Users/jm/.hermes-team2/scripts/team2-granola-sync-cycle.sh`가 이 runner를 호출한다. cron job은 `/Users/jm/.hermes-team2/cron/jobs.json`의 `team2 granola meeting sync cycle`이며 `every 10m`, `no_agent` 모드다. 변경이 없으면 wrapper가 `[SILENT]`만 출력해 Discord delivery를 억제한다.
+
+경계:
+
+- Granola 원본은 read-only다.
+- 기본으로 transcript를 저장하지 않고 daily note를 새로 만들지 않는다.
+- AI 보강은 티켓/서비스 후보 block만 작성한다. `결정`, `후속 액션`, `confirmed`, `canonical`, YouTrack/KB/DB/git 변경은 자동 처리하지 않는다.
+- API key는 Hermes `.env`의 `GRANOLA_API_KEY` 또는 host Keychain에서 관리하고 값은 출력하지 않는다.
 
 ## enrich_vault_relations.py — LLM 위키 관계 필드 보강
 

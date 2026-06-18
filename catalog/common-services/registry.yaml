@@ -1,0 +1,88 @@
+# 개발 2팀 공통 서비스 registry
+#
+# 팀 서비스 프로파일(catalog/{service_id}.yaml)과 분리한다.
+# 이 파일은 티켓/분석 시 반복 확인해야 할 공통 영향 경계의 하네스다.
+
+registry_kind: common-services
+policy: policies/common-service-policy.md
+updated_at: 2026-06-18
+
+defaults:
+  impact_check_required: true
+  confirmation_required_for_canonical: true
+  allowed_auto_actions:
+    - candidate-detection
+    - vault-draft-update
+    - relation-suggestion
+  forbidden_auto_actions:
+    - owner-request
+    - youtrack-mutation
+    - youtrack-kb-mutation
+    - db-write
+    - production-change
+    - canonical-promotion
+
+common_services:
+  - service_id: aladin-auth
+    display_name: 알라딘 인증
+    domain: identity-access
+    status: candidate
+    owner_scope: common
+    impact_check_required: true
+    description: 로그인, SSO, 세션, 권한, 회원 식별, partner user mapping에 영향을 주는 공통 인증 경계.
+    check_when:
+      - 로그인/로그아웃/세션/쿠키 변경
+      - SSO 또는 partner authentication 변경
+      - 권한, role, admin permission 변경
+      - 회원 식별자, custkey, partner user mapping 변경
+    known_consumers:
+      - max
+      - tobe
+      - shopping
+      - blog
+      - naru
+      - storefront
+    evidence_required:
+      - owner-confirmation
+      - api-contract
+      - auth-flow
+      - session-policy
+      - incident-runbook
+    notes:
+      - owner/API/repo/KB는 아직 후보 상태다. 확인 전 confirmed로 쓰지 않는다.
+
+  - service_id: new-billing
+    display_name: 뉴빌링
+    domain: billing-payment-settlement
+    status: evidence
+    lifecycle: development
+    integration_state: no-active-team2-integration
+    profile: new-billing.yaml
+    owner_scope: common
+    impact_check_required: true
+    description: 결제, 청구, 환불, 정산, 구독, 빌링키, 파트너 과금 흐름에 영향을 주는 개발 중 공통 billing API 경계.
+    source_repositories:
+      - https://github.com/AladinCommunication/billing-backend
+      - https://github.com/AladinCommunication/billing-frontend
+    check_when:
+      - 결제/환불/취소/정산 상태 변경
+      - 구독, 자동결제, 정기결제, 빌링키 변경
+      - 신규 빌링, 결제, 청구, 환불, 정산 기능 신설
+      - storefront, bazaar, max, tobe의 주문/정산 연동 변경
+      - 운영 데이터 추출에서 결제/정산 금액 또는 상태를 다룸
+    known_consumers: []
+    future_consumer_candidates:
+      - max
+      - tobe
+      - storefront
+      - bazaar
+    evidence_required:
+      - owner-confirmation
+      - api-contract
+      - state-contract
+      - reconciliation-rule
+      - rollback-policy
+    notes:
+      - backend/frontend 소스는 확인됨. 현재 팀 서비스와의 active 연동은 확인되지 않았다.
+      - 새로 만들어지는 빌링성 기능은 뉴빌링 API 경유를 우선 검토한다.
+      - owner/API contract 확인 전에는 production dependency나 canonical 지식으로 승격하지 않는다.

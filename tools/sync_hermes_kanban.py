@@ -132,17 +132,35 @@ def card_title(card: dict[str, Any]) -> str:
 
 def card_body(card: dict[str, Any]) -> str:
     summary = str(card.get("summary") or "No summary")
+    vault_path = str(card.get("path") or card.get("id") or "")
     return "\n".join(
         [
-            "Source: team2 vault projection",
+            "Source of truth: wiki note",
+            "Projection: Hermes task",
             f"Column: {card.get('column') or ''}",
             f"Work ID: {card.get('work_id') or ''}",
             f"Ticket ID: {card.get('ticket_id') or ''}",
             f"Service: {card.get('service') or ''}",
             f"Type: {card.get('type') or ''}",
-            f"Vault path: {card.get('path') or card.get('id') or ''}",
+            f"Vault path: {vault_path}",
+            "Do not mark this task done only in Hermes. Update the wiki note status fields first.",
             "",
             summary,
+        ]
+    )
+
+
+def source_link_comment(card: dict[str, Any]) -> str:
+    return "\n".join(
+        [
+            "TEAM2-SOURCE-LINK",
+            "source_of_truth: wiki-note",
+            "projection: hermes-task",
+            f"vault_path: {card.get('path') or card.get('id') or ''}",
+            f"work_id: {card.get('work_id') or ''}",
+            f"ticket_id: {card.get('ticket_id') or ''}",
+            f"service: {card.get('service') or ''}",
+            "rule: update wiki note status before marking this task done",
         ]
     )
 
@@ -294,6 +312,10 @@ def sync_from_vault(
         spec = task_spec(card, workspace=workspace)
         if not spec["card_id"]:
             continue
+        previous_item = previous_cards.get(spec["card_id"], {})
+        previous_source_link_comment_at = ""
+        if isinstance(previous_item, dict):
+            previous_source_link_comment_at = str(previous_item.get("source_link_comment_at") or "")
         operation: dict[str, Any] = {
             "action": "ensure_active",
             "card_id": spec["card_id"],
@@ -319,18 +341,51 @@ def sync_from_vault(
             task_id = str(task.get("id") or "")
             task_status = str(task.get("status") or "")
             operation.update({"task_id": task_id, "task_status": task_status, "status": "ok"})
-            next_cards[spec["card_id"]] = {
+            state_item = {
                 "task_id": task_id,
                 "title": spec["title"],
                 "column": card.get("column") or "",
                 "work_id": card.get("work_id") or "",
+                "ticket_id": card.get("ticket_id") or "",
+                "service": card.get("service") or "",
+                "type": card.get("type") or "",
                 "path": card.get("path") or card.get("id") or "",
+                "vault_path": card.get("path") or card.get("id") or "",
+                "source_of_truth": "wiki-note",
                 "status": spec["desired_status"],
                 "last_seen_at": timestamp,
                 "last_synced_at": timestamp,
             }
+            if previous_source_link_comment_at:
+                state_item["source_link_comment_at"] = previous_source_link_comment_at
+            next_cards[spec["card_id"]] = state_item
             operations.append(operation)
             is_new_mapping = spec["card_id"] not in previous_cards
+            if task_id and not is_new_mapping and not previous_source_link_comment_at:
+                comment_command = [
+                    hermes_cli,
+                    "kanban",
+                    "--board",
+                    kanban_board,
+                    "comment",
+                    task_id,
+                    source_link_comment(card),
+                    "--author",
+                    created_by,
+                ]
+                commented = runner(comment_command)
+                comment_operation = {
+                    "action": "source_link_comment",
+                    "card_id": spec["card_id"],
+                    "task_id": task_id,
+                }
+                if commented.returncode != 0:
+                    errors.append(command_error(comment_command, commented))
+                    comment_operation["status"] = "failed"
+                else:
+                    comment_operation["status"] = "ok"
+                    next_cards[spec["card_id"]]["source_link_comment_at"] = timestamp
+                operations.append(comment_operation)
             if task_id and (is_new_mapping or task_status != spec["desired_status"]):
                 block_command = [
                     hermes_cli,

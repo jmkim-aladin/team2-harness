@@ -37,6 +37,9 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 | Daily 운영 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/daily-meeting-operating-rule.md` | daily 아젠다 등록 |
 | 도메인 용어 링크 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/domain-term-linking-rule.md` | canonical 용어 링크 |
 | 서비스 카탈로그 | `$TEAM2_HARNESS_PATH/catalog/{서비스ID}.yaml` | 서비스 컨텍스트 |
+| 공통 서비스 정책 | `$TEAM2_HARNESS_PATH/policies/common-service-policy.md` | 공통 서비스 영향 확인 기준 |
+| 공통 서비스 registry | `$TEAM2_HARNESS_PATH/catalog/common-services/registry.yaml` | 알라딘 인증/뉴빌링 등 공통 영향 경계 |
+| 뉴빌링 프로파일 | `$TEAM2_HARNESS_PATH/catalog/common-services/new-billing.yaml` | 신규 빌링 API 경계 |
 | 팀원/오너 | `$TEAM2_HARNESS_PATH/policies/team-members.md` | 담당자 매핑 |
 
 ## 검증 순서 원칙
@@ -75,6 +78,9 @@ curl -s -H "$AUTH" \
 - 티켓 모드: 제목 `[서비스명] ...` prefix, 본문, custom field 의 Project/Service를 분석
 - 자유글 모드: 입력 텍스트의 서비스 키워드 (만권당/투비/naru/bazaar/aasm/shopping/storefront/caravan)로 추정
 - 추정된 서비스가 있으면 `$TEAM2_HARNESS_PATH/catalog/{서비스}.yaml` 을 로드해 owner·repo·tech stack을 컨텍스트로 묶는다
+- 로그인/SSO/세션/권한/회원 식별/결제/청구/환불/정산/구독/공유 DB·SP·API·event/outbox 단서가 있으면 `$TEAM2_HARNESS_PATH/policies/common-service-policy.md` 와 `$TEAM2_HARNESS_PATH/catalog/common-services/registry.yaml` 을 함께 로드한다
+- 신규 빌링, 결제, 정산, 구독, 빌링키 기능이면 `$TEAM2_HARNESS_PATH/catalog/common-services/new-billing.yaml` 을 로드하고, 뉴빌링 API 경유 여부와 미경유 사유를 `공통 서비스 영향`에 남긴다
+- 공통 서비스 후보가 있으면 위키 노트에 `공통 서비스 영향` 섹션을 추가하고, 오너 확인 전에는 candidate/evidence로만 기록한다. owner-confirmed 전까지 confirmed/canonical/done으로 승격하지 않는다
 - 서비스 추정 불가 시 사용자에게 질문
 
 ### 3.5 코드 레벨 진입점 분석 (자동)

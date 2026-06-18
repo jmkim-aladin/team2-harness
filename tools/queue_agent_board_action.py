@@ -153,9 +153,14 @@ def build_action_item(
         "created_at": created_at,
         "actor": actor,
         "source": source,
+        "source_of_truth": mapping.get("source_of_truth") or ("wiki-note" if mapping.get("card_id") else ""),
         "task_id": mapping.get("task_id") or "",
         "card_id": mapping.get("card_id") or "",
+        "vault_path": mapping.get("vault_path") or mapping.get("path") or mapping.get("card_id") or "",
         "work_id": mapping.get("work_id") or "",
+        "ticket_id": mapping.get("ticket_id") or "",
+        "service": mapping.get("service") or "",
+        "column": mapping.get("column") or "",
         "title": mapping.get("title") or "",
         "action": action,
         "instruction": instruction,
@@ -171,6 +176,7 @@ def action_comment(item: dict[str, Any]) -> str:
         f"status: {item['status']}",
         f"actor: {item['actor']}",
         f"card_id: {item['card_id']}",
+        f"vault_path: {item.get('vault_path', '')}",
         f"instruction: {item['instruction']}",
     ]
     return "\n".join(lines)

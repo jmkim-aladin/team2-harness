@@ -31,6 +31,12 @@ def write_state(vault: Path) -> None:
                     "wiki/processes/tickets/dev2-1001.md": {
                         "task_id": "t_1001",
                         "title": "[Decision Needed] DEV2-1001",
+                        "work_id": "DEV2-1001",
+                        "ticket_id": "DEV2-1001",
+                        "service": "[[max]]",
+                        "column": "Decision Needed",
+                        "vault_path": "wiki/processes/tickets/dev2-1001.md",
+                        "source_of_truth": "wiki-note",
                         "status": "blocked",
                     }
                 },
@@ -80,6 +86,10 @@ class ImportHermesBoardActionsTests(unittest.TestCase):
             snapshot = json.loads((vault / importer.DEFAULT_QUEUE_JSON).read_text(encoding="utf-8"))
             self.assertEqual(snapshot["items"][0]["action"], "delegate")
             self.assertEqual(snapshot["items"][0]["source"], "hermes-comment")
+            self.assertEqual(snapshot["items"][0]["source_of_truth"], "wiki-note")
+            self.assertEqual(snapshot["items"][0]["vault_path"], "wiki/processes/tickets/dev2-1001.md")
+            self.assertEqual(snapshot["items"][0]["ticket_id"], "DEV2-1001")
+            self.assertEqual(snapshot["items"][0]["service"], "[[max]]")
 
 
 if __name__ == "__main__":

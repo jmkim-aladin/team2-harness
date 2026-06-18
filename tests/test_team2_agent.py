@@ -438,10 +438,40 @@ class Team2AgentTests(unittest.TestCase):
         self.assertEqual(
             seen,
             [
+                ["herdr", "agent", "get", "orch-worker-1"],
                 ["herdr", "agent", "send", "orch-worker-1", expected_packet],
+                ["herdr", "pane", "send-keys", "p-worker", "Enter"],
                 ["herdr", "agent", "wait", "orch-worker-1", "--status", "idle", "--timeout", "600000"],
                 ["herdr", "agent", "read", "orch-worker-1", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"],
+                ["herdr", "pane", "close", "p-worker"],
+            ],
+        )
+
+    def test_run_herdr_ask_queues_packet_when_target_is_working(self) -> None:
+        seen: list[list[str]] = []
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        expected_packet = agent.herdr_ask_packet(config, task_id="", expect="result", instruction="상태 확인")
+        agent_stdout = '{"result":{"agent":{"name":"orch-worker-1","pane_id":"p-worker","agent_status":"working","workspace_id":"w2"}}}'
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "agent", "get", "orch-worker-1"]:
+                return completed(stdout=agent_stdout)
+            if command == ["herdr", "agent", "read", "orch-worker-1", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"]:
+                return completed(stdout="RESULT_PACKET status=done")
+            return completed()
+
+        code = agent.run(["herdr", "ask", "orch-worker-1", "상태", "확인"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
                 ["herdr", "agent", "get", "orch-worker-1"],
+                ["herdr", "agent", "send", "orch-worker-1", expected_packet],
+                ["herdr", "pane", "send-keys", "p-worker", "Tab"],
+                ["herdr", "agent", "wait", "orch-worker-1", "--status", "idle", "--timeout", "600000"],
+                ["herdr", "agent", "read", "orch-worker-1", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"],
                 ["herdr", "pane", "close", "p-worker"],
             ],
         )
@@ -475,9 +505,98 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "tab", "list", "--workspace", "w-max"],
                 ["herdr", "agent", "get", "ticket-DEV2-6509"],
                 ["herdr", "agent", "send", "ticket-DEV2-6509", packet],
+                ["herdr", "pane", "send-keys", "p-ticket", "Enter"],
+                ["herdr", "agent", "focus", "ticket-DEV2-6509"],
                 ["herdr", "notification", "show", "team2-agent", "--body", "Routed DEV2-6509 to ticket-DEV2-6509", "--sound", "done"],
             ],
         )
+
+    def test_run_herdr_route_queues_followup_when_ticket_lead_is_working(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-max","label":"max","focused":false,"pane_count":3}]}}'
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-6814","label":"DEV2-6814","workspace_id":"w-max"}]}}'
+        agent_stdout = '{"result":{"agent":{"name":"ticket-DEV2-6814","pane_id":"p-ticket","agent_status":"working","workspace_id":"w-max"}}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        packet = agent.herdr_route_packet(config, work_ref="DEV2-6814", expect="result", instruction="공수산정")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
+                return completed(stdout=tabs_stdout)
+            if command == ["herdr", "agent", "get", "ticket-DEV2-6814"]:
+                return completed(stdout=agent_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "route", "--service", "max", "DEV2-6814", "공수산정"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
+                ["herdr", "workspace", "list"],
+                ["herdr", "workspace", "focus", "w-max"],
+                ["herdr", "tab", "list", "--workspace", "w-max"],
+                ["herdr", "agent", "get", "ticket-DEV2-6814"],
+                ["herdr", "agent", "send", "ticket-DEV2-6814", packet],
+                ["herdr", "pane", "send-keys", "p-ticket", "Tab"],
+                ["herdr", "agent", "focus", "ticket-DEV2-6814"],
+                ["herdr", "notification", "show", "team2-agent", "--body", "Routed DEV2-6814 to ticket-DEV2-6814", "--sound", "done"],
+            ],
+        )
+
+    def test_run_herdr_route_uses_renamed_ticket_lead_before_starting_new_pane(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-max","label":"max","focused":false,"pane_count":3}]}}'
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-6814","label":"DEV2-6814","workspace_id":"w-max"}]}}'
+        agent_stdout = '{"result":{"agent":{"name":"DEV2-6814","pane_id":"p-ticket","agent_status":"idle","workspace_id":"w-max"}}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        packet = agent.herdr_route_packet(config, work_ref="DEV2-6814", expect="result", instruction="공수산정")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
+                return completed(stdout=tabs_stdout)
+            if command == ["herdr", "agent", "get", "ticket-DEV2-6814"]:
+                return completed(returncode=1)
+            if command == ["herdr", "agent", "get", "DEV2-6814"]:
+                return completed(stdout=agent_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "route", "--service", "max", "DEV2-6814", "공수산정"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
+                ["herdr", "workspace", "list"],
+                ["herdr", "workspace", "focus", "w-max"],
+                ["herdr", "tab", "list", "--workspace", "w-max"],
+                ["herdr", "agent", "get", "ticket-DEV2-6814"],
+                ["herdr", "agent", "get", "DEV2-6814"],
+                ["herdr", "agent", "send", "DEV2-6814", packet],
+                ["herdr", "pane", "send-keys", "p-ticket", "Enter"],
+                ["herdr", "agent", "focus", "DEV2-6814"],
+                ["herdr", "notification", "show", "team2-agent", "--body", "Routed DEV2-6814 to DEV2-6814", "--sound", "done"],
+            ],
+        )
+
+    def test_herdr_created_tab_captures_root_pane_when_present(self) -> None:
+        output = (
+            '{"result":{'
+            '"tab":{"tab_id":"t-work","label":"aasm-search","workspace_id":"w-aasm"},'
+            '"root_pane":{"pane_id":"p-root","tab_id":"t-work"}'
+            '}}'
+        )
+
+        tab = agent.herdr_created_tab(output)
+
+        self.assertIsNotNone(tab)
+        assert tab is not None
+        self.assertEqual(tab.root_pane_id, "p-root")
 
     def test_run_herdr_route_starts_missing_work_lead_with_initial_instruction(self) -> None:
         seen: list[list[str]] = []
@@ -494,6 +613,8 @@ class Team2AgentTests(unittest.TestCase):
             if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--focus"]:
                 return completed(stdout='{"result":{"tab":{"tab_id":"t-work","label":"aasm-resource-url-copy","workspace_id":"w-aasm"}}}')
             if command == ["herdr", "agent", "get", "work-aasm-resource-url-copy"]:
+                return completed(returncode=1)
+            if command == ["herdr", "agent", "get", "aasm-resource-url-copy"]:
                 return completed(returncode=1)
             return completed()
 
@@ -512,6 +633,7 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "tab", "list", "--workspace", "w-aasm"],
                 ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--focus"],
                 ["herdr", "agent", "get", "work-aasm-resource-url-copy"],
+                ["herdr", "agent", "get", "aasm-resource-url-copy"],
                 [
                     "herdr",
                     "agent",
@@ -530,7 +652,60 @@ class Team2AgentTests(unittest.TestCase):
                         config,
                     ),
                 ],
+                ["herdr", "agent", "focus", "work-aasm-resource-url-copy"],
                 ["herdr", "notification", "show", "team2-agent", "--body", "Routed aasm-resource-url-copy to work-aasm-resource-url-copy", "--sound", "done"],
+            ],
+        )
+
+    def test_run_herdr_work_reuses_tab_root_pane_when_tab_is_created(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-aasm","label":"aasm","focused":false,"pane_count":1}]}}'
+        empty_tabs_stdout = '{"result":{"tabs":[]}}'
+        tab_create_stdout = (
+            '{"result":{'
+            '"tab":{"tab_id":"t-work","label":"aasm-global-file-search-fallback","workspace_id":"w-aasm"},'
+            '"root_pane":{"pane_id":"p-root","tab_id":"t-work"}'
+            '}}'
+        )
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
+                return completed(stdout=empty_tabs_stdout)
+            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-global-file-search-fallback", "--focus"]:
+                return completed(stdout=tab_create_stdout)
+            return completed()
+
+        code = agent.run(
+            ["herdr", "work", "--service", "aasm", "aasm-global-file-search-fallback", "전체", "검색", "판정"],
+            config=config,
+            runner=runner,
+        )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
+                ["herdr", "workspace", "list"],
+                ["herdr", "workspace", "focus", "w-aasm"],
+                ["herdr", "tab", "list", "--workspace", "w-aasm"],
+                ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-global-file-search-fallback", "--focus"],
+                ["herdr", "pane", "rename", "p-root", "work-aasm-global-file-search-fallback"],
+                [
+                    "herdr",
+                    "pane",
+                    "run",
+                    "p-root",
+                    agent.ai_shell_command(
+                        "codex",
+                        agent.work_lead_prompt(config, "aasm-global-file-search-fallback", service="aasm", instruction="전체 검색 판정"),
+                        config,
+                    ),
+                ],
+                ["herdr", "notification", "show", "team2-agent", "--body", "Started work cell aasm-global-file-search-fallback", "--sound", "done"],
             ],
         )
 
@@ -1464,6 +1639,7 @@ class Team2AgentTests(unittest.TestCase):
                     "t-6509",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("codex", agent.role_agent_prompt(config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"), config),
                 ],
@@ -1500,6 +1676,7 @@ class Team2AgentTests(unittest.TestCase):
                 "t-6509",
                 "--split",
                 "right",
+                "--no-focus",
                 "--",
                 *agent.ai_argv("claude", agent.role_agent_prompt(engine_config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"), engine_config),
             ],

@@ -100,6 +100,11 @@ TYPE_RULES: dict[str, dict] = {
         "location": r"^wiki/services/[a-z0-9-]+/proposals/",
         "filename": r"^[a-z0-9-]+\.md$",
     },
+    "design": {
+        "required": ["service_id"],
+        "location": r"^wiki/services/[a-z0-9-]+/proposals/",
+        "filename": r"^[a-z0-9-]+\.md$",
+    },
     "guide": {
         "required": [],
         "location": r"^wiki/guides/",

@@ -70,6 +70,9 @@ dependencies:
     - system: "뉴빌링"
       method: REST
       purpose: "결제/정산 연동"
+      profile: "catalog/common-services/new-billing.yaml"
+      status: "future-required"
+      note: "현재 active 연동 없음. 신규 빌링성 기능은 뉴빌링 API 경유를 우선 검토한다."
 
 okr:
   annual: "KR6. B2B 전용 커머스(스토어프론트) 개발 및 연동 완료 (런칭 대기)"

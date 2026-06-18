@@ -397,6 +397,11 @@ def role_agent_name(ticket_id: str, role: str) -> str:
     return f"{ticket_cell_name(ticket_id)}-{role}"
 
 
+def lead_target_candidates(work_ref: str, *, kind: str = "auto") -> list[str]:
+    lead_name = task_lead_name(work_ref, kind=kind)
+    return [lead_name] if lead_name == work_ref else [lead_name, work_ref]
+
+
 def service_workspace_label(service: str) -> str:
     normalized = service.strip()
     if not normalized or normalized.lower() in {"auto", "triage", "unknown"}:
@@ -611,11 +616,14 @@ def herdr_created_tab(output: str) -> HerdrTab | None:
         payload = json.loads(output)
     except json.JSONDecodeError:
         return None
-    tab = payload.get("result", {}).get("tab", {})
+    result = payload.get("result", {})
+    tab = result.get("tab", {})
+    root_pane = result.get("root_pane", {})
     tab_id = tab.get("tab_id")
     if not tab_id:
         return None
-    return HerdrTab(str(tab_id), str(tab.get("label") or ""), str(tab.get("workspace_id") or ""))
+    root_pane_id = root_pane.get("pane_id") or ""
+    return HerdrTab(str(tab_id), str(tab.get("label") or ""), str(tab.get("workspace_id") or ""), str(root_pane_id))
 
 
 def herdr_created_workspace(output: str) -> HerdrCreatedWorkspace | None:
@@ -648,6 +656,10 @@ def herdr_agent_info(output: str) -> HerdrAgentInfo | None:
         str(agent.get("agent_status") or "").lower(),
         str(agent.get("workspace_id") or ""),
     )
+
+
+def herdr_submit_key(agent_info: HerdrAgentInfo) -> str:
+    return "Tab" if agent_info.status == "working" else "Enter"
 
 
 def start_orchestrator_command(
@@ -787,7 +799,7 @@ def start_role_agent_command(
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
     selected_engine = engine or config.agent_engine
-    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT, "--", *ai_argv(selected_engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=agent_cwd)])
+    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT, "--no-focus", "--", *ai_argv(selected_engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=agent_cwd)])
     return command
 
 
@@ -1058,9 +1070,18 @@ def run_herdr_ask(args: argparse.Namespace, config: Config, execute=None) -> int
         expect=args.expect,
         instruction=instruction_text(args.instruction, ""),
     )
+    get_proc = execute([HERDR, "agent", "get", args.target], config.harness)
+    if get_proc.returncode != 0:
+        return int(get_proc.returncode)
+    agent_info = herdr_agent_info(get_proc.stdout or "")
+    if not agent_info:
+        return 2
     send_proc = execute([HERDR, "agent", "send", args.target, packet], config.harness)
     if send_proc.returncode != 0:
         return int(send_proc.returncode)
+    submit_proc = execute([HERDR, "pane", "send-keys", agent_info.pane_id, herdr_submit_key(agent_info)], config.harness)
+    if submit_proc.returncode != 0:
+        return int(submit_proc.returncode)
     wait_proc = execute([HERDR, "agent", "wait", args.target, "--status", "idle", "--timeout", str(args.timeout_ms)], config.harness)
     if wait_proc.returncode != 0:
         return int(wait_proc.returncode)
@@ -1071,12 +1092,6 @@ def run_herdr_ask(args: argparse.Namespace, config: Config, execute=None) -> int
     if read_proc.returncode != 0:
         return int(read_proc.returncode)
     if args.target.startswith("orch-worker-"):
-        get_proc = execute([HERDR, "agent", "get", args.target], config.harness)
-        if get_proc.returncode != 0:
-            return int(get_proc.returncode)
-        agent_info = herdr_agent_info(get_proc.stdout or "")
-        if not agent_info:
-            return 2
         close_proc = execute([HERDR, "pane", "close", agent_info.pane_id], config.harness)
         if close_proc.returncode != 0:
             return int(close_proc.returncode)
@@ -1105,12 +1120,30 @@ def run_herdr_route(args: argparse.Namespace, config: Config, execute=None) -> i
     if not tab:
         return 2
 
-    get_proc = execute([HERDR, "agent", "get", lead_name], config.harness)
+    active_lead_name = lead_name
+    get_proc = None
+    for candidate in lead_target_candidates(work_ref, kind=kind):
+        candidate_proc = execute([HERDR, "agent", "get", candidate], config.harness)
+        if candidate_proc.returncode == 0:
+            active_lead_name = candidate
+            get_proc = candidate_proc
+            break
+        get_proc = candidate_proc
+    assert get_proc is not None
     if get_proc.returncode == 0:
+        agent_info = herdr_agent_info(get_proc.stdout or "")
+        if not agent_info:
+            return 2
         packet = herdr_route_packet(config, work_ref=work_ref, expect=args.expect, instruction=instruction)
-        send_proc = execute([HERDR, "agent", "send", lead_name, packet], config.harness)
+        send_proc = execute([HERDR, "agent", "send", active_lead_name, packet], config.harness)
         if send_proc.returncode != 0:
             return int(send_proc.returncode)
+        submit_proc = execute([HERDR, "pane", "send-keys", agent_info.pane_id, herdr_submit_key(agent_info)], config.harness)
+        if submit_proc.returncode != 0:
+            return int(submit_proc.returncode)
+        focus_proc = execute([HERDR, "agent", "focus", active_lead_name], config.harness)
+        if focus_proc.returncode != 0:
+            return int(focus_proc.returncode)
     else:
         if kind == "ticket":
             steps = start_ticket_lead_steps(config, tab, work_ref, service=service, cwd=workspace_cwd, instruction=instruction)
@@ -1119,11 +1152,14 @@ def run_herdr_route(args: argparse.Namespace, config: Config, execute=None) -> i
         code = run_steps(steps, execute)
         if code != 0:
             return code
+        focus_proc = execute([HERDR, "agent", "focus", lead_name], config.harness)
+        if focus_proc.returncode != 0:
+            return int(focus_proc.returncode)
 
     return run_steps(
         [
             ExecutionStep(
-                herdr_notify_command(f"Routed {work_ref} to {lead_name}", sound="done"),
+                herdr_notify_command(f"Routed {work_ref} to {active_lead_name}", sound="done"),
                 config.harness,
             )
         ],

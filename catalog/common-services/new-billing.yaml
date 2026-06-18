@@ -1,0 +1,140 @@
+# 뉴빌링 공통 서비스 프로파일
+#
+# 이 파일은 팀 서비스 프로파일(catalog/{service_id}.yaml)이 아니다.
+# 여러 서비스가 앞으로 결제/정산/구독 기능을 붙일 때 먼저 확인할 공통 서비스 경계다.
+
+service_id: new-billing
+display_name: 뉴빌링
+domain: billing-payment-settlement
+status: evidence
+lifecycle: development
+integration_state: no-active-team2-integration
+owner_scope: common
+impact_check_required: true
+
+source_repositories:
+  backend:
+    url: https://github.com/AladinCommunication/billing-backend
+    local_path: /Users/jm/Documents/workspace/billing-backend
+    analyzed_ref: main@e615146b4
+    description: Kotlin/Spring Boot 기반 결제 API, backoffice API, batch, core 모듈.
+  frontend:
+    url: https://github.com/AladinCommunication/billing-frontend
+    local_path: /Users/jm/Documents/workspace/billing-frontend
+    analyzed_ref: main@44cae20
+    description: Next.js 기반 billing backoffice/front console.
+
+stack:
+  backend:
+    language: Kotlin 2.0.21 + Java 21
+    framework: Spring Boot 3.2.1
+    build: Gradle Kotlin DSL
+    modules:
+      - billing-api
+      - billing-backoffice
+      - billing-batch
+      - billing-core
+    persistence: MySQL 8, Exposed ORM primary, Spring Data JPA configured
+    cache: Redis/Redisson
+    messaging: Kafka/AWS MSK
+    auth: API key/secret issued JWT for billing API, role based admin API
+    docs: Swagger/OpenAPI
+  frontend:
+    framework: Next.js 15
+    runtime: React 19, TypeScript
+    ui: MUI, React Query
+    api_proxy: /api -> NEXT_PUBLIC_API_URL
+    auth_proxy: /auth -> NEXT_PUBLIC_AUTH_URL
+
+api_surface:
+  public_billing_api:
+    - path: /api/v1/authenticate/{pgClient}
+      purpose: API key/secret 기반 JWT 발급
+    - path: /api/v1/payments/single/{client}/ready
+      purpose: 단건 결제 준비
+    - path: /api/v1/payments/single/{client}/approve
+      purpose: 단건 결제 승인
+    - path: /api/v1/payments/single/{client}/cancel
+      purpose: 단건 결제 취소
+    - path: /api/v1/payments/single/{client}/confirm
+      purpose: 단건 결제 확인
+    - path: /api/v1/payments/single/{client}/complete
+      purpose: 단건 거래 완료
+    - path: /api/v1/payments/single/{client}/point-credit
+      purpose: 포인트 적립
+    - path: /api/v1/payments/recurrent/{client}/register
+      purpose: 정기결제 등록
+    - path: /api/v1/payments/recurrent/{client}/{recurrentId}
+      purpose: 정기결제 조회/수정
+    - path: /api/v1/payments/recurrent/{client}/{recurrentId}/pause
+      purpose: 정기결제 일시정지
+    - path: /api/v1/payments/recurrent/{client}/{recurrentId}/resume
+      purpose: 정기결제 재개
+    - path: /api/v1/payments/recurrent/{client}/{recurrentId}/cancel
+      purpose: 정기결제 해지
+    - path: /api/v1/billing-keys/{client}/register
+      purpose: 빌링키 등록 시작
+    - path: /api/v1/billing-keys/{client}/issue
+      purpose: PG 인증 후 빌링키 발급
+    - path: /api/v1/billing-keys/{client}
+      purpose: 빌링키 목록 조회/삭제
+    - path: /api/v1/webhook/recurrent/test
+      purpose: 정기결제 webhook 테스트
+    - path: /api/v1/webhook/resend/{webhookId}
+      purpose: webhook 재발송
+  backoffice_api:
+    - /api/v1/admin/payments
+    - /api/v1/admin/payments/recurrent
+    - /api/v1/admin/billing-keys
+    - /api/v1/admin/clients
+    - /api/v1/admin/client-pg-details
+    - /api/v1/admin/pgs
+    - /api/v1/admin/common-codes
+    - /api/v1/admin/common-groups
+    - /api/v1/admin/dashboards
+
+supported_pg_candidates:
+  - KAKAO_PAY
+  - TOSS
+  - NAVER_PAY
+  - TOSS_PAYMENTS
+  - INICIS
+  - KCP
+
+known_active_team2_consumers: []
+future_consumer_candidates:
+  - storefront
+  - bazaar
+  - max
+  - tobe
+
+adoption_policy:
+  - 신규 빌링, 결제, 청구, 환불, 정산, 구독, 빌링키 기능은 뉴빌링 API 경유를 우선 검토한다.
+  - 팀 서비스가 자체 PG 연동, 결제 상태, 정산 상태를 새로 만들려면 뉴빌링 적용 불가 사유를 티켓/설계 노트에 남긴다.
+  - 현재 팀 서비스 연동은 확인되지 않았으므로, active consumer나 production dependency로 기록하지 않는다.
+  - API contract, endpoint, auth client, webhook contract, migration path는 owner/API 문서 확인 전 canonical로 승격하지 않는다.
+
+source_evidence:
+  backend:
+    - billing-backend/README.md
+    - billing-backend/settings.gradle.kts
+    - billing-backend/billing-core/src/main/kotlin/co/kr/aladin/billing/core/common/shared/enums/ApiPaths.kt
+    - billing-api/src/main/kotlin/co/kr/aladin/billing/api/payment/single/shared/controller/SinglePaymentController.kt
+    - billing-api/src/main/kotlin/co/kr/aladin/billing/api/payment/recurrent/shared/controller/RecurrentPaymentController.kt
+    - billing-api/src/main/kotlin/co/kr/aladin/billing/api/billingkey/shared/controller/BillingKeyController.kt
+    - billing-api/src/main/kotlin/co/kr/aladin/billing/api/token/controller/AuthController.kt
+    - billing-api/src/main/kotlin/co/kr/aladin/billing/api/webhook/controller/WebhookController.kt
+  frontend:
+    - billing-frontend/package.json
+    - billing-frontend/next.config.ts
+    - billing-frontend/src/requests/routes.ts
+    - billing-frontend/src/requests/axios.ts
+
+open_questions:
+  - 공통 서비스 owner와 변경 승인자
+  - dev/stage/prod endpoint와 service discovery 방식
+  - API contract의 최종 원장 위치
+  - 신규 client 등록과 API key/secret 발급 절차
+  - webhook 수신/재발송 계약과 실패 보상 절차
+  - 레거시 결제/정산/구독 데이터 migration 범위
+  - 운영 SLA, 장애 runbook, 알림 책임 경계

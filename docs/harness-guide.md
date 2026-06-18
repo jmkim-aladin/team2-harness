@@ -49,6 +49,7 @@ team2 레포에서 실행할 필요 없이, 평소처럼 각 서비스 레포에
 - 작업 유형 분류 (기능/버그/핫픽스/리팩토링/현대화)
 - DB/SP 변경 승인 필요 여부
 - 서비스 경계를 넘는지 확인
+- 공통 서비스(알라딘 인증, 뉴빌링 등) 영향 여부 확인
 
 ### 2. 작업 중 — 실행 가이드
 - 빌드/실행 방법
@@ -73,6 +74,7 @@ AI 도구는 하네스 문서를 갱신하거나 티켓 초안을 작성할 수 
 운영 지식 위키 산출물을 레거시 현대화와 DB 분리 판단에 사용할 때는 [legacy-modernization-db-separation-analysis-guide.md](./legacy-modernization-db-separation-analysis-guide.md)의 readiness level과 rubric을 함께 적용한다.
 IDC DB 운영 안정화와 AWS 전환을 위한 batch/SP/table/query 진단은 [db-migration-cdc-assessment-guide.md](./db-migration-cdc-assessment-guide.md)를 따른다.
 다른 서비스로 Ralph Loop를 확장할 때는 [ralph-loop-service-expansion-guide.md](./ralph-loop-service-expansion-guide.md)를 따른다.
+팀 소유 서비스와 별개로 알라딘 인증, 뉴빌링 같은 공통 서비스 영향은 [공통 서비스 정책](../policies/common-service-policy.md)과 [`catalog/common-services/registry.yaml`](../catalog/common-services/registry.yaml)을 따른다. 티켓 준비와 설계 분석은 대상 팀 서비스의 `catalog/{service_id}.yaml`을 먼저 읽고, 로그인/권한/회원 식별/결제/정산/구독/공유 API가 걸리면 공통 서비스 registry를 함께 확인한다. 신규 빌링, 결제, 정산, 구독, 빌링키 기능은 [`catalog/common-services/new-billing.yaml`](../catalog/common-services/new-billing.yaml)의 뉴빌링 API 경계를 먼저 본다.
 
 ### 문서 언어와 제목
 
@@ -165,13 +167,13 @@ board projection과 dispatch request만 갱신할 때는 아래 runner를 사용
 python3 "$TEAM2_HARNESS_PATH/tools/run_hermes_dispatch_cycle.py" --vault "$LOCAL_WIKI_PATH" --apply --default-batch-output --default-outbox
 ```
 
-Hermes Kanban 화면은 아래 동기화 도구가 관리한다. source card가 새로 생기면 `team2` 보드에 task를 만들고, 사람 결정/검토 대기이므로 `blocked` 상태로 유지한다. source card가 projection에서 사라지면 기존 task를 `done`으로 이동한다.
+Hermes Kanban 화면은 아래 동기화 도구가 관리한다. source card가 새로 생기면 `team2` 보드에 task를 만들고, 사람 결정/검토 대기이므로 `blocked` 상태로 유지한다. 생성된 task 본문에는 `Source of truth: wiki note`, `Projection: Hermes task`, `Vault path`가 포함된다. 이미 존재하던 task에는 `TEAM2-SOURCE-LINK` 댓글을 한 번 남겨 같은 연결을 보강한다. source card가 projection에서 사라지면 기존 task를 `done`으로 이동한다. task만 `done`으로 바꾸지 말고 먼저 wiki note의 `decision_status`, `ticket_status`, `review_state`를 정리해야 한다.
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/sync_hermes_kanban.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
 
-컴퓨터 앞에서는 Discord 대신 desktop decision cockpit을 주 화면으로 사용한다. Hermes Board 댓글의 `/brief`, `/ask`, `/delegate`, `/decide`, `/approve`, `/revise`, `/split`, `/snooze`, `/done` 지시는 action queue로 수집된다.
+컴퓨터 앞에서는 Discord 대신 desktop decision cockpit을 주 화면으로 사용한다. Hermes Board 댓글의 `/brief`, `/ask`, `/delegate`, `/decide`, `/approve`, `/revise`, `/split`, `/snooze`, `/done` 지시는 action queue로 수집된다. queue item에는 `source_of_truth`, `vault_path`, `work_id`, `ticket_id`, `service`, `column`을 보존해 실행자가 원장 wiki note로 돌아갈 수 있게 한다.
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/import_hermes_board_actions.py" --vault "$LOCAL_WIKI_PATH" --apply

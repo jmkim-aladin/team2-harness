@@ -15,6 +15,8 @@ class GBrainMaintenanceScriptTests(unittest.TestCase):
         self.assertIn("clean_gbrain_lock", script)
         self.assertIn("run_gbrain_step sync", script)
         self.assertIn("sync --all --yes --no-pull", script)
+        self.assertIn("run_gbrain_step sync-team2-vault-full", script)
+        self.assertIn("sync --source team2-vault --full --yes --no-pull", script)
         self.assertIn("run_gbrain_step extract", script)
         self.assertIn("extract --stale", script)
         self.assertIn("run_gbrain_step embed", script)
@@ -25,6 +27,16 @@ class GBrainMaintenanceScriptTests(unittest.TestCase):
         self.assertIn("dream --source team2-vault", script)
         self.assertIn("gbrain doctor --json > /opt/data/gbrain-doctor-latest.json", script)
         self.assertIn('"steps": ${steps_json}', script)
+
+    def test_status_mode_reads_status_without_running_maintenance(self) -> None:
+        script = SCRIPT.read_text(encoding="utf-8")
+
+        self.assertIn('if [[ "${1:-}" == "--status" ]]; then', script)
+        self.assertIn('cat "${STATUS_FILE}"', script)
+        self.assertLess(
+            script.index('if [[ "${1:-}" == "--status" ]]; then'),
+            script.index('exec >>"${LOG_FILE}" 2>&1'),
+        )
 
 
 if __name__ == "__main__":

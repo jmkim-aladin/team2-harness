@@ -7,6 +7,7 @@
 
 - `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, AWS Secrets, 로컬 자격증명/Keychain, DB 이관/CDC, 위키 문서 언어/제목, 데이터 추출 요청)
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, storefront, caravan, pod, shopping, blog)
+- `catalog/common-services/registry.yaml` — 알라딘 인증, 뉴빌링 등 공통 서비스 영향 확인 registry
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
 - `.claude/commands/ad/` — 팀 스킬 (ticket, work-prep, code-review, kb-read, kb-list, kb-sync, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan, granola-sync)
 - `scripts/setup.sh` — 원커맨드 셋업
@@ -22,6 +23,8 @@
 - AI 도구는 YouTrack 티켓/Task 생성, 티켓 상태 변경, 커밋/푸시/머지 전에 반드시 사용자에게 확인한다. 하네스 예외 작업은 DEV2 티켓 없이도 사용자 명시 지시로 commit/merge/push 가능하다
 - YouTrack KB 생성/수정/삭제/이동은 반드시 사용자 확인 후 수행한다
 - 지식 분리: 팀 하네스(repo) = "어떻게 일하나"(정책·템플릿·카탈로그·스킬), Obsidian vault = "무엇을 일하나"(프로젝트 진행·운영·도메인·회의·일지·OKR·티켓 산출물). 결정 트리는 [policies/knowledge-base-policy.md](./policies/knowledge-base-policy.md) 참조
+- 공통 서비스 영향: 로그인/권한/회원 식별/결제/정산/구독/공유 API가 걸리면 [policies/common-service-policy.md](./policies/common-service-policy.md)와 [catalog/common-services/registry.yaml](./catalog/common-services/registry.yaml)을 함께 확인
+- 신규 빌링, 결제, 정산, 구독, 빌링키 기능은 [catalog/common-services/new-billing.yaml](./catalog/common-services/new-billing.yaml)의 뉴빌링 API 경계를 먼저 확인한다. 현재 팀 서비스 active 연동은 없는 상태로 기록한다.
 - Feature ≤ 1주 (필수) / Task ≤ 1일 (필수) — 초과 시 분할. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md)
 - DB/SP 변경 별도 승인, 프로덕션 배포 사람 승인
 - 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지
@@ -98,9 +101,10 @@ Key routing rules:
 - MCP registered: Hermes `cli`/`discord`, Codex global, Claude Code user scope
 - Token storage: `/Users/jm/.hermes-team2/.env` and local agent config only. Do not commit tokens.
 - Indexed sources: `team2-harness`, `team2-vault`; code files are indexed under `team2-harness`.
+- Default source scope: Docker runtime sets `GBRAIN_SOURCE=team2-vault`; use explicit source selection for `team2-harness` when needed.
 - Embeddings: enabled with ZeroEntropy `zembed-1`; run shared maintenance from the Docker service, not the Mac-local `~/.gbrain` PGLite.
-- Hermes runtime: cron runs `tools/run_team2_knowledge_cycle.py`; nightly agent jobs use GBrain MCP for domain hardening drafts. Hermes may write vault draft/projection files but must not mutate YouTrack/KB/DB/prod or promote canonical state without approval.
-- GBrain PGLite maintenance: host LaunchAgent `com.team2.gbrain-maintenance` runs `/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh` at 01:40 KST. This stops `gbrain-team2`, runs `sync --all`, `extract --stale`, `embed --stale`, source-level `dream`, writes `/Users/jm/.hermes-team2/gbrain-maintenance-status.json`, then restarts the server.
+- Hermes runtime: cron runs `tools/run_team2_knowledge_cycle.py`; Granola meeting sync runs every 10m through `tools/run_granola_sync_cycle.py`; nightly agent jobs use GBrain MCP for domain hardening drafts. Hermes may write vault draft/projection files but must not mutate YouTrack/KB/DB/prod or promote canonical state without approval.
+- GBrain PGLite maintenance: host LaunchAgent `com.team2.gbrain-maintenance` runs `/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh` at 01:40 KST. This stops `gbrain-team2`, runs `sync --all`, a forced `sync --source team2-vault --full`, `extract --stale`, `embed --stale`, source-level `dream`, writes `/Users/jm/.hermes-team2/gbrain-maintenance-status.json`, then restarts the server. Read status with `/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh --status`; it must not run maintenance.
 
 ## GBrain Search Guidance (configured by /sync-gbrain)
 <!-- gstack-gbrain-search-guidance:start -->

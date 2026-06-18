@@ -2,6 +2,8 @@
 
 개발 2팀이 관리하는 서비스 인벤토리입니다.
 
+팀이 직접 소유하거나 주도하는 서비스는 `catalog/{service_id}.yaml`에 둔다. 여러 팀/서비스가 함께 쓰는 공통 서비스는 팀 서비스 프로파일과 섞지 않고 [`catalog/common-services/registry.yaml`](common-services/registry.yaml)에 둔다. 공통 서비스 영향 확인 기준은 [공통 서비스 정책](../policies/common-service-policy.md)을 따른다.
+
 ## 서비스 목록
 
 | 서비스 | 유형 | 스택 | DB | SP | 현대화 트랙 후보 | 하네스 상태 |
@@ -42,6 +44,17 @@
 
 > max와 tobe가 WebCatalog, WebLog, Alibaba를 공유 — 현대화 시 함께 고려 필요
 
+## 공통 서비스
+
+공통 서비스는 개발 2팀의 단독 소유가 아니지만 티켓 영향 범위에 반복적으로 등장하는 인증, 결제, 정산, 메시징, 공통 API 같은 경계다. 공통 서비스는 팀 서비스 목록에 넣지 않고 별도 registry에서 관리한다.
+
+| 공통 서비스 | 영역 | 확인 기준 |
+|---|---|---|
+| 알라딘 인증 (`aladin-auth`) | 로그인, SSO, 세션, 권한, 회원 식별 | 로그인/권한/회원 식별 변경 시 공통 서비스 영향 확인 |
+| [뉴빌링 (`new-billing`)](common-services/new-billing.yaml) | 결제, 청구, 환불, 정산, 구독, 빌링키 | 소스 확인됨, 개발 중, 현재 팀 서비스 active 연동 없음. 신규 빌링성 기능은 뉴빌링 API 우선 확인 |
+
+자세한 기준: [`catalog/common-services/registry.yaml`](common-services/registry.yaml), [`policies/common-service-policy.md`](../policies/common-service-policy.md)
+
 ## 현대화 트랙 분포
 
 | 트랙 | 서비스 | 설명 |
@@ -57,3 +70,5 @@
 2. 필수 항목 작성
 3. 이 README에 서비스 추가
 4. 서비스 레포에 하네스 템플릿 적용 (`templates/service-harness/` 참조)
+
+공통 서비스는 위 절차가 아니라 `catalog/common-services/registry.yaml`에 `status: candidate`로 먼저 등록하고, owner/API/repo/KB/runbook이 확인되면 증거 수준을 갱신한다.
