@@ -836,10 +836,38 @@ class Team2AgentTests(unittest.TestCase):
             ],
         )
 
+    def test_run_herdr_open_spawns_second_instance_in_new_tab_when_slot_free(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":3}]}}'
+        panes_stdout = '{"result":{"panes":[{"pane_id":"p1","label":"global-orchestrator","agent":"codex"},{"pane_id":"p2","label":"orch-worker-1","agent":"codex"}]}}'
+        tab_stdout = '{"result":{"tab":{"tab_id":"w2:t2","label":"global-orchestrator-2","workspace_id":"w2"},"root_pane":{"pane_id":"p-root"}}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "pane", "list", "--workspace", "w2"]:
+                return completed(stdout=panes_stdout)
+            if command == ["herdr", "tab", "create", "--workspace", "w2", "--cwd", "/repo", "--label", "global-orchestrator-2", "--focus"]:
+                return completed(stdout=tab_stdout)
+            return completed()
+
+        with patch.dict(agent.os.environ, {}, clear=True):
+            code = agent.run(["herdr", "open", "--no-attach"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertIn(["herdr", "tab", "create", "--workspace", "w2", "--cwd", "/repo", "--label", "global-orchestrator-2", "--focus"], seen)
+        self.assertTrue(
+            any(command[:5] == ["herdr", "agent", "start", "global-orchestrator-2", "--cwd"] and "--tab" in command and "w2:t2" in command for command in seen)
+        )
+        self.assertIn(["herdr", "pane", "close", "p-root"], seen)
+        self.assertFalse(any(command[:3] == ["herdr", "workspace", "create"] for command in seen))
+
     def test_run_herdr_open_no_attach_focuses_without_attaching(self) -> None:
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":3}]}}'
-        panes_stdout = '{"result":{"panes":[{"pane_id":"p1","label":"global-orchestrator","agent":"codex"},{"pane_id":"p2","label":"orch-worker-1","agent":"codex"},{"pane_id":"p3","label":"orch-worker-2","agent":"codex"}]}}'
+        panes_stdout = '{"result":{"panes":[{"pane_id":"p1","label":"global-orchestrator","agent":"codex"},{"pane_id":"p2","label":"global-orchestrator-2","agent":"codex"},{"pane_id":"p3","label":"global-orchestrator-3","agent":"codex"}]}}'
 
         def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
             seen.append(list(command))
@@ -853,6 +881,7 @@ class Team2AgentTests(unittest.TestCase):
 
         self.assertEqual(code, 0)
         self.assertNotIn(["herdr", "session", "attach", "default"], seen)
+        self.assertFalse(any(command[:3] == ["herdr", "tab", "create"] for command in seen))
 
     def test_run_herdr_open_does_not_seed_workers_without_board_pane(self) -> None:
         seen: list[list[str]] = []

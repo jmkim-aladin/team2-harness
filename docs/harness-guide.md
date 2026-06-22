@@ -144,7 +144,7 @@ team2-agent board
 team2-agent cockpit
 ```
 
-herdr를 사용하는 로컬 작업실에서는 `team2-agent`가 Hermes/wiki 상태와 herdr 실행 표면을 연결한다. `herdr open`은 `team2-orchestration` space를 focus하고, 기본 작업실이 부족하면 `global-orchestrator`만 보정한 뒤 herdr session에 attach한다. 기본 agent engine은 codex이며, Claude Code로 시작하려면 `--engine claude`를 붙인다. `open` 때 선택한 engine은 orchestrator prompt의 후속 `worker`/`tickets`/`work`/`role` 명령 예시에 반영된다. 서비스 작업은 서비스별 space, 티켓/작업별 tab, 임시 role agent pane으로 나눈다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. 이미 herdr 안에서 실행 중이거나 attach가 필요 없으면 `--no-attach`를 붙인다. herdr는 원장이 아니므로 상태 판단은 Hermes Board와 vault note를 기준으로 한다.
+herdr를 사용하는 로컬 작업실에서는 `team2-agent`가 Hermes/wiki 상태와 herdr 실행 표면을 연결한다. `herdr open`은 `team2-orchestration` space가 없으면 새로 만들어 `global-orchestrator`를 띄우고, 이미 있으면 빈 slot에 맞춰 새 tab으로 추가 instance(`global-orchestrator-2`/`-3`, 최대 3개)를 띄운 뒤 herdr session에 attach한다. 3개가 모두 떠 있으면 첫 instance를 focus한다. `worker`/`ask`/`route`/`refresh-global` 등 이름 기반 명령은 첫 instance(`global-orchestrator`)를 대상으로 한다. 기본 agent engine은 codex이며, Claude Code로 시작하려면 `--engine claude`를 붙인다. `open` 때 선택한 engine은 orchestrator prompt의 후속 `worker`/`tickets`/`work`/`role` 명령 예시에 반영된다. 서비스 작업은 서비스별 space, 티켓/작업별 tab, 임시 role agent pane으로 나눈다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. 이미 herdr 안에서 실행 중이거나 attach가 필요 없으면 `--no-attach`를 붙인다. herdr는 원장이 아니므로 상태 판단은 Hermes Board와 vault note를 기준으로 한다.
 
 ```bash
 team2-agent herdr doctor

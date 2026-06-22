@@ -24,6 +24,11 @@ HERDR = "herdr"
 ORCHESTRATION_WORKSPACE_LABEL = "team2-orchestration"
 TRIAGE_WORKSPACE_LABEL = "team2-triage"
 ORCHESTRATOR_AGENT_NAME = "global-orchestrator"
+ORCHESTRATOR_AGENT_NAMES = (
+    ORCHESTRATOR_AGENT_NAME,
+    f"{ORCHESTRATOR_AGENT_NAME}-2",
+    f"{ORCHESTRATOR_AGENT_NAME}-3",
+)
 DEFAULT_ORCHESTRATION_WORKERS = ("orch-worker-1", "orch-worker-2")
 DEFAULT_TICKET_CONCURRENCY = 4
 GLOBAL_REFRESH_SAFE_STATUSES = {"done", "idle"}
@@ -666,19 +671,23 @@ def start_orchestrator_command(
     config: Config,
     *,
     workspace_id: str | None = None,
+    tab_id: str | None = None,
     engine: str | None = None,
     split: str = DEFAULT_HERDR_PANE_SPLIT,
     focus: bool | None = None,
+    name: str = ORCHESTRATOR_AGENT_NAME,
 ) -> list[str]:
     command = [
         HERDR,
         "agent",
         "start",
-        ORCHESTRATOR_AGENT_NAME,
+        name,
         "--cwd",
         str(config.harness),
     ]
-    if workspace_id:
+    if tab_id:
+        command.extend(["--tab", tab_id])
+    elif workspace_id:
         command.extend(["--workspace", workspace_id])
     command.extend(["--split", split])
     if focus is not None:
@@ -962,9 +971,17 @@ def existing_workspace_setup_steps(workspace: HerdrWorkspace, panes: list[HerdrP
     return steps
 
 
-def new_workspace_setup_steps(created: HerdrCreatedWorkspace, config: Config) -> list[ExecutionStep]:
+def new_orchestrator_tab_steps(tab: HerdrTab, config: Config, *, agent_name: str) -> list[ExecutionStep]:
+    steps = [ExecutionStep(start_orchestrator_command(config, tab_id=tab.tab_id, focus=True, name=agent_name), config.harness)]
+    if tab.root_pane_id:
+        steps.append(ExecutionStep([HERDR, "pane", "close", tab.root_pane_id], config.harness))
+    steps.append(ExecutionStep(herdr_notify_command("Opened additional team2 orchestrator tab", sound="done"), config.harness))
+    return steps
+
+
+def new_workspace_setup_steps(created: HerdrCreatedWorkspace, config: Config, *, agent_name: str = ORCHESTRATOR_AGENT_NAME) -> list[ExecutionStep]:
     return [
-        ExecutionStep(start_orchestrator_command(config, workspace_id=created.workspace_id, focus=True), config.harness),
+        ExecutionStep(start_orchestrator_command(config, workspace_id=created.workspace_id, focus=True, name=agent_name), config.harness),
         ExecutionStep([HERDR, "pane", "close", created.root_pane_id], config.harness),
         ExecutionStep(herdr_notify_command("Opened team2 orchestrator workspace", sound="done"), config.harness),
     ]
@@ -1332,7 +1349,23 @@ def run_herdr_open(args: argparse.Namespace, config: Config, execute=None) -> in
         pane_proc = execute_capture([HERDR, "pane", "list", "--workspace", workspace.workspace_id], config.harness)
         if pane_proc.returncode != 0:
             return int(pane_proc.returncode)
-        steps = existing_workspace_setup_steps(workspace, herdr_panes(pane_proc.stdout or ""), config)
+        panes = herdr_panes(pane_proc.stdout or "")
+        present = {pane.label for pane in panes}
+        free_name = next((name for name in ORCHESTRATOR_AGENT_NAMES if name not in present), None)
+        if free_name is None or free_name == ORCHESTRATOR_AGENT_NAME:
+            # All instances open (focus #1) or base orchestrator missing (repair it in place).
+            steps = existing_workspace_setup_steps(workspace, panes, config)
+        else:
+            # Space exists: spawn the next instance in a new tab.
+            create_command = [HERDR, "tab", "create", "--workspace", workspace.workspace_id, "--cwd", str(config.harness), "--label", free_name, "--focus"]
+            create_proc = execute_capture(create_command, config.harness)
+            if create_proc.returncode != 0:
+                return int(create_proc.returncode)
+            tab = herdr_created_tab(create_proc.stdout or "")
+            if not tab:
+                steps = [ExecutionStep(start_orchestrator_command(config, workspace_id=workspace.workspace_id, focus=True, name=free_name), config.harness)]
+            else:
+                steps = new_orchestrator_tab_steps(tab, config, agent_name=free_name)
     else:
         create_command = [HERDR, "workspace", "create", "--cwd", str(config.harness), "--label", ORCHESTRATION_WORKSPACE_LABEL, "--focus"]
         create_proc = execute_capture(create_command, config.harness)
@@ -1340,12 +1373,7 @@ def run_herdr_open(args: argparse.Namespace, config: Config, execute=None) -> in
             return int(create_proc.returncode)
         created = herdr_created_workspace(create_proc.stdout or "")
         if not created:
-            steps = [
-                ExecutionStep(command, config.harness)
-                for command in [
-                    start_orchestrator_command(config),
-                ]
-            ]
+            steps = [ExecutionStep(start_orchestrator_command(config), config.harness)]
         else:
             steps = new_workspace_setup_steps(created, config)
     attach_step = None if args.no_attach else herdr_attach_step(config)
