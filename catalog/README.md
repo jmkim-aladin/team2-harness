@@ -18,6 +18,11 @@
 | [caravan](caravan.yaml) | new | Spring Boot 3.3.7 + Kotlin + Spring Cloud Gateway + Next.js 14 | PostgreSQL + Redis 7 | 없음 | Observe | 미시작 |
 | [pod](pod.yaml) | new | Spring Boot 3.5.1 + Kotlin | PostgreSQL + S3/KMS | 없음 | Observe | 초기 등록 |
 
+## 운영 모니터링
+
+- IDC DB 이전 Datadog 서비스 매핑: [`datadog-idc-db-monitoring.yaml`](datadog-idc-db-monitoring.yaml)
+- IDC DB 이전 Datadog 대시보드 구성: [`docs/datadog-idc-db-monitoring-dashboard.md`](../docs/datadog-idc-db-monitoring-dashboard.md)
+
 ## 아키텍처 비교
 
 | 서비스 | 아키텍처 | ORM | 배포 | 호스팅 |

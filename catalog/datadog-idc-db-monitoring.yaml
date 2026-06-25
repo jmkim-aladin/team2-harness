@@ -1,0 +1,68 @@
+# Datadog IDC DB 이전 모니터링 서비스 매핑
+
+monitoring_id: idc-db-migration
+tool: datadog
+purpose: "IDC DB 이전 모니터링을 위한 개발2팀 서비스 그룹과 Datadog service tag 매핑"
+
+tag_defaults:
+  team: dev2
+  event: idc-db-migration
+  service_tag_key: service
+
+dashboards:
+  overview:
+    slug: dev2-idc-db-migration-overview
+    title: "개발2팀 IDC DB 이전 전체 현황"
+    datadog_id: we5-wce-ez6
+    url: "https://app.datadoghq.com/dashboard/we5-wce-ez6"
+  services:
+    naru:
+      slug: dev2-idc-db-migration-naru
+      title: "나루 IDC DB 이전 모니터링"
+      datadog_id: v2i-69h-ibu
+      url: "https://app.datadoghq.com/dashboard/v2i-69h-ibu"
+    max:
+      slug: dev2-idc-db-migration-max
+      title: "만권당 IDC DB 이전 모니터링"
+      datadog_id: z2s-zxy-urp
+      url: "https://app.datadoghq.com/dashboard/z2s-zxy-urp"
+    tobe:
+      slug: dev2-idc-db-migration-tobe
+      title: "투비 IDC DB 이전 모니터링"
+      datadog_id: evu-22a-uy2
+      url: "https://app.datadoghq.com/dashboard/evu-22a-uy2"
+    blog:
+      slug: dev2-idc-db-migration-blog
+      title: "알라딘 블로그/북플 IDC DB 이전 모니터링"
+      datadog_id: 3te-pcb-5qe
+      url: "https://app.datadoghq.com/dashboard/3te-pcb-5qe"
+    bazaar:
+      slug: dev2-idc-db-migration-bazaar
+      title: "바자르 IDC DB 이전 모니터링"
+      datadog_id: 5i5-4e9-yj8
+      url: "https://app.datadoghq.com/dashboard/5i5-4e9-yj8"
+
+service_groups:
+  naru:
+    datadog_services:
+      - naru-account-api
+      - naru-sso-api
+  max:
+    datadog_services:
+      - maxapi
+      - max-front
+      - maxims-front
+      - max-search
+  tobe:
+    datadog_services:
+      - tobe-web
+  blog:
+    datadog_services:
+      - blog-web
+  bazaar:
+    datadog_services:
+      - bazaar-batch-api
+
+notes:
+  - "Datadog service tag 값은 모두 lowercase로 관리한다."
+  - "bazaar-batch-api는 바자르 batch/API 서비스의 Datadog service tag다."
