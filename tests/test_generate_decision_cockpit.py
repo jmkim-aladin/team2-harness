@@ -108,6 +108,13 @@ class GenerateDecisionCockpitTests(unittest.TestCase):
             self.assertFalse((vault / cockpit.DEFAULT_MARKDOWN_PATH).exists())
             self.assertFalse((vault / cockpit.DEFAULT_JSON_PATH).exists())
 
+    def test_markdown_stays_below_vault_lint_warning_for_full_board(self) -> None:
+        cards = [sample_card() | {"id": f"wiki/processes/tickets/dev2-{index}.md"} for index in range(41)]
+        items = cockpit.build_items({"cards": cards}, {"cards": {}}, {"items": []})
+        markdown = cockpit.render_markdown(cockpit.render_json(items, "2026-06-17T00:00:00+09:00", "apply"))
+
+        self.assertLess(markdown.count("\n"), 500)
+
 
 if __name__ == "__main__":
     unittest.main()

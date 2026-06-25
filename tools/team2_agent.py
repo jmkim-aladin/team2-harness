@@ -9,6 +9,7 @@ import re
 import shlex
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Callable, NamedTuple, Sequence
 
@@ -34,10 +35,12 @@ DEFAULT_TICKET_CONCURRENCY = 4
 GLOBAL_REFRESH_SAFE_STATUSES = {"done", "idle"}
 DEFAULT_HERDR_ASK_TIMEOUT_MS = 600000
 DEFAULT_HERDR_ASK_READ_LINES = 160
+HERDR_AGENT_SEND_SETTLE_SECONDS = 0.25
 DEFAULT_AGENT_ENGINE = "codex"
 AGENT_ENGINES = ("codex", "claude")
 TASK_KINDS = ("auto", "ticket", "work")
 DEFAULT_HERDR_PANE_SPLIT = "right"
+SAFE_CLOSE_PANE_STATUSES = {"", "idle", "done", "unknown"}
 TICKET_CELL_ROLES = {
     "analyst",
     "architect",
@@ -80,12 +83,15 @@ class HerdrWorkspace(NamedTuple):
     label: str = ""
     active_tab_id: str = ""
     root_pane_id: str = ""
+    tab_count: int = 0
 
 
 class HerdrPane(NamedTuple):
     pane_id: str
     label: str
     agent: str
+    tab_id: str = ""
+    status: str = ""
 
 
 class HerdrTab(NamedTuple):
@@ -255,6 +261,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     role_parser.add_argument("ticket_id")
     role_parser.add_argument("role", choices=sorted(TICKET_CELL_ROLES))
     role_parser.add_argument("instruction", nargs="*")
+    close_parser = herdr_sub.add_parser("close", help="Close a ticket/work tab after checking child panes")
+    close_parser.add_argument("--service", default="triage")
+    close_parser.add_argument("--kind", choices=TASK_KINDS, default="auto")
+    close_parser.add_argument("--force", action="store_true", help="Close even when child panes are working or blocked")
+    close_parser.add_argument("target")
     herdr_sub.add_parser("sync", help="Run the team2 cycle, refresh cockpit, and notify herdr")
     notify = herdr_sub.add_parser("notify", help="Show a herdr notification")
     notify.add_argument("body")
@@ -344,11 +355,11 @@ def orchestrator_prompt(config: Config) -> str:
         f"`{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency N DEV2-1234 ...`를 실행해 "
         "서비스 space와 티켓별 ticket tab을 만든다. 비티켓 서비스 작업은 "
         f"`{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`로 work tab을 만든다. "
-        "서비스 불명확하면 triage. 비서비스/단기 병렬 작업은 필요할 때만 "
+        "기존 DEV2 tab이면 route. 서비스 불명확하면 triage. 비서비스/단기 병렬 작업은 필요할 때만 "
         f"`{team2_agent} herdr worker --engine {config.agent_engine} orch-worker-1 \"작업 설명\"`로 띄우고 결과 후 자동으로 닫는다. "
         f"idle worker는 `{team2_agent} herdr ask orch-worker-N --expect result \"작업 설명\"`로 쓴다. "
         f"후속 지시는 `{team2_agent} herdr route --engine {config.agent_engine} --service {{service|triage}} {{DEV2-1234|work-id}} \"후속 지시\"`, "
-        f"결과 확인은 `{team2_agent} herdr collect {{DEV2-1234|work-id}}`. "
+        f"결과 확인은 `{team2_agent} herdr collect {{DEV2-1234|work-id}}`, 종료는 `{team2_agent} herdr close --service {{service}} {{DEV2-1234|work-id}}`. "
         f"먼저 `{team2_agent} board`와 `{team2_agent} cockpit` 확인. 사용자 확인 없이 {APPROVAL_BAN}."
     )
 
@@ -359,8 +370,8 @@ def worker_prompt(config: Config, instruction: str = "") -> str:
         f"너는 worker다. global-orchestrator가 `{team2_agent} herdr ask orch-worker-N ...` 또는 "
         f"`{team2_agent} herdr worker --engine {config.agent_engine} orch-worker-N \"...\"`로 준 단일 작업만 처리. "
         f"{STRUCTURE_RULE} 티켓/서비스 작업은 직접 처리하지 않는다. "
-        f"DEV2 티켓은 `{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency 1 DEV2-1234`로 서비스 space/ticket tab 생성. "
-        f"비티켓은 `{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`로 work tab 생성. "
+        f"DEV2 ticket tab: `{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency 1 DEV2-1234`. "
+        f"기존 DEV2 tab이면 route. 비티켓: `{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`. "
         "서비스 불명확: triage. note/정책 확인. "
         f"명시 지시 전 {APPROVAL_BAN}. 결과: 완료/막힘/결정 필요, 근거, 검증."
     )
@@ -437,8 +448,9 @@ def herdr_ask_packet(config: Config, *, task_id: str = "", expect: str = "result
             "routing:",
             f"- {STRUCTURE_RULE}",
             f"- DEV2 티켓: `{team2_agent} herdr tickets --engine {config.agent_engine} --service {{service|triage}} --concurrency 1 DEV2-1234`.",
+            "- 기존 DEV2 tab이면 route.",
             f"- 비티켓 서비스: `{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`.",
-            "- 서비스 불명확: triage. orchestration worker pane 장시간 처리 금지.",
+            "- 서비스 불명확: triage. worker 장시간 처리 금지.",
             "response:",
             "- RESULT_PACKET status=done|blocked|decision_needed",
             "- summary/evidence/next: 짧게",
@@ -471,10 +483,10 @@ def ticket_lead_prompt(config: Config, ticket_id: str, *, service: str = "triage
     prompt = (
         f"너는 {ticket_id} ticket-lead다. Global이 {service_label} space 티켓 tab 맡김. "
         "/ad:work-prep 기준: YouTrack 읽기전용, 카탈로그/정책/vault note 확인. "
-        "필요한 role agent만 생성(analyst, planner, architect, developer, reviewer, qa, designer, data). "
+        "필요한 role agent만 생성. "
         f"role agent는 `{team2_agent} herdr role --engine {config.agent_engine} --service {service} {ticket_id} analyst \"요구사항과 코드 진입점 분석\"`처럼 띄운다. "
         "TEAM2_ROUTE_PACKET은 후속 지시다. "
-        "role 결과는 위키 note에 모아 GLOBAL_RESULT_PACKET으로 Decision Needed/Approval Needed/Blocked만 반환한다. "
+        "role 결과는 위키 note에 모아 GLOBAL_RESULT_PACKET으로 Decision Needed/Approval Needed/Blocked만 반환한다. 종료=close. "
         f"사용자 확인 없이 {APPROVAL_BAN}."
     )
     if instruction:
@@ -487,10 +499,10 @@ def work_lead_prompt(config: Config, work_id: str, *, service: str = "triage", i
     service_label = service_workspace_label(service)
     prompt = (
         f"너는 {work_id} work-lead다. Global/worker가 {service_label} space work tab 맡김. "
-        f"{STRUCTURE_RULE} 카탈로그/정책/vault note 확인 후 필요한 role agent만 생성. "
+        f"{STRUCTURE_RULE} 카탈로그/정책/vault note 확인 후 필요 role만 생성. "
         f"role agent는 `{team2_agent} herdr role --engine {config.agent_engine} --service {service} {work_id} developer \"구현 후보와 검증 방법 정리\"`처럼 띄운다. "
         "TEAM2_ROUTE_PACKET은 후속 지시다. "
-        "role 결과는 위키 note에 모아 GLOBAL_RESULT_PACKET으로 Decision Needed/Approval Needed/Blocked만 반환한다. "
+        "role 결과는 위키 note에 모아 GLOBAL_RESULT_PACKET으로 Decision Needed/Approval Needed/Blocked만 반환한다. 종료=close. "
         f"사용자 확인 없이 {APPROVAL_BAN}."
     )
     if instruction:
@@ -534,10 +546,6 @@ def ai_command_text(engine: str, prompt: str, config: Config, *, cwd: Path | Non
     return f"cd {shlex.quote(str(run_cwd))}; {shlex.join(argv)}"
 
 
-def ai_shell_command(engine: str, prompt: str, config: Config, *, cwd: Path | None = None) -> str:
-    return shlex.join(ai_argv(engine, prompt, config, cwd=cwd))
-
-
 def herdr_workspaces(output: str) -> list[HerdrWorkspace]:
     try:
         payload = json.loads(output)
@@ -555,6 +563,8 @@ def herdr_workspaces(output: str) -> list[HerdrWorkspace]:
                 int(workspace.get("pane_count") or 0),
                 str(workspace.get("label") or ""),
                 str(workspace.get("active_tab_id") or ""),
+                "",
+                int(workspace.get("tab_count") or 0),
             )
         )
     return parsed
@@ -590,7 +600,15 @@ def herdr_panes(output: str) -> list[HerdrPane]:
         pane_id = pane.get("pane_id")
         if not pane_id:
             continue
-        parsed.append(HerdrPane(str(pane_id), str(pane.get("label") or ""), str(pane.get("agent") or "")))
+        parsed.append(
+            HerdrPane(
+                str(pane_id),
+                str(pane.get("label") or ""),
+                str(pane.get("agent") or ""),
+                str(pane.get("tab_id") or ""),
+                str(pane.get("agent_status") or "").lower(),
+            )
+        )
     return parsed
 
 
@@ -614,6 +632,21 @@ def tab_by_label(output: str, label: str) -> HerdrTab | None:
         if tab.label == label:
             return tab
     return None
+
+
+def close_tab_label(target: str, kind: str) -> str:
+    resolved = resolve_task_kind(kind, target)
+    if resolved == "ticket":
+        return ticket_tab_label(target)
+    return target
+
+
+def unsafe_close_panes(panes: Sequence[HerdrPane]) -> list[HerdrPane]:
+    return [pane for pane in panes if pane.status not in SAFE_CLOSE_PANE_STATUSES]
+
+
+def pane_status_summary(panes: Sequence[HerdrPane]) -> str:
+    return ", ".join(f"{pane.pane_id}:{pane.status or 'unknown'}" for pane in panes)
 
 
 def herdr_created_tab(output: str) -> HerdrTab | None:
@@ -663,8 +696,49 @@ def herdr_agent_info(output: str) -> HerdrAgentInfo | None:
     )
 
 
+def compact_session_start_hook_context(text: str) -> str:
+    lines = text.splitlines()
+    compacted = []
+    index = 0
+    while index < len(lines):
+        if (
+            lines[index].strip().removeprefix("•").strip() == "SessionStart hook (completed)"
+            and index + 2 < len(lines)
+            and lines[index + 1].strip().startswith("warning:")
+            and lines[index + 2].strip().startswith("hook context:")
+        ):
+            index += 3
+            while index < len(lines) and (not lines[index].strip() or lines[index].startswith("    ")):
+                index += 1
+            continue
+        compacted.append(lines[index])
+        index += 1
+    suffix = "\n" if text.endswith("\n") else ""
+    return "\n".join(compacted) + suffix
+
+
+def compact_herdr_read_output(output: str) -> str:
+    try:
+        payload = json.loads(output)
+    except json.JSONDecodeError:
+        return compact_session_start_hook_context(output)
+    read = payload.get("result", {}).get("read", {})
+    if isinstance(read.get("text"), str):
+        read["text"] = compact_session_start_hook_context(read["text"])
+    suffix = "\n" if output.endswith("\n") else ""
+    return json.dumps(payload, ensure_ascii=False) + suffix
+
+
 def herdr_submit_key(agent_info: HerdrAgentInfo) -> str:
     return "Tab" if agent_info.status == "working" else "Enter"
+
+
+def submit_herdr_agent_input(target: str, agent_info: HerdrAgentInfo, config: Config, execute) -> subprocess.CompletedProcess[str]:
+    focus_proc = execute([HERDR, "agent", "focus", target], config.harness)
+    if focus_proc.returncode != 0:
+        return focus_proc
+    time.sleep(HERDR_AGENT_SEND_SETTLE_SECONDS)
+    return execute([HERDR, "pane", "send-keys", agent_info.pane_id, herdr_submit_key(agent_info)], config.harness)
 
 
 def start_orchestrator_command(
@@ -674,7 +748,7 @@ def start_orchestrator_command(
     tab_id: str | None = None,
     engine: str | None = None,
     split: str = DEFAULT_HERDR_PANE_SPLIT,
-    focus: bool | None = None,
+    focus: bool | None = False,
     name: str = ORCHESTRATOR_AGENT_NAME,
 ) -> list[str]:
     command = [
@@ -705,7 +779,7 @@ def start_worker_command(
     name: str = DEFAULT_ORCHESTRATION_WORKERS[0],
     instruction: str = "",
     split: str = DEFAULT_HERDR_PANE_SPLIT,
-    focus: bool | None = None,
+    focus: bool | None = False,
 ) -> list[str]:
     command = [
         HERDR,
@@ -734,6 +808,7 @@ def start_ticket_lead_command(
     service: str = "triage",
     engine: str | None = None,
     cwd: Path | None = None,
+    focus: bool | None = False,
 ) -> list[str]:
     agent_cwd = cwd or config.harness
     command = [
@@ -749,7 +824,10 @@ def start_ticket_lead_command(
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
     selected_engine = engine or config.agent_engine
-    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT, "--", *ai_argv(selected_engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=agent_cwd)])
+    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT])
+    if focus is not None:
+        command.append("--focus" if focus else "--no-focus")
+    command.extend(["--", *ai_argv(selected_engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=agent_cwd)])
     return command
 
 
@@ -763,6 +841,7 @@ def start_work_lead_command(
     instruction: str = "",
     engine: str | None = None,
     cwd: Path | None = None,
+    focus: bool | None = False,
 ) -> list[str]:
     agent_cwd = cwd or config.harness
     command = [
@@ -778,7 +857,10 @@ def start_work_lead_command(
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
     selected_engine = engine or config.agent_engine
-    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT, "--", *ai_argv(selected_engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=agent_cwd)])
+    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT])
+    if focus is not None:
+        command.append("--focus" if focus else "--no-focus")
+    command.extend(["--", *ai_argv(selected_engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=agent_cwd)])
     return command
 
 
@@ -814,18 +896,27 @@ def start_role_agent_command(
 
 def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, service: str, cwd: Path, instruction: str = "") -> list[ExecutionStep]:
     if tab.root_pane_id:
+        if instruction:
+            command = [
+                HERDR,
+                "agent",
+                "start",
+                ticket_cell_name(ticket_id),
+                "--cwd",
+                str(cwd),
+                "--tab",
+                tab.tab_id,
+                "--split",
+                DEFAULT_HERDR_PANE_SPLIT,
+                "--no-focus",
+                "--",
+                *ai_argv(config.agent_engine, ticket_lead_prompt(config, ticket_id, service=service, instruction=instruction), config, cwd=cwd),
+            ]
+        else:
+            command = start_ticket_lead_command(config, tab_id=tab.tab_id, ticket_id=ticket_id, service=service, cwd=cwd)
         return [
-            ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, ticket_cell_name(ticket_id)], config.harness),
-            ExecutionStep(
-                [
-                    HERDR,
-                    "pane",
-                    "run",
-                    tab.root_pane_id,
-                    ai_shell_command(config.agent_engine, ticket_lead_prompt(config, ticket_id, service=service, instruction=instruction), config, cwd=cwd),
-                ],
-                config.harness,
-            ),
+            ExecutionStep(command, config.harness),
+            ExecutionStep([HERDR, "pane", "close", tab.root_pane_id], config.harness),
         ]
     if instruction:
         command = [
@@ -849,11 +940,8 @@ def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, se
 def start_work_lead_steps(config: Config, tab: HerdrTab, work_id: str, *, service: str, instruction: str, cwd: Path) -> list[ExecutionStep]:
     if tab.root_pane_id:
         return [
-            ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, work_cell_name(work_id)], config.harness),
-            ExecutionStep(
-                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command(config.agent_engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=cwd)],
-                config.harness,
-            ),
+            ExecutionStep(start_work_lead_command(config, tab_id=tab.tab_id, work_id=work_id, service=service, instruction=instruction, cwd=cwd), config.harness),
+            ExecutionStep([HERDR, "pane", "close", tab.root_pane_id], config.harness),
         ]
     return [ExecutionStep(start_work_lead_command(config, tab_id=tab.tab_id, work_id=work_id, service=service, instruction=instruction, cwd=cwd), config.harness)]
 
@@ -861,11 +949,19 @@ def start_work_lead_steps(config: Config, tab: HerdrTab, work_id: str, *, servic
 def start_role_agent_steps(config: Config, tab: HerdrTab, ticket_id: str, role: str, *, service: str, instruction: str, cwd: Path) -> list[ExecutionStep]:
     if tab.root_pane_id:
         return [
-            ExecutionStep([HERDR, "pane", "rename", tab.root_pane_id, role_agent_name(ticket_id, role)], config.harness),
             ExecutionStep(
-                [HERDR, "pane", "run", tab.root_pane_id, ai_shell_command(config.agent_engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=cwd)],
+                start_role_agent_command(
+                    config,
+                    tab_id=tab.tab_id,
+                    ticket_id=ticket_id,
+                    role=role,
+                    instruction=instruction,
+                    service=service,
+                    cwd=cwd,
+                ),
                 config.harness,
             ),
+            ExecutionStep([HERDR, "pane", "close", tab.root_pane_id], config.harness),
         ]
     return [
         ExecutionStep(
@@ -914,7 +1010,7 @@ def herdr_steps_for(args: argparse.Namespace, config: Config) -> list[ExecutionS
         ]
     elif args.herdr_command == "open":
         commands = [
-            [HERDR, "workspace", "create", "--cwd", str(config.harness), "--label", ORCHESTRATION_WORKSPACE_LABEL, "--focus"],
+            [HERDR, "workspace", "create", "--cwd", str(config.harness), "--label", ORCHESTRATION_WORKSPACE_LABEL, "--no-focus"],
             start_orchestrator_command(config),
         ]
     elif args.herdr_command == "sync":
@@ -962,7 +1058,7 @@ def existing_workspace_setup_steps(workspace: HerdrWorkspace, panes: list[HerdrP
         else:
             shell_pane = next((pane for pane in panes if not pane.agent and not pane.label), None)
             if shell_pane:
-                steps.append(ExecutionStep(start_orchestrator_command(config, workspace_id=workspace.workspace_id, focus=True), config.harness))
+                steps.append(ExecutionStep(start_orchestrator_command(config, workspace_id=workspace.workspace_id), config.harness))
                 steps.append(ExecutionStep([HERDR, "pane", "close", shell_pane.pane_id], config.harness))
             else:
                 steps.append(ExecutionStep(start_orchestrator_command(config, workspace_id=workspace.workspace_id), config.harness))
@@ -972,7 +1068,7 @@ def existing_workspace_setup_steps(workspace: HerdrWorkspace, panes: list[HerdrP
 
 
 def new_orchestrator_tab_steps(tab: HerdrTab, config: Config, *, agent_name: str) -> list[ExecutionStep]:
-    steps = [ExecutionStep(start_orchestrator_command(config, tab_id=tab.tab_id, focus=True, name=agent_name), config.harness)]
+    steps = [ExecutionStep(start_orchestrator_command(config, tab_id=tab.tab_id, name=agent_name), config.harness)]
     if tab.root_pane_id:
         steps.append(ExecutionStep([HERDR, "pane", "close", tab.root_pane_id], config.harness))
     steps.append(ExecutionStep(herdr_notify_command("Opened additional team2 orchestrator tab", sound="done"), config.harness))
@@ -981,7 +1077,7 @@ def new_orchestrator_tab_steps(tab: HerdrTab, config: Config, *, agent_name: str
 
 def new_workspace_setup_steps(created: HerdrCreatedWorkspace, config: Config, *, agent_name: str = ORCHESTRATOR_AGENT_NAME) -> list[ExecutionStep]:
     return [
-        ExecutionStep(start_orchestrator_command(config, workspace_id=created.workspace_id, focus=True, name=agent_name), config.harness),
+        ExecutionStep(start_orchestrator_command(config, workspace_id=created.workspace_id, name=agent_name), config.harness),
         ExecutionStep([HERDR, "pane", "close", created.root_pane_id], config.harness),
         ExecutionStep(herdr_notify_command("Opened team2 orchestrator workspace", sound="done"), config.harness),
     ]
@@ -1006,7 +1102,7 @@ def ensure_workspace(label: str, config: Config, execute, *, cwd: Path | None = 
                 return None
             return workspace
     create_proc = execute(
-        [HERDR, "workspace", "create", "--cwd", str(workspace_cwd), "--label", label, "--focus"],
+        [HERDR, "workspace", "create", "--cwd", str(workspace_cwd), "--label", label, "--no-focus"],
         config.harness,
     )
     if create_proc.returncode != 0:
@@ -1032,7 +1128,7 @@ def ensure_ticket_tab(workspace: HerdrWorkspace, ticket_id: str, config: Config,
             return None
         return HerdrTab(workspace.active_tab_id, label, workspace.workspace_id, workspace.root_pane_id)
     create_proc = execute(
-        [HERDR, "tab", "create", "--workspace", workspace.workspace_id, "--cwd", str(tab_cwd), "--label", label, "--focus"],
+        [HERDR, "tab", "create", "--workspace", workspace.workspace_id, "--cwd", str(tab_cwd), "--label", label, "--no-focus"],
         config.harness,
     )
     if create_proc.returncode != 0:
@@ -1073,7 +1169,7 @@ def run_herdr_worker(args: argparse.Namespace, config: Config, execute=None) -> 
     if close_proc.returncode != 0:
         return int(close_proc.returncode)
     if should_emit and read_proc.stdout:
-        sys.stdout.write(read_proc.stdout)
+        sys.stdout.write(compact_herdr_read_output(read_proc.stdout))
     return 0
 
 
@@ -1096,7 +1192,7 @@ def run_herdr_ask(args: argparse.Namespace, config: Config, execute=None) -> int
     send_proc = execute([HERDR, "agent", "send", args.target, packet], config.harness)
     if send_proc.returncode != 0:
         return int(send_proc.returncode)
-    submit_proc = execute([HERDR, "pane", "send-keys", agent_info.pane_id, herdr_submit_key(agent_info)], config.harness)
+    submit_proc = submit_herdr_agent_input(args.target, agent_info, config, execute)
     if submit_proc.returncode != 0:
         return int(submit_proc.returncode)
     wait_proc = execute([HERDR, "agent", "wait", args.target, "--status", "idle", "--timeout", str(args.timeout_ms)], config.harness)
@@ -1113,7 +1209,7 @@ def run_herdr_ask(args: argparse.Namespace, config: Config, execute=None) -> int
         if close_proc.returncode != 0:
             return int(close_proc.returncode)
     if should_emit and read_proc.stdout:
-        sys.stdout.write(read_proc.stdout)
+        sys.stdout.write(compact_herdr_read_output(read_proc.stdout))
     return 0
 
 
@@ -1155,12 +1251,9 @@ def run_herdr_route(args: argparse.Namespace, config: Config, execute=None) -> i
         send_proc = execute([HERDR, "agent", "send", active_lead_name, packet], config.harness)
         if send_proc.returncode != 0:
             return int(send_proc.returncode)
-        submit_proc = execute([HERDR, "pane", "send-keys", agent_info.pane_id, herdr_submit_key(agent_info)], config.harness)
+        submit_proc = submit_herdr_agent_input(active_lead_name, agent_info, config, execute)
         if submit_proc.returncode != 0:
             return int(submit_proc.returncode)
-        focus_proc = execute([HERDR, "agent", "focus", active_lead_name], config.harness)
-        if focus_proc.returncode != 0:
-            return int(focus_proc.returncode)
     else:
         if kind == "ticket":
             steps = start_ticket_lead_steps(config, tab, work_ref, service=service, cwd=workspace_cwd, instruction=instruction)
@@ -1196,7 +1289,7 @@ def run_herdr_collect(args: argparse.Namespace, config: Config, execute=None) ->
     if read_proc.returncode != 0:
         return int(read_proc.returncode)
     if should_emit and read_proc.stdout:
-        sys.stdout.write(read_proc.stdout)
+        sys.stdout.write(compact_herdr_read_output(read_proc.stdout))
     return 0
 
 
@@ -1287,19 +1380,34 @@ def run_herdr_tickets(args: argparse.Namespace, config: Config, execute=None) ->
     ticket_ids = list(args.ticket_ids)
     active_ticket_ids = ticket_ids[: args.concurrency]
     queued_count = len(ticket_ids) - len(active_ticket_ids)
+    started_count = 0
+    reused_count = 0
     for ticket_id in active_ticket_ids:
         tab = ensure_ticket_tab(workspace, ticket_id, config, execute, cwd=workspace_cwd)
         if not tab:
             return 2
+        lead_exists = False
+        if not tab.root_pane_id:
+            for candidate in lead_target_candidates(ticket_id, kind="ticket"):
+                get_proc = execute([HERDR, "agent", "get", candidate], config.harness)
+                if get_proc.returncode == 0:
+                    if not herdr_agent_info(get_proc.stdout or ""):
+                        return 2
+                    lead_exists = True
+                    break
+        if lead_exists:
+            reused_count += 1
+            continue
         code = run_steps(start_ticket_lead_steps(config, tab, ticket_id, service=service, cwd=workspace_cwd), execute)
         if code != 0:
             return code
+        started_count += 1
         if tab.root_pane_id:
             workspace = workspace._replace(active_tab_id="", root_pane_id="")
     return run_steps(
         [
             ExecutionStep(
-                herdr_notify_command(f"Started {len(active_ticket_ids)} ticket cells; queued {queued_count}", sound="done"),
+                herdr_notify_command(f"Started {started_count} ticket cells; reused {reused_count}; queued {queued_count}", sound="done"),
                 config.harness,
             )
         ],
@@ -1324,6 +1432,49 @@ def run_herdr_role(args: argparse.Namespace, config: Config, execute=None) -> in
     instruction = instruction_text(args.instruction, "")
     return run_steps(
         start_role_agent_steps(config, tab, args.ticket_id, args.role, service=service, instruction=instruction, cwd=workspace_cwd),
+        execute,
+    )
+
+
+def run_herdr_close(args: argparse.Namespace, config: Config, execute=None) -> int:
+    if execute is None:
+        execute = lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False, capture_output=True)
+    list_proc = execute([HERDR, "workspace", "list"], config.harness)
+    if list_proc.returncode != 0:
+        return int(list_proc.returncode)
+    service = args.service
+    workspace = ensure_workspace(service_workspace_label(service), config, execute, known_output=list_proc.stdout or "")
+    if not workspace:
+        return 2
+    tabs_proc = execute([HERDR, "tab", "list", "--workspace", workspace.workspace_id], config.harness)
+    if tabs_proc.returncode != 0:
+        return int(tabs_proc.returncode)
+    label = close_tab_label(args.target, args.kind)
+    tab = tab_by_label(tabs_proc.stdout or "", label)
+    if not tab:
+        return 2
+    panes_proc = execute([HERDR, "pane", "list", "--workspace", workspace.workspace_id], config.harness)
+    if panes_proc.returncode != 0:
+        return int(panes_proc.returncode)
+    tab_panes = [pane for pane in herdr_panes(panes_proc.stdout or "") if pane.tab_id == tab.tab_id]
+    unsafe_panes = unsafe_close_panes(tab_panes)
+    if unsafe_panes and not args.force:
+        body = f"Close skipped for {label}; active panes: {pane_status_summary(unsafe_panes)}"
+        notify_proc = execute(herdr_notify_command(body, sound="request"), config.harness)
+        if notify_proc.returncode != 0:
+            return int(notify_proc.returncode)
+        return 2
+    close_command = [HERDR, "workspace", "close", workspace.workspace_id] if workspace.tab_count == 1 else [HERDR, "tab", "close", tab.tab_id]
+    close_proc = execute(close_command, config.harness)
+    if close_proc.returncode != 0:
+        return int(close_proc.returncode)
+    return run_steps(
+        [
+            ExecutionStep(
+                herdr_notify_command(f"Closed {label} with {len(tab_panes)} panes", sound="done"),
+                config.harness,
+            )
+        ],
         execute,
     )
 
@@ -1357,17 +1508,17 @@ def run_herdr_open(args: argparse.Namespace, config: Config, execute=None) -> in
             steps = existing_workspace_setup_steps(workspace, panes, config)
         else:
             # Space exists: spawn the next instance in a new tab.
-            create_command = [HERDR, "tab", "create", "--workspace", workspace.workspace_id, "--cwd", str(config.harness), "--label", free_name, "--focus"]
+            create_command = [HERDR, "tab", "create", "--workspace", workspace.workspace_id, "--cwd", str(config.harness), "--label", free_name, "--no-focus"]
             create_proc = execute_capture(create_command, config.harness)
             if create_proc.returncode != 0:
                 return int(create_proc.returncode)
             tab = herdr_created_tab(create_proc.stdout or "")
             if not tab:
-                steps = [ExecutionStep(start_orchestrator_command(config, workspace_id=workspace.workspace_id, focus=True, name=free_name), config.harness)]
+                steps = [ExecutionStep(start_orchestrator_command(config, workspace_id=workspace.workspace_id, name=free_name), config.harness)]
             else:
                 steps = new_orchestrator_tab_steps(tab, config, agent_name=free_name)
     else:
-        create_command = [HERDR, "workspace", "create", "--cwd", str(config.harness), "--label", ORCHESTRATION_WORKSPACE_LABEL, "--focus"]
+        create_command = [HERDR, "workspace", "create", "--cwd", str(config.harness), "--label", ORCHESTRATION_WORKSPACE_LABEL, "--no-focus"]
         create_proc = execute_capture(create_command, config.harness)
         if create_proc.returncode != 0:
             return int(create_proc.returncode)
@@ -1414,6 +1565,8 @@ def run(
         return run_herdr_tickets(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "role":
         return run_herdr_role(parsed, cfg, runner)
+    if parsed.command == "herdr" and parsed.herdr_command == "close":
+        return run_herdr_close(parsed, cfg, runner)
     execute = runner or (lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False))
     return run_steps(steps_for(parsed, cfg), execute)
 

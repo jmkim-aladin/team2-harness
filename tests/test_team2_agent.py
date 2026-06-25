@@ -221,7 +221,7 @@ class Team2AgentTests(unittest.TestCase):
         self.assertEqual(
             [step.command for step in steps],
             [
-                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--focus"],
+                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--no-focus"],
                 [
                     "herdr",
                     "agent",
@@ -231,6 +231,7 @@ class Team2AgentTests(unittest.TestCase):
                     "/repo",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("codex", agent.orchestrator_prompt(config), config),
                 ],
@@ -247,7 +248,7 @@ class Team2AgentTests(unittest.TestCase):
         self.assertEqual(
             [step.command for step in steps],
             [
-                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--focus"],
+                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--no-focus"],
                 [
                     "herdr",
                     "agent",
@@ -257,6 +258,7 @@ class Team2AgentTests(unittest.TestCase):
                     "/repo",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config),
                 ],
@@ -296,6 +298,7 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("서비스 판정에 필요한 최소 정보만", prompt)
         self.assertIn("티켓 상세 정리", prompt)
         self.assertIn("ticket-lead가 담당", prompt)
+        self.assertIn("기존 DEV2 tab이면 route", prompt)
         self.assertIn("/repo/bin/team2-agent herdr route --engine codex", prompt)
         self.assertIn("/repo/bin/team2-agent herdr collect", prompt)
 
@@ -366,6 +369,7 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("worker pane", prompt)
         self.assertIn("팀 서비스 기준", prompt)
         self.assertIn("티켓/서비스 작업은 직접 처리하지 않는다", prompt)
+        self.assertIn("기존 DEV2 tab이면 route", prompt)
 
     def test_worker_prompt_can_include_initial_instruction(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
@@ -400,6 +404,7 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn("서비스 space", packet)
         self.assertIn("ticket/work tab", packet)
         self.assertIn("worker pane", packet)
+        self.assertIn("기존 DEV2 tab이면 route", packet)
         self.assertIn("RESULT_PACKET", packet)
 
     def test_herdr_route_packet_tells_task_lead_to_report_back_to_global(self) -> None:
@@ -440,6 +445,7 @@ class Team2AgentTests(unittest.TestCase):
             [
                 ["herdr", "agent", "get", "orch-worker-1"],
                 ["herdr", "agent", "send", "orch-worker-1", expected_packet],
+                ["herdr", "agent", "focus", "orch-worker-1"],
                 ["herdr", "pane", "send-keys", "p-worker", "Enter"],
                 ["herdr", "agent", "wait", "orch-worker-1", "--status", "idle", "--timeout", "600000"],
                 ["herdr", "agent", "read", "orch-worker-1", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"],
@@ -469,6 +475,7 @@ class Team2AgentTests(unittest.TestCase):
             [
                 ["herdr", "agent", "get", "orch-worker-1"],
                 ["herdr", "agent", "send", "orch-worker-1", expected_packet],
+                ["herdr", "agent", "focus", "orch-worker-1"],
                 ["herdr", "pane", "send-keys", "p-worker", "Tab"],
                 ["herdr", "agent", "wait", "orch-worker-1", "--status", "idle", "--timeout", "600000"],
                 ["herdr", "agent", "read", "orch-worker-1", "--source", "recent-unwrapped", "--lines", "160", "--format", "text"],
@@ -505,8 +512,8 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "tab", "list", "--workspace", "w-max"],
                 ["herdr", "agent", "get", "ticket-DEV2-6509"],
                 ["herdr", "agent", "send", "ticket-DEV2-6509", packet],
-                ["herdr", "pane", "send-keys", "p-ticket", "Enter"],
                 ["herdr", "agent", "focus", "ticket-DEV2-6509"],
+                ["herdr", "pane", "send-keys", "p-ticket", "Enter"],
                 ["herdr", "notification", "show", "team2-agent", "--body", "Routed DEV2-6509 to ticket-DEV2-6509", "--sound", "done"],
             ],
         )
@@ -540,8 +547,8 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "tab", "list", "--workspace", "w-max"],
                 ["herdr", "agent", "get", "ticket-DEV2-6814"],
                 ["herdr", "agent", "send", "ticket-DEV2-6814", packet],
-                ["herdr", "pane", "send-keys", "p-ticket", "Tab"],
                 ["herdr", "agent", "focus", "ticket-DEV2-6814"],
+                ["herdr", "pane", "send-keys", "p-ticket", "Tab"],
                 ["herdr", "notification", "show", "team2-agent", "--body", "Routed DEV2-6814 to ticket-DEV2-6814", "--sound", "done"],
             ],
         )
@@ -578,8 +585,8 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "agent", "get", "ticket-DEV2-6814"],
                 ["herdr", "agent", "get", "DEV2-6814"],
                 ["herdr", "agent", "send", "DEV2-6814", packet],
-                ["herdr", "pane", "send-keys", "p-ticket", "Enter"],
                 ["herdr", "agent", "focus", "DEV2-6814"],
+                ["herdr", "pane", "send-keys", "p-ticket", "Enter"],
                 ["herdr", "notification", "show", "team2-agent", "--body", "Routed DEV2-6814 to DEV2-6814", "--sound", "done"],
             ],
         )
@@ -610,7 +617,7 @@ class Team2AgentTests(unittest.TestCase):
                 return completed(stdout=workspace_stdout)
             if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
                 return completed(stdout=empty_tabs_stdout)
-            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--focus"]:
+            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--no-focus"]:
                 return completed(stdout='{"result":{"tab":{"tab_id":"t-work","label":"aasm-resource-url-copy","workspace_id":"w-aasm"}}}')
             if command == ["herdr", "agent", "get", "work-aasm-resource-url-copy"]:
                 return completed(returncode=1)
@@ -631,7 +638,7 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "workspace", "list"],
                 ["herdr", "workspace", "focus", "w-aasm"],
                 ["herdr", "tab", "list", "--workspace", "w-aasm"],
-                ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--focus"],
+                ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--no-focus"],
                 ["herdr", "agent", "get", "work-aasm-resource-url-copy"],
                 ["herdr", "agent", "get", "aasm-resource-url-copy"],
                 [
@@ -645,6 +652,7 @@ class Team2AgentTests(unittest.TestCase):
                     "t-work",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv(
                         "codex",
@@ -675,7 +683,7 @@ class Team2AgentTests(unittest.TestCase):
                 return completed(stdout=workspace_stdout)
             if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
                 return completed(stdout=empty_tabs_stdout)
-            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-global-file-search-fallback", "--focus"]:
+            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-global-file-search-fallback", "--no-focus"]:
                 return completed(stdout=tab_create_stdout)
             return completed()
 
@@ -692,19 +700,27 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "workspace", "list"],
                 ["herdr", "workspace", "focus", "w-aasm"],
                 ["herdr", "tab", "list", "--workspace", "w-aasm"],
-                ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-global-file-search-fallback", "--focus"],
-                ["herdr", "pane", "rename", "p-root", "work-aasm-global-file-search-fallback"],
+                ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-global-file-search-fallback", "--no-focus"],
                 [
                     "herdr",
-                    "pane",
-                    "run",
-                    "p-root",
-                    agent.ai_shell_command(
+                    "agent",
+                    "start",
+                    "work-aasm-global-file-search-fallback",
+                    "--cwd",
+                    "/repo",
+                    "--tab",
+                    "t-work",
+                    "--split",
+                    "right",
+                    "--no-focus",
+                    "--",
+                    *agent.ai_argv(
                         "codex",
                         agent.work_lead_prompt(config, "aasm-global-file-search-fallback", service="aasm", instruction="전체 검색 판정"),
                         config,
                     ),
                 ],
+                ["herdr", "pane", "close", "p-root"],
                 ["herdr", "notification", "show", "team2-agent", "--body", "Started work cell aasm-global-file-search-fallback", "--sound", "done"],
             ],
         )
@@ -726,6 +742,35 @@ class Team2AgentTests(unittest.TestCase):
             seen,
             [["herdr", "agent", "read", "ticket-DEV2-6509", "--source", "recent-unwrapped", "--lines", "80", "--format", "text"]],
         )
+
+    def test_compact_herdr_read_output_collapses_session_start_context(self) -> None:
+        raw = (
+            '{"result":{"read":{"text":"\\n'
+            '• SessionStart hook (completed)\\n'
+            '  warning: GLOBAL:FULL\\n'
+            '  hook context: GLOBAL MODE ACTIVE - level: full\\n'
+            '\\n'
+            '    # Agent Context\\n'
+            '    long rules\\n'
+            '\\n'
+            'GLOBAL_RESULT_PACKET ok"}}}'
+        )
+
+        compacted = agent.compact_herdr_read_output(raw)
+
+        self.assertNotIn("SessionStart hook", compacted)
+        self.assertNotIn("GLOBAL:FULL", compacted)
+        self.assertNotIn("hook context:", compacted)
+        self.assertNotIn("# Agent Context", compacted)
+        self.assertNotIn("long rules", compacted)
+        self.assertIn("GLOBAL_RESULT_PACKET ok", compacted)
+
+    def test_compact_herdr_read_output_collapses_session_start_context_without_bullet(self) -> None:
+        raw = "SessionStart hook (completed)\n  warning: GLOBAL:FULL\n  hook context: GLOBAL MODE ACTIVE - level: full\n\n    # Agent Context\n    long rules\n\nRESULT ok\n"
+
+        compacted = agent.compact_herdr_read_output(raw)
+
+        self.assertEqual(compacted, "RESULT ok\n")
 
     def test_ai_argv_starts_codex_with_local_workspace_permissions(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
@@ -849,7 +894,7 @@ class Team2AgentTests(unittest.TestCase):
                 return completed(stdout=workspace_stdout)
             if command == ["herdr", "pane", "list", "--workspace", "w2"]:
                 return completed(stdout=panes_stdout)
-            if command == ["herdr", "tab", "create", "--workspace", "w2", "--cwd", "/repo", "--label", "global-orchestrator-2", "--focus"]:
+            if command == ["herdr", "tab", "create", "--workspace", "w2", "--cwd", "/repo", "--label", "global-orchestrator-2", "--no-focus"]:
                 return completed(stdout=tab_stdout)
             return completed()
 
@@ -857,12 +902,12 @@ class Team2AgentTests(unittest.TestCase):
             code = agent.run(["herdr", "open", "--no-attach"], config=config, runner=runner)
 
         self.assertEqual(code, 0)
-        self.assertIn(["herdr", "tab", "create", "--workspace", "w2", "--cwd", "/repo", "--label", "global-orchestrator-2", "--focus"], seen)
+        self.assertIn(["herdr", "tab", "create", "--workspace", "w2", "--cwd", "/repo", "--label", "global-orchestrator-2", "--no-focus"], seen)
         self.assertTrue(
             any(command[:5] == ["herdr", "agent", "start", "global-orchestrator-2", "--cwd"] and "--tab" in command and "w2:t2" in command for command in seen)
         )
         self.assertIn(["herdr", "pane", "close", "p-root"], seen)
-        self.assertFalse(any(command[:3] == ["herdr", "workspace", "create"] for command in seen))
+        self.assertFalse(any(command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--no-focus"] for command in seen))
 
     def test_run_herdr_open_no_attach_focuses_without_attaching(self) -> None:
         seen: list[list[str]] = []
@@ -968,7 +1013,7 @@ class Team2AgentTests(unittest.TestCase):
             seen.append(list(command))
             if command == ["herdr", "workspace", "list"]:
                 return completed(stdout=workspace_stdout)
-            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--focus"]:
+            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--no-focus"]:
                 return completed(stdout=create_stdout)
             return completed()
 
@@ -980,7 +1025,7 @@ class Team2AgentTests(unittest.TestCase):
             seen,
             [
                 ["herdr", "workspace", "list"],
-                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--focus"],
+                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--no-focus"],
                 [
                     "herdr",
                     "agent",
@@ -992,7 +1037,7 @@ class Team2AgentTests(unittest.TestCase):
                     "w-new",
                     "--split",
                     "right",
-                    "--focus",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("codex", agent.orchestrator_prompt(config), config),
                 ],
@@ -1018,7 +1063,7 @@ class Team2AgentTests(unittest.TestCase):
             seen.append(list(command))
             if command == ["herdr", "workspace", "list"]:
                 return completed(stdout=workspace_stdout)
-            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--focus"]:
+            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "team2-orchestration", "--no-focus"]:
                 return completed(stdout=create_stdout)
             return completed()
 
@@ -1044,7 +1089,7 @@ class Team2AgentTests(unittest.TestCase):
                 "w-new",
                 "--split",
                 "right",
-                "--focus",
+                "--no-focus",
                 "--",
                 *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config),
             ],
@@ -1085,6 +1130,7 @@ class Team2AgentTests(unittest.TestCase):
                     "w2",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("codex", agent.worker_prompt(config, "DEV2-6509 브리프"), config),
                 ],
@@ -1127,6 +1173,7 @@ class Team2AgentTests(unittest.TestCase):
                 "w2",
                 "--split",
                 "right",
+                "--no-focus",
                 "--",
                 *agent.ai_argv("claude", agent.worker_prompt(engine_config, "DEV2-6509 브리프"), engine_config),
             ],
@@ -1162,6 +1209,7 @@ class Team2AgentTests(unittest.TestCase):
                     "w2",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("codex", agent.worker_prompt(config), config),
                 ],
@@ -1202,6 +1250,7 @@ class Team2AgentTests(unittest.TestCase):
                     "w2",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("codex", agent.orchestrator_prompt(config), config),
                 ],
@@ -1315,7 +1364,7 @@ class Team2AgentTests(unittest.TestCase):
             seen.append(list(command))
             if command == ["herdr", "workspace", "list"]:
                 return completed(stdout=workspace_stdout)
-            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "max", "--focus"]:
+            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "max", "--no-focus"]:
                 return completed(stdout=create_stdout)
             if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
                 return completed(stdout=tabs_stdout)
@@ -1328,24 +1377,32 @@ class Team2AgentTests(unittest.TestCase):
             seen,
             [
                 ["herdr", "workspace", "list"],
-                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "max", "--focus"],
+                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "max", "--no-focus"],
                 ["herdr", "tab", "list", "--workspace", "w-max"],
                 ["herdr", "tab", "rename", "t-root", "DEV2-6509"],
-                ["herdr", "pane", "rename", "p-root", "ticket-DEV2-6509"],
                 [
                     "herdr",
-                    "pane",
-                    "run",
-                    "p-root",
-                    agent.ai_shell_command("codex", agent.ticket_lead_prompt(config, "DEV2-6509", service="max"), config),
+                    "agent",
+                    "start",
+                    "ticket-DEV2-6509",
+                    "--cwd",
+                    "/repo",
+                    "--tab",
+                    "t-root",
+                    "--split",
+                    "right",
+                    "--no-focus",
+                    "--",
+                    *agent.ai_argv("codex", agent.ticket_lead_prompt(config, "DEV2-6509", service="max"), config),
                 ],
+                ["herdr", "pane", "close", "p-root"],
                 [
                     "herdr",
                     "notification",
                     "show",
                     "team2-agent",
                     "--body",
-                    "Started 1 ticket cells; queued 0",
+                    "Started 1 ticket cells; reused 0; queued 0",
                     "--sound",
                     "done",
                 ],
@@ -1369,7 +1426,7 @@ class Team2AgentTests(unittest.TestCase):
             seen.append(list(command))
             if command == ["herdr", "workspace", "list"]:
                 return completed(stdout=workspace_stdout)
-            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "max", "--focus"]:
+            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "max", "--no-focus"]:
                 return completed(stdout=create_stdout)
             if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
                 return completed(stdout=tabs_stdout)
@@ -1381,13 +1438,22 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn(
             [
                 "herdr",
-                "pane",
-                "run",
-                "p-root",
-                agent.ai_shell_command("claude", agent.ticket_lead_prompt(engine_config, "DEV2-6509", service="max"), engine_config),
+                "agent",
+                "start",
+                "ticket-DEV2-6509",
+                "--cwd",
+                "/repo",
+                "--tab",
+                "t-root",
+                "--split",
+                "right",
+                "--no-focus",
+                "--",
+                *agent.ai_argv("claude", agent.ticket_lead_prompt(engine_config, "DEV2-6509", service="max"), engine_config),
             ],
             seen,
         )
+        self.assertIn(["herdr", "pane", "close", "p-root"], seen)
 
     def test_run_herdr_work_reuses_root_pane_when_service_workspace_is_created(self) -> None:
         seen: list[list[str]] = []
@@ -1405,7 +1471,7 @@ class Team2AgentTests(unittest.TestCase):
             seen.append(list(command))
             if command == ["herdr", "workspace", "list"]:
                 return completed(stdout=workspace_stdout)
-            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "aasm", "--focus"]:
+            if command == ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "aasm", "--no-focus"]:
                 return completed(stdout=create_stdout)
             if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
                 return completed(stdout=tabs_stdout)
@@ -1422,21 +1488,29 @@ class Team2AgentTests(unittest.TestCase):
             seen,
             [
                 ["herdr", "workspace", "list"],
-                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "aasm", "--focus"],
+                ["herdr", "workspace", "create", "--cwd", "/repo", "--label", "aasm", "--no-focus"],
                 ["herdr", "tab", "list", "--workspace", "w-aasm"],
                 ["herdr", "tab", "rename", "t-root", "aasm-resource-url-copy"],
-                ["herdr", "pane", "rename", "p-root", "work-aasm-resource-url-copy"],
                 [
                     "herdr",
-                    "pane",
-                    "run",
-                    "p-root",
-                    agent.ai_shell_command(
+                    "agent",
+                    "start",
+                    "work-aasm-resource-url-copy",
+                    "--cwd",
+                    "/repo",
+                    "--tab",
+                    "t-root",
+                    "--split",
+                    "right",
+                    "--no-focus",
+                    "--",
+                    *agent.ai_argv(
                         "codex",
                         agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"),
                         config,
                     ),
                 ],
+                ["herdr", "pane", "close", "p-root"],
                 [
                     "herdr",
                     "notification",
@@ -1462,10 +1536,12 @@ class Team2AgentTests(unittest.TestCase):
                 return completed(stdout=workspace_stdout)
             if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
                 return completed(stdout=empty_tabs_stdout)
-            if command == ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6509", "--focus"]:
+            if command == ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6509", "--no-focus"]:
                 return completed(stdout='{"result":{"tab":{"tab_id":"t-6509"}}}')
-            if command == ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6510", "--focus"]:
+            if command == ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6510", "--no-focus"]:
                 return completed(stdout='{"result":{"tab":{"tab_id":"t-6510"}}}')
+            if command[:3] == ["herdr", "agent", "get"]:
+                return completed(returncode=1)
             return completed()
 
         code = agent.run(["herdr", "tickets", "--service", "max", "--concurrency", "2", "DEV2-6509", "DEV2-6510", "DEV2-6511"], config=config, runner=runner)
@@ -1482,7 +1558,9 @@ class Team2AgentTests(unittest.TestCase):
                     "w-max",
                 ],
                 ["herdr", "tab", "list", "--workspace", "w-max"],
-                ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6509", "--focus"],
+                ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6509", "--no-focus"],
+                ["herdr", "agent", "get", "ticket-DEV2-6509"],
+                ["herdr", "agent", "get", "DEV2-6509"],
                 [
                     "herdr",
                     "agent",
@@ -1494,11 +1572,14 @@ class Team2AgentTests(unittest.TestCase):
                     "t-6509",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("codex", agent.ticket_lead_prompt(config, "DEV2-6509", service="max"), config),
                 ],
                 ["herdr", "tab", "list", "--workspace", "w-max"],
-                ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6510", "--focus"],
+                ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6510", "--no-focus"],
+                ["herdr", "agent", "get", "ticket-DEV2-6510"],
+                ["herdr", "agent", "get", "DEV2-6510"],
                 [
                     "herdr",
                     "agent",
@@ -1510,6 +1591,7 @@ class Team2AgentTests(unittest.TestCase):
                     "t-6510",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("codex", agent.ticket_lead_prompt(config, "DEV2-6510", service="max"), config),
                 ],
@@ -1519,7 +1601,47 @@ class Team2AgentTests(unittest.TestCase):
                     "show",
                     "team2-agent",
                     "--body",
-                    "Started 2 ticket cells; queued 1",
+                    "Started 2 ticket cells; reused 0; queued 1",
+                    "--sound",
+                    "done",
+                ],
+            ],
+        )
+
+    def test_run_herdr_tickets_reuses_existing_ticket_lead(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-max","label":"max","focused":false,"pane_count":3}]}}'
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-6509","label":"DEV2-6509","workspace_id":"w-max"}]}}'
+        agent_stdout = '{"result":{"agent":{"pane_id":"p-lead","agent_status":"idle","workspace_id":"w-max"}}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
+                return completed(stdout=tabs_stdout)
+            if command == ["herdr", "agent", "get", "ticket-DEV2-6509"]:
+                return completed(stdout=agent_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "tickets", "--service", "max", "--concurrency", "1", "DEV2-6509"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
+                ["herdr", "workspace", "list"],
+                ["herdr", "workspace", "focus", "w-max"],
+                ["herdr", "tab", "list", "--workspace", "w-max"],
+                ["herdr", "agent", "get", "ticket-DEV2-6509"],
+                [
+                    "herdr",
+                    "notification",
+                    "show",
+                    "team2-agent",
+                    "--body",
+                    "Started 0 ticket cells; reused 1; queued 0",
                     "--sound",
                     "done",
                 ],
@@ -1538,7 +1660,7 @@ class Team2AgentTests(unittest.TestCase):
                 return completed(stdout=workspace_stdout)
             if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
                 return completed(stdout=empty_tabs_stdout)
-            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--focus"]:
+            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--no-focus"]:
                 return completed(stdout='{"result":{"tab":{"tab_id":"t-work","label":"aasm-resource-url-copy","workspace_id":"w-aasm"}}}')
             return completed()
 
@@ -1555,7 +1677,7 @@ class Team2AgentTests(unittest.TestCase):
                 ["herdr", "workspace", "list"],
                 ["herdr", "workspace", "focus", "w-aasm"],
                 ["herdr", "tab", "list", "--workspace", "w-aasm"],
-                ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--focus"],
+                ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--no-focus"],
                 [
                     "herdr",
                     "agent",
@@ -1567,6 +1689,7 @@ class Team2AgentTests(unittest.TestCase):
                     "t-work",
                     "--split",
                     "right",
+                    "--no-focus",
                     "--",
                     *agent.ai_argv("codex", agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"), config),
                 ],
@@ -1596,7 +1719,7 @@ class Team2AgentTests(unittest.TestCase):
                 return completed(stdout=workspace_stdout)
             if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
                 return completed(stdout=empty_tabs_stdout)
-            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--focus"]:
+            if command == ["herdr", "tab", "create", "--workspace", "w-aasm", "--cwd", "/repo", "--label", "aasm-resource-url-copy", "--no-focus"]:
                 return completed(stdout='{"result":{"tab":{"tab_id":"t-work","label":"aasm-resource-url-copy","workspace_id":"w-aasm"}}}')
             return completed()
 
@@ -1619,6 +1742,7 @@ class Team2AgentTests(unittest.TestCase):
                 "t-work",
                 "--split",
                 "right",
+                "--no-focus",
                 "--",
                 *agent.ai_argv(
                     "claude",
@@ -1674,6 +1798,188 @@ class Team2AgentTests(unittest.TestCase):
                 ],
             ],
         )
+
+    def test_run_herdr_role_starts_agent_and_closes_created_root_pane(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-max","label":"max","focused":false,"pane_count":3}]}}'
+        empty_tabs_stdout = '{"result":{"tabs":[]}}'
+        create_tab_stdout = (
+            '{"result":{'
+            '"tab":{"tab_id":"t-6509","label":"DEV2-6509","workspace_id":"w-max"},'
+            '"root_pane":{"pane_id":"p-root","tab_id":"t-6509"}'
+            '}}'
+        )
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
+                return completed(stdout=empty_tabs_stdout)
+            if command == ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6509", "--no-focus"]:
+                return completed(stdout=create_tab_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "role", "--service", "max", "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
+                ["herdr", "workspace", "list"],
+                ["herdr", "workspace", "focus", "w-max"],
+                ["herdr", "tab", "list", "--workspace", "w-max"],
+                ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6509", "--no-focus"],
+                [
+                    "herdr",
+                    "agent",
+                    "start",
+                    "ticket-DEV2-6509-analyst",
+                    "--cwd",
+                    "/repo",
+                    "--tab",
+                    "t-6509",
+                    "--split",
+                    "right",
+                    "--no-focus",
+                    "--",
+                    *agent.ai_argv("codex", agent.role_agent_prompt(config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"), config),
+                ],
+                ["herdr", "pane", "close", "p-root"],
+            ],
+        )
+
+    def test_run_herdr_close_closes_idle_work_tab_with_all_panes(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-aasm","label":"aasm","focused":false,"pane_count":3}]}}'
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-work","label":"aasm-global-file-search-fallback","workspace_id":"w-aasm"}]}}'
+        panes_stdout = (
+            '{"result":{"panes":['
+            '{"pane_id":"p-lead","tab_id":"t-work","label":"work-aasm-global-file-search-fallback","agent":"codex","agent_status":"idle"},'
+            '{"pane_id":"p-role","tab_id":"t-work","label":"ticket-aasm-global-file-search-fallback-developer","agent":"codex","agent_status":"idle"}'
+            ']}}'
+        )
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
+                return completed(stdout=tabs_stdout)
+            if command == ["herdr", "pane", "list", "--workspace", "w-aasm"]:
+                return completed(stdout=panes_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "close", "--service", "aasm", "aasm-global-file-search-fallback"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            seen,
+            [
+                ["herdr", "workspace", "list"],
+                ["herdr", "workspace", "focus", "w-aasm"],
+                ["herdr", "tab", "list", "--workspace", "w-aasm"],
+                ["herdr", "pane", "list", "--workspace", "w-aasm"],
+                ["herdr", "tab", "close", "t-work"],
+                [
+                    "herdr",
+                    "notification",
+                    "show",
+                    "team2-agent",
+                    "--body",
+                    "Closed aasm-global-file-search-fallback with 2 panes",
+                    "--sound",
+                    "done",
+                ],
+            ],
+        )
+
+    def test_run_herdr_close_refuses_working_panes_without_force(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-aasm","label":"aasm","focused":false,"pane_count":3}]}}'
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-work","label":"aasm-editor-deploy-queue-permission","workspace_id":"w-aasm"}]}}'
+        panes_stdout = (
+            '{"result":{"panes":['
+            '{"pane_id":"p-lead","tab_id":"t-work","label":"work-aasm-editor-deploy-queue-permission","agent":"codex","agent_status":"idle"},'
+            '{"pane_id":"p-active","tab_id":"t-work","label":"","agent":"codex","agent_status":"working"}'
+            ']}}'
+        )
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
+                return completed(stdout=tabs_stdout)
+            if command == ["herdr", "pane", "list", "--workspace", "w-aasm"]:
+                return completed(stdout=panes_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "close", "--service", "aasm", "aasm-editor-deploy-queue-permission"], config=config, runner=runner)
+
+        self.assertEqual(code, 2)
+        self.assertNotIn(["herdr", "tab", "close", "t-work"], seen)
+        self.assertIn(
+            [
+                "herdr",
+                "notification",
+                "show",
+                "team2-agent",
+                "--body",
+                "Close skipped for aasm-editor-deploy-queue-permission; active panes: p-active:working",
+                "--sound",
+                "request",
+            ],
+            seen,
+        )
+
+    def test_run_herdr_close_force_closes_working_panes(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-aasm","label":"aasm","focused":false,"pane_count":3}]}}'
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-work","label":"aasm-editor-deploy-queue-permission","workspace_id":"w-aasm"}]}}'
+        panes_stdout = '{"result":{"panes":[{"pane_id":"p-active","tab_id":"t-work","label":"","agent":"codex","agent_status":"working"}]}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-aasm"]:
+                return completed(stdout=tabs_stdout)
+            if command == ["herdr", "pane", "list", "--workspace", "w-aasm"]:
+                return completed(stdout=panes_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "close", "--force", "--service", "aasm", "aasm-editor-deploy-queue-permission"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertIn(["herdr", "tab", "close", "t-work"], seen)
+
+    def test_run_herdr_close_closes_workspace_when_target_is_last_tab(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-max","label":"max","focused":false,"pane_count":1,"tab_count":1}]}}'
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-6018","label":"DEV2-6018","workspace_id":"w-max"}]}}'
+        panes_stdout = '{"result":{"panes":[{"pane_id":"p-ticket","tab_id":"t-6018","label":"DEV2-6018","agent":"codex","agent_status":"idle"}]}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
+                return completed(stdout=tabs_stdout)
+            if command == ["herdr", "pane", "list", "--workspace", "w-max"]:
+                return completed(stdout=panes_stdout)
+            return completed()
+
+        code = agent.run(["herdr", "close", "--service", "max", "DEV2-6018"], config=config, runner=runner)
+
+        self.assertEqual(code, 0)
+        self.assertNotIn(["herdr", "tab", "close", "t-6018"], seen)
+        self.assertIn(["herdr", "workspace", "close", "w-max"], seen)
 
     def test_run_herdr_role_uses_requested_engine(self) -> None:
         seen: list[list[str]] = []
@@ -1741,7 +2047,7 @@ class Team2AgentTests(unittest.TestCase):
                 "w2",
                 "--split",
                 "right",
-                "--focus",
+                "--no-focus",
                 "--",
                 *agent.ai_argv(
                     "codex",

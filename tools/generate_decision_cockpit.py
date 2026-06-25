@@ -147,12 +147,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
                 f"- 서비스: {item['service'] or '-'}",
                 f"- 요약: {item['summary']}",
                 f"- 권장 액션: {', '.join('`' + action + '`' for action in item['recommended_actions'])}",
-                "",
-                "지시 예시:",
-                "",
-                "```bash",
-                f"team2-agent {item['recommended_actions'][0]} {item['task_id'] or '<task-id>'} \"필요한 지시를 여기에 작성\"",
-                "```",
+                f"- 지시 예시: `team2-agent {item['recommended_actions'][0]} {item['task_id'] or '<task-id>'} \"필요한 지시를 여기에 작성\"`",
             ]
         )
         if item["pending_actions"]:
