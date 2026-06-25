@@ -17,8 +17,14 @@ description: "Use when a request needs DEV2/team2 harness context: policies, ser
 ## 참조
 
 - 진입점: `CLAUDE.md`, `AGENTS.md`
-- 정책: `policies/engineering-policy.md`, `branching-strategy.md`, `code-review-policy.md`, `release-policy.md`, `ai-usage-policy.md`, `security-policy.md`, `incident-policy.md`, `team-members.md`, `knowledge-base-policy.md`, `wiki-document-language-and-title-policy.md`, `data-request-policy.md`
+- 정책: `policies/engineering-policy.md`, `branching-strategy.md`, `code-review-policy.md`, `release-policy.md`, `ai-usage-policy.md`, `security-policy.md`, `incident-policy.md`, `team-members.md`, `knowledge-base-policy.md`, `wiki-document-language-and-title-policy.md`, `business-stakeholder-communication-policy.md`, `data-request-policy.md`
 - 서비스/스프린트/분석: `catalog/{service}.yaml`, `docs/sprint/*.md`, `docs/analysis-guides.md`
+
+## 사업부 커뮤니케이션
+
+- 사업부, 기획, 운영, CS 등 비개발 이해관계자에게 전달할 댓글/선택지/보고 초안은 `policies/business-stakeholder-communication-policy.md`를 먼저 적용한다.
+- 특정 서비스에 국한하지 않고, 서비스별 내부 구현명을 그대로 설명하지 말고 업무 용어로 풀어쓴다. 예: `MaxProduct` → "이용권 상품 관리 구조", `AutoPayment` → "기존 정기결제 구조", `MaxPass` → "이용 권한/이용권 활성화".
+- 내부명, 코드 경로, DB 근거는 사업부용 코멘트가 아니라 로컬 위키의 `내부 근거` 또는 개발 메모에 분리한다.
 
 ## 외부·승인
 
