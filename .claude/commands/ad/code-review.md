@@ -66,7 +66,7 @@ gh CLI가 없으면 설치 안내: https://cli.github.com/ (`brew install gh`)
 | 숫자만 (`1308`) | `catalog/*.yaml`의 `repos:` 매핑에서 후보를 모은 뒤 `AskUserQuestion`으로 어느 레포인지 확인 |
 | `{owner}/{repo}#{N}` 또는 `{repo}#{N}` | 같은 방식으로 owner/repo 해석 |
 
-레포 해석 결과는 **수집 단계 첫 출력**으로 사용자에게 한 줄 노출한다 (예: `대상: AladinCommunication/max-front #1308`). 잘못 매핑되면 조기 중단 가능하도록.
+레포 해석 결과는 **수집 단계 첫 출력**으로 사용자에게 한 줄 노출한다. PR 정보 조회(1단계) 후 머지 방향(`headRefName` → `baseRefName`)을 함께 표기해 어느 브랜치가 어느 브랜치로 머지되는지 드러낸다 (예: `대상: AladinCommunication/max-front #1308 (feature/DEV2-1234 → develop)`). 잘못 매핑되거나 머지 대상 브랜치가 예상과 다르면 조기 중단 가능하도록.
 
 ### 1. PR 정보 수집
 
@@ -142,6 +142,7 @@ GitHub에 게시하는 코멘트/리뷰 본문에는 로컬 하네스 내부 정
 
 ```
 ## PR #{번호} 리뷰 결과
+머지: {headRefName} → {baseRefName}
 
 ### 하네스 체크리스트
 ✅ 기본: 티켓 일치, 테스트 포함, 컨벤션 준수

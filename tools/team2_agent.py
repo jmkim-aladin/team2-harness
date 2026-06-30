@@ -9,6 +9,7 @@ import re
 import shlex
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Callable, NamedTuple, Sequence
@@ -266,6 +267,8 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     close_parser.add_argument("--kind", choices=TASK_KINDS, default="auto")
     close_parser.add_argument("--force", action="store_true", help="Close even when child panes are working or blocked")
     close_parser.add_argument("target")
+    reset_parser = herdr_sub.add_parser("reset", help="Close all team2 herdr workspaces (orchestration, triage, service spaces)")
+    reset_parser.add_argument("--force", action="store_true", help="Close even when panes are working or blocked")
     herdr_sub.add_parser("sync", help="Run the team2 cycle, refresh cockpit, and notify herdr")
     notify = herdr_sub.add_parser("notify", help="Show a herdr notification")
     notify.add_argument("body")
@@ -531,14 +534,42 @@ def role_agent_prompt(config: Config, ticket_id: str, role: str, instruction: st
     return prompt
 
 
-def ai_argv(engine: str, prompt: str, config: Config, *, cwd: Path | None = None) -> list[str]:
-    return ["zsh", "-ic", ai_command_text(engine, prompt, config, cwd=cwd)]
+def ai_argv(
+    engine: str,
+    prompt: str,
+    config: Config,
+    *,
+    cwd: Path | None = None,
+    non_interactive: bool = False,
+    codex_output_path: Path | None = None,
+) -> list[str]:
+    return [
+        "zsh",
+        "-ic",
+        ai_command_text(engine, prompt, config, cwd=cwd, non_interactive=non_interactive, codex_output_path=codex_output_path),
+    ]
 
 
-def ai_command_text(engine: str, prompt: str, config: Config, *, cwd: Path | None = None) -> str:
+def ai_command_text(
+    engine: str,
+    prompt: str,
+    config: Config,
+    *,
+    cwd: Path | None = None,
+    non_interactive: bool = False,
+    codex_output_path: Path | None = None,
+) -> str:
     run_cwd = cwd or config.harness
     if engine == "codex":
-        argv = [engine, "--sandbox", "danger-full-access", "--ask-for-approval", "never", prompt]
+        argv = [engine]
+        if non_interactive:
+            argv.append("exec")
+        argv.extend(["--sandbox", "danger-full-access"])
+        if non_interactive and codex_output_path:
+            argv.extend(["--output-last-message", str(codex_output_path)])
+        if not non_interactive:
+            argv.extend(["--ask-for-approval", "never"])
+        argv.append(prompt)
     elif engine == "claude":
         argv = [engine, "--dangerously-skip-permissions", prompt]
     else:
@@ -587,6 +618,16 @@ def team2_workspace(output: str) -> HerdrWorkspace | None:
 def team2_workspace_id(output: str) -> str | None:
     workspace = team2_workspace(output)
     return workspace.workspace_id if workspace else None
+
+
+def team2_managed_labels(config: Config) -> set[str]:
+    # ponytail: service-space labels come from catalog/*.yaml stems (SSOT); _*.yaml are templates.
+    labels = {ORCHESTRATION_WORKSPACE_LABEL, TRIAGE_WORKSPACE_LABEL}
+    try:
+        labels.update(p.stem for p in (config.harness / "catalog").glob("*.yaml") if not p.stem.startswith("_"))
+    except OSError:
+        pass
+    return labels
 
 
 def herdr_panes(output: str) -> list[HerdrPane]:
@@ -741,6 +782,26 @@ def submit_herdr_agent_input(target: str, agent_info: HerdrAgentInfo, config: Co
     return execute([HERDR, "pane", "send-keys", agent_info.pane_id, herdr_submit_key(agent_info)], config.harness)
 
 
+def codex_worker_result_path(name: str) -> Path:
+    safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", name).strip("._-") or "worker"
+    return Path(tempfile.gettempdir()) / f"team2-herdr-{safe_name}-last-message.txt"
+
+
+def wait_for_file_text(path: Path, timeout_ms: int) -> str | None:
+    deadline = time.monotonic() + (timeout_ms / 1000)
+    while time.monotonic() <= deadline:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            text = ""
+        except OSError:
+            text = ""
+        if text.strip():
+            return text
+        time.sleep(0.25)
+    return None
+
+
 def start_orchestrator_command(
     config: Config,
     *,
@@ -778,6 +839,7 @@ def start_worker_command(
     engine: str | None = None,
     name: str = DEFAULT_ORCHESTRATION_WORKERS[0],
     instruction: str = "",
+    codex_output_path: Path | None = None,
     split: str = DEFAULT_HERDR_PANE_SPLIT,
     focus: bool | None = False,
 ) -> list[str]:
@@ -795,7 +857,18 @@ def start_worker_command(
     if focus is not None:
         command.append("--focus" if focus else "--no-focus")
     selected_engine = engine or config.agent_engine
-    command.extend(["--", *ai_argv(selected_engine, worker_prompt(config, instruction), config)])
+    command.extend(
+        [
+            "--",
+            *ai_argv(
+                selected_engine,
+                worker_prompt(config, instruction),
+                config,
+                non_interactive=bool(instruction and selected_engine == "codex"),
+                codex_output_path=codex_output_path,
+            ),
+        ]
+    )
     return command
 
 
@@ -1147,9 +1220,38 @@ def run_herdr_worker(args: argparse.Namespace, config: Config, execute=None) -> 
     if not workspace:
         return 2
     instruction = instruction_text(args.instruction, "")
-    start_proc = execute(start_worker_command(config, workspace_id=workspace.workspace_id, name=args.name, instruction=instruction), config.harness)
+    selected_engine = args.engine or config.agent_engine
+    codex_non_interactive = bool(instruction and selected_engine == "codex")
+    result_path = codex_worker_result_path(args.name) if codex_non_interactive else None
+    if result_path:
+        try:
+            result_path.unlink()
+        except FileNotFoundError:
+            pass
+    start_proc = execute(
+        start_worker_command(
+            config,
+            workspace_id=workspace.workspace_id,
+            engine=selected_engine,
+            name=args.name,
+            instruction=instruction,
+            codex_output_path=result_path,
+        ),
+        config.harness,
+    )
     if start_proc.returncode != 0 or not instruction:
         return int(start_proc.returncode)
+    if codex_non_interactive and result_path:
+        result_text = wait_for_file_text(result_path, DEFAULT_HERDR_ASK_TIMEOUT_MS)
+        if result_text is None:
+            return 1
+        try:
+            result_path.unlink()
+        except FileNotFoundError:
+            pass
+        if should_emit:
+            sys.stdout.write(result_text if result_text.endswith("\n") else f"{result_text}\n")
+        return 0
     wait_proc = execute([HERDR, "agent", "wait", args.name, "--status", "idle", "--timeout", str(DEFAULT_HERDR_ASK_TIMEOUT_MS)], config.harness)
     if wait_proc.returncode != 0:
         return int(wait_proc.returncode)
@@ -1479,6 +1581,44 @@ def run_herdr_close(args: argparse.Namespace, config: Config, execute=None) -> i
     )
 
 
+def run_herdr_reset(args: argparse.Namespace, config: Config, execute=None) -> int:
+    if execute is None:
+        execute = lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False, capture_output=True)
+    list_proc = execute([HERDR, "workspace", "list"], config.harness)
+    if list_proc.returncode != 0:
+        return int(list_proc.returncode)
+    managed = team2_managed_labels(config)
+    targets = [workspace for workspace in herdr_workspaces(list_proc.stdout or "") if workspace.label in managed]
+    if not targets:
+        return run_steps(
+            [ExecutionStep(herdr_notify_command("No team2 herdr workspaces to reset", sound="done"), config.harness)],
+            execute,
+        )
+    if not args.force:
+        blocking: list[str] = []
+        for workspace in targets:
+            panes_proc = execute([HERDR, "pane", "list", "--workspace", workspace.workspace_id], config.harness)
+            if panes_proc.returncode != 0:
+                return int(panes_proc.returncode)
+            unsafe = unsafe_close_panes(herdr_panes(panes_proc.stdout or ""))
+            if unsafe:
+                blocking.append(f"{workspace.label}: {pane_status_summary(unsafe)}")
+        if blocking:
+            body = f"Reset skipped; active panes: {'; '.join(blocking)}"
+            notify_proc = execute(herdr_notify_command(body, sound="request"), config.harness)
+            if notify_proc.returncode != 0:
+                return int(notify_proc.returncode)
+            return 2
+    for workspace in targets:
+        close_proc = execute([HERDR, "workspace", "close", workspace.workspace_id], config.harness)
+        if close_proc.returncode != 0:
+            return int(close_proc.returncode)
+    return run_steps(
+        [ExecutionStep(herdr_notify_command(f"Reset {len(targets)} team2 herdr workspaces", sound="done"), config.harness)],
+        execute,
+    )
+
+
 def run_herdr_open(args: argparse.Namespace, config: Config, execute=None) -> int:
     if execute is None:
         list_proc = subprocess.run(
@@ -1567,6 +1707,8 @@ def run(
         return run_herdr_role(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "close":
         return run_herdr_close(parsed, cfg, runner)
+    if parsed.command == "herdr" and parsed.herdr_command == "reset":
+        return run_herdr_reset(parsed, cfg, runner)
     execute = runner or (lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False))
     return run_steps(steps_for(parsed, cfg), execute)
 

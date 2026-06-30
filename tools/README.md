@@ -26,6 +26,7 @@ team2-agent herdr tickets --engine claude --service max --concurrency 4 DEV2-650
 team2-agent herdr worker --engine claude orch-worker-3 "추가 분석 작업"
 team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
 team2-agent herdr close --service max DEV2-6509
+team2-agent herdr reset
 team2-agent herdr sync
 ```
 
@@ -45,6 +46,7 @@ herdr 작업실이 열린 뒤 사용자는 `team2-orchestration` space의 `globa
 - `herdr tickets`: 서비스 space에 티켓별 tab을 만들고 ticket-lead를 concurrency 한도만큼 시작
 - `herdr role`: 특정 서비스 space의 티켓 tab 안에 role agent 시작
 - `herdr close`: 특정 서비스 space의 티켓/work tab을 닫음. 기본은 working/blocked pane이 있으면 거부하고, `--force`일 때만 강제 종료
+- `herdr reset`: team2가 만든 모든 작업실(`team2-orchestration`, `team2-triage`, 카탈로그 서비스 space)을 전부 정리해 초기화. 비-team2 작업실은 보존. 기본은 working/blocked pane이 있으면 거부하고, `--force`일 때만 강제 종료
 - `herdr sync`: 전체 cycle과 cockpit 갱신 후 herdr 알림 표시
 - `herdr notify`: herdr 알림 직접 표시
 
