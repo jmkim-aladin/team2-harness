@@ -102,13 +102,7 @@ curl -s -H "$AUTH" \
 
 탐색 결과가 비면 "후보 미식별" 항목으로 명시 (감추지 않는다). 키워드 후보를 노트에 적어 다음 사이클에서 다시 시도.
 
-기록 밀도:
-
-- 첫 50줄 안에 문제, 현재 판단, 해결 방향, 다음 행동이 모두 보여야 한다.
-- `비즈니스 로직`은 트리거/정책/예외/운영 영향을 3-5개 bullet로 요약한다.
-- `기술 근거`는 재탐색용 식별자만 남긴다. 파일 경로·SP·테이블 대량 나열, 호출부 전문, 콜그래프 출력 전문은 본문에 붙이지 않는다.
-- 운영 서버에서 사람이 직접 확인해야 하는 조회 SQL은 `검증 SQL` 섹션에 전문을 남긴다. 단, 판단 요약·검증 결과 뒤에 배치해 첫 화면을 밀어내지 않는다.
-- 전수검사 목록, raw evidence는 티켓 하위 근거 파일(`wiki/processes/tickets/dev2-{NNNN}/...`) 또는 promote 대상 분석/결정 노트로 분리하고, 티켓 본문에는 링크와 결론만 둔다.
+기록 밀도는 §5 기준을 따른다 (호출부·콜그래프 출력 전문 금지 포함). 추가: 사람이 운영 서버에서 직접 확인할 조회 SQL은 `검증 SQL` 섹션에 전문으로 남기되, 판단 요약·검증 결과 뒤에 배치해 첫 화면을 밀어내지 않는다.
 
 ### 4. 위키 노트 경로 결정
 
@@ -119,7 +113,7 @@ curl -s -H "$AUTH" \
 
 기존 파일이 있으면 **읽어서** frontmatter `youtrack_synced_at`/`updated_at` 갱신만 하고, 본문은 보존한다. 사용자에게 "이미 있음 → 갱신" / "처음 생성" 인지 보고한다.
 
-**기본 동작 (사용자 확인 없이 진행)**: 위키 노트 신규 생성·기존 노트 frontmatter 갱신·티켓 종료 반영·Daily 아젠다 추가는 미리보기를 출력한 뒤 바로 진행한다. 별도 확인 질문을 두지 않는다. 단, dev DB 쓰기 쿼리(§11)·브랜치 생성·YouTrack 변경은 여전히 사용자 확인 게이트를 유지한다.
+확인 없이 진행 / 확인 필수 구분은 "사용자 확인 게이트" 섹션(SoT)을 따른다.
 
 ### 5. 위키 노트 작성
 
@@ -179,10 +173,7 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (`daily-meet
 | 담당자 | {fullName ({login})} |
 | 위키 노트 | $LOCAL_WIKI_PATH/wiki/processes/tickets/dev2-{nnnn}.md (생성/갱신) |
 | Daily 아젠다 | $LOCAL_WIKI_PATH/wiki/processes/daily/{YYYY-MM-DD}.md (추가/스킵) |
-| cmux 탭 | DEV2-{NNNN} (변경/스킵 — cmux 외부면 스킵) |
-| herdr tab | DEV2-{NNNN} (변경/스킵 — herdr 외부면 스킵) |
-| herdr agent | DEV2-{NNNN} (변경/스킵 — herdr 외부면 스킵) |
-| herdr pane | DEV2-{NNNN} — {제목} (변경/스킵 — herdr 외부면 스킵) |
+| cmux/herdr 라벨 | DEV2-{NNNN} (변경/스킵 — 외부 환경이면 스킵, §9) |
 | 제안 브랜치 | feature/DEV2-{NNNN} (미생성) |
 | 제안 커밋 prefix | [DEV2-{NNNN}] |
 
@@ -201,12 +192,9 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (`daily-meet
 
 요약:
 
-- `SELECT`/스키마 조회만 자동 허용한다. `INSERT/UPDATE/DELETE/DDL`은 별도 승인 전 금지.
-- dev/staging 읽기 쿼리는 사전 동의 범위다. Keychain에서 credential을 읽고 사용 후 unset한다.
-- 검증은 작은 모수와 짧은 기간으로 시작하고, 결과는 스키마/카운트/대표 패턴/판단만 노트에 남긴다.
-- 운영(prod) 조회·추출은 직접 실행하지 않고 [data-request-policy.md](../../../policies/data-request-policy.md) 절차로 전환한다.
-- 검증 SQL은 data-requests-dev2 등록 전에 먼저 티켓 노트 `검증 SQL` 섹션의 마크다운 코드블록에 embed한다. 별도 `.sql` 사이드카 파일은 만들지 않는다.
-- 만권당 CS 구독취소/환불에서 실제 사용 여부 확인이 필요하면 vault `wiki/services/max/analysis/subscription-usage-check-sql.md` 템플릿을 우선 사용한다.
+- `SELECT`/스키마 조회만 자동 허용 (dev/staging 읽기는 사전 동의 범위 — Keychain credential 사용 후 unset). 쓰기·prod 전환은 "사용자 확인 게이트" 참조.
+- 검증은 작은 모수·짧은 기간으로 시작하고, 결과는 스키마/카운트/대표 패턴/판단만 노트에 남긴다. SQL 전문은 티켓 노트 `검증 SQL` 코드블록에 embed — 별도 `.sql` 사이드카 금지, data-requests-dev2 등록은 그 다음.
+- 만권당 CS 구독취소/환불 사용 여부 확인은 vault `wiki/services/max/analysis/subscription-usage-check-sql.md` 템플릿 우선.
 
 ### 12. 티켓 종료 모드 (로컬 위키 자동 반영)
 
@@ -248,16 +236,12 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (`daily-meet
 
 > dev DB **읽기 쿼리**는 사전 동의되어 있어 확인 게이트 없이 실행 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의").
 
-## 금지
+**항상 금지** (확인으로도 해제 불가):
 
-- YouTrack 상태/필드/댓글 변경 (조회 전용)
-- 브랜치 자동 생성/체크아웃
-- 운영(prod) DB 직접 조회/변경 — 데이터 추출 요청 절차로 전환
-- 개발 DB라도 사용자 사전 승인 없는 쓰기 쿼리(`INSERT/UPDATE/DELETE/DDL`)
 - DB 계열 MCP 서버(postgres/mssql/mysql 등) 사용
 - SP 원문/운영 실데이터/시크릿/개인정보를 위키 본문에 저장
 - placeholder `/Users/user/...`를 실제 경로로 해석해 파일 생성 (반드시 `$LOCAL_WIKI_PATH` 사용)
-- vault의 `<!-- GENERATED:START -->` ~ `<!-- GENERATED:END -->` 외부 영역을 자동 갱신
+- vault의 `<!-- GENERATED:START -->` ~ `<!-- GENERATED:END -->` 외부 영역 자동 갱신
 
 ## 문서 위치 결정
 
