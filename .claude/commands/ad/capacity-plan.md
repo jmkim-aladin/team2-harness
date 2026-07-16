@@ -34,6 +34,7 @@
 | 조은흠 | heum2 | FE |
 | 박민석 | pms0905 | BE/FE |
 | 안혜련 | hyeryun | BE (storefront) |
+| 강인용 | iyk | BE (storefront B2B, bazaar) — 2026-07 정규 전환, 이전 스프린트 baseline 미포함 |
 
 > 팀 수용량 집계 시 위 dev role 정직원만 합산.
 > **제외 대상**:
@@ -316,17 +317,5 @@ status: draft
 - `Story points` customField value는 int/float 직접 (dict 아님) — 파싱 시 타입 분기 필요
 - 박민석 등 SP 산정 누락 케이스 다수 — baseline 정확도 위해 산정 완료 권고
 - AASM 가중치는 팀장 지침. 변경 시 frontmatter `aasm_weight` 갱신
-
-## 저장 frontmatter
-
-```yaml
----
-type: capacity-plan
-year: 2026
-month: 6
-assignees: [jmkim, heum2, pms0905, hyeryun]
-updated_at: 2026-05-27
----
-```
 
 ARGUMENTS: $ARGUMENTS

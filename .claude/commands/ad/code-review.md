@@ -1,6 +1,6 @@
 ---
 description: GitHub PR 코드 리뷰 (팀 하네스 기준)
-model: sonnet
+model: claude-opus-4-8
 ---
 
 # GitHub PR 코드 리뷰
@@ -31,15 +31,8 @@ model: sonnet
 
 ### 실행 모드
 
-이 스킬은 다수의 `gh` 호출과 마지막 리뷰 게시까지 포함하므로, **세션 시작 시 `--dangerously-skip-permissions` 로 진입하는 것을 권장**한다.
-
-```bash
-claude --dangerously-skip-permissions
-```
-
-- 권한 프롬프트가 모두 우회되므로, 게시 직전 단계에서 스킬이 보여주는 **미리보기를 사용자가 검토**하는 것이 유일한 게이트가 된다.
-- 미리보기 단계에서 사용자가 "이대로 게시"라고 답해야만 `gh api ... POST` 를 실행한다 — 이 규칙은 권한 모드와 무관하게 지킨다.
-- 일반 모드로 실행했다면 `.claude/settings.local.json` 의 `Bash(gh pr view:*)` / `Bash(rtk gh pr view:*)` 계열 화이트리스트로 읽기 명령은 통과하고, 게시 명령은 사용자 확인을 거친다.
+- 게시 직전 단계에서 스킬이 보여주는 **미리보기를 사용자가 검토**하고 "이대로 게시"라고 답해야만 `gh api ... POST` 를 실행한다 — 이 규칙은 권한 모드와 무관하게 지킨다.
+- 읽기 명령은 `.claude/settings.local.json` 의 `Bash(gh pr view:*)` / `Bash(rtk gh pr view:*)` 계열 화이트리스트로 통과하고, 게시 명령은 사용자 확인을 거친다.
 
 ### 도구 점검
 

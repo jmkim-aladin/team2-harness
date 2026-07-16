@@ -67,13 +67,13 @@
 
 사용 빈도 × 감사 결과 교차 우선순위. 적용 시 삭제 테스트(해당 스킬 1회 실행 비교) 필수.
 
-### A. 즉시 수정 (무동작·리터럴 중복·자기불일치)
+### A. 즉시 수정 (무동작·리터럴 중복·자기불일치) — 2026-07-16 적용 완료
 
-- [ ] `ticket.md:198-210` — "Task 본문: 수행 내용 섹션" 리터럴 2회 중복 → 1개 삭제
-- [ ] `code-review.md:30-42` — `--dangerously-skip-permissions` 권장 문단 삭제 (게이트는 아래 문단에 이미 존재, 위험 권고만 잔존). 최다 사용 스킬(70회)이라 효과 큼
-- [ ] `harness-optimize.md` SoT 표 — 팀원 정보 참조 파일에 weekly-report/capacity-plan/sprint-close-check/weekly-planned 추가
-- [ ] `capacity-plan.md` — 저장 frontmatter 스키마 2곳 상충 → 1개로 병합
-- [ ] `team2-kb-list.md:32-51` — KB 트리 스냅샷에 "예시 (API 재조회 권장)" 명시
+- [x] `ticket.md` — "Task 본문: 수행 내용 섹션" 리터럴 2회 중복 → 1개 삭제
+- [x] `code-review.md` — `--dangerously-skip-permissions` 권장 문단 삭제 (게이트는 아래 문단에 이미 존재, 위험 권고만 잔존). 최다 사용 스킬(70회)이라 효과 큼
+- [x] `harness-optimize.md` SoT 표 — 팀원 정보 참조 파일에 weekly-report/capacity-plan/sprint-close-check/weekly-planned 추가
+- [x] `capacity-plan.md` — 저장 frontmatter 스키마 2곳 상충 → 축약판(퇴적물) 제거, 상세판으로 단일화
+- [x] `team2-kb-list.md` — KB 트리 스냅샷에 "예시 (API 재조회 권장)" 명시
 
 ### B. 중복 통합 (SoT 링크로 교체)
 

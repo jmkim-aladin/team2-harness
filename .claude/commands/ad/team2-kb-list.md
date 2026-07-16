@@ -31,6 +31,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 ## DEV2 KB 루트 구조
 
+> 특정 시점 스냅샷 예시 — 실제 트리는 위 API로 재조회한 결과를 우선한다.
+
 ```
 DEV2 KB
 ├─ Team (DEV2-A-1)
