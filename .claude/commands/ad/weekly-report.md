@@ -54,86 +54,17 @@ DEV2-A-692 (주간업무)
 - H2 헤더 안에 `**` bold 처리 (KB 원본 패턴)
 - `## **백로그 항목**`은 KB 양식 호환용 섹션이다. 최종 주간보고 후보 생성 시 Backlog 상태 티켓은 제외하고, 새 항목을 넣지 않는다.
 
-### 항목 형식 (KB 원본 패턴)
+### 항목 형식·예정일 산정
 
-**제목 라인** (top-level):
+SoT: [docs/sprint/weekly-report-guide.md](../../../docs/sprint/weekly-report-guide.md)
 
-```
-* **{제목} ({일정정보}, {담당자}** DEV2-xxxx **\[원문제목\])**
-```
-
-- 불릿 `*` (하이픈 `-` 아님)
-- `**` 짝 2개로 `(담당자**` ... **`\[원문제목\])` 감싼다
-- 원문제목의 대괄호는 `\[` `\]` escape (KB 마크다운 렌더링 호환)
-
-**본문 라인** (sub-task 또는 단일 본문):
-
-```
-  : ({상태}) {간략 설명} ({일정정보}, {담당자} DEV2-yyyy [원문제목])
-```
-
-- 2-space indent + `:` + space (불릿 아님)
-- 본문 라인 대괄호는 **escape 없이** `[원문제목]` 그대로 (KB 자동 링크 동작)
-
-**Feature 하위가 없거나 단일 Task인 경우**:
-
-- 본문 라인은 **반드시 작성**
-- 본문 라인의 티켓 정보(`DEV2-xxxx [원문제목]`)는 **제목과 동일**하게 반복
-
-예시 (단일 본문):
-
-```
-* **만권당 5월 이벤트 (5월의 책) (5/13, 조은흠** DEV2-5259 **\[만권당\]\[개발\] 5월 이벤트 (5월의 책))**
-  : (완료) 5월의 책 디자인/개발 일정 (5/13, 조은흠 DEV2-5259 [만권당][개발] 5월 이벤트 (5월의 책))
-```
-
-예시 (다중 sub-task):
-
-```
-* **\[AASM\] IAM Access Key → Node Role + Self-Assume 마이그레이션 (5/15, 김정민** DEV2-6223 **\[AASM\] IAM Access Key → Node Role + Self-Assume 마이그레이션)**
-  : (완료) S3 클라이언트 빌더 신설 + 진입점 제한 (5/15, 김정민 DEV2-6225 [AASM] S3 클라이언트 빌더 신설 + 진입점 제한)
-  : (완료) S3 연산 모듈 시그니처 일괄 변경 (5/15, 김정민 DEV2-6226 [AASM] S3 연산 모듈 시그니처 일괄 변경)
-```
-
-**표기 규칙**:
-
-- 앞 간략 설명은 보고서 흐름상 짧게 요약 (Task 본질만)
-- 티켓번호(`DEV2-xxxx`) 뒤에는 YouTrack 티켓 제목을 **수정 없이 그대로** 기재 (대괄호 prefix `[서비스][직군]` 포함). YouTrack 자동 링크와 원본 맥락 보존 목적
-
-**상태 말머리**: `(완료)`, `(진행 중)`, `(예정)`, `(보류)`
-
-**일정 형식**:
-
-- 백로그: 최종 주간보고 후보에서는 제외 (기존 KB 양식 조회용으로만 참고)
-- 계획(예정): 시작 예상 일자~
-- 진행중: ~완료 예상 일자
-- 완료: 완료 일자
-- 지연: ~~기존목표~~ ~수정목표, 제목 뒤 `- 지연`, 지연 사유 기재
+- **항목 표기** (제목/본문 라인, escape, 단일 Task 반복, 일정 형식): 가이드 §4.1~4.4
+- **예정일 선택·fallback** (코멘트 의미 추출, Feature↔Task 상속 표, `미기록` 처리): 가이드 §4.5
+- 보고서 작성·동기화 시점에 가이드 해당 절을 읽어 그대로 적용한다. 티켓 조회 시 `comments(text,created,updated)` 필드 포함 (아래 API 참조 #3)
 
 ## 기록 대상 필터
 
-가이드 `docs/sprint/weekly-report-guide.md` §1 원칙 강화:
-
-**포함**:
-
-- 개발자 담당 Feature/Epic 중심
-- Type=Feature 또는 Epic
-- 대상 월 스프린트와 일치하는 항목
-  - 예: 2026년 6월 보고서는 `Sprints=2026.06` 또는 `2606-planned`
-- 하위 Task는 부모 Feature 컨텍스트로만 본문 라인에 표기
-- 기획자/디자이너 Feature라도 하위 Task가 개발자 담당이면 부모 Feature를 컨텍스트로 포함하고, 본문 라인은 개발자 담당 Task만 표기
-- 완료 항목은 대상 월 완료분 유지. 같은 달 완료분은 최근 7/14일 범위로 자르지 않음
-
-**제외**:
-
-- Backlog 상태 티켓
-- 대상 월 스프린트가 아닌 티켓
-- 기획자/디자이너 담당 Feature 중 개발자 하위 Task가 없는 항목
-- 사업부 작성 운영성 단발 Task/Bug (통계요청·점검요청·팀장승인·앱푸시 발송 리스트 등)
-- 단발 운영 대응 (DB 정산 오류 확인, 사용자 개별 문의 등)
-- 가이드 §1 "예외적으로 포함"은 **이슈 규모가 크거나 팀 차원 공유가 필요한 운영성 업무**로만 한정
-
-판단 기준:
+원칙 SoT: 가이드 §1 (포함/제외/예외). 실행용 판단 기준:
 
 | 항목 | 포함 여부 |
 |------|----------|
@@ -148,10 +79,8 @@ DEV2-A-692 (주간업무)
 
 ### 최종본 중복 제거 규칙
 
-- `DEV2-*` ID 중복은 같은 레벨에서만 제거한다.
-- top-level 항목끼리 같은 ID가 반복되면 하나만 남긴다.
-- 하위 본문 라인끼리 같은 ID가 반복되면 하나만 남긴다.
-- top-level과 하위 본문 라인의 같은 ID 반복은 계층 표현으로 허용한다. 단일 Task나 하위가 없는 Feature는 제목과 본문 라인에 같은 ID가 반복될 수 있다.
+레벨별 ID 중복 제거 원칙은 가이드 §1 "중복 제거" (SoT). 스킬 실행 추가 규칙:
+
 - 중복 점검은 저장 전 `DEV2-*` ID의 레벨별 빈도 기준으로 수행한다.
 - 사용자가 "현재 KB가 최종"이라고 하면 YouTrack KB `DEV2-A-696`은 비교 기준이다. 별도 명시 승인 없이는 KB `POST` 업데이트를 하지 않는다.
 
@@ -175,9 +104,9 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
   "$BASE/api/articles/{articleId}?fields=id,idReadable,summary,content,updated"
 
-# 3. 티켓 상태 조회 (동기화용)
+# 3. 티켓 상태·예정일 코멘트 조회 (동기화용)
 curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
-  "$BASE/api/issues/{issueId}?fields=idReadable,summary,customFields(name,value(name))"
+  "$BASE/api/issues/{issueId}?fields=idReadable,summary,customFields(name,value(name)),comments(text,created,updated)"
 
 # 4. 담당자별 티켓 검색 (진행중 항목 탐색)
 curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
@@ -207,13 +136,14 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 
 1. **현재 보고서 조회**: KB에서 최신 보고서 가져오기
 2. **금주 변동 파악**: 사용자에게 이번 주 완료/진행/신규 항목을 질문
-3. **티켓 상태 확인**: 언급된 티켓ID가 있으면 YouTrack에서 실제 상태 조회하여 교차 검증
+3. **티켓 상태·예정일 확인**: 언급된 티켓ID가 있으면 YouTrack에서 실제 상태와 코멘트를 조회하여 교차 검증
 4. **보고서 갱신**: 항목 이동 및 내용 추가
    - 완료된 항목: 진행중 → 완료로 이동, 완료 일자 기재
    - 새로 시작: 계획 → 진행중으로 이동
    - Backlog 상태는 최종 주간보고 후보에서 제외
    - 신규 항목: 해당 섹션에 추가
    - Task 말머리: (예정) → (진행 중) → (완료) 갱신
+   - 대상 스프린트의 미착수·미종료 Feature/Task: 가이드 §4.5 예정일 규칙으로 일정정보 갱신
 5. **마크다운 출력**: 갱신된 보고서를 마크다운으로 출력
 6. **KB 반영 제안**: 사용자 확인 후 YouTrack KB API로 업데이트 (확인 필수)
 
@@ -223,7 +153,7 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 
 1. **현재 보고서 조회**
 2. **추가할 항목 파악**: 내용에서 티켓ID, 섹션, 상태 추출
-3. **티켓 정보 보강**: 티켓ID가 있으면 YouTrack에서 상세 정보 조회
+3. **티켓 정보 보강**: 티켓ID가 있으면 YouTrack에서 상세 정보와 예정일 코멘트 조회
 4. **양식에 맞게 항목 생성**: 보고서 양식에 맞춰 항목 포맷팅
 5. **적절한 섹션에 삽입**
 6. **마크다운 출력 및 KB 반영 제안**
@@ -234,9 +164,9 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 
 1. **현재 보고서 조회**
 2. **보고서 내 모든 티켓ID 추출**
-3. **YouTrack API로 각 티켓 현재 상태 일괄 조회**
-4. **상태 불일치 감지**: 보고서 상태 vs 실제 티켓 상태 비교
-5. **변경 제안**: 불일치 항목 목록 표시, 자동 갱신 제안
+3. **YouTrack API로 각 티켓 현재 상태·코멘트 일괄 조회**
+4. **상태·일정 불일치 감지**: 보고서 상태와 일정정보를 실제 티켓 상태·예정일 코멘트와 비교
+5. **변경 제안**: 상태 불일치와 날짜 fallback/미기록 항목을 표시하고 자동 갱신 제안
 6. **사용자 확인 후 반영**
 
 ### 5. 전체 조회 모드
@@ -252,18 +182,16 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 
 1. **기존 보고서 조회**: KB(DEV2-A-696) 현재 내용 가져오기
 2. **동월 기준본 유지**: 현재 초안의 대상 월이 KB/직전 주차와 같은 월이면 기존 본문 목록을 기준본으로 유지한다. 새 주차 변동분만 요약해 새 본문을 만들지 않는다. 상태 이동(계획→진행중→완료), 하위 본문 보강, 신규 항목 추가, 같은 레벨 중복 제거만 수행한다. 월이 바뀔 때만 해당 월 스프린트/태그 기준으로 목록을 새로 구성한다.
-3. **상태 동기화**: 보고서 내 모든 티켓ID + 담당자별 In Progress + 대상 월 resolved 일괄 조회
+3. **상태·예정일 동기화**: 보고서 내 모든 티켓ID + 담당자별 In Progress + 대상 월 resolved를 조회하고, 미착수·미종료 Feature/Task의 코멘트도 일괄 조회
    - **섹션 재배치**: 기존 본문 섹션 위치보다 현재 top-level Feature/Epic 상태를 우선한다. Open/Reopened→계획, In Progress→진행중, Fixed/Closed/Verified→완료된, Backlog→본문 제외로 이동한다. 하위 Task 상태가 부모와 어긋나면 하위 말머리를 실제 상태로 보정하고 이슈사항에 남긴다.
+   - **일정정보 갱신**: 가이드 §4.5 규칙에 따라 자체 코멘트 날짜를 우선하고 Feature↔Task fallback을 한 번만 적용한다. 근거가 없으면 붉은색 `미기록`으로 남긴다.
 4. **필터 적용**: Type=Feature/Epic only. 운영성 Task/Bug 제외 (위 "기록 대상 필터" 참조)
    - **월별 계획 스냅샷("N월거만") 작성 시**: YouTrack 태그 `YYMM-planned`(예: 2026년 6월 = `2606-planned`) 또는 `Sprints=YYYY.MM` + 개발자 assignee 로 필터. 디자인/기획 상위 Feature는 기본 제외하되, 하위 Task가 개발자 담당이면 부모 Feature를 컨텍스트로만 포함하고 개발자 Task만 본문 라인으로 롤업. 이전 달 누적 완료분은 태그/스프린트가 대상 월과 맞지 않으면 제외됨. 상태별 섹션 매핑: In Progress→진행중, Open/Reopened→계획, Fixed/Closed/Verified→완료된. **Backlog는 제외.**
    - **개발자 assignee 기준**: 김정민(jmkim), 조은흠(heum2), 박민석(pms0905), 안혜련(hyeryun), 박희수(heesoo), 조주영(jjy), 강인용(iyk; YouTrack 검색 가능 시). 팀원 변동 시 `policies/team-members.md`를 우선한다.
    - **완료 항목**: 대상 월에 완료된 항목은 유지한다. 최근 7/14일 완료분만 남기지 않는다.
    - **중복 제거**: 저장 전 `DEV2-*` ID의 레벨별 빈도를 점검하고, 같은 레벨의 중복 top-level 또는 본문 라인만 제거한다. top-level과 하위 본문 라인의 반복은 허용한다.
-5. **양식 정렬**: 위 "항목 형식" 패턴 그대로 적용
-   - 제목 라인: `*` + 이중 `**` 분할 + 원문제목 `\[`/`\]` escape
-   - 본문 라인: `  : ` + 본문 + `(일정정보, 담당자 DEV2-xxxx [원문제목])`
-   - Feature 하위 없거나 단일 Task인 경우 본문에 동일 티켓 정보 반복
-   - **Obsidian 줄바꿈**: 제목 라인·`: ` 본문 라인 끝에 공백 2칸(markdown hard break) 추가. 미적용 시 `: ` 하위 라인이 bullet lazy-continuation으로 한 단락에 합쳐져 줄바꿈이 사라짐 (KB/YouTrack 렌더와 달리 Obsidian에서 필요)
+5. **양식 정렬**: 가이드 §4·§5 패턴 그대로 적용
+   - **Obsidian 줄바꿈** (스킬 고유): 제목 라인·`: ` 본문 라인 끝에 공백 2칸(markdown hard break) 추가. 미적용 시 `: ` 하위 라인이 bullet lazy-continuation으로 한 단락에 합쳐져 줄바꿈이 사라짐 (KB/YouTrack 렌더와 달리 Obsidian에서 필요)
 6. **저장 경로**: 옵시디언 vault — `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/weekly/YYYY-MM-NW-{assignee}.md` (예: `2026-06-1W-jmkim.md`)
    - 파일명은 Tolaria weekly-report 규약(`templates/vault-notes/weekly-report.md`) 준수 — assignee 슬러그 사용, `-draft` 금지. 초안 여부는 frontmatter `status: draft`로 표기
    - 파일명·frontmatter `title`·`canonical_id` 는 동일 키(`YYYY-MM-NW-{assignee}`)로 통일

@@ -4,30 +4,30 @@
 
 최종 감사일: 2026-07-16 (최초 베이스라인)
 
-## 사용 통계 (2026-05-31 ~ 07-16, Claude Code 로그)
+## 사용 통계 (2026-05-31 ~ 07-16, Claude + Codex 로그 통합)
 
-> ⚠️ Codex(`.codex/skills/*`)·Hermes cron 경유 사용은 이 표에 안 잡힘. 0회 ≠ 미사용.
+> Hermes cron 등 로그 밖 자동 실행은 안 잡힘. Codex 열은 `$ad-*` invocation 리터럴 기준.
 
-| 스킬 | 사용자 | 모델 | 계 | 마지막 | 판정 |
-|------|-------|------|----|--------|------|
-| code-review | 70 | 0 | 70 | 07-15 | 활성 |
-| work-prep | 19 | 2 | 21 | 07-15 | 활성 |
-| okr | 6 | 1 | 7 | 07-09 | 활성 |
-| ticket | 5 | 2 | 7 | 07-15 | 활성 |
-| data-request | 4 | 0 | 4 | 07-15 | 활성 |
-| new-note | 0 | 2 | 2 | 07-14 | 활성 (모델 호출 전용) |
-| sprint-close-check | 1 | 1 | 2 | 07-01 | 활성 (월말 주기성) |
-| team2-kb-read | 0 | 2 | 2 | 07-09 | 활성 |
-| weekly-report | 0 | 0 | 0 | - | 보류 — Codex 사용 추정, 확인 필요 |
-| weekly-planned | 0 | 0 | 0 | - | 보류 — Codex 사용 추정, 확인 필요 |
-| granola-sync | 0 | 0 | 0 | - | 유지 — Hermes cron 10분 주기 자동 실행 |
-| architecture-analysis | 0 | 0 | 0 | - | 유지 — 신규 (2026-07 작업 중) |
-| capacity-plan | 0 | 0 | 0 | - | 검토 — 월 주기 스킬, 다음 달 계획 시점 재확인 |
-| harness-optimize | 0 | 0 | 0 | - | 유지 — 본 감사 루프의 실행 주체 |
-| service-activity | 0 | 0 | 0 | - | 검토 — 사용 이력 없음 |
-| work-board | 0 | 0 | 0 | - | 검토 — 사용 이력 없음 |
-| team2-kb-list | 0 | 0 | 0 | - | 검토 — kb-read로 통합 후보 |
-| team2-kb-sync | 0 | 0 | 0 | - | 검토 — harness-optimize 동기화와 중복 후보 |
+| 스킬 | Claude 사용자/모델 | Codex | 계 | 마지막 | 판정 |
+|------|------------------|-------|----|--------|------|
+| work-prep | 19 / 2 | 111 | 132 | 07-15 | 활성 — **Codex 주력** |
+| code-review | 70 / 0 | 19 | 89 | 07-15 | 활성 — Claude 주력 |
+| weekly-report | 0 / 0 | 16 | 16 | 07-13 | 활성 — Codex 전용 |
+| ticket | 5 / 2 | 6 | 13 | 07-15 | 활성 |
+| data-request | 4 / 0 | 5 | 9 | 07-15 | 활성 |
+| okr | 6 / 1 | 0 | 7 | 07-09 | 활성 |
+| sprint-close-check | 1 / 1 | 4 | 6 | 07-01 | 활성 (월말 주기) |
+| new-note | 0 / 2 | 0 | 2 | 07-14 | 활성 (모델 호출 전용) |
+| team2-kb-read | 0 / 2 | 0 | 2 | 07-09 | 활성 |
+| granola-sync | 0 / 0 | 2 | 2 | 06-08 | 유지 — Hermes cron 10분 주기 |
+| architecture-analysis | 0 | 0 | 0 | - | 유지 — 신규 (2026-07 구축 중) |
+| capacity-plan | 0 | 0 | 0 | - | 관찰 — 월 주기, 7월 말 계획 시점 재확인 |
+| harness-optimize | 0 | 0 | 0 | - | 유지 — 본 감사 루프 실행 주체 |
+| service-activity | 0 | 0 | 0 | - | 관찰 — 다음 감사까지 0이면 삭제/통합 제안 |
+| work-board | 0 | 0 | 0 | - | 관찰 — 동상 |
+| team2-kb-list | 0 | 0 | 0 | - | 관찰 — kb-read 통합 후보 |
+| team2-kb-sync | 0 | 0 | 0 | - | 관찰 — harness-optimize 동기화와 중복 후보 |
+| weekly-planned | 0 | 0 | 0 | - | 관찰 — weekly-report 초안 모드와 기능 겹침 검토 |
 
 ## 트리거 분배 (체크리스트 1단계)
 
@@ -81,11 +81,13 @@
 - [x] 팀원 매핑표 5중복 → `policies/team-members.md` 참조로 교체. 스킬별 파생 정보만 잔존: weekly-report(기본 담당자), weekly-planned(기본 담당자 페어), capacity-plan(강인용 baseline 예외), okr(이니셜·파일명 접미사 표 유지)
 - [x] `weekly-planned.md` — 기간초과 경고 재기술 → weekly-report §SoT 링크
 
-### C. 대형 슬림화
+### C. 대형 슬림화 — 2026-07-16 적용 완료
 
-- [ ] `weekly-report.md` §항목형식/예정일산정 ~130줄 → `docs/sprint/weekly-report-guide.md §4-5` 링크로 축약 (2649단어 → 절반 목표)
-- [ ] `work-prep.md` §9·§11 → 독립 규율 문서로 분리 검토 (2층 구조 패턴)
+- [x] `weekly-report.md` — §항목 형식·예정일 산정·기록 필터 bullet·중복 제거 원칙을 가이드 §1/§4/§4.5 링크로 축약 (-92줄). 스킬 고유 규칙(판단 기준 표, Obsidian hard break, KB POST 게이트)만 잔존
+- [x] `work-prep.md` §9 → [docs/cmux-herdr-labeling.md](./cmux-herdr-labeling.md) 분리 (2층 구조). §11은 이미 템플릿 링크로 슬림 — 분리 불요 판정
 
-### 트리거 재검토 (별도)
+### 트리거 재검토 — 2026-07-16 완료
 
-- [ ] CLAUDE.md routing 등록 13개 중 관측기간 모델 호출 0회 6개 (weekly-report, weekly-planned, service-activity, capacity-plan, granola-sync, architecture-analysis) — routing 줄 유지/제거 판단. 단 Codex·cron 사용 경로 확인 선행
+- [x] Codex 로그 교차 확인 결과 routing **전부 유지** 결정
+  - weekly-report(Codex 16회)·granola-sync(Codex+cron) — 사용 확인됨
+  - weekly-planned·service-activity·capacity-plan·architecture-analysis — 전 경로 0회이나 routing 라인당 비용 미미(~15-20토큰), NL 트리거 실효 있음(work-prep·ticket·okr 모델 호출 실적). 스킬 자체는 "관찰" 판정으로 다음 감사에서 재평가

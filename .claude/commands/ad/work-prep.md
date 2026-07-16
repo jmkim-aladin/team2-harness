@@ -163,58 +163,9 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (`daily-meet
 
 ### 9. cmux/herdr 작업 라벨 변경 (선택, 감지된 환경에서만)
 
-현재 셸이 cmux 안에서 실행 중이면 작업 중인 서피스의 탭 이름을 티켓번호만으로 바꾼다.
-현재 셸이 herdr 안에서 실행 중이면 현재 tab/agent 이름은 티켓번호만, 현재 pane 이름은 티켓번호와 제목으로 바꾼다.
-cmux/herdr 외부(일반 터미널/tmux/iTerm/VSCode 내장 등)에서는 **건드리지 않는다**.
+절차 SoT: [docs/cmux-herdr-labeling.md](../../../docs/cmux-herdr-labeling.md) — 감지 스크립트·리네이밍 명령·라벨 규칙 전체.
 
-감지:
-
-```bash
-CMUX_INSIDE=0
-if [ -n "${CMUX_WORKSPACE_ID:-}" ] && [ -n "${CMUX_SURFACE_ID:-}" ] && command -v cmux >/dev/null 2>&1; then
-  CMUX_INSIDE=1
-fi
-
-HERDR_INSIDE=0
-if [ -n "${HERDR_ENV:-}" ] && [ -n "${HERDR_PANE_ID:-}" ] && command -v herdr >/dev/null 2>&1; then
-  HERDR_INSIDE=1
-fi
-```
-
-리네이밍 (감지된 경우):
-
-```bash
-# 티켓 모드
-TAB_LABEL="DEV2-{NNNN}"
-PANE_LABEL="DEV2-{NNNN} — {제목}"
-
-# 자유글 모드라면 위 대신:
-# TAB_LABEL="NO-TICKET"
-# PANE_LABEL="NO-TICKET — {제목}"
-
-# cmux 안이면 surface tab 이름 변경
-if [ "$CMUX_INSIDE" -eq 1 ]; then
-  cmux rename-tab --surface "$CMUX_SURFACE_ID" "$TAB_LABEL"
-fi
-
-# herdr 안이면 현재 tab + agent + pane 이름 변경
-if [ "$HERDR_INSIDE" -eq 1 ]; then
-  HERDR_TAB_ID="$(herdr pane get "$HERDR_PANE_ID" | jq -r '.result.pane.tab_id')"
-  herdr tab rename "$HERDR_TAB_ID" "$TAB_LABEL"
-  herdr agent rename "$HERDR_PANE_ID" "$TAB_LABEL"
-  herdr pane rename "$HERDR_PANE_ID" "$PANE_LABEL"
-fi
-```
-
-규칙:
-
-- 티켓 모드는 tab/cmux surface에 `DEV2-{NNNN}`만 표시한다. 제목은 herdr pane label에만 둔다.
-- 자유글 모드는 tab/cmux surface에 `NO-TICKET`만 표시하고, herdr pane label은 `NO-TICKET — {제목}`으로 둔다.
-- 제목은 한 줄로, 약 60자 이내로 자른다 (pane 폭 고려).
-- 명령 실패(소켓 인증 실패, 서피스·pane ID 만료 등)는 경고만 출력하고 다른 단계를 막지 않는다.
-- cmux 워크스페이스 자체 이름(`workspace-action --action rename --title ...`)은 건드리지 않는다 — 사용자가 별도 작업 컨텍스트로 쓰고 있을 수 있다. 탭(=surface) 단위만 변경한다.
-- herdr 워크스페이스 이름은 건드리지 않는다. 현재 tab/agent label은 티켓번호만, 현재 pane label은 제목 포함으로 변경한다.
-- 사용자 확인 없이 기본 진행. 변경 전후 이름을 출력에 명시한다.
+요약: cmux 안이면 surface tab을 `DEV2-{NNNN}`(자유글은 `NO-TICKET`)로, herdr 안이면 tab/agent는 티켓번호·pane은 `티켓번호 — 제목`으로 변경. 외부 환경이면 스킵. 실패는 경고만 하고 진행. 사용자 확인 없이 기본 진행하되 변경 전후 이름을 출력.
 
 ### 10. 출력 형식
 
@@ -254,7 +205,7 @@ fi
 - dev/staging 읽기 쿼리는 사전 동의 범위다. Keychain에서 credential을 읽고 사용 후 unset한다.
 - 검증은 작은 모수와 짧은 기간으로 시작하고, 결과는 스키마/카운트/대표 패턴/판단만 노트에 남긴다.
 - 운영(prod) 조회·추출은 직접 실행하지 않고 [data-request-policy.md](../../../policies/data-request-policy.md) 절차로 전환한다.
-- 검증 SQL은 data-requests-dev2 등록 전에 먼저 티켓 노트나 티켓 하위 근거 파일에 저장한다.
+- 검증 SQL은 data-requests-dev2 등록 전에 먼저 티켓 노트 `검증 SQL` 섹션의 마크다운 코드블록에 embed한다. 별도 `.sql` 사이드카 파일은 만들지 않는다.
 - 만권당 CS 구독취소/환불에서 실제 사용 여부 확인이 필요하면 vault `wiki/services/max/analysis/subscription-usage-check-sql.md` 템플릿을 우선 사용한다.
 
 ### 12. 티켓 종료 모드 (로컬 위키 자동 반영)
