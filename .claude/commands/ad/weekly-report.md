@@ -20,14 +20,9 @@ YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를
 
 ## 팀원 매핑
 
-| 이름 | 이니셜 | YouTrack ID | 역할 | 비고 |
-|------|--------|-------------|------|------|
-| 김정민 | KJM | jmkim | 백엔드 (메인) | 기본값 |
-| 조은흠 | JEH | heum2 | 프론트엔드 (서브) | 김정민 보고서에 항목 포함 |
-| 박민석 | PMS | pms0905 | 백엔드/프론트엔드 | 김정민 보고서에 항목 포함, 2026-05-14 합류 |
-| 안혜련 | AHR | hyeryun | 백엔드 (storefront) | 김정민 보고서에 항목 포함 |
+로스터 SoT: [policies/team-members.md](../../../policies/team-members.md) — 이름·YouTrack ID·역할은 그 표를 따른다 (dev role 정직원 대상).
 
-> 팀원 추가 시 이 테이블에 행을 추가하면 됩니다.
+- 기본 담당자: 김정민(jmkim). 다른 dev 팀원 항목도 김정민 보고서에 포함
 
 ## YouTrack KB 구조
 
@@ -322,19 +317,6 @@ Feature는 총 기간 1주일 이내가 필수 규칙 (`docs/sprint/ticket-guide
 
 ## frontmatter 표준 (티켓 산출물)
 
-```yaml
----
-type: ticket
-ticket_id: DEV2-XXXX
-ticket_status: auto-prep | in-progress | blocked | review-needed | done-candidate | done | backlog
-decision_status: none | decision-needed | approval-needed | blocked | review-needed
-assignee: jmkim
-service: "[[max]]"
-sprint: 2026-05
-type_yt: feature | task | bug
----
-```
-
-상세: vault `wiki/guides/frontmatter-spec.md`.
+vault `wiki/guides/frontmatter-spec.md` (SoT)의 ticket 스키마를 따른다 — 티켓 노트 작성 시점에 해당 파일을 읽어 최신 스키마 사용.
 
 ARGUMENTS: $ARGUMENTS

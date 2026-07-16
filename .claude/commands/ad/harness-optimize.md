@@ -31,6 +31,7 @@
 | **OKR (팀/개인)** | Obsidian vault `wiki/processes/okr/` | `.claude/commands/ad/okr.md` |
 | **서비스 프로파일** | `catalog/*.yaml` | `.claude/commands/ad/ticket.md` |
 | **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/capacity-plan.md`, `.claude/commands/ad/sprint-close-check.md`, `.claude/commands/ad/weekly-planned.md` |
+| **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만) |
 
 ## 실행 지침
 

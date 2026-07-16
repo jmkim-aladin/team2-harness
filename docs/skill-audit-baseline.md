@@ -75,11 +75,11 @@
 - [x] `capacity-plan.md` — 저장 frontmatter 스키마 2곳 상충 → 축약판(퇴적물) 제거, 상세판으로 단일화
 - [x] `team2-kb-list.md` — KB 트리 스냅샷에 "예시 (API 재조회 권장)" 명시
 
-### B. 중복 통합 (SoT 링크로 교체)
+### B. 중복 통합 (SoT 링크로 교체) — 2026-07-16 적용 완료
 
-- [ ] frontmatter YAML 4중복 (ticket/weekly-report/sprint-close-check/new-note) → `wiki/guides/frontmatter-spec.md` 링크 한 줄
-- [ ] 팀원 매핑표 5중복 (weekly-report/capacity-plan/sprint-close-check/weekly-planned/okr) → `policies/team-members.md` 참조 + 스킬별 파생 컬럼만 유지
-- [ ] `weekly-planned.md:177-181` — 기간초과 경고 재기술 → weekly-report 정책 링크
+- [x] frontmatter YAML 4중복 (ticket/weekly-report/sprint-close-check/new-note) → `wiki/guides/frontmatter-spec.md` 링크 한 줄
+- [x] 팀원 매핑표 5중복 → `policies/team-members.md` 참조로 교체. 스킬별 파생 정보만 잔존: weekly-report(기본 담당자), weekly-planned(기본 담당자 페어), capacity-plan(강인용 baseline 예외), okr(이니셜·파일명 접미사 표 유지)
+- [x] `weekly-planned.md` — 기간초과 경고 재기술 → weekly-report §SoT 링크
 
 ### C. 대형 슬림화
 

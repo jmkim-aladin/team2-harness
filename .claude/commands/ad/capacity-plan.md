@@ -28,19 +28,9 @@
 
 ## 팀원 매핑 (dev role, 정직원만)
 
-| 이름 | YouTrack ID | 역할 |
-|------|-------------|------|
-| 김정민 | jmkim | BE |
-| 조은흠 | heum2 | FE |
-| 박민석 | pms0905 | BE/FE |
-| 안혜련 | hyeryun | BE (storefront) |
-| 강인용 | iyk | BE (storefront B2B, bazaar) — 2026-07 정규 전환, 이전 스프린트 baseline 미포함 |
+로스터 SoT: [policies/team-members.md](../../../policies/team-members.md) — 정규직 표에서 **개발자 역할만** 합산 (팀장·디자이너·기획자·프리랜서 제외).
 
-> 팀 수용량 집계 시 위 dev role 정직원만 합산.
-> **제외 대상**:
-> - 외주 개발자 (예: 박희수)
-> - 디자인 (이유림/김정실/김규태)
-> - 기획 (조윤주/이현민)
+- capacity 특화 예외: 강인용(iyk)은 2026-07 정규 전환 — 이전 스프린트 velocity baseline에 미포함
 
 ## 스프린트 구조 (팀장 지침)
 
