@@ -6,6 +6,7 @@
 
 | 가이드 | 용도 |
 |--------|------|
+| [DEV2 저장소 아키텍처 분석 기준](./architecture-analysis-guide.md) | 서비스 전체 구조, 설계 철학, Clean/Hexagonal/DDD, 운영 위험, 네이밍 분석 |
 | [에이전트 티켓 실행과 도메인 지식 강화 루프](./agentic-ticket-domain-loop-guide.md) | 티켓 자동 prep, Hermes board, gbrain briefing, 야간 도메인 분석을 연결하는 운영 기준 |
 | [Discord 에이전트 오케스트레이션 가이드](./discord-agent-orchestration-guide.md) | Hermes에 연결된 기존 Discord bot 1개로 orchestrator, architect, developer, planner, QA, designer 역할 프로필을 운영하는 기준 |
 | [에이전트 런타임 DEV2 운영 지침](./hermes-agent-operating-guide.md) | Hermes 등 상시 에이전트로 서비스/SP/아키텍처 지식을 발견하고 확정 지식으로 승격하는 기준 |

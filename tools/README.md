@@ -25,10 +25,12 @@ team2-agent herdr open --no-attach
 team2-agent herdr tickets --engine claude --service max --concurrency 4 DEV2-6509 DEV2-6510
 team2-agent herdr worker --engine claude orch-worker-3 "추가 분석 작업"
 team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
+team2-agent herdr close --service max DEV2-6509
+team2-agent herdr reset
 team2-agent herdr sync
 ```
 
-herdr 작업실이 열린 뒤 사용자는 `team2-orchestration` space의 `global-orchestrator` pane에 자연어로 지시한다. 기본 작업실은 `global-orchestrator`만 확보하고, `--engine {codex|claude}`로 새 agent engine을 선택한다. 티켓 묶음은 서비스 space 안의 티켓별 tab으로 나눈다. 각 tab의 ticket-lead는 analyst/developer/reviewer/QA/designer/data/architect role agent pane을 필요한 만큼만 띄운다. Hermes board와 desktop cockpit은 orchestrator가 필요할 때 조회하는 내부 상태 도구로 둔다. CLI action 명령은 사람용 주 인터페이스가 아니라 orchestrator/worker/ticket-lead가 쓰는 내부 도구다.
+herdr 작업실이 열린 뒤 사용자는 `team2-orchestration` space의 `global-orchestrator` pane에 자연어로 지시한다. 기본 작업실은 `global-orchestrator`만 확보하고, `--engine {codex|claude}`로 새 agent engine을 선택한다. 티켓 묶음은 서비스 space 안의 티켓별 tab으로 나눈다. 각 tab의 ticket-lead는 analyst/developer/reviewer/QA/designer/data/architect role agent pane을 필요한 만큼만 띄운다. 종료 시에는 `herdr close`로 tab 안의 lead/role pane을 같이 닫는다. Hermes board와 desktop cockpit은 orchestrator가 필요할 때 조회하는 내부 상태 도구로 둔다. CLI action 명령은 사람용 주 인터페이스가 아니라 orchestrator/worker/ticket-lead가 쓰는 내부 도구다.
 
 ### 역할
 
@@ -43,6 +45,8 @@ herdr 작업실이 열린 뒤 사용자는 `team2-orchestration` space의 `globa
 - `herdr worker`: `team2-orchestration` space에 작업 단위 worker 시작
 - `herdr tickets`: 서비스 space에 티켓별 tab을 만들고 ticket-lead를 concurrency 한도만큼 시작
 - `herdr role`: 특정 서비스 space의 티켓 tab 안에 role agent 시작
+- `herdr close`: 특정 서비스 space의 티켓/work tab을 닫음. 기본은 working/blocked pane이 있으면 거부하고, `--force`일 때만 강제 종료
+- `herdr reset`: team2가 만든 모든 작업실(`team2-orchestration`, `team2-triage`, 카탈로그 서비스 space)을 전부 정리해 초기화. 비-team2 작업실은 보존. 기본은 working/blocked pane이 있으면 거부하고, `--force`일 때만 강제 종료
 - `herdr sync`: 전체 cycle과 cockpit 갱신 후 herdr 알림 표시
 - `herdr notify`: herdr 알림 직접 표시
 

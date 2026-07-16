@@ -1,0 +1,4 @@
+interface:
+  display_name: "DEV2 아키텍처 분석"
+  short_description: "DEV2 서비스 구조와 설계 철학을 근거 기반으로 분석"
+  default_prompt: "Use $ad-architecture-analysis to analyze the current repository and save Markdown and HTML reports to the DEV2 local wiki."

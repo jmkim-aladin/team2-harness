@@ -21,14 +21,7 @@
 
 ## 팀원 매핑
 
-| 이름 | YouTrack ID |
-|------|-------------|
-| 김정민 | jmkim |
-| 조은흠 | heum2 |
-| 박민석 | pms0905 |
-| 안혜련 | hyeryun |
-
-> 신규 팀원은 이 테이블에 추가한다. `ad:weekly-report` / `ad:weekly-planned` 와 동기화 유지.
+로스터 SoT: [policies/team-members.md](../../../policies/team-members.md) — 한글 이름 → YouTrack ID 변환은 그 표(dev role 정직원)를 따른다.
 
 ## 점검 카테고리
 
@@ -168,19 +161,6 @@ curl -s -H "$AUTH" \
 
 ## frontmatter 표준 (티켓 산출물)
 
-```yaml
----
-type: ticket
-ticket_id: DEV2-XXXX
-ticket_status: auto-prep | in-progress | blocked | review-needed | done-candidate | done | backlog
-decision_status: none | decision-needed | approval-needed | blocked | review-needed
-assignee: jmkim
-service: "[[max]]"
-sprint: 2026-05
-type_yt: feature | task | bug
----
-```
-
-상세: vault `wiki/guides/frontmatter-spec.md`.
+vault `wiki/guides/frontmatter-spec.md` (SoT)의 ticket 스키마를 따른다 — 티켓 노트 작성 시점에 해당 파일을 읽어 최신 스키마 사용.
 
 ARGUMENTS: $ARGUMENTS

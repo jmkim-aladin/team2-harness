@@ -1,97 +1,189 @@
-# B2B 전용몰 서비스 프로파일
-# 상태: 설계 단계 (2026 Q2~)
+# 스토어프론트 서비스 프로파일
+# 소스 확인: https://github.com/AladinCommunication/StoreFront @ 1eab9afa (2026-07-12)
 
 service_id: storefront
 name: B2B 전용몰 (스토어프론트)
 type: new
-description: "B2B 파트너 전용 커머스 플랫폼 — 멀티 테넌시 기반 전시·주문·정산, 바자르/뉴빌링 연동"
+description: "제휴사별 독립 몰을 설정으로 구성하는 공급사 비종속 커머스 플랫폼. 동적 정책 엔진을 코어 도메인으로 삼고 전시·주문·청구·결제·이행을 멀티 테넌시로 제공하는 것을 목표로 한다."
 
 owners:
   primary: "jmkim@aladin.co.kr"      # 김정민 (BE/아키텍처)
   backup: "heum2@aladin.co.kr"       # 조은흠 (FE)
   stakeholders:
-    - "hyeryun@aladin.co.kr"         # 안혜련 (티켓 발행)
+    - "hyeryun@aladin.co.kr"         # 안혜련
 
-status: design  # design → development → staging → production
+status: development
+implementation_stage: architecture-skeleton
 
-# 아직 레포 미생성 — 설계 확정 후 생성 예정
-repo: TBD
-components: TBD
+repo: "https://github.com/AladinCommunication/StoreFront.git"
+default_branch: master
 
 youtrack:
   project_key: DEV2
 
+components:
+  admin-api:
+    module: bootstrap:admin
+    description: "내부 관리자용 Spring Boot 조립 애플리케이션. 현재 11개 BC 모듈을 모두 의존하지만 BC 업무 소스는 아직 비어 있다."
+    runtime:
+      type: spring-boot
+      version: "4.1.0"
+      language: "Kotlin 2.3.21"
+      jvm: "Java 25"
+      hosting: TBD
+    port: 8080
+    spring_application_name: storefront-admin
+
+  storefront-api:
+    module: bootstrap:storefront
+    description: "제휴사 회원 몰용 Spring Boot 애플리케이션. 현재 common과 platform만 조립한 부팅 스켈레톤이다."
+    runtime:
+      type: spring-boot
+      version: "4.1.0"
+      language: "Kotlin 2.3.21"
+      jvm: "Java 25"
+      hosting: TBD
+    port: 8081
+    spring_application_name: storefront-mall
+
+  common-web:
+    module: bootstrap:common
+    description: "배포 단위 공용 웹 인프라와 전 모듈 Konsist 아키텍처 테스트의 호스트. 현재 업무 구현은 없다."
+
 architecture:
-  pattern: "Hexagonal Architecture (Ports & Adapters) + DDD (목표)"
-  design_phase:
-    q2_2026:
-      - "서비스 정의 및 핵심 기능 도출"
-      - "도메인별 연계 구조 정의 (고객·상품·주문·정산)"
-      - "Bounded Context 및 Aggregate 정의 (5개+)"
-      - "멀티 테넌시 전략 결정"
-      - "데이터 스키마 설계"
-      - "권한 격리 아키텍처 설계"
-      - "바자르/뉴빌링 연동 API 인터페이스 명세"
-    q3_2026:
-      - "핵심 기능 개발 (전시·주문 엔진)"
-      - "바자르 연동 모듈 개발"
-    q4_2026:
-      - "통합 테스트 및 런칭 대기"
-  domains:
-    - name: 고객(파트너)
-      scope: "테넌트 관리, 입점, 계약"
-      integration: TBD  # 스토어프론트 소유 vs 외부 연동 미확정
-    - name: 상품
-      scope: "카탈로그, 검색, 전시"
-      integration: TBD  # 바자르 연동 vs 독립 카탈로그 미확정
-    - name: 주문
-      scope: "장바구니, 주문, 배송"
-      integration: TBD  # 바자르 주문 흐름 활용 여부 미확정
-    - name: 정산
-      scope: "파트너 정산, 수수료"
-      integration: "뉴빌링 연동"
+  declared_pattern: "Gradle 멀티모듈 모놀리식 + DDD + Hexagonal Architecture + Clean Architecture"
+  observed_state: "모듈 의존 경계와 실행 엔트리포인트를 만든 아키텍처 스켈레톤. 실제 domain/ports/application/adapters 업무 구현은 아직 없다."
+  gradle_subprojects: 16
+  dependency_direction: "domain -> ports -> application -> adapters"
+  boundaries:
+    - "11개 BC는 서로 project dependency를 두지 않는다."
+    - "각 BC는 shared를 api로, platform을 implementation으로 의존한다."
+    - "bootstrap 모듈이 런타임 composition root 역할을 맡는다."
+    - "Konsist 테스트가 계층 import, domain 프레임워크 격리, Port와 UseCase 네이밍을 검사한다."
+  caveats:
+    - "현재 BC 모듈의 main/test 소스는 .gitkeep뿐이라 계층 규칙은 공집합 기준으로 통과하도록 설계돼 있다."
+    - "tenant-admin 배포 단위는 설계 문서에만 있고 settings.gradle.kts에는 포함되지 않았다."
+
+modules:
+  shared: "순수 Kotlin 공유 커널 자리. 현재 구현 없음."
+  platform: "Spring 기반 횡단 관심사 자리. 현재 구현 없음."
+  bounded_contexts:
+    rule: "정책 스펙·평가 엔진. 코어 도메인으로 설계됐으나 현재 구현 없음."
+    identity: "Admin/TenantAdmin/Member 인증·인가. 현재 구현 없음."
+    tenant: "제휴사 식별·설정. 현재 구현 없음."
+    product: "상품 마스터. 현재 구현 없음."
+    catalog: "전시·검색. 현재 구현 없음."
+    order: "주문서 생성·소유·상태 오케스트레이션. 현재 구현 없음."
+    invoice: "청구서와 금액 구성. 현재 구현 없음."
+    payment: "결제수단 처리. 현재 구현 없음."
+    point: "포인트 적립·사용. 현재 구현 없음."
+    fulfillment: "배송 등 이행 그룹 분리·추적. 현재 구현 없음."
+    resolution: "클레임·보상. 현재 구현 없음."
+
+domain_design:
+  core_domain: "동적 정책 엔진"
+  policy_model:
+    layers: [Target, Spec, Value, EffectiveRule]
+    inheritance: "자식에서 루트로 역추적해 가장 가까운 ACTIVE 정의를 채택"
+    lifecycle: "Pending -> Active -> Terminate"
+    implementation_status: "설계 문서만 존재"
+  invariants:
+    - "스토어프론트가 공급사와 무관하게 주문서를 소유한다."
+    - "주문:청구와 주문:이행은 각각 1:N을 허용한다."
+    - "정책 평가 결과는 주문·청구 시점에 스냅샷해 이후 정책 변경의 소급 영향을 차단한다."
+  tenancy:
+    strategy: "미확정"
+    guard: "인증이 발급한 AccessScope와 Konsist 규칙으로 애플리케이션 조회 경계를 강제하는 안"
+    implementation_status: "설계 문서만 존재"
 
 stack:
-  framework: "Spring Boot (예정)"
-  language: "Kotlin (예정)"
-  hosting: "AWS (예정)"
-  frontend: "Next.js (예정, JEH 담당)"
+  framework: "Spring Boot 4.1.0"
+  language: "Kotlin 2.3.21"
+  jvm: "Java 25"
+  build: "Gradle 9.5.1 Wrapper + Kotlin DSL + buildSrc convention plugins"
+  web: "Spring MVC"
+  architecture_test: "Konsist 0.17.3"
+  persistence: "미구현. JDBC/JPA driver와 migration 도구 의존성이 없다."
+  frontend: "이 저장소에서 확인되지 않음"
 
 data:
-  db_type: TBD  # 멀티 테넌시 전략에 따라 결정
-  tenancy_strategy: TBD  # Shared DB / Schema per Tenant / DB per Tenant
+  db_type: postgresql
+  version: "17.5-alpine (local Docker scaffold)"
+  application_wiring: "미구현"
+  local:
+    compose: ".claude/docker/docker-compose.yml"
+    database: storefront
+    port: 5432
   shared_db: false
+  direct_sp_write: false
+  notes:
+    - "Docker 로컬 DB 구성은 존재하지만 추적 중인 application-local.yaml, DataSource 설정, driver, schema, migration은 없다."
+    - "shared_db=false는 다른 서비스와 DB를 공유하지 않는 현재 계획이며 tenant별 물리 격리 전략은 아직 미확정이다."
+    - "README가 언급하는 RuleSampleSeeder는 현재 추적 소스에서 확인되지 않는다."
 
 dependencies:
-  outbound:
-    - system: "바자르 (BazaarServer)"
+  active: []
+  planned:
+    - system: "Naru"
       method: REST
-      purpose: "상품/주문 연동"
+      purpose: "Member 인증 위임"
+      evidence: ".claude/context/domain-model.md"
+      status: design-only
+    - system: "알리스"
+      method: TBD
+      purpose: "상품 마스터 연동"
+      evidence: ".claude/context/domain-model.md"
+      status: design-only
     - system: "뉴빌링"
       method: REST
-      purpose: "결제/정산 연동"
+      purpose: "결제·청구·정산 경계 검토"
       profile: "catalog/common-services/new-billing.yaml"
-      status: "future-required"
+      status: future-required
       note: "현재 active 연동 없음. 신규 빌링성 기능은 뉴빌링 API 경유를 우선 검토한다."
+  unverified_previous_plan:
+    - system: "바자르 (BazaarServer)"
+      purpose: "상품·주문 연동"
+      note: "기존 하네스 계획에는 있었으나 현재 StoreFront 저장소 문서와 코드에서는 확인되지 않아 재확인이 필요하다."
 
-okr:
-  annual: "KR6. B2B 전용 커머스(스토어프론트) 개발 및 연동 완료 (런칭 대기)"
-  q2: "KR6. B2B 전용 커머스 기획 및 설계"
-  owner_kr:
-    kimjeongmin: "KR3. B2B 스토어프론트 데이터 스키마 및 권한 격리 아키텍처 확정"
-    joeunheum: "KR3. B2B 스토어프론트 FE 구조설계"
+build:
+  commands:
+    build: "./gradlew build"
+    test: "./gradlew test"
+    compile: "./gradlew compileKotlin"
+    run_admin: "./gradlew :bootstrap:admin:bootRun"
+    run_storefront: "./gradlew :bootstrap:storefront:bootRun"
+  ci: "없음 (.github workflow 미존재)"
+  container_image: "없음"
+  deployment: "미정"
+  profiles: "추적 설정에는 기본 profile만 존재"
+
+verification:
+  analyzed_at: "2026-07-12"
+  revision: "1eab9afa"
+  branch: master
+  repository_state: clean
+  source_snapshot:
+    tracked_files: 97
+    kotlin_files: 3
+    bounded_context_implementation_files: 0
+    test_files: 1
+  build_result: "blocked-local-toolchain"
+  build_note: "분석 환경은 Java 24만 설치되어 Java 25 toolchain을 찾지 못해 ./gradlew build가 compile 전에 중단됐다. 테스트는 실행되지 않았다."
 
 risk:
-  change_frequency: ""
-  incident_impact: ""
-  data_coupling: low  # 신규 서비스, 독립 DB 예정
+  change_frequency: high
+  incident_impact: low
+  data_coupling: low
+  notes:
+    - "아직 운영 기능과 배포 경로가 없어 현재 장애 영향은 낮다."
+    - "아키텍처 문서의 구현 완료처럼 읽히는 표현과 실제 빈 BC 모듈 사이에 문서 drift가 있다."
+    - "CI, 영속성, 인증·인가, tenant write guard, migration, 배포·복구 절차는 구현 전이다."
 
 modernization:
-  track: ""  # 신규 서비스 — 해당 없음
-  status: "design"
+  track: observe
+  status: "not-applicable"
   notes: |
-    - 신규 프로젝트로 modern stack 적용 예정
-    - naru, bazaar와 동일 아키텍처 (Hexagonal + DDD) 목표
-    - Q2 설계 → Q3 개발 → Q4 런칭 대기
+    신규 Kotlin/Spring Boot 서비스이므로 레거시 현대화 대상은 아니다.
+    현재는 참조 아키텍처가 아니라 아키텍처 스켈레톤 단계이므로 실제 BC 구현이 경계를 따르는지 계속 관찰해야 한다.
 
-harness_status: "initial"
+harness_status: "in-progress"

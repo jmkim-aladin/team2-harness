@@ -34,8 +34,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 | 위키 탐색 가이드 | `$TEAM2_HARNESS_PATH/docs/wiki-navigation-guide.md` | graph 우선, indexes, Graphify |
 | 위키 문서 언어/제목 정책 | `$TEAM2_HARNESS_PATH/policies/wiki-document-language-and-title-policy.md` | H1/title 규칙 |
 | Work Prep 노트 템플릿 | `$TEAM2_HARNESS_PATH/docs/sprint/work-prep-note-template.md` | frontmatter, 본문, 검증 SQL 상세 형식 |
-| Daily 운영 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/daily-meeting-operating-rule.md` | daily 아젠다 등록 |
-| 도메인 용어 링크 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/domain-term-linking-rule.md` | canonical 용어 링크 |
+| vault 구조·daily·용어 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/taxonomy.md` | daily 아젠다 등록, glossary canonical 용어 wikilink |
 | 서비스 카탈로그 | `$TEAM2_HARNESS_PATH/catalog/{서비스ID}.yaml` | 서비스 컨텍스트 |
 | 공통 서비스 정책 | `$TEAM2_HARNESS_PATH/policies/common-service-policy.md` | 공통 서비스 영향 확인 기준 |
 | 공통 서비스 registry | `$TEAM2_HARNESS_PATH/catalog/common-services/registry.yaml` | 알라딘 인증/뉴빌링 등 공통 영향 경계 |
@@ -49,6 +48,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 1. 코드 레벨 (§3.5) → 2. 데이터 레벨 (§11) → 3. 잔여 항목만 보고자/오너 컨펌
 2. dev DB 읽기 쿼리는 사전 동의됨 — 즉시 실행
 3. 위키 노트 `## 미확정 질문`에는 1·2로 풀리지 않은 항목만 남긴다
+4. 사용자에게 물을 땐 한 번에 하나씩, 추천안과 함께 — 사실은 조회로 해소하고 결정만 묻는다
 
 ## 실행 흐름
 
@@ -102,13 +102,7 @@ curl -s -H "$AUTH" \
 
 탐색 결과가 비면 "후보 미식별" 항목으로 명시 (감추지 않는다). 키워드 후보를 노트에 적어 다음 사이클에서 다시 시도.
 
-기록 밀도:
-
-- 첫 50줄 안에 문제, 현재 판단, 해결 방향, 다음 행동이 모두 보여야 한다.
-- `비즈니스 로직`은 트리거/정책/예외/운영 영향을 3-5개 bullet로 요약한다.
-- `기술 근거`는 재탐색용 식별자만 남긴다. 파일 경로·SP·테이블 대량 나열, 호출부 전문, 콜그래프 출력 전문은 본문에 붙이지 않는다.
-- 운영 서버에서 사람이 직접 확인해야 하는 조회 SQL은 `검증 SQL` 섹션에 전문을 남긴다. 단, 판단 요약·검증 결과 뒤에 배치해 첫 화면을 밀어내지 않는다.
-- 전수검사 목록, raw evidence는 티켓 하위 근거 파일(`wiki/processes/tickets/dev2-{NNNN}/...`) 또는 promote 대상 분석/결정 노트로 분리하고, 티켓 본문에는 링크와 결론만 둔다.
+기록 밀도는 §5 기준을 따른다 (호출부·콜그래프 출력 전문 금지 포함). 추가: 사람이 운영 서버에서 직접 확인할 조회 SQL은 `검증 SQL` 섹션에 전문으로 남기되, 판단 요약·검증 결과 뒤에 배치해 첫 화면을 밀어내지 않는다.
 
 ### 4. 위키 노트 경로 결정
 
@@ -119,7 +113,7 @@ curl -s -H "$AUTH" \
 
 기존 파일이 있으면 **읽어서** frontmatter `youtrack_synced_at`/`updated_at` 갱신만 하고, 본문은 보존한다. 사용자에게 "이미 있음 → 갱신" / "처음 생성" 인지 보고한다.
 
-**기본 동작 (사용자 확인 없이 진행)**: 위키 노트 신규 생성·기존 노트 frontmatter 갱신·티켓 종료 반영·Daily 아젠다 추가는 미리보기를 출력한 뒤 바로 진행한다. 별도 확인 질문을 두지 않는다. 단, dev DB 쓰기 쿼리(§11)·브랜치 생성·YouTrack 변경은 여전히 사용자 확인 게이트를 유지한다.
+확인 없이 진행 / 확인 필수 구분은 "사용자 확인 게이트" 섹션(SoT)을 따른다.
 
 ### 5. 위키 노트 작성
 
@@ -152,7 +146,7 @@ curl -s -H "$AUTH" \
 - 자유글 모드: `- [ ] [[{YYYY-MM-DD}-{slug}|{제목}]]`
 
 이미 동일 링크가 있으면 추가하지 않는다 (idempotent).
-Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (`daily-meeting-operating-rule.md` 참조).
+Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (vault `wiki/guides/taxonomy.md`의 `processes/daily/` 규칙 참조).
 
 ### 8. 브랜치 제안
 
@@ -163,58 +157,9 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (`daily-meet
 
 ### 9. cmux/herdr 작업 라벨 변경 (선택, 감지된 환경에서만)
 
-현재 셸이 cmux 안에서 실행 중이면 작업 중인 서피스의 탭 이름을 티켓번호만으로 바꾼다.
-현재 셸이 herdr 안에서 실행 중이면 현재 tab/agent 이름은 티켓번호만, 현재 pane 이름은 티켓번호와 제목으로 바꾼다.
-cmux/herdr 외부(일반 터미널/tmux/iTerm/VSCode 내장 등)에서는 **건드리지 않는다**.
+절차 SoT: [docs/cmux-herdr-labeling.md](../../../docs/cmux-herdr-labeling.md) — 감지 스크립트·리네이밍 명령·라벨 규칙 전체.
 
-감지:
-
-```bash
-CMUX_INSIDE=0
-if [ -n "${CMUX_WORKSPACE_ID:-}" ] && [ -n "${CMUX_SURFACE_ID:-}" ] && command -v cmux >/dev/null 2>&1; then
-  CMUX_INSIDE=1
-fi
-
-HERDR_INSIDE=0
-if [ -n "${HERDR_ENV:-}" ] && [ -n "${HERDR_PANE_ID:-}" ] && command -v herdr >/dev/null 2>&1; then
-  HERDR_INSIDE=1
-fi
-```
-
-리네이밍 (감지된 경우):
-
-```bash
-# 티켓 모드
-TAB_LABEL="DEV2-{NNNN}"
-PANE_LABEL="DEV2-{NNNN} — {제목}"
-
-# 자유글 모드라면 위 대신:
-# TAB_LABEL="NO-TICKET"
-# PANE_LABEL="NO-TICKET — {제목}"
-
-# cmux 안이면 surface tab 이름 변경
-if [ "$CMUX_INSIDE" -eq 1 ]; then
-  cmux rename-tab --surface "$CMUX_SURFACE_ID" "$TAB_LABEL"
-fi
-
-# herdr 안이면 현재 tab + agent + pane 이름 변경
-if [ "$HERDR_INSIDE" -eq 1 ]; then
-  HERDR_TAB_ID="$(herdr pane get "$HERDR_PANE_ID" | jq -r '.result.pane.tab_id')"
-  herdr tab rename "$HERDR_TAB_ID" "$TAB_LABEL"
-  herdr agent rename "$HERDR_PANE_ID" "$TAB_LABEL"
-  herdr pane rename "$HERDR_PANE_ID" "$PANE_LABEL"
-fi
-```
-
-규칙:
-
-- 티켓 모드는 tab/cmux surface에 `DEV2-{NNNN}`만 표시한다. 제목은 herdr pane label에만 둔다.
-- 자유글 모드는 tab/cmux surface에 `NO-TICKET`만 표시하고, herdr pane label은 `NO-TICKET — {제목}`으로 둔다.
-- 제목은 한 줄로, 약 60자 이내로 자른다 (pane 폭 고려).
-- 명령 실패(소켓 인증 실패, 서피스·pane ID 만료 등)는 경고만 출력하고 다른 단계를 막지 않는다.
-- cmux 워크스페이스 자체 이름(`workspace-action --action rename --title ...`)은 건드리지 않는다 — 사용자가 별도 작업 컨텍스트로 쓰고 있을 수 있다. 탭(=surface) 단위만 변경한다.
-- herdr 워크스페이스 이름은 건드리지 않는다. 현재 tab/agent label은 티켓번호만, 현재 pane label은 제목 포함으로 변경한다.
-- 사용자 확인 없이 기본 진행. 변경 전후 이름을 출력에 명시한다.
+요약: cmux 안이면 surface tab을 `DEV2-{NNNN}`(자유글은 `NO-TICKET`)로, herdr 안이면 tab/agent는 티켓번호·pane은 `티켓번호 — 제목`으로 변경. 외부 환경이면 스킵. 실패는 경고만 하고 진행. 사용자 확인 없이 기본 진행하되 변경 전후 이름을 출력.
 
 ### 10. 출력 형식
 
@@ -228,10 +173,7 @@ fi
 | 담당자 | {fullName ({login})} |
 | 위키 노트 | $LOCAL_WIKI_PATH/wiki/processes/tickets/dev2-{nnnn}.md (생성/갱신) |
 | Daily 아젠다 | $LOCAL_WIKI_PATH/wiki/processes/daily/{YYYY-MM-DD}.md (추가/스킵) |
-| cmux 탭 | DEV2-{NNNN} (변경/스킵 — cmux 외부면 스킵) |
-| herdr tab | DEV2-{NNNN} (변경/스킵 — herdr 외부면 스킵) |
-| herdr agent | DEV2-{NNNN} (변경/스킵 — herdr 외부면 스킵) |
-| herdr pane | DEV2-{NNNN} — {제목} (변경/스킵 — herdr 외부면 스킵) |
+| cmux/herdr 라벨 | DEV2-{NNNN} (변경/스킵 — 외부 환경이면 스킵, §9) |
 | 제안 브랜치 | feature/DEV2-{NNNN} (미생성) |
 | 제안 커밋 prefix | [DEV2-{NNNN}] |
 
@@ -250,12 +192,9 @@ fi
 
 요약:
 
-- `SELECT`/스키마 조회만 자동 허용한다. `INSERT/UPDATE/DELETE/DDL`은 별도 승인 전 금지.
-- dev/staging 읽기 쿼리는 사전 동의 범위다. Keychain에서 credential을 읽고 사용 후 unset한다.
-- 검증은 작은 모수와 짧은 기간으로 시작하고, 결과는 스키마/카운트/대표 패턴/판단만 노트에 남긴다.
-- 운영(prod) 조회·추출은 직접 실행하지 않고 [data-request-policy.md](../../../policies/data-request-policy.md) 절차로 전환한다.
-- 검증 SQL은 data-requests-dev2 등록 전에 먼저 티켓 노트나 티켓 하위 근거 파일에 저장한다.
-- 만권당 CS 구독취소/환불에서 실제 사용 여부 확인이 필요하면 vault `wiki/services/max/analysis/subscription-usage-check-sql.md` 템플릿을 우선 사용한다.
+- `SELECT`/스키마 조회만 자동 허용 (dev/staging 읽기는 사전 동의 범위 — Keychain credential 사용 후 unset). 쓰기·prod 전환은 "사용자 확인 게이트" 참조.
+- 검증은 작은 모수·짧은 기간으로 시작하고, 결과는 스키마/카운트/대표 패턴/판단만 노트에 남긴다. SQL 전문은 티켓 노트 `검증 SQL` 코드블록에 embed — 별도 `.sql` 사이드카 금지, data-requests-dev2 등록은 그 다음.
+- 만권당 CS 구독취소/환불 사용 여부 확인은 vault `wiki/services/max/analysis/subscription-usage-check-sql.md` 템플릿 우선.
 
 ### 12. 티켓 종료 모드 (로컬 위키 자동 반영)
 
@@ -297,16 +236,12 @@ fi
 
 > dev DB **읽기 쿼리**는 사전 동의되어 있어 확인 게이트 없이 실행 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의").
 
-## 금지
+**항상 금지** (확인으로도 해제 불가):
 
-- YouTrack 상태/필드/댓글 변경 (조회 전용)
-- 브랜치 자동 생성/체크아웃
-- 운영(prod) DB 직접 조회/변경 — 데이터 추출 요청 절차로 전환
-- 개발 DB라도 사용자 사전 승인 없는 쓰기 쿼리(`INSERT/UPDATE/DELETE/DDL`)
 - DB 계열 MCP 서버(postgres/mssql/mysql 등) 사용
 - SP 원문/운영 실데이터/시크릿/개인정보를 위키 본문에 저장
 - placeholder `/Users/user/...`를 실제 경로로 해석해 파일 생성 (반드시 `$LOCAL_WIKI_PATH` 사용)
-- vault의 `<!-- GENERATED:START -->` ~ `<!-- GENERATED:END -->` 외부 영역을 자동 갱신
+- vault의 `<!-- GENERATED:START -->` ~ `<!-- GENERATED:END -->` 외부 영역 자동 갱신
 
 ## 문서 위치 결정
 

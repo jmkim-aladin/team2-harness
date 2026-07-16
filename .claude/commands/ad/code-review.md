@@ -1,6 +1,7 @@
 ---
 description: GitHub PR 코드 리뷰 (팀 하네스 기준)
-model: sonnet
+model: claude-opus-4-8
+disable-model-invocation: true
 ---
 
 # GitHub PR 코드 리뷰
@@ -10,6 +11,14 @@ model: sonnet
 ## 검증 순서
 
 [policies/hypothesis-verification-order.md](../../../policies/hypothesis-verification-order.md) 적용 — "이거 맞나요?"류 질문 코멘트 달기 전에 콜그래프/grep + dev DB 읽기 쿼리로 답이 나오는지 먼저 확인. 잔여 의문만 작성자에게 질의 코멘트로 남긴다. dev DB 읽기는 사전 동의 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md)).
+
+## 리뷰 2축 분리
+
+두 축을 따로 판정·보고하고 병합·재순위하지 않는다 — 한 축 통과가 다른 축 실패를 가리는 것을 막는 장치:
+
+- **기준 축**: 팀 정책·컨벤션·코드 스멜 — 문서화된 기준 위반(하드)과 판단성 스멜을 구분하고 근거 문서를 인용
+- **스펙 축**: 티켓(5W1H)·설계 문서 대비 — 요구 누락/부분 구현, 요청 밖 변경(scope creep), 구현됐지만 의도와 다른 것
+- 연결된 티켓/스펙이 없으면 스펙 축은 생략하고 결과에 그 사실을 명시
 
 ## 사용법
 
@@ -31,15 +40,8 @@ model: sonnet
 
 ### 실행 모드
 
-이 스킬은 다수의 `gh` 호출과 마지막 리뷰 게시까지 포함하므로, **세션 시작 시 `--dangerously-skip-permissions` 로 진입하는 것을 권장**한다.
-
-```bash
-claude --dangerously-skip-permissions
-```
-
-- 권한 프롬프트가 모두 우회되므로, 게시 직전 단계에서 스킬이 보여주는 **미리보기를 사용자가 검토**하는 것이 유일한 게이트가 된다.
-- 미리보기 단계에서 사용자가 "이대로 게시"라고 답해야만 `gh api ... POST` 를 실행한다 — 이 규칙은 권한 모드와 무관하게 지킨다.
-- 일반 모드로 실행했다면 `.claude/settings.local.json` 의 `Bash(gh pr view:*)` / `Bash(rtk gh pr view:*)` 계열 화이트리스트로 읽기 명령은 통과하고, 게시 명령은 사용자 확인을 거친다.
+- 게시 직전 단계에서 스킬이 보여주는 **미리보기를 사용자가 검토**하고 "이대로 게시"라고 답해야만 `gh api ... POST` 를 실행한다 — 이 규칙은 권한 모드와 무관하게 지킨다.
+- 읽기 명령은 `.claude/settings.local.json` 의 `Bash(gh pr view:*)` / `Bash(rtk gh pr view:*)` 계열 화이트리스트로 통과하고, 게시 명령은 사용자 확인을 거친다.
 
 ### 도구 점검
 
@@ -66,7 +68,7 @@ gh CLI가 없으면 설치 안내: https://cli.github.com/ (`brew install gh`)
 | 숫자만 (`1308`) | `catalog/*.yaml`의 `repos:` 매핑에서 후보를 모은 뒤 `AskUserQuestion`으로 어느 레포인지 확인 |
 | `{owner}/{repo}#{N}` 또는 `{repo}#{N}` | 같은 방식으로 owner/repo 해석 |
 
-레포 해석 결과는 **수집 단계 첫 출력**으로 사용자에게 한 줄 노출한다 (예: `대상: AladinCommunication/max-front #1308`). 잘못 매핑되면 조기 중단 가능하도록.
+레포 해석 결과는 **수집 단계 첫 출력**으로 사용자에게 한 줄 노출한다. PR 정보 조회(1단계) 후 머지 방향(`headRefName` → `baseRefName`)과 **PR 작성자(`author.login`/`author.name`)**를 함께 표기해 어느 브랜치가 어느 브랜치로 머지되는지, 누구 요청인지 드러낸다 (예: `대상: AladinCommunication/max-front #1308 (feature/DEV2-1234 → develop) · 작성자: 안혜련(00HyeRyun00)`). 잘못 매핑되거나 머지 대상 브랜치가 예상과 다르면 조기 중단 가능하도록.
 
 ### 1. PR 정보 수집
 
@@ -142,6 +144,8 @@ GitHub에 게시하는 코멘트/리뷰 본문에는 로컬 하네스 내부 정
 
 ```
 ## PR #{번호} 리뷰 결과
+머지: {headRefName} → {baseRefName}
+작성자: {author.name}({author.login})
 
 ### 하네스 체크리스트
 ✅ 기본: 티켓 일치, 테스트 포함, 컨벤션 준수

@@ -12,13 +12,16 @@
 | 기획자 | 조윤주 | yj@aladin.co.kr | |
 | 백엔드 개발자 | 김정민 | jmkim@aladin.co.kr | max, tobe, naru, aasm, caravan, shopping, storefront, blog (메인) |
 | 백엔드 개발자 | 안혜련 | hyeryun@aladin.co.kr | storefront |
+| 백엔드 개발자 | 강인용 | iyk@aladin.co.kr | storefront (B2B), bazaar |
 | 프론트엔드 개발자 | 조은흠 | heum2@aladin.co.kr | max, tobe, caravan (서브) |
+| 백엔드·프론트엔드 개발자 | 박민석 | pms0905@aladin.co.kr | max, tobe |
+
+> 강인용: 2026-07 프리랜서 → 정규직 전환, B2B(스토어프론트) 담당. 박민석: 주니어(5년차), 만권당·투비 담당.
 
 ### 프리랜서
 
 | 역할 | 이름 | 이메일 (YouTrack ID) | 담당 서비스 |
 |------|------|---------------------|-------------|
-| 백엔드 개발자 | 강인용 | iyk@aladin.co.kr | bazaar (메인) |
 | 백엔드 개발자 | 박희수 | heesoo@aladin.co.kr | max, tobe |
 | 백엔드 개발자 | 조주영 | jjy@aladin.co.kr | bazaar (서브) |
 
@@ -26,12 +29,12 @@
 
 | 서비스 | Owner (메인) | 서브/백업 | 비고 |
 |--------|-------------|-----------|------|
-| max (만권당) | 김정민 (jmkim) | 조은흠 (heum2), 박희수 (heesoo) | |
-| tobe (투비컨티뉴드) | 김정민 (jmkim) | 조은흠 (heum2), 박희수 (heesoo) | |
+| max (만권당) | 김정민 (jmkim) | 조은흠 (heum2), 박민석 (pms0905), 박희수 (heesoo) | |
+| tobe (투비컨티뉴드) | 김정민 (jmkim) | 조은흠 (heum2), 박민석 (pms0905), 박희수 (heesoo) | |
 | naru | 김정민 (jmkim) | | |
-| bazaar | 강인용 (iyk) | 조주영 (jjy) | 프리랜서 |
+| bazaar | 강인용 (iyk) | 조주영 (jjy) | 서브 조주영은 프리랜서. 강인용 B2B 이동에 따른 메인 이관 여부 미정 |
 | aasm | 김정민 (jmkim) | | |
-| storefront (B2B 전용몰) | 김정민 (jmkim) | 조은흠 (heum2) | 설계 단계, 안혜련 티켓 발행 참여 |
+| storefront (B2B 전용몰) | 김정민 (jmkim) | 조은흠 (heum2), 강인용 (iyk) | 설계 단계, 안혜련 티켓 발행 참여 |
 | caravan (가상 대기열) | 김정민 (jmkim) | 조은흠 (heum2) | AS-IS: [DEV2-A-985](https://aladincommunication.youtrack.cloud/articles/DEV2-A-985/7JWM652865SYIOuMgOq4sOyXtCDshJzrsoQ) |
 | shopping (알라딘 쇼핑) | 김정민 (jmkim) | | 레거시 .NET FW + VB6 백오피스, B2B/C2C/중고매장 도메인 혼재 |
 | blog (블로그/북플) | 김정민 (jmkim) | | 레거시 ASP.NET Web Site, 블로그 + 북플 동거. DB 스크립트는 shopping-db-script(webcatalog) 공유 |
@@ -41,10 +44,27 @@
 | 역할 | 하네스 내 권한 |
 |------|---------------|
 | 팀장 | 도메인 경계 승인, 예외 기술 승인, 모든 상태 전환 |
+| 테크니컬 매니저(TM) | 기술 방향·설계 기준·API 계약·검증 게이트 소유, 기술 표준·리뷰·언블로킹으로 팀 실행 견인, 본인 소유 영역 직접 구현 |
 | 기획자 | 티켓 생성, 요구사항 정의, 레거시 유지/대체/폐기 우선순위 결정 |
 | 디자이너 | UI/UX 설계, BFF/API contract 기준 UI 변경면 최소화 |
 | 백엔드 개발자 | 신규 개발, 레거시 adapter, 추출 후보 선정, 코드 변경/배포 |
 | 프론트엔드 개발자 | 프론트엔드 개발, API 연동, UI 구현 |
+
+## 테크니컬 매니저(TM) ↔ 팀장 ↔ PM 경계
+
+김정민은 백엔드 개발자이자 팀의 TM이다. TM은 기술 리더십·직접 구현 역할이며, 인사·일정·평가 권한은 팀장(김규태)에 있다. 스토어프론트 등 제품의 PM 역할은 기획자(조윤주)가 맡는다.
+
+| 구분 | 팀장 (김규태) | TM (김정민) | PM (조윤주) |
+|------|:---:|:---:|:---:|
+| 인력 배정·우선순위 최종 확정·일정 승인·성과 판정 | ✅ | — | — |
+| 기술 방향·설계 기준·API 계약·검증 게이트 | 승인 | ✅ 소유 | — |
+| 기술 표준·코드/설계 리뷰·blocker 기술 해소 | — | ✅ | — |
+| 제품 기획·wireframe·정책 문서화·요구 우선순위 제안 | 승인 | 기술 기반 견인·검증 | ✅ 소유 |
+| 구현(개발) | — | 본인 소유 영역 직접 + 팀 구현 기술 견인 | — |
+
+- **견인 = 기술 기준 제시·리뷰**이지 인사·일정·평가 권한이 아니다. 자원·우선순위 결정이 필요한 blocker는 팀장에게 에스컬레이션한다.
+- TM은 기술 기준·리스크 근거를 만들어 팀장 의사결정에 올린다. 최종 결정·평가는 팀장 소관.
+- 개인 OKR(예: `vault wiki/processes/okr/`)은 TM 기술 성과를 측정 대상으로 하고, 팀장 관리 업무는 측정 밖에 둔다.
 
 ## 승인 권한
 

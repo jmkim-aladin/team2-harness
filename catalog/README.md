@@ -17,6 +17,12 @@
 | [aasm](aasm.yaml) | new | Next.js 16 + TypeScript | PostgreSQL (마이그레이션 중) | 없음 | Observe | 미시작 |
 | [caravan](caravan.yaml) | new | Spring Boot 3.3.7 + Kotlin + Spring Cloud Gateway + Next.js 14 | PostgreSQL + Redis 7 | 없음 | Observe | 미시작 |
 | [pod](pod.yaml) | new | Spring Boot 3.5.1 + Kotlin | PostgreSQL + S3/KMS | 없음 | Observe | 초기 등록 |
+| [스토어프론트](storefront.yaml) | new | Spring Boot 4.1.0 + Kotlin 2.3.21 | PostgreSQL 17 로컬 스켈레톤, 앱 연결 미구현 | 없음 | Observe | 갱신 중 |
+
+## 운영 모니터링
+
+- IDC DB 이전 Datadog 서비스 매핑: [`datadog-idc-db-monitoring.yaml`](datadog-idc-db-monitoring.yaml)
+- IDC DB 이전 Datadog 대시보드 구성: [`docs/datadog-idc-db-monitoring-dashboard.md`](../docs/datadog-idc-db-monitoring-dashboard.md)
 
 ## 아키텍처 비교
 
@@ -30,6 +36,7 @@
 | bazaar | Hexagonal + DDD + CQRS | JPA/Hibernate | Docker → AWS ECR → ArgoCD (K8s) | K8s (ArgoCD) |
 | caravan | Clean Architecture (domain/application/infra) + Reverse-Proxy Gateway | JPA/Hibernate (Admin) | Docker → Kubernetes | Kubernetes |
 | pod | Spring Boot layered service (Controller→Service→Repository/JPA) | JPA/Hibernate | TODO | TODO |
+| storefront | Gradle 멀티모듈 모놀리식 + DDD/Hexagonal/Clean 스켈레톤 | 미구현 | 미정 | 미정 |
 
 ## 공유 DB 현황
 
@@ -59,7 +66,7 @@
 
 | 트랙 | 서비스 | 설명 |
 |------|--------|------|
-| Observe | naru, bazaar, aasm, caravan, pod | 이미 modern stack, 하네스 문서화만 |
+| Observe | naru, bazaar, aasm, caravan, pod, storefront | modern stack 서비스. storefront는 실제 BC 구현 전 스켈레톤 단계 |
 | Wrap | tobe, max(일부), shopping, blog | adapter/facade로 감싸기, SP 확산 방지 |
 | Extract | max(일부), shopping(후보) | 신규 서비스로 도메인 추출 후보 (shopping은 B2B/C2C/중고매장 분리 식별 단계) |
 | Freeze/Retire | - | 해당 없음 |

@@ -1,3 +1,8 @@
+---
+description: YouTrack KB → 하네스 동기화
+disable-model-invocation: true
+---
+
 # YouTrack KB → 하네스 동기화
 
 전사 KB 문서가 업데이트되었을 때, 하네스 정책 파일을 최신 상태로 갱신합니다.
