@@ -34,8 +34,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 | 위키 탐색 가이드 | `$TEAM2_HARNESS_PATH/docs/wiki-navigation-guide.md` | graph 우선, indexes, Graphify |
 | 위키 문서 언어/제목 정책 | `$TEAM2_HARNESS_PATH/policies/wiki-document-language-and-title-policy.md` | H1/title 규칙 |
 | Work Prep 노트 템플릿 | `$TEAM2_HARNESS_PATH/docs/sprint/work-prep-note-template.md` | frontmatter, 본문, 검증 SQL 상세 형식 |
-| Daily 운영 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/daily-meeting-operating-rule.md` | daily 아젠다 등록 |
-| 도메인 용어 링크 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/domain-term-linking-rule.md` | canonical 용어 링크 |
+| vault 구조·daily·용어 규칙 | `$LOCAL_WIKI_PATH/wiki/guides/taxonomy.md` | daily 아젠다 등록, glossary canonical 용어 wikilink |
 | 서비스 카탈로그 | `$TEAM2_HARNESS_PATH/catalog/{서비스ID}.yaml` | 서비스 컨텍스트 |
 | 공통 서비스 정책 | `$TEAM2_HARNESS_PATH/policies/common-service-policy.md` | 공통 서비스 영향 확인 기준 |
 | 공통 서비스 registry | `$TEAM2_HARNESS_PATH/catalog/common-services/registry.yaml` | 알라딘 인증/뉴빌링 등 공통 영향 경계 |
@@ -147,7 +146,7 @@ curl -s -H "$AUTH" \
 - 자유글 모드: `- [ ] [[{YYYY-MM-DD}-{slug}|{제목}]]`
 
 이미 동일 링크가 있으면 추가하지 않는다 (idempotent).
-Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (`daily-meeting-operating-rule.md` 참조).
+Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (vault `wiki/guides/taxonomy.md`의 `processes/daily/` 규칙 참조).
 
 ### 8. 브랜치 제안
 

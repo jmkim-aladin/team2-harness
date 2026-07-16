@@ -5,6 +5,15 @@
 
 출처: Matt Pocock "How to write good skills" 발표 (AgentOS 정리 영상, 2026-07) + [mattpocock/skills](https://github.com/mattpocock/skills) 레포(MIT) 패턴. 팀 실정에 맞게 번안.
 
+## 대전제 — Codex 패리티
+
+모든 팀 스킬은 Claude Code와 Codex 양쪽에서 동일하게 사용 가능해야 한다 (2026-07-16 팀 확정).
+
+- 절차 SoT는 `.claude/commands/ad/{name}.md` 하나. `.codex/skills/ad-{name}/SKILL.md`는 SoT를 런타임에 읽는 **얇은 alias**로 유지 — 내용 복제 금지
+- 스킬 신설·개명·삭제 시 Codex alias를 동반 생성/갱신/삭제한다
+- Claude 전용 frontmatter(`disable-model-invocation` 등)는 Codex alias가 파싱하지 않으므로 무해해야 하며, Codex 쪽 동작(사용자 `$ad-*` 호출)을 바꾸지 않는다
+- 커버리지 검증: `/ad:harness-optimize 스킬` 실행 시 alias 전수 대조
+
 ## 체크리스트 4단계
 
 ### 1. 트리거 — 누가 부르는가부터 정한다

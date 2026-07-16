@@ -124,7 +124,12 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-312
    - 주의: Claude Code 로그만 집계. Codex(`.codex/skills/*`)·Hermes cron(granola-sync 등) 사용은 안 잡힘 — 0회여도 즉시 삭제 판단 금지, 사용 경로 확인 후 판정
 2. **체크리스트 감사**: 각 스킬을 트리거/구조/유도/가지치기 기준으로 점검, 결과를 `docs/skill-audit-baseline.md`에 갱신 (표 형식 유지, 날짜 갱신)
 3. **삭제 테스트**: 무동작 문장 후보를 지운 버전으로 해당 스킬 1회 실행해 결과 비교. 같으면 삭제 확정
-4. **판정 보고**: 0회 스킬은 삭제/통합/유지(사유 필수) 중 하나로 사용자에게 제안. 삭제는 사용자 확인 후
+4. **Codex 패리티 검증** (대전제 — [skill-authoring-principles.md](../../../policies/skill-authoring-principles.md)):
+   ```bash
+   for f in .claude/commands/ad/*.md; do n=$(basename "$f" .md); [ -d ".codex/skills/ad-$n" ] || echo "MISSING codex alias: ad-$n"; done
+   ```
+   alias 누락·내용 복제(얇은 alias 위반)·깨진 SoT 참조를 surface한다
+5. **판정 보고**: 0회 스킬은 삭제/통합/유지(사유 필수) 중 하나로 사용자에게 제안. 삭제는 사용자 확인 후
 
 ## repo↔vault 드리프트 점검
 
