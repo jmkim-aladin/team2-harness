@@ -1,6 +1,6 @@
 ---
 name: dev2-ad-commands-ko
-description: "Use when the user invokes or refers to DEV2 /ad:* commands in Codex, including ticket, work-prep, work-board, code-review, weekly, sprint, OKR, KB, harness, data, service activity, capacity, Granola, or new-note work."
+description: "Use when the user invokes or refers to DEV2 /ad:* commands in Codex, including ticket, work-prep, work-board, code-review, architecture-analysis, weekly, sprint, OKR, KB, harness, data, service activity, capacity, Granola, or new-note work."
 ---
 
 # 개발 2팀 `/ad:*` 명령 호환
@@ -21,6 +21,7 @@ Codex는 team2 하네스 command 파일을 source of truth로 읽고 같은 절�
 - `work-prep`: 작업 준비, 위키 노트
 - `work-board`: Hermes board projection
 - `code-review`: GitHub PR 리뷰
+- `architecture-analysis`: 저장소 전체 아키텍처·설계 철학·네이밍 분석과 vault Markdown/HTML 저장
 - `weekly-report`, `weekly-planned`, `sprint-close-check`
 - `okr`
 - `team2-kb-read`, `team2-kb-list`, `team2-kb-sync`

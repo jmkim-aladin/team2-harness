@@ -64,11 +64,20 @@ sm-bazaar-batch-dev-vendor-st11                        # 11번가 API
 
 ### 예시: max 서비스
 
+max는 멀티 앱(admin·batch) 모놀리스 — 모듈(앱)별 prefix로 분리한다 (IAM/발급 경계 = 모듈).
+추가 DB 리소스명에는 서버를 포함한다 (`database-read-{서버}-{db}`).
+
 ```
+# admin
 sm-max-admin-dev-database-write                        # PostgreSQL Primary (쓰기)
 sm-max-admin-dev-database-read                         # PostgreSQL Read Replica (읽기)
-sm-max-admin-dev-database-read-webcatalog              # MSSQL WebCatalog (읽기 전용)
-sm-max-admin-dev-database-read-ebookcms                # MSSQL EbookCms (읽기 전용)
+sm-max-admin-dev-database-read-cool-webcatalog         # MSSQL COOL WebCatalog
+sm-max-admin-dev-database-read-cool-max                # MSSQL COOL Max
+sm-max-admin-dev-database-read-lego-ebookcms           # MSSQL LEGO EbookCms
+
+# batch
+sm-max-batch-dev-database-read-cool-max                # MSSQL COOL Max (outbox)
+sm-max-batch-dev-service-endpoint-viewer-api           # 뷰어 API 캐시 무효화 (X-API-Key)
 ```
 
 ### 예시: aasm 서비스 (Node.js/Next.js)
