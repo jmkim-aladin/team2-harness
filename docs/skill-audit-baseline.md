@@ -86,6 +86,14 @@
 - [x] `weekly-report.md` — §항목 형식·예정일 산정·기록 필터 bullet·중복 제거 원칙을 가이드 §1/§4/§4.5 링크로 축약 (-92줄). 스킬 고유 규칙(판단 기준 표, Obsidian hard break, KB POST 게이트)만 잔존
 - [x] `work-prep.md` §9 → [docs/cmux-herdr-labeling.md](./cmux-herdr-labeling.md) 분리 (2층 구조). §11은 이미 템플릿 링크로 슬림 — 분리 불요 판정
 
+### D. mattpocock/skills 패턴 흡수 — 2026-07-16 완료 (설치 없이 패턴만, MIT)
+
+- [x] `disable-model-invocation: true` 메커니즘 도입 — 사용자 전용 스킬 3개 적용 (code-review·work-board·team2-kb-sync), 설명이 모델 컨텍스트에서 제거됨
+- [x] 질문 규율 (하나씩·추천안 동반·사실은 조회/결정만 질문) → ad:ticket, ad:work-prep 이식
+- [x] 리뷰 2축 분리 (기준 축 vs 스펙 축, 병합·재순위 금지) → ad:code-review 이식
+- [x] 작성 원칙 정책 보강: description 작성 규칙, 점검 가능한 완료 기준, 분리 비용 판단, 용어집 패턴, 2축 패턴
+- 도입 안 함: 스킬 28개 직접 설치 (superpowers/gstack/ad:*와 3중 중복 + 컨텍스트 역행 — 판정 근거는 2026-07-16 평가)
+
 ### 트리거 재검토 — 2026-07-16 완료
 
 - [x] Codex 로그 교차 확인 결과 routing **전부 유지** 결정

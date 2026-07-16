@@ -1,6 +1,7 @@
 ---
 description: GitHub PR 코드 리뷰 (팀 하네스 기준)
 model: claude-opus-4-8
+disable-model-invocation: true
 ---
 
 # GitHub PR 코드 리뷰
@@ -10,6 +11,14 @@ model: claude-opus-4-8
 ## 검증 순서
 
 [policies/hypothesis-verification-order.md](../../../policies/hypothesis-verification-order.md) 적용 — "이거 맞나요?"류 질문 코멘트 달기 전에 콜그래프/grep + dev DB 읽기 쿼리로 답이 나오는지 먼저 확인. 잔여 의문만 작성자에게 질의 코멘트로 남긴다. dev DB 읽기는 사전 동의 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md)).
+
+## 리뷰 2축 분리
+
+두 축을 따로 판정·보고하고 병합·재순위하지 않는다 — 한 축 통과가 다른 축 실패를 가리는 것을 막는 장치:
+
+- **기준 축**: 팀 정책·컨벤션·코드 스멜 — 문서화된 기준 위반(하드)과 판단성 스멜을 구분하고 근거 문서를 인용
+- **스펙 축**: 티켓(5W1H)·설계 문서 대비 — 요구 누락/부분 구현, 요청 밖 변경(scope creep), 구현됐지만 의도와 다른 것
+- 연결된 티켓/스펙이 없으면 스펙 축은 생략하고 결과에 그 사실을 명시
 
 ## 사용법
 

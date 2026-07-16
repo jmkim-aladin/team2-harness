@@ -1,3 +1,8 @@
+---
+description: Work Board Projection (dry-run/apply)
+disable-model-invocation: true
+---
+
 # Work Board Projection
 
 Hermes가 읽는 work-board projection, Discord dispatch request, Hermes Kanban projection, desktop decision cockpit을 갱신한다.
