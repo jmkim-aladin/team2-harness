@@ -38,11 +38,12 @@ DEV2-A-692 (주간업무)
 ## 보고서 양식
 
 > 상세 가이드: `docs/sprint/weekly-report-guide.md`
-> 양식의 source of truth는 YouTrack KB `DEV2-A-696` 원본. 가이드 §5 템플릿과 KB 원본이 다르면 KB 원본을 따른다.
+> 라인 포맷의 source of truth는 가이드 **§4-B (2026-07 개편)**. KB `DEV2-A-696`가 신규 포맷으로 이관되기 전까지 초안 작성은 §4-B를 우선한다. §4.1~4.4 레거시 패턴은 기존 KB 원본 조회·호환용.
 
 ### 섹션 구조
 
 ```
+## 이번 주 요약          ← 신규(§4-B.1): 건수 + 담당자별 표 + 하이라이트
 ## **백로그 항목**
 ## **계획 항목**
 ## **진행중 항목**
@@ -51,16 +52,17 @@ DEV2-A-692 (주간업무)
 ## **기타**
 ```
 
-- H2 헤더 안에 `**` bold 처리 (KB 원본 패턴)
+- H2 헤더 안에 `**` bold 처리 (KB 원본 패턴). `## 이번 주 요약`만 bold 없이 둔다.
 - `## **백로그 항목**`은 KB 양식 호환용 섹션이다. 최종 주간보고 후보 생성 시 Backlog 상태 티켓은 제외하고, 새 항목을 넣지 않는다.
 
 ### 항목 형식·예정일 산정
 
 SoT: [docs/sprint/weekly-report-guide.md](../../../docs/sprint/weekly-report-guide.md)
 
-- **항목 표기** (제목/본문 라인, escape, 단일 Task 반복, 일정 형식): 가이드 §4.1~4.4
-- **예정일 선택·fallback** (코멘트 의미 추출, Feature↔Task 상속 표, `미기록` 처리): 가이드 §4.5
-- 보고서 작성·동기화 시점에 가이드 해당 절을 읽어 그대로 적용한다. 티켓 조회 시 `comments(text,created,updated)` 필드 포함 (아래 API 참조 #3)
+- **보고 포맷 (신규 표준)**: 가이드 §4-B — 이번 주 요약 섹션, 상태 섹션 내 서비스 그룹핑(그룹명 한글: 바자르·나루 등), 라인 단순화(제목 1회 + `DEV2-xxxx` ID만), 하위 Task 날짜는 **(완료)만 표시**
+- **항목 표기 레거시** (제목 2회 반복, escape, 일정 형식): 가이드 §4.1~4.4 — 기존 KB 원본 읽을 때만 참조
+- **예정일 선택·fallback** (코멘트 명시일 → 착수일 fallback(In Progress 전환시각/created) → `미기록`): 가이드 §4.5
+- 보고서 작성·동기화 시점에 가이드 해당 절을 읽어 그대로 적용한다. 티켓 조회 시 `comments(text,created,updated)` 필드 포함 (아래 API 참조 #3). 착수일 fallback이 필요하면 `activities?categories=CustomFieldCategory` 로 State 전환시각 조회 (API 참조 #6)
 
 ## 기록 대상 필터
 
@@ -117,6 +119,11 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"content": "..."}' \
   "$BASE/api/articles/{articleId}"
+
+# 6. 착수일 fallback — State가 In Progress로 전환된 시각 (가이드 §4.5)
+curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+  "$BASE/api/issues/{issueId}/activities?categories=CustomFieldCategory&fields=timestamp,field(name),added(name)"
+# field.name == State, added에 In Progress 포함된 최초 항목의 timestamp 사용. 없으면 created.
 ```
 
 ## 실행 지침
