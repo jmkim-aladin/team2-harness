@@ -107,7 +107,7 @@ TYPE_RULES: dict[str, dict] = {
     },
     "guide": {
         "required": [],
-        "location": r"^wiki/guides/",
+        "location": r"(^wiki/guides/|^wiki/services/[a-z0-9-]+/guide/)",
         "filename": r"^[a-z0-9-]+\.md$",
     },
     "glossary": {
@@ -225,8 +225,12 @@ def lint_file(rel: str, abs_path: Path) -> list[str]:
             f"{rel}: type=`{t}` 파일명 패턴 위반. 기대=`{rules['filename']}`, 실제=`{fname}`"
         )
     # 3b. 서비스 prefix 금지 (단 {name}-index.md는 stem uniqueness 위해 허용)
+    # wiki/services/{svc}/ 안에서는 소유 서비스 prefix만 금지 — 타 서비스 prefix는
+    # 상대 서비스를 가리키는 정보성 이름이라 허용 (예: storefront/proposals/bazaar-*.md)
     if not fname.endswith("-index.md") and fname != "_log.md" and not PREFIX_EXEMPT.match(fname):
-        for p in SERVICE_PREFIX:
+        owner = re.match(r"wiki/services/([a-z0-9-]+)/", rel)
+        banned = (f"{owner.group(1)}-",) if owner else SERVICE_PREFIX
+        for p in banned:
             if fname.startswith(p):
                 violations.append(
                     f"{rel}: 파일명에 서비스 prefix `{p}` 금지 (디렉터리가 표현)"
@@ -250,7 +254,7 @@ def lint_file(rel: str, abs_path: Path) -> list[str]:
     return violations
 
 
-SKIP_DIRS = {"templates", "_audit"}  # placeholder 포함 또는 도구 자체 산출물
+SKIP_DIRS = {"templates", "_audit", "db-docs"}  # placeholder, 도구 산출물, tbls 생성 문서(frontmatter 없음)
 
 
 def is_skip(rel: str) -> bool:
