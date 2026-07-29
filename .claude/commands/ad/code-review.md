@@ -74,7 +74,7 @@ gh CLI가 없으면 설치 안내: https://cli.github.com/ (`brew install gh`)
 
 ```bash
 # PR 기본 정보 + 최신 커밋 SHA (한 번에 조회)
-gh pr view {N} --repo {owner}/{repo} --json title,body,author,baseRefName,headRefName,commits,files,additions,deletions
+gh pr view {N} --repo {owner}/{repo} --json title,body,author,baseRefName,headRefName,commits,files,additions,deletions,isDraft
 
 # 변경 파일 목록 (이름만)
 gh pr diff {N} --repo {owner}/{repo} --name-only
@@ -84,6 +84,13 @@ gh pr diff {N} --repo {owner}/{repo}
 ```
 
 > `--repo` 누락 시 현재 디렉터리(하네스)의 remote를 따라가 엉뚱한 레포 조회나 실패가 발생한다. 항상 명시한다.
+
+#### Draft PR은 리뷰하지 않는다
+
+`isDraft`가 `true`면 리뷰를 진행하지 않는다. Draft는 작성자가 아직 완료 신호를 주지 않은 상태이므로, diff를 읽거나 코멘트를 준비하지 말고 즉시 중단한다.
+
+- 레포 해석 결과와 함께 "PR #{N}은 Draft 상태 — 리뷰 스킵" 한 줄을 노출하고 종료한다.
+- 사용자가 Draft인 걸 알고도 명시적으로 "그래도 리뷰해줘"라고 요청하면 그때만 진행한다.
 
 ### 2. 팀 하네스 기준 리뷰
 
