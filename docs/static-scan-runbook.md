@@ -37,6 +37,16 @@ Docker로 우회는 불가하다. Windows 컨테이너는 macOS에 Windows 커�
 
 → **월례 점검은 Windows에서 돌리는 것이 정답이다.** macOS는 .NET 3건이 공백으로 남는다.
 
+### Windows 실행으로 메워진 C# 공백 (2026-07-29 서버 실측)
+
+| projectKey | macOS 언어 분포 | Windows 실행 후 | ncloc |
+|---|---|---|---|
+| `max-api` | `xml=2651` (C# 0줄) | **`cs=17789`**;xml=433 | 2,651 → **18,222** |
+| `tobe` | `css/js/web/xml` (C# 0줄) | **`cs=43623`**;css=71992;js=121734;web=19906;xml=4213 | 212,899 → **261,577** |
+| `maxcms-api` | `cs=10708` (정상) | `cs=10802`;docker=54;shell=6 | 10,768 → 10,862 |
+
+6개월간 SAST 공백이던 C# 약 1,000파일이 처음으로 분석됐다.
+
 ## 사전 조건
 
 ### 공통
@@ -75,12 +85,24 @@ security add-generic-password -U -a "$USER" -s sonarqube-jmkim-token -w
 
 | 도구 | 용도 | 비고 |
 |---|---|---|
-| SonarScanner CLI | TS/JS·Kotlin·T-SQL | `sonar-scanner.bat`가 PATH에 있어야 한다 |
-| `dotnet-sonarscanner` | .NET 8 SDK-style (`maxcms-api`) | `dotnet tool install --global dotnet-sonarscanner` |
-| **SonarScanner for MSBuild** | .NET Framework legacy (`max-api`·`tobe`) | `sonar-scanner-msbuild-<ver>-**net-framework**` 배포본의 `SonarScanner.MSBuild.exe`. .NET Core flavor는 legacy csproj를 처리하지 못한다 |
+| SonarScanner CLI | TS/JS·Kotlin·T-SQL | `sonar-scanner.bat`가 PATH에 있어야 한다. `-windows-x64` 배포본은 JRE를 번들하므로 별도 Java 설치가 필요 없다 |
+| `dotnet-sonarscanner` | .NET 8 SDK-style (`maxcms-api`) | `dotnet tool install --global dotnet-sonarscanner`. `%USERPROFILE%\.dotnet\tools`가 PATH에 있어야 한다 |
+| **SonarScanner for MSBuild** | .NET Framework legacy (`max-api`·`tobe`) | `sonar-scanner-msbuild-<ver>-**net-framework**` 배포본의 `SonarScanner.MSBuild.exe`. .NET Core flavor는 legacy csproj를 처리하지 못한다. 실행 시 "Using the .NET **Framework** version"이 찍히는지 확인해라 |
 | Visual Studio Build Tools 2022 | MSBuild + .NET Framework 4.8 targeting pack | 러너가 `vswhere.exe`로 자동 탐지한다 |
-| `nuget.exe` | `packages.config` 복원 | legacy repo는 `dotnet restore`로 복원되지 않는다 |
-| Fortify SAST | Fortify 스캔 | `FORTIFY_HOME` 환경변수로 설치 경로 지정. 기본값 `C:\Program Files\Fortify\Fortify_SCA_26.2.0` |
+| `nuget.exe` | NuGet 복원 | `MSBuild.exe`는 `dotnet` CLI와 달리 **자동 복원을 하지 않는다.** packages.config뿐 아니라 SDK-style(PackageReference)도 복원이 선행돼야 컴파일된다. 러너는 msbuild 모드에서 항상 복원한다 |
+| Fortify SAST | Fortify 스캔 | `FORTIFY_HOME` 환경변수로 설치 경로 지정. **설치 디렉토리명이 배포본에 따라 다르다** — 실측 설치본은 `OpenText_SAST_Fortify_26.2.0`이고 이전 기본값 `Fortify_SCA_26.2.0`가 아니었다 |
+| **Fortify 룰팩** | Fortify `-scan` 단계 | **설치본에 룰팩이 들어 있지 않다.** `$FORTIFY_HOME\Core\config\rules`에 `README.TXT`만 있으면 미설치다. 룰팩 zip(예: `2026Q2`)의 `rules\*.bin`(37개·14MB)과 `ExternalMetadata\externalmetadata.xml`를 해당 경로로 복사해라. 없으면 translate는 되고 scan에서 `[error]: No rules files found`로 실패한다 |
+| **.NET 10 런타임** | Fortify C# / VB.NET 번역 | Fortify 26.2.0의 `dotnet-translator`는 **net10.0 대상**이라 `Microsoft.NETCore.App 10.0.0`이 필요하다. .NET 8·9만 있으면 번역기가 실행되지 못해 **`.cs` 0건 번역**이 된다. `dotnet --list-runtimes`로 10.x 존재를 확인해라 |
+
+**PowerShell 버전 주의 (필수)**: 러너는 Windows PowerShell 5.1에서도 동작하지만, `.ps1`이 **BOM 없는 UTF-8**이면 5.1이 파일을 ANSI(한국어 환경 CP949)로 읽어 한글이 깨지고 파싱이 실패한다. `run-static-scan.ps1`은 이 때문에 **UTF-8 BOM을 유지해야 한다.** 편집기가 BOM을 떼면 다음으로 확인한다.
+
+```powershell
+$e=$null
+[System.Management.Automation.Language.Parser]::ParseFile("$PWD\scripts\run-static-scan.ps1",[ref]$null,[ref]$e) | Out-Null
+if($e){ $e | ForEach-Object { "line $($_.Extent.StartLineNumber): $($_.Message)" } } else { 'parse: OK' }
+```
+
+에러가 한글 깨짐과 함께 나오면 문법 오류가 아니라 인코딩 문제다. BOM을 붙이면 해소된다.
 
 토큰 저장 (DPAPI, 현재 Windows 사용자 계정 전용):
 
@@ -119,9 +141,31 @@ $env:TEAM2_WORKSPACE_ROOT = 'D:\workspace'
 .\scripts\run-static-scan.ps1 -Target all -SonarOnly
 ```
 
+**실행 위치 주의 (Windows 실측 2026-07-29)**: Sonar 단계는 **실제 콘솔이 있는 포그라운드**에서 돌려야 한다. `dotnet-sonarscanner`·`SonarScanner.MSBuild`는 콘솔 없는 분리 프로세스(`Start-Process -WindowStyle Hidden` 등)에서 아무 메시지도 남기지 않고 죽는다(3회 재현). Fortify는 영향이 없다.
+
+`tobe`처럼 오래 걸리는 대상은 단계를 나누는 것이 안정적이다.
+
+```powershell
+# 1) Sonar — 포그라운드 (repo당 약 3분)
+.\scripts\run-static-scan.ps1 -Target tobe -SonarOnly
+
+# 2) Fortify — 분리 실행 (빌드·번역 약 14분 + scan)
+Start-Process powershell -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-Command',
+  "`$env:FORTIFY_HOME='C:\Program Files\Fortify\OpenText_SAST_Fortify_26.2.0'; .\scripts\run-static-scan.ps1 -Target tobe -FortifyOnly") `
+  -RedirectStandardOutput .\tobe-fortify.log -WindowStyle Hidden
+```
+
+**진행 판단**: 부모 `java`의 CPU가 0이어도 정체가 아니다. `aspcodegen.exe` / `dotnet-translator.exe`의 CPU 증가량을 봐라 (아래 함정 표 참조).
+
 **대상 해석 규칙**: repo 키가 서비스명보다 우선한다. `tobe`는 repo(`tobe/Tobe`)로 해석되므로 tobe 서비스 전체는 `svc:tobe`를 써야 한다.
 
-**기준 브랜치**: `origin/main`이 있으면 main, 없으면 `origin/master`. develop은 쓰지 않는다 (팀 결정 2026-07-29). 러너가 `git fetch` 후 `git worktree`로 해당 ref를 별도 디렉토리에 꺼내 스캔하고, 끝나면 제거한다. Ctrl-C로 중단해도 trap이 정리한다.
+**기준 브랜치**: `origin/main`이 있으면 main, 없으면 `origin/master`. develop은 쓰지 않는다 (팀 결정 2026-07-29).
+
+**예외 1건 — `tobe`는 `origin/develop`** (사용자 결정 2026-07-29). `tobe`의 `origin/main`(2026-01-16)은 **실제로 컴파일되지 않는다**: `Aladin.Tobe.Bll\Search\SearchEngine.cs(582,32) error CS0103: 'isInternal'`. develop 대비 565커밋 뒤이고 develop에서는 해당 참조가 없어 빌드가 통과한다. C# 분석은 빌드 성공이 전제이므로 main으로는 596파일을 Roslyn·Fortify 어느 쪽으로도 분석할 수 없다. 나머지 9 repo는 규칙 그대로다.
+
+`max-api`는 예외가 아니다. 처음 main 빌드가 깨진 원인은 브랜치가 아니라 `Configuration`이었고(`Web.Debug.config` 부재), `/p:Configuration=Release`로 `origin/main` 빌드가 통과한다.
+
+**보고 시 주의**: 러너는 `sonar.branch.name`을 넘기지 않으므로 develop 코드가 프로젝트 기본 브랜치 슬롯에 올라간다. `tobe`의 기존 이력은 main 기반이라 이번 분석부터 기준이 바뀐다. leak period·New Code 산정에 영향이 있으니 보고서에 명시해야 한다. 러너가 `git fetch` 후 `git worktree`로 해당 ref를 별도 디렉토리에 꺼내 스캔하고, 끝나면 제거한다. Ctrl-C로 중단해도 trap이 정리한다.
 
 **출력**: `~/Documents/Work/static-scan/<날짜>/`
 - `summary-<타임스탬프>.md` — 요약표 + 실패/부분/공백 목록 + repo별 상세
@@ -156,6 +200,14 @@ $env:TEAM2_WORKSPACE_ROOT = 'D:\workspace'
    *이 확인 없이 measures를 읽으면 기존 프로젝트는 '이전 분석값'을 즉시 돌려주므로 재시도 로직이 무의미해진다.*
 
 4. **심각도 집계 파싱 검증** — `FPRUtility -information -analyzerIssueCounts`는 analyzer 그룹 수이고 심각도가 아니다. `[fortify priority order]:critical|high|medium|low` 쿼리로 센다. 파싱 실패를 0으로 떨어뜨리면 "Critical 0건"이라는 거짓 통과가 나오므로 PARTIAL로 처리한다.
+
+**게이트 2의 Windows 보강 (2026-07-29)**: .NET msbuild 모드는 C#을 빌드 통합으로 번역하므로 레지스트리 `Globs`에 `.cs`가 없다. 그러면 분모가 0이 되고, 예전 코드는 그때 커버리지를 100%로 떨어뜨렸다. 그 결과 **한 파일도 번역되지 않은 스캔이 `OK / 커버리지 100%`로 통과했다** (실측: `maxcms-api` 번역 0/0, 이슈 0건, FPR에는 번역 오류 기록). 세 가지를 함께 고쳤다.
+
+- 분모에 `**/*.cs`를 포함한다 (프론트 자산 `Globs`가 있으면 합친다)
+- 번역 파일 0건은 **FAIL**로 내린다. "이슈 0건"은 깨끗한 것이 아니라 보지 않은 것이다
+- 분자도 분모와 같은 확장자만 센다. `-show-files`는 `.csproj` 등 분모에 없는 파일까지 세어 100%를 넘겼고(실측 `206/201 = 102%`), 그 상태로는 ".cs 100 + 기타 106"도 102%로 보여 실제 누락을 가린다
+
+**빌드 통합 번역의 전제**: Fortify는 **실제로 컴파일되는 파일만** 번역한다. 증분 빌드면 번역 대상이 0이 된다(실측: 재실행 시 `files=0`). `/t:Rebuild`와 NuGet 복원이 함께 있어야 성립한다.
 
 ### 원시 건수와 고유 위치를 함께 봐라
 
@@ -194,6 +246,29 @@ repo 전체를 넘기면 매니페스트·픽스처·테스트가 Critical로 �
 
 ## 알려진 함정
 
+### Windows 실측 함정 (2026-07-29 최초 Windows 실행에서 확인)
+
+macOS `.sh`에는 없고 Windows PowerShell 판에만 있는 문제들이다. 전부 러너에서 수정했다.
+
+| 증상 | 원인 | 대응 |
+|---|---|---|
+| 파싱 오류 21건, 메시지에 한글 깨짐 | BOM 없는 UTF-8을 PS 5.1이 CP949로 디코딩 → 깨진 바이트가 따옴표·백틱으로 해석 | `.ps1`에 UTF-8 BOM 유지. 문법 오류가 아니다 |
+| 스캐너가 정보성 메시지 한 줄 출력하고 스크립트 즉사 (rc=0인데도) | PS 5.1은 `*>>`로 리다이렉트한 네이티브 stderr를 `NativeCommandError`로 감싸고, 전역 `$ErrorActionPreference='Stop'`이 이를 종료 오류로 만든다 | 네이티브 호출 함수에 함수 스코프 `$ErrorActionPreference='Continue'`. 성공 판정은 `$LASTEXITCODE`로 한다 |
+| 정리 루틴이 죽어 worktree가 등록된 채 남음 | 같은 원인. `git worktree remove`의 경고 한 줄에 `Remove-Worktree`가 사망 | 정리 함수도 `Continue`로 낮춤 |
+| 게이트 1·3·4가 아무것도 못 잡음 (로그 검색 전부 실패) | PS 5.1의 `>`/`>>`/`*>>`는 Out-File 기반이고 기본 인코딩이 **UTF-16LE**. UTF-8 헤더 뒤에 UTF-16 본문이 붙어 `Select-String`이 매칭 실패 | 스크립트 앞부분에 `$PSDefaultParameterValues['Out-File:Encoding']='utf8'` |
+| `max-api`·`tobe`가 스캔되지 않았는데 종료 코드 0 | `Set-StrictMode -Version Latest`에서 없는 키(`$Cfg.Globs`) 접근 시 `PropertyNotFoundStrict` 예외 → 루프 중단. 런처의 `$LASTEXITCODE`는 직전 네이티브 명령 값(0)이 남음 | 키 존재 확인 후 접근. 래퍼에서 예외를 명시적으로 잡아 성공과 구분 |
+| Fortify가 `번역 0/0 (100%)`로 **OK** 판정 | msbuild 모드는 `Globs`가 없어 분모가 0이 되고, 코드가 그때 `pct=100`으로 떨어뜨렸다 | 분모에 `**/*.cs` 포함. 번역 0건은 FAIL. 분자도 분모와 같은 확장자만 센다 |
+| `-FortifyOnly`로 돌리면 Fortify C# 번역 0건 | 도구 탐지가 `$needSonar` 블록 안에만 있어 `$MsBuildExe`가 `$null` → `sourceanalyzer`가 솔루션·스위치를 '번역할 파일'로 취급 (FPR에 `[101] File t:Rebuild not found`) | MSBuild·nuget 탐지를 `$needSonar` 밖으로 이동. `$MsBuildExe`가 없으면 즉시 FAIL |
+| `.cs` 0건 번역, FPR에 `[1103] Translator execution failed` | Fortify `dotnet-translator`가 net10.0 대상인데 .NET 10 런타임 부재 | .NET 10 런타임 설치 (위 사전 조건 표) |
+| scan 단계 `[error]: No rules files found` | 룰팩 미설치 | 룰팩 복사 (위 사전 조건 표) |
+| `Web.Debug.config 파일을 찾을 수 없습니다` 로 빌드 실패 | `max-api`·`tobe`에 `Web.Debug.config`가 없는데 MSBuild 기본값이 `Configuration=Debug`라 `TransformWebConfig` 타겟이 실행됨. **`/p:TransformWebConfigEnabled=false`로는 회피되지 않는다(실측 반증)** | `/p:Configuration=Release` 지정. 두 repo 모두 `Web.Release.config`가 있다 |
+| Fortify 번역 파일 수가 0 또는 예상보다 훨씬 적음 (빌드 통합 모드) | Fortify 빌드 통합 번역은 **실제로 컴파일되는 파일만** 잡는다. 증분 빌드면 번역 대상이 없다 | `/t:Rebuild` 유지. NuGet 복원도 선행돼야 한다 |
+| 백그라운드로 띄운 러너가 CPU 0%로 무한 대기 | 부모 셸이 먼저 종료되어 자식이 상속한 출력 핸들에 쓰다가 블록 | 포그라운드 실행, 또는 `Start-Process -RedirectStandardOutput`으로 부모와 분리(파일 핸들은 파이프처럼 차지 않는다) |
+| **콘솔 없는 분리 프로세스에서 SonarQube 단계가 조용히 죽는다** (로그 5바이트, 오류 메시지 없음, 예외도 없음) | `dotnet-sonarscanner`·`SonarScanner.MSBuild`는 `Start-Process -WindowStyle Hidden` 처럼 콘솔이 없는 환경에서 실패한다. Fortify(`sourceanalyzer`)는 영향 없다. 실측 3회 재현 | **Sonar 단계는 포그라운드(실제 콘솔)에서 돌려라.** 장시간 Fortify만 분리 실행한다. 실무 조합: `-SonarOnly`를 포그라운드로, `-FortifyOnly`를 `Start-Process`로 |
+| **`tobe` Fortify가 멈춘 것처럼 보인다** (부모 java CPU 0, 로그 정지, FPR 미생성이 수십 분) | **오진하기 쉬운 정상 동작이다.** `Aladin.ToBe.Web` 번역 단계에서 자식 `aspcodegen.exe`(ASP.NET 뷰 코드 생성, web≈20k ncloc)가 **단일 스레드로 코어 하나를 100%** 쓰며 오래 돌고, 부모 java는 자식을 기다려 유휴로 보인다. 로그도 이 구간에서 출력이 없다 | **죽이지 마라.** 진행 여부는 부모가 아니라 `aspcodegen.exe` / `dotnet-translator.exe`의 **CPU 증가량**으로 판단해라. 실측 2026-07-29: 정상 진행 중인 실행을 정체로 오판해 두 번 중단시켰다 |
+
+### 공통 함정
+
 | 증상 | 원인 | 대응 |
 |---|---|---|
 | `dotnet-sonarscanner` 실행 시 `incompatible architecture` | arm64 Mac에 x86_64 apphost 설치 | `--arch arm64`로 재설치 |
@@ -214,9 +289,20 @@ aasm-{initial,q3,final}-developer-workbook.pdf   (개발자 워크북)
 aasm-fortify-report-2026-06-12.md + .pdf         (보고서)
 ```
 
-- **developer workbook PDF 생성 도구가 없다.** 현 설치본은 SCA 전용이다. Audit Workbench 미설치, `ReportGenerator`/`BIRTReportGenerator` 바이너리 없음
 - **보고서 md/PDF**는 6월엔 수작업이었다
 - **KB 업로드** — DEV2-6427이 참조하는 `fortify-upload-kb.py`가 현재 머신에 없다
+
+**정정 (2026-07-29, Windows 실측)**: "developer workbook PDF 생성 도구가 없다"는 macOS 설치본 기준이었고 Windows 머신에는 **도구가 있다.** SCA 설치본(`OpenText_SAST_Fortify_26.2.0`)과 별개로 도구 번들이 설치돼 있다.
+
+```
+C:\Program Files\Fortify\OpenText_Application_Security_Tools_25.4.0\bin\
+  auditworkbench.cmd        ← Audit Workbench
+  BIRTReportGenerator.cmd   ← BIRT 리포트
+  ReportGenerator.bat       ← 리포트 생성
+  scancentral.bat, fortifyclient.bat, CustomRulesEditor.cmd, ScanWizard.cmd
+```
+
+즉 P2의 워크북·보고서 PDF 경로는 조달이 아니라 **연결 작업**이다. SCA(26.2.0)와 도구 번들(25.4.0) 버전이 다르니 FPR 호환성은 확인이 필요하다.
 
 P2(월례 스케줄 + 보고서 자동 생성) 범위에서 이 경로를 확보해야 한다.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   개발 2팀 정적 점검 원커맨드 러너 (Windows) — DEV2-7594 P1
 
@@ -65,6 +65,14 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+# Windows PowerShell 5.1의 `>`/`>>`/`*>>` 는 내부적으로 Out-File을 쓰고 기본 인코딩이
+# Unicode(UTF-16LE)다. 그러면 스캐너 로그가 UTF-8 헤더 뒤에 UTF-16 본문이 붙은 혼합 파일이 되고
+# Select-String이 아무것도 못 찾는다. 게이트 1(FPR/로그 오류)·3(CE task)·4(심각도)가
+# 조용히 무력화되어 "경고 0건"이라는 거짓 통과가 난다.
+# 실측 2026-07-29: maxcms-api 로그 3.9MB에 NUL 1927개, 'ANALYSIS SUCCESSFUL' 검색 실패.
+# 리다이렉션 기본값을 UTF-8로 고정한다. (환경에 따라 UTF-8로 나오기도 해서 수동 테스트만으로는 안 걸린다)
+$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 
 # ── 설정 ────────────────────────────────────────────────────────────────────
 
@@ -195,6 +203,11 @@ $Registry = [ordered]@{
     Note = 'T-SQL. 2026-07-29 신규 생성된 프로젝트'
   }
   'max-api' = @{
+    # 기준 브랜치는 규칙대로 origin/main을 유지한다.
+    # main 빌드 실패의 원인은 브랜치가 아니라 Configuration이었다 (실측 2026-07-29):
+    #   Web.Debug.config가 main·develop 양쪽에 없어서 기본 Configuration=Debug의
+    #   TransformWebConfig 타겟이 실패한다. /p:TransformWebConfigEnabled=false 로는 회피되지 않는다.
+    #   /p:Configuration=Release 로 origin/main 빌드 클린 확인 (Web.Release.config 존재).
     Path = 'max\max-api'; Ref = 'origin/main'; SonarKey = 'max-api'
     SonarMode = 'msbuild'; FortifyMode = 'msbuild'
     BuildTarget = 'Aladin.Max.sln'
@@ -203,12 +216,25 @@ $Registry = [ordered]@{
     Note = '.NET FW 4.8 legacy. macOS에서 SAST 전무였던 C# 400파일 — Windows 전용 커버리지'
   }
   'tobe' = @{
-    Path = 'tobe\Tobe'; Ref = 'origin/main'; SonarKey = 'tobe'
+    # 기준 브랜치 예외 (사용자 결정 2026-07-29) — 10 repo 중 유일한 예외다.
+    # origin/main(2026-01-16)은 실제로 컴파일되지 않는다:
+    #   Aladin.Tobe.Bll\Search\SearchEngine.cs(582,32) error CS0103 'isInternal'.
+    # develop 대비 565커밋 뒤이고 develop에서는 해당 참조가 사라져 빌드 클린이다.
+    # 빌드 성공이 C# 분석의 전제라 main으로는 596파일을 어떤 도구로도 분석할 수 없다.
+    Path = 'tobe\Tobe'; Ref = 'origin/develop'; SonarKey = 'tobe'
     SonarMode = 'msbuild'; FortifyMode = 'msbuild'; Globs = $GlobsWebFull
     BuildTarget = 'Aladin.Tobe.sln'
     NeedsNuGetRestore = $true
-    # 212k ncloc으로 대상 중 최대. macOS에서 4G로는 scan이 메모리 부족으로 실패했다.
-    Heap = '12G'
+    # 대상 중 최대. macOS에서 4G로는 scan이 메모리 부족으로 실패해 12G로 올렸다.
+    # 12G는 macOS가 C#을 건너뛴 상태(프론트 자산만)에서 정한 값이라, C# 43,623 ncloc이
+    # 더해진 Windows 실제 규모를 위해 여유를 둬 24G로 올렸다. 머신 RAM 64GB.
+    #
+    # 주의 — 12G가 부족하다는 것이 증명된 것은 아니다. 2026-07-29에 "12G 상한에서 정지"로
+    # 판단했던 것은 오진이었다. 부모 java의 CPU만 보고 정체로 봤는데, 실제로는 자식
+    # aspcodegen.exe(ASP.NET 뷰 코드 생성)가 코어 하나를 100% 쓰며 정상 진행 중이었고
+    # 부모는 자식을 기다려 유휴로 보였을 뿐이다. .rsp 번역 자식의 힙 상한은 이미 약 57GB였다.
+    # 진행 여부는 부모가 아니라 aspcodegen/dotnet-translator의 CPU 증가로 판단해야 한다.
+    Heap = '24G'
     Note = '.NET FW 4.8 legacy + JS/CSS. C# 596파일 — Windows 전용 커버리지'
   }
 }
@@ -275,6 +301,8 @@ function Find-Command {
 }
 
 function Find-MsBuild {
+  # vswhere stderr가 'Stop'에서 사전 점검을 죽이지 않게 한다.
+  $ErrorActionPreference = 'Continue'
   # vswhere가 VS Build Tools 설치 경로를 알려준다. VS 2017 이상에서 표준 경로다.
   $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
   if (Test-Path $vswhere) {
@@ -294,6 +322,15 @@ function Invoke-Preflight {
   $modes = @($selected | ForEach-Object { $Registry[$_].SonarMode })
   $needMsBuild = ($modes -contains 'msbuild')
   $needDotnet  = ($modes -contains 'dotnet')
+
+  # Fortify의 msbuild 모드도 MSBuild.exe·nuget.exe를 쓴다. 예전에는 이 탐지가 $needSonar
+  # 블록 안에만 있어서 -FortifyOnly로 돌리면 $script:MsBuildExe가 $null로 남았다.
+  # 그러면 Fortify 호출이 `sourceanalyzer -b id -Xmx <빈값> <sln> /t:Rebuild ...` 가 되어
+  # sourceanalyzer가 솔루션과 스위치를 전부 '번역할 파일'로 취급한다.
+  # 실측 2026-07-29: FPR에 "[101] File t:Rebuild not found", 번역 0/201, MSBuild 미실행(로그 2줄).
+  # 도구 탐지는 Sonar/Fortify 어느 쪽이 필요해도 수행해야 한다.
+  $fortifyModes = @($selected | ForEach-Object { $Registry[$_].FortifyMode })
+  $needMsBuildTool = $needMsBuild -or ($needFortify -and ($fortifyModes -contains 'msbuild'))
 
   if ($needSonar) {
     $script:SonarToken = Get-SonarToken
@@ -323,19 +360,24 @@ SonarScanner.MSBuild.exe 없음. .NET Framework repo(max-api, tobe) 스캔에 �
      dotnet-sonarscanner(.NET Core flavor)는 legacy csproj를 처리하지 못한다.
 "@
       }
-      $script:MsBuildExe = Find-MsBuild
-      if (-not $script:MsBuildExe) {
-        Die "MSBuild.exe 없음. Visual Studio Build Tools 2022 + .NET Framework 4.8 targeting pack 을 설치해라."
-      }
-      $script:NuGetExe = Find-Command 'nuget.exe'
-      if (-not $script:NuGetExe) {
-        Write-Warn 'nuget.exe 없음. packages.config 기반 repo는 복원 실패로 빌드가 깨질 수 있다.'
-      }
     }
 
     if (-not $DryRun) {
       $v = Invoke-SonarApi '/api/authentication/validate'
       if (-not $v -or -not $v.valid) { Die "SonarQube 토큰 무효 또는 서버 연결 실패 ($SonarHost)" }
+    }
+  }
+
+  # MSBuild·nuget 탐지는 $needSonar 밖에 둔다. Fortify msbuild 모드에도 필요하므로
+  # -FortifyOnly 로 돌릴 때 $null로 남으면 안 된다 (위 $needMsBuildTool 주석 참조).
+  if ($needMsBuildTool) {
+    $script:MsBuildExe = Find-MsBuild
+    if (-not $script:MsBuildExe) {
+      Die "MSBuild.exe 없음. Visual Studio Build Tools 2022 + .NET Framework 4.8 targeting pack 을 설치해라."
+    }
+    $script:NuGetExe = Find-Command 'nuget.exe'
+    if (-not $script:NuGetExe) {
+      Write-Warn 'nuget.exe 없음. MSBuild.exe는 자동 복원을 하지 않으므로 복원 실패로 빌드가 깨진다.'
     }
   }
 
@@ -370,6 +412,10 @@ $script:ActiveBuildId = $null
 
 function Remove-Worktree {
   param([string]$Src, [string]$Wt)
+  # PS 5.1은 네이티브 stderr를 NativeCommandError로 감싼다. 전역 'Stop'이면 git의 정상적인
+  # 경고 한 줄에도 정리 루틴이 죽어 worktree가 등록된 채 남는다 (실측: 고아 worktree 3건).
+  # 정리는 실패해도 계속 진행해야 하므로 함수 스코프에서 낮춘다.
+  $ErrorActionPreference = 'Continue'
   if (-not $Src -or -not $Wt) { return }
   $real = try { (Resolve-Path -LiteralPath $Wt -ErrorAction Stop).Path } catch { $null }
   if (-not $real) { return }
@@ -384,6 +430,8 @@ function Remove-Worktree {
 }
 
 function Invoke-Cleanup {
+  # 정리 루틴은 어떤 경우에도 중단되면 안 된다 (Remove-Worktree와 같은 이유).
+  $ErrorActionPreference = 'Continue'
   if ($script:ActiveWt -and -not $KeepWorktree) {
     Remove-Worktree -Src $script:ActiveSrc -Wt $script:ActiveWt
   }
@@ -399,6 +447,8 @@ function Invoke-Cleanup {
 
 function New-RepoWorktree {
   param([string]$Key, [string]$RelPath, [string]$Ref, [string]$RelPathAlt)
+  # git 호출이 stderr를 쓰면 'Stop'에서 죽는다. 성공 판정은 $LASTEXITCODE로 한다.
+  $ErrorActionPreference = 'Continue'
   $src = Join-Path $WorkspaceRoot $RelPath
   $wt = Join-Path $script:RunRoot $Key
 
@@ -454,12 +504,26 @@ function Wait-CeTask {
   if (-not $tf) {
     $tf = Get-ChildItem -LiteralPath $Src -Recurse -Filter 'report-task.txt' -File -ErrorAction SilentlyContinue | Select-Object -First 1
   }
-  if (-not $tf) { return 'NO_TASK_FILE' }
+  $ceId = $null
+  if ($tf) {
+    $line = Select-String -Path $tf.FullName -Pattern '^ceTaskId=' | Select-Object -First 1
+    if ($line) { $ceId = ($line.Line -replace '^ceTaskId=', '').Trim() }
+  }
 
-  $line = Select-String -Path $tf.FullName -Pattern '^ceTaskId=' | Select-Object -First 1
-  if (-not $line) { return 'NO_TASK_ID' }
-  $ceId = ($line.Line -replace '^ceTaskId=', '').Trim()
-  if (-not $ceId) { return 'NO_TASK_ID' }
+  # SonarScanner for .NET 11.x는 end 단계가 성공하면 .sonarqube\out 을 정리한다.
+  # 그 결과 report-task.txt 탐색이 .NET 대상에서 항상 실패해 완전 스캔이 거짓 PARTIAL로 떨어진다.
+  # 실측 (maxcms-api, 2026-07-29): ANALYSIS SUCCESSFUL·CE SUCCESS·cs=10802 인데도 NO_TASK_FILE.
+  # 스캐너가 로그에 남기는 CE task URL에서 id를 회수한다.
+  # 로그는 Set-Content(UTF8) 헤더 뒤에 `*>>` 추가분이 붙어 인코딩이 섞일 수 있으므로 두 가지로 시도한다.
+  if (-not $ceId -and (Test-Path $LogFile)) {
+    $bytes = [System.IO.File]::ReadAllBytes($LogFile)
+    foreach ($enc in @([System.Text.Encoding]::UTF8, [System.Text.Encoding]::Unicode)) {
+      $m = [regex]::Match($enc.GetString($bytes), 'api/ce/task\?id=([0-9A-Za-z_\-]{16,})')
+      if ($m.Success) { $ceId = $m.Groups[1].Value; break }
+    }
+  }
+
+  if (-not $ceId) { return $(if ($tf) { 'NO_TASK_ID' } else { 'NO_TASK_FILE' }) }
   Add-Content -Path $LogFile -Value "ceTaskId=$ceId"
 
   $waited = 0
@@ -490,6 +554,14 @@ $SonarExclusions = '**/node_modules/**,**/.next/**,**/dist/**,**/build/**,**/bin
 
 function Invoke-SonarScan {
   param($Key, $Cfg, $Wt, [string]$LogFile)
+
+  # Windows PowerShell 5.1은 `*>>` 로 리다이렉트한 네이티브 명령의 stderr를
+  # NativeCommandError ErrorRecord로 감싼다. 전역 $ErrorActionPreference='Stop'과 만나면
+  # rc=0인데도 첫 stderr 한 줄에서 스크립트가 죽는다.
+  # 실측: 스캐너의 JRE 프로비저닝 안내(정보성 stderr)에서 maxcms-api가 즉시 중단됐다.
+  # 아래 네이티브 호출은 전부 $LASTEXITCODE로 성공을 판정하므로 stderr를 오류로 볼 필요가 없다.
+  # 함수 스코프로만 낮춘다 (다른 구간의 cmdlet 엄격성은 유지).
+  $ErrorActionPreference = 'Continue'
 
   if ($DryRun) { return @{ Result = 'DRY'; Note = "$($Cfg.SonarMode) -> $($Cfg.SonarKey)" } }
 
@@ -544,13 +616,18 @@ function Invoke-SonarScan {
         if (-not (Test-Path $target)) {
           return @{ Result = 'FAIL'; Note = "빌드 대상 없음: $target" }
         }
-        if ($Cfg.ContainsKey('NeedsNuGetRestore') -and $Cfg.NeedsNuGetRestore -and $script:NuGetExe) {
-          # legacy packages.config는 dotnet restore로 복원되지 않는다.
+        # MSBuild.exe는 dotnet CLI와 달리 자동 복원을 하지 않는다. SDK-style(PackageReference)도
+        # 복원 없이는 컴파일이 실패하고, 컴파일이 없으면 Roslyn 번역·분석도 없다.
+        # 그래서 NeedsNuGetRestore 여부와 무관하게 msbuild 모드에서는 항상 복원한다.
+        # (nuget.exe restore는 packages.config와 PackageReference를 모두 처리한다.)
+        if ($script:NuGetExe) {
           & $script:NuGetExe restore $target *>> $LogFile
         }
         & $script:SonarScannerMsBuild begin "/k:$($Cfg.SonarKey)" "/v:$version" `
             "/d:sonar.host.url=$SonarHost" "/d:sonar.token=$($script:SonarToken)" *>> $LogFile
-        if ($LASTEXITCODE -eq 0) { & $script:MsBuildExe $target /t:Rebuild /nologo /v:minimal *>> $LogFile }
+        # Configuration=Release 필수. 기본값 Debug는 Web.Debug.config를 요구하는데
+        # max-api·tobe 둘 다 그 파일이 없어 TransformWebConfig 타겟에서 빌드가 깨진다 (실측 2026-07-29).
+        if ($LASTEXITCODE -eq 0) { & $script:MsBuildExe $target /t:Rebuild /nologo /v:minimal /p:Configuration=Release *>> $LogFile }
         if ($LASTEXITCODE -eq 0) { & $script:SonarScannerMsBuild end "/d:sonar.token=$($script:SonarToken)" *>> $LogFile }
         $rc = $LASTEXITCODE
       }
@@ -574,6 +651,8 @@ $ExpectedExcludeRe = '(^|/)(node_modules|\.next|dist|build|bin|obj|coverage|vend
 
 function Get-ExpectedFileCount {
   param($Src, $Globs, $SrcDirs)
+  # git ls-files stderr가 'Stop'에서 커버리지 분모 계산을 죽이지 않게 한다.
+  $ErrorActionPreference = 'Continue'
   if (-not $Globs) { return 0 }
   $total = 0
   $exts = @($Globs | ForEach-Object { ($_ -split '\.')[-1] } | Select-Object -Unique)
@@ -592,6 +671,8 @@ function Get-ExpectedFileCount {
 # Fortify는 내부 분석 오류가 있어도 FPR을 만들고 rc=0을 돌려준다. 로그와 FPR 오류를 직접 본다.
 function Test-FortifyHealth {
   param([string]$Fpr, [string]$LogFile)
+  # FPRUtility는 진단을 stderr로 쓴다. 'Stop'이면 게이트 검사 자체가 죽는다.
+  $ErrorActionPreference = 'Continue'
   $errs = 0
   $out = & $script:FprUtility -information -errors -project $Fpr 2>$null
   if ($out) { $errs = (@($out | Where-Object { $_ -match 'Fatal|code \d+|Unexpected exception' })).Count }
@@ -607,6 +688,8 @@ function Test-FortifyHealth {
 # 파싱 실패를 0으로 떨어뜨리면 "Critical 0건"이라는 거짓 통과가 나온다.
 function Get-FortifySeverity {
   param([string]$Fpr)
+  # 같은 이유. 파싱 실패는 ParseOk=$false로 PARTIAL 처리하므로 예외로 죽일 필요가 없다.
+  $ErrorActionPreference = 'Continue'
   $counts = [ordered]@{}
   $ok = $true
   foreach ($v in @('critical','high','medium','low')) {
@@ -621,6 +704,10 @@ function Get-FortifySeverity {
 
 function Invoke-FortifyScan {
   param($Key, $Cfg, $Wt, [string]$OutDir, [string]$LogFile)
+
+  # Invoke-SonarScan과 같은 이유. sourceanalyzer/msbuild/nuget 는 진행 상황을 stderr로 쓴다.
+  # 'Stop'이면 translate 첫 줄에서 스크립트가 죽는다. rc는 아래에서 명시적으로 판정한다.
+  $ErrorActionPreference = 'Continue'
 
   if ($DryRun) { return @{ Result = 'DRY'; Note = "translate+scan ($($Cfg.FortifyMode)) -> $Key.fpr" } }
 
@@ -660,10 +747,20 @@ function Invoke-FortifyScan {
       if (-not (Test-Path $target)) {
         return @{ Result = 'FAIL'; Note = "빌드 대상 없음: $target" }
       }
-      if ($Cfg.ContainsKey('NeedsNuGetRestore') -and $Cfg.NeedsNuGetRestore -and $script:NuGetExe) {
+      # MsBuildExe가 $null이면 sourceanalyzer가 솔루션·스위치를 '번역할 파일'로 삼아
+      # 조용히 번역 0건이 된다. 조용한 오판을 만들지 않도록 여기서 끊는다.
+      if (-not $script:MsBuildExe) {
+        return @{ Result = 'FAIL'; Note = 'MSBuild.exe 미탐지 — Fortify msbuild 번역 불가 (사전 점검 확인)' }
+      }
+      # Sonar 쪽과 같은 이유로 항상 복원한다. 복원 누락이 maxcms-api 번역 0/201의 원인이었다.
+      # 실측 2026-07-29: 복원 후 동일 인자로 .cs 200/201 번역 성공.
+      if ($script:NuGetExe) {
         & $script:NuGetExe restore $target *>> $LogFile
       }
-      & $script:SourceAnalyzer -b $buildId "-Xmx$heap" $script:MsBuildExe $target /t:Rebuild /nologo *>> $LogFile
+      # Sonar 쪽과 같은 이유로 Configuration=Release를 명시한다.
+      # /t:Rebuild도 필수다 — Fortify 빌드 통합 번역은 실제로 컴파일되는 파일만 잡으므로
+      # 증분 빌드로는 번역 0건이 된다 (실측: dotnet build 재실행 시 files=0).
+      & $script:SourceAnalyzer -b $buildId "-Xmx$heap" $script:MsBuildExe $target /t:Rebuild /nologo /p:Configuration=Release *>> $LogFile
       $rc = $LASTEXITCODE
       # 혼합 repo는 프론트 자산을 별도 translate로 덧붙인다 (tobe: js/jsx/cshtml 등).
       if ($rc -eq 0 -and $Cfg.ContainsKey('Globs') -and $Cfg.Globs) {
@@ -690,9 +787,37 @@ function Invoke-FortifyScan {
 
   if ($rc -ne 0) { return @{ Result = 'FAIL'; Note = "translate rc=$rc — 로그: $LogFile" } }
 
-  $translated = (@(& $script:SourceAnalyzer -b $buildId -show-files 2>$null)).Count
-  $expected = Get-ExpectedFileCount -Src $Wt.Path -Globs $Cfg.Globs -SrcDirs $(if ($Cfg.ContainsKey('SrcDirs')) { $Cfg.SrcDirs } else { $null })
-  $pct = if ($expected -gt 0) { [math]::Floor($translated * 100 / $expected) } else { 100 }
+  $shownFiles = @(& $script:SourceAnalyzer -b $buildId -show-files 2>$null)
+  # StrictMode(Latest)에서는 없는 키를 읽으면 PropertyNotFoundStrict 예외가 난다.
+  # Globs 없는 repo(maxcms-api·max-api)에서 여기가 터져 이후 대상이 통째로 스캔되지 않았다.
+  # 실측: max-api·tobe가 실행조차 안 됐는데 런처는 exit 0을 반환했다.
+  $cfgGlobs = if ($Cfg.ContainsKey('Globs')) { $Cfg.Globs } else { $null }
+  # msbuild 모드는 C#을 빌드 통합으로 번역하므로 Globs에 .cs가 없다. 그대로 두면 분모가 0이 되어
+  # 커버리지 게이트가 무력화된다. .cs를 분모에 넣어 게이트가 실제로 동작하게 한다.
+  # (tobe처럼 Globs로 프론트 자산을 덧붙이는 repo는 둘을 합친다.)
+  $expectedGlobs = if ($Cfg.FortifyMode -eq 'msbuild') {
+                     @('**/*.cs') + @(if ($cfgGlobs) { $cfgGlobs } else { @() })
+                   } else { $cfgGlobs }
+  $expected = Get-ExpectedFileCount -Src $Wt.Path -Globs $expectedGlobs -SrcDirs $(if ($Cfg.ContainsKey('SrcDirs')) { $Cfg.SrcDirs } else { $null })
+
+  # 분자·분모의 단위를 맞춘다. -show-files는 분모에 없는 확장자(.csproj 등)까지 세므로
+  # 그대로 비교하면 100%를 넘고 게이트가 느슨해진다.
+  # 실측 2026-07-29: maxcms-api가 206/201 (102%)로 나왔다 (.cs 200 + 기타 6 / .cs 201).
+  # 그 상태로는 ".cs 100 + 기타 106"도 102%로 보여 실제 누락을 가린다.
+  $expectedExts = @($expectedGlobs | ForEach-Object { ($_ -split '\.')[-1].ToLower() } | Select-Object -Unique)
+  $translated = if ($expectedExts.Count -gt 0) {
+                  @($shownFiles | Where-Object {
+                      $ext = ([System.IO.Path]::GetExtension($_) -replace '^\.','').ToLower()
+                      $expectedExts -contains $ext
+                    }).Count
+                } else { $shownFiles.Count }
+  # Globs 없는 repo(.NET msbuild 모드)는 분모가 0이 된다. 예전에는 그때 pct=100으로 떨어뜨렸는데,
+  # 그러면 "한 파일도 번역되지 않은" 스캔이 커버리지 100% OK로 통과한다.
+  # 실측 2026-07-29: maxcms-api가 번역 0/0 (100%)·이슈 0건으로 OK 판정됐고, FPR에는
+  # "[101] File t:Rebuild not found" 번역 오류가 들어 있었다. 거짓 통과다.
+  # 분모를 못 구하면 커버리지는 '미산정'($null)으로 두고, 번역 0건은 별도로 걸러낸다.
+  $pct = if ($expected -gt 0) { [math]::Floor($translated * 100 / $expected) } else { $null }
+  $pctStr = if ($null -eq $pct) { '미산정' } else { "$pct%" }
 
   & $script:SourceAnalyzer -b $buildId "-Xmx$heap" -scan @scanArgs -f $fpr *>> $LogFile
   $rc = $LASTEXITCODE
@@ -708,16 +833,27 @@ function Invoke-FortifyScan {
   $health = Test-FortifyHealth -Fpr $fpr -LogFile $LogFile
   $sev = Get-FortifySeverity -Fpr $fpr
   $sevStr = (($sev.Counts.Keys | ForEach-Object { "$_=$($sev.Counts[$_])" }) -join ' ')
-  $note = "$sevStr | 번역 $translated/$expected ($pct%) | fpr: $fpr"
+  $note = "$sevStr | 번역 $translated/$expected ($pctStr) | fpr: $fpr"
 
   & $script:SourceAnalyzer -b $buildId -clean 2>$null | Out-Null
   $script:ActiveBuildId = $null
+
+  # 한 파일도 번역되지 않았으면 스캔이 성립하지 않았다. 이슈 0건은 "깨끗함"이 아니라 "안 봤음"이다.
+  # 커버리지 게이트는 분모가 0이면 이걸 못 잡으므로 별도 조건으로 둔다.
+  if ($translated -eq 0) {
+    return @{ Result = 'FAIL'; Note = "$note | 번역된 파일 0건 — 스캔 미성립. FPR 오류를 확인해라: $($script:FprUtility) -information -errors -project $fpr" }
+  }
 
   if (-not $sev.ParseOk) {
     return @{ Result = 'PARTIAL'; Note = "$note | 심각도 집계 파싱 실패 — 수치 신뢰 불가" }
   }
   if ($health.FprErrors -gt 0 -or $health.LogWarnings -gt 0) {
     return @{ Result = 'PARTIAL'; Note = "$note | 분석 오류 $($health.FprErrors)건·로그 경고 $($health.LogWarnings)건 — 결과 불완전" }
+  }
+  # $pct가 $null이면 분모를 못 구한 것이다. PowerShell에서 $null -lt 90 은 $true가 되어
+  # "커버리지 % < 90%"라는 엉뚱한 메시지가 나오므로 명시적으로 분리한다.
+  if ($null -eq $pct) {
+    return @{ Result = 'PARTIAL'; Note = "$note | 번역 커버리지 분모 미산정 — 완전 스캔 여부 확인 불가" }
   }
   if ($pct -lt $CoverageThresholdPct) {
     return @{ Result = 'PARTIAL'; Note = "$note | 번역 커버리지 $pct% < $CoverageThresholdPct%" }
