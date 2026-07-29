@@ -20,7 +20,7 @@ Obsidian vault(운영·도메인 지식 SSOT)와 팀 하네스 문서가 서비�
 - `Command`, `Querybook`, `Shadow-Read`, `Reconciliation`, `Adapter`, `Read Model`, `CDC`, `Graphify`, `Owner`, `Runtime`, `Source Gap`처럼 분석/운영 문맥에서 통용되는 기술 용어는 무리하게 번역하지 않는다.
 - 한글화의 목적은 모든 단어를 한국어로 바꾸는 것이 아니라, 문서가 한국어 독자에게 도메인 판단, 운영 기준, 이관 위험, 후속 조치를 이해할 수 있게 기술되는 것이다.
 - 영어 기술 용어만으로 문서 제목을 만들지 않는다. 제목은 한국어 문장 또는 한국어 명사구가 중심이어야 한다.
-- 파일명은 기존 규칙대로 `kebab-case.md`를 사용하며, 서비스 식별을 위해 `service_id` 접두어를 유지한다.
+- 파일명은 기존 규칙대로 `kebab-case.md`를 사용한다. `wiki/services/{service_id}/` 아래에서는 디렉터리가 서비스를 표현하므로 소유 서비스의 `service_id` 접두어를 붙이지 않는다. 서비스 디렉터리 밖 공용 위치에서 서비스 식별이 필요할 때만 접두어를 사용한다.
 - H1 제목과 Obsidian `title` frontmatter는 사람이 읽는 이름이므로 서비스의 한글 표시명으로 시작한다.
 - 실행 흐름·관계 필드·projection 생성 규칙은 [LLM 위키 운영 가이드](../docs/llm-wiki-operating-guide.md)를 기준으로 한다.
 
@@ -50,7 +50,7 @@ Obsidian vault(운영·도메인 지식 SSOT)와 팀 하네스 문서가 서비�
 
 | 항목 | 규칙 | 예시 |
 |---|---|---|
-| 파일명 | `service_id` + 영문 kebab-case | vault `wiki/inventory/tobe-sp-inventory.md` |
+| 파일명 | 서비스 디렉터리 안은 소유 `service_id` 접두어 없는 영문 kebab-case | vault `wiki/services/storefront/analysis/bc-entity-explainer.md` |
 | H1/title | 한글 서비스명 + 한국어 제목 | `# 투비 SP 인벤토리` |
 | 링크 표시명 | H1과 같은 한국어 이름 권장 | `[[tobe-sp-inventory|투비 SP 인벤토리]]` |
 
@@ -77,7 +77,7 @@ Obsidian vault(운영·도메인 지식 SSOT)와 팀 하네스 문서가 서비�
 
 새 문서를 만들 때는 다음을 동시에 맞춘다.
 
-- 파일명: `service_id` 접두어와 `kebab-case.md`
+- 파일명: `kebab-case.md`. `wiki/services/{service_id}/` 아래에서는 소유 `service_id` 접두어 금지
 - H1: 서비스별 한글 접두어로 시작
 - frontmatter `title`: H1과 동일하거나 같은 한국어 제목
 - `service` 또는 `service_id`: 기계 판별용 값 유지

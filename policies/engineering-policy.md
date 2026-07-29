@@ -40,7 +40,7 @@
 ## 기술 스택 원칙
 
 ### 신규 서비스
-- 백엔드: Kotlin + Spring Boot 3 + JDK 17+ (원칙)
+- 백엔드: Kotlin + Spring Boot 4 + JDK 17+ (원칙)
 - 신규 .NET 서비스 생성 금지 (예외는 팀장 승인 필요)
 - DB 마이그레이션 방식 표준화
 - 공통 에러 응답, 인증 필터, trace/correlation 처리 공통화
