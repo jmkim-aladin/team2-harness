@@ -148,7 +148,9 @@ $GlobsWebFull = @('**/*.js','**/*.jsx','**/*.cshtml','**/*.aspx','**/*.ascx','**
 
 $Registry = [ordered]@{
   'aasm' = @{
-    Path = 'AASM'; Ref = 'origin/main'; SonarKey = 'aasm'
+    # clone-catalog-repos.ps1 은 AASM을 workspace\s3manager 로 clone한다 (macOS 수동 clone은 AASM).
+    # 어느 레이아웃이든 동작하도록 대체 경로를 둔다.
+    Path = 'AASM'; PathAlt = 's3manager'; Ref = 'origin/main'; SonarKey = 'aasm'
     SonarMode = 'cli'; FortifyMode = 'yes'; Globs = $GlobsTs
     # 6월 선례(DEV2-6294)가 app/components/lib 131파일로 한정했다. repo 전체를 넘기면
     # package-lock.json·tests·docker 픽스처가 Critical로 잡혀 게이트를 막는다 (실측 11/15건).
@@ -396,11 +398,22 @@ function Invoke-Cleanup {
 }
 
 function New-RepoWorktree {
-  param([string]$Key, [string]$RelPath, [string]$Ref)
+  param([string]$Key, [string]$RelPath, [string]$Ref, [string]$RelPathAlt)
   $src = Join-Path $WorkspaceRoot $RelPath
   $wt = Join-Path $script:RunRoot $Key
 
-  if (-not (Test-Path (Join-Path $src '.git'))) { Write-Warn "$Key : git repo 아님 ($src)"; return $null }
+  if (-not (Test-Path (Join-Path $src '.git')) -and $RelPathAlt) {
+    $alt = Join-Path $WorkspaceRoot $RelPathAlt
+    if (Test-Path (Join-Path $alt '.git')) {
+      Write-Info "$Key : $RelPath 없음 -> $RelPathAlt 사용"
+      $src = $alt
+    }
+  }
+  if (-not (Test-Path (Join-Path $src '.git'))) {
+    $hint = if ($RelPathAlt) { "$RelPath 또는 $RelPathAlt" } else { $RelPath }
+    Write-Warn "$Key : git repo 아님 ($WorkspaceRoot\$hint)"
+    return $null
+  }
   & git -C $src fetch --quiet origin 2>$null | Out-Null
 
   $resolved = $Ref
@@ -742,7 +755,8 @@ try {
     $cfg = $Registry[$key]
     Write-Log "[$key] $($cfg.Path) ($($cfg.Ref))"
 
-    $wt = New-RepoWorktree -Key $key -RelPath $cfg.Path -Ref $cfg.Ref
+    $altPath = if ($cfg.Contains('PathAlt')) { $cfg.PathAlt } else { $null }
+    $wt = New-RepoWorktree -Key $key -RelPath $cfg.Path -Ref $cfg.Ref -RelPathAlt $altPath
     if (-not $wt) {
       $rows.Add("| ``$key`` | $($cfg.Ref) | - | WORKTREE 실패 | WORKTREE 실패 |")
       $fails.Add("- ``$key``: worktree 준비 실패")

@@ -90,6 +90,8 @@ security add-generic-password -U -a "$USER" -s sonarqube-jmkim-token -w
 
 `%LOCALAPPDATA%\team2\sonarqube-token.dpapi`에 암호화 저장된다. 다른 사용자·다른 머신에서는 복호화되지 않는다. **repo에 커밋하지 마라.**
 
+대상 repo clone은 `scripts/clone-catalog-repos.ps1`로 할 수 있다. 이 스크립트는 `AASM`을 `workspace\s3manager`에 두므로(다른 repo는 러너 레이아웃과 일치) 러너가 `AASM`·`s3manager` 두 경로를 모두 탐색한다.
+
 워크스페이스 경로가 `%USERPROFILE%\Documents\workspace`와 다르면:
 
 ```powershell
