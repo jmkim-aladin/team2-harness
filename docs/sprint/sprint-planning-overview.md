@@ -65,3 +65,4 @@
 | [Velocity 측정 및 활용 가이드](./velocity-guide.md) | Velocity 산출 규칙, 수용량 산정, 추이 해석 |
 | [Velocity-OKR 스프린트 운영 정책](./velocity-okr-sprint-policy.md) | 80% 수용량 설계, OKR 달성 판정 체인 |
 | [스프린트 마감 프로세스 가이드](./sprint-closing-process.md) | D-5 ~ D-day 마감 절차 (이월·검증·계획 확정) |
+| [주간 핵심 목표 운영 정책](./weekly-goal-policy.md) | 개인별 주 2개 핵심 목표, 산출물 증명, 미달성 결과 처리 |

@@ -33,7 +33,13 @@ DEV2-A-692 (주간업무)
     ├── DEV2-A-695 (이현민)
     ├── DEV2-A-696 (김정민)     ← 김정민 + 조은흠 + 박민석 + 안혜련 항목 포함
     └── DEV2-A-830 (2026.05.2W) ← 주간 스냅샷
+
+DEV2-A-1351 (주간업무 핵심 목표)   ← parent: DEV2-A-1 (Team). 주간업무 트리와 별도
+└── DEV2-A-1352 (2026.07.5W)      ← 주차별 문서. 담당자별 핵심목표 2개 (2026-08-03 주차부터. 도입 주 2026.07.5W는 1~4개)
 ```
+
+- 핵심목표 트리는 `DEV2-A-692`(주간업무) 하위가 **아니다**. `DEV2-A-1351`의 `childArticles`에서 대상 주차 문서를 직접 찾는다.
+- 주차 표기는 해당 월 1일 기준(7/27~31 = `2026.07.5W`)이라 vault 파일명 주차(월 첫 월요일 기준, `2026-07-4W`)와 다를 수 있다. 파일명 규칙은 바꾸지 않고 인용 시 KB 원문 주차를 그대로 적는다.
 
 ## 보고서 양식
 
@@ -44,6 +50,7 @@ DEV2-A-692 (주간업무)
 
 ```
 ## 이번 주 요약          ← 신규(§4-B.1): 건수 + 담당자별 표 + 하이라이트
+## 이번 주 핵심목표      ← 신규(§4-B.1.1): KB DEV2-A-1351 하위 주차 문서 취합
 ## **백로그 항목**
 ## **계획 항목**
 ## **진행중 항목**
@@ -52,7 +59,7 @@ DEV2-A-692 (주간업무)
 ## **기타**
 ```
 
-- H2 헤더 안에 `**` bold 처리 (KB 원본 패턴). `## 이번 주 요약`만 bold 없이 둔다.
+- H2 헤더 안에 `**` bold 처리 (KB 원본 패턴). `## 이번 주 요약`·`## 이번 주 핵심목표`만 bold 없이 둔다.
 - `## **백로그 항목**`은 KB 양식 호환용 섹션이다. 최종 주간보고 후보 생성 시 Backlog 상태 티켓은 제외하고, 새 항목을 넣지 않는다.
 
 ### 항목 형식·예정일 산정
@@ -60,8 +67,11 @@ DEV2-A-692 (주간업무)
 SoT: [docs/sprint/weekly-report-guide.md](../../../docs/sprint/weekly-report-guide.md)
 
 - **보고 포맷 (신규 표준)**: 가이드 §4-B — 이번 주 요약 섹션, 상태 섹션 내 서비스 그룹핑(그룹명 한글: 바자르·나루 등), 라인 단순화(제목 1회 + `DEV2-xxxx` ID만), 하위 Task 날짜는 **(완료)만 표시**
+- **이번 주 핵심목표**: 가이드 §4-B.1.1 — `DEV2-A-1351` 하위 주차 문서를 담당자·항목 순서·문구·티켓 ID **원문 그대로** 옮긴다. 상태·일정정보·`티켓 미발행`·출처 인용·제외 사유 각주 같은 **보강은 넣지 않는다**. 핵심목표 섹션과 상태 섹션의 ID 중복은 허용. 운영 원칙(주 2개·산출물 증명·미달성 원인/재발방지 기록)은 [docs/sprint/weekly-goal-policy.md](../../../docs/sprint/weekly-goal-policy.md)
 - **항목 표기 레거시** (제목 2회 반복, escape, 일정 형식): 가이드 §4.1~4.4 — 기존 KB 원본 읽을 때만 참조
-- **예정일 선택·fallback** (코멘트 명시일 → 착수일 fallback(In Progress 전환시각/created) → `미기록`): 가이드 §4.5
+- **일정정보 방향 고정 (반복 오류)**: 진행중 = 항상 `~M/D`(완료 경계), 계획 = 항상 `M/D~`(시작 경계). 진행중 항목에 `M/D~`를 쓰면 오류다. 가이드 §4.4 방향 고정 규칙
+- **이월 검토 표시**: 가이드 §4-B.5 — 코멘트에 이월·범위 제외 결정이 있어도 상태가 `Open`이면 본문에서 빼지 않는다. 계획 항목에 두고 제목 끝에 ` - {대상} 이월 검토` 마커 + 일정정보를 `{N}월~`/`{N}분기~`로 바꾼다. 실제 `Backlog` 전환 후부터 제외
+- **예정일 선택·fallback**: 가이드 §4.5 — 미착수는 `코멘트 시작예정일 → 착수일 fallback → 미기록`, 진행중은 `코멘트 완료목표 → 대상 월 스프린트 종료일(예: 2026-07 → ~7/31) + 이슈사항에 완료목표 미기재 기록`. 착수일 fallback은 미착수 전용이며 완료 목표로 쓰지 않는다. 예외: `{서비스} N월 운영` umbrella는 운영 기간이라 `M/D~` 유지
 - 보고서 작성·동기화 시점에 가이드 해당 절을 읽어 그대로 적용한다. 티켓 조회 시 `comments(text,created,updated)` 필드 포함 (아래 API 참조 #3). 착수일 fallback이 필요하면 `activities?categories=CustomFieldCategory` 로 State 전환시각 조회 (API 참조 #6)
 
 ## 기록 대상 필터
@@ -124,7 +134,19 @@ curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
   "$BASE/api/issues/{issueId}/activities?categories=CustomFieldCategory&fields=timestamp,field(name),added(name)"
 # field.name == State, added에 In Progress 포함된 최초 항목의 timestamp 사용. 없으면 created.
+
+# 7. 주간 핵심목표 — 주차 문서 탐색 후 본문 조회 (가이드 §4-B.1.1)
+curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+  "$BASE/api/articles/DEV2-A-1351?fields=childArticles(idReadable,summary,updated)"
+curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+  "$BASE/api/articles/{weekArticleId}?fields=idReadable,summary,content,updated"
 ```
+
+**API 응답 주의** (실측 확인 사항):
+
+- `customFields`의 `Assignee.value`는 `name`(표시명)과 `login`이 함께 온다. 담당자 필터는 **`login`**으로 비교한다. `name`으로 비교하면 dev 필터가 전부 탈락해 신규 항목 탐색이 빈 결과를 낸다.
+- `activities`의 `field.name`은 **로컬라이즈되어 `상태`로 온다**. 착수일 판정은 `field.name in ("State", "상태")` 둘 다 허용해야 한다.
+- 신규 항목 탐색은 보고서 본문 ID 목록만 재조회하지 말고 `Sprints:{대상월}` · `tag:{YYMM}-planned` · `State:{In Progress}` · `resolved date:{대상월 범위}` 를 각각 질의해 합집합으로 만든 뒤 본문에 없는 dev Feature/Epic을 찾는다.
 
 ## 실행 지침
 
@@ -188,10 +210,14 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 사용자가 `/ad:weekly-report 초안` 또는 `이번주 초안 작성해줘` 류를 입력하면:
 
 1. **기존 보고서 조회**: KB(DEV2-A-696) 현재 내용 가져오기
+1-1. **핵심목표 조회**: `DEV2-A-1351` 하위에서 대상 주차 문서를 찾아 본문을 가져온다 (API 참조 #7). 대상 주차 문서가 없으면 최신 주차를 사용하고 이슈사항에 남긴다. 본문은 담당자·순서·문구·티켓 ID 그대로 `## 이번 주 핵심목표` 섹션에 옮기고 **아무 보강도 하지 않는다** (가이드 §4-B.1.1)
 2. **동월 기준본 유지**: 현재 초안의 대상 월이 KB/직전 주차와 같은 월이면 기존 본문 목록을 기준본으로 유지한다. 새 주차 변동분만 요약해 새 본문을 만들지 않는다. 상태 이동(계획→진행중→완료), 하위 본문 보강, 신규 항목 추가, 같은 레벨 중복 제거만 수행한다. 월이 바뀔 때만 해당 월 스프린트/태그 기준으로 목록을 새로 구성한다.
 3. **상태·예정일 동기화**: 보고서 내 모든 티켓ID + 담당자별 In Progress + 대상 월 resolved를 조회하고, 미착수·미종료 Feature/Task의 코멘트도 일괄 조회
+   - **신규 항목 누락 방지 (필수)**: 본문 ID 재조회만으로 끝내지 않는다. `Sprints:{대상월}` · `tag:{YYMM}-planned` · `State:{In Progress}` · `resolved date:{대상월}` 질의 합집합에서 본문에 없는 dev Feature/Epic을 찾아 편입한다. assignee 비교는 **`login`** 기준 (API 응답 주의 참조)
    - **섹션 재배치**: 기존 본문 섹션 위치보다 현재 top-level Feature/Epic 상태를 우선한다. Open/Reopened→계획, In Progress→진행중, Fixed/Closed/Verified→완료된, Backlog→본문 제외로 이동한다. 하위 Task 상태가 부모와 어긋나면 하위 말머리를 실제 상태로 보정하고 이슈사항에 남긴다.
-   - **일정정보 갱신**: 가이드 §4.5 규칙에 따라 자체 코멘트 날짜를 우선하고 Feature↔Task fallback을 한 번만 적용한다. 근거가 없으면 붉은색 `미기록`으로 남긴다.
+   - **이월 결정 항목**: 코멘트에 이월·범위 제외 결정이 있어도 상태가 `Open`이면 계획 항목에 유지하고 ` - {대상} 이월 검토` 마커와 `{N}월~`/`{N}분기~` 일정정보를 붙인다 (가이드 §4-B.5). 임의 제외 금지 — 제외 판단은 사용자가 한다.
+   - **일정정보 갱신**: 가이드 §4.5 규칙에 따라 자체 코멘트 날짜를 우선하고 Feature↔Task fallback을 한 번만 적용한다. 방향은 상태로 고정한다 — 진행중 `~M/D`, 계획 `M/D~`. 진행중에 완료목표 코멘트가 없으면 대상 월 스프린트 종료일을 `~M/D`로 쓰고 이슈사항에 미기재로 남긴다(착수일로 대체 금지). 미착수는 착수일 fallback, 근거가 없으면 붉은색 `미기록`.
+   - **저장 전 자체 점검**: `진행중 항목` 섹션에 `M/D~` 패턴이 남아 있는지 확인한다. `{서비스} N월 운영` umbrella 외에 하나라도 있으면 방향 오류다.
 4. **필터 적용**: Type=Feature/Epic only. 운영성 Task/Bug 제외 (위 "기록 대상 필터" 참조)
    - **월별 계획 스냅샷("N월거만") 작성 시**: YouTrack 태그 `YYMM-planned`(예: 2026년 6월 = `2606-planned`) 또는 `Sprints=YYYY.MM` + 개발자 assignee 로 필터. 디자인/기획 상위 Feature는 기본 제외하되, 하위 Task가 개발자 담당이면 부모 Feature를 컨텍스트로만 포함하고 개발자 Task만 본문 라인으로 롤업. 이전 달 누적 완료분은 태그/스프린트가 대상 월과 맞지 않으면 제외됨. 상태별 섹션 매핑: In Progress→진행중, Open/Reopened→계획, Fixed/Closed/Verified→완료된. **Backlog는 제외.**
    - **개발자 assignee 기준**: 김정민(jmkim), 조은흠(heum2), 박민석(pms0905), 안혜련(hyeryun), 박희수(heesoo), 조주영(jjy), 강인용(iyk; YouTrack 검색 가능 시). 팀원 변동 시 `policies/team-members.md`를 우선한다.
