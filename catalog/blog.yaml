@@ -11,7 +11,7 @@ description: |
   "블로그 ≒ 북플"로 인식되며, 북플 관련 도메인 객체는 blog 코드와 DB(`webcatalog`)를 공유한다.
 
 owners:
-  primary: "jmkim@aladin.co.kr"  # 김정민
+  primary: "hyeryun@aladin.co.kr"  # 안혜련
 
 # 멀티 컴포넌트가 아닌 단일 Web Site 프로젝트
 components:

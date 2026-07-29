@@ -8,6 +8,9 @@ description: "알라딘 쇼핑 — B2B / C2C / 중고매장 업무가 복합적�
 
 owners:
   primary: "jmkim@aladin.co.kr" # 김정민
+  secondary:
+    - "hyeryun@aladin.co.kr" # 안혜련
+    - "iyk@aladin.co.kr" # 강인용
 
 # 멀티 컴포넌트 서비스
 components:
