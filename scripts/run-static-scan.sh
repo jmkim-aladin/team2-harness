@@ -64,6 +64,21 @@ readonly WORKSPACE_ROOT="${WORKSPACE_ROOT:-$HOME/Documents/workspace}"
 readonly DOTNET_SONAR_SCANNER="${DOTNET_SONAR_SCANNER:-$HOME/.dotnet/tools/dotnet-sonarscanner}"
 readonly FORTIFY_HEAP="${FORTIFY_HEAP:-4G}"
 
+# 테스트 코드 제외 패턴 (2026-07-30 확정).
+#
+# 실측 근거: NaruServer는 코드가 1월 이후 한 줄도 안 바뀌었는데 high 4 → 38로 늘었다.
+# 원인은 1월 스캔이 src/test 를 제외했고 이번 스캔이 포함한 것이다(38건 중 24건이 src/test).
+# 테스트 코드에 프로덕션 규칙을 적용하면 결함 수가 부풀고 커버리지 분모도 왜곡된다.
+#
+# 디렉토리명 기반 `**/test/**` 는 쓰지 않는다. 운영 코드를 버린다:
+#   Tobe      Aladin.ToBe.Web/{Views,ViewsReact}/App/Test/**  Applink·Bridge·Device 앱 연동 뷰 12파일
+#   max-front src/components/test/**                          AppLinkTest·BridgeTest 등 디버깅 페이지 7파일
+# 둘 다 배포되는 운영 코드다. 경로 패턴은 규약이 확실한 곳만 쓴다.
+#
+# Kotlin은 파일명만으로 부족하다 — TestConfiguration.kt·TestFixtures.kt 3건이 Test* 접두어라
+# `*Test.kt` 에 안 걸린다. src/test/ 경로로 잡는다 (Gradle 규약이라 운영 코드가 없다).
+readonly TEST_EXCLUDES="**/src/test/**,**/src/testFixtures/**,e2e/**,.devops/tests/**,**/cypress/**,**/playwright/**,**/*.test.ts,**/*.test.tsx,**/*.test.js,**/*.test.jsx,**/*.test.mjs,**/*.spec.ts,**/*.spec.tsx,**/*.spec.js,**/*.spec.jsx,**/*Test.cs,**/*Tests.cs"
+
 # Fortify translate 후 번역 파일 수가 git 추적 파일 수의 이 비율 미만이면 PARTIAL로 본다.
 readonly COVERAGE_THRESHOLD_PCT=90
 
@@ -89,7 +104,12 @@ readonly CE_POLL_INTERVAL_SEC=5
 # 소유권 근거: catalog/max.yaml, catalog/tobe.yaml 의 repos: 주석.
 # 타팀 관리(ToBeAndroid·ToBeIos·max-search·Ebook*)와 git repo 아닌 사본은 제외했다.
 
-readonly ALL_KEYS="aasm naru-server max-server max-front maxcms-front maxcms-api max-db-script tobe-db-script max-api tobe"
+# REGISTRY_ORDER 는 보고서 정렬 기준이며 레지스트리에 정의된 전체 키다.
+# ALL_KEYS 는 `all` 이 실제로 도는 점검 대상이다.
+# max-db-script·tobe-db-script 는 점검 대상에서 제외 (2026-07-30 결정). 정의는 남겨 둬
+# 개별 키 지정으로는 여전히 실행 가능하고, 대상 복원 시 ALL_KEYS 에 다시 넣으면 된다.
+readonly REGISTRY_ORDER="aasm naru-server max-server max-front maxcms-front maxcms-api max-db-script tobe-db-script max-api tobe"
+readonly ALL_KEYS="aasm naru-server max-server max-front maxcms-front maxcms-api max-api tobe"
 
 # 스택별 글로브. 소스 + 설정 파일(configuration 분석기 대상)을 함께 넘긴다.
 readonly GLOBS_TS='**/*.ts **/*.tsx **/*.js **/*.jsx **/*.json **/*.yml **/*.yaml'
@@ -157,8 +177,8 @@ service_repos() {
   case "$1" in
     aasm) echo "aasm" ;;
     naru) echo "naru-server" ;;
-    max)  echo "max-server max-front maxcms-front maxcms-api max-db-script max-api" ;;
-    tobe) echo "tobe-db-script tobe" ;;
+    max)  echo "max-server max-front maxcms-front maxcms-api max-api" ;;
+    tobe) echo "tobe" ;;
     *)    return 1 ;;
   esac
 }
@@ -228,7 +248,7 @@ for t in $TARGETS; do
 done
 
 SELECTED=""
-for k in $ALL_KEYS; do
+for k in $REGISTRY_ORDER; do
   for r in $REQUESTED; do
     if [ "$r" = "$k" ]; then SELECTED="$SELECTED $k"; break; fi
   done
@@ -517,6 +537,7 @@ run_sonar() {
 
 sonar_exclusions() {
   local base='**/node_modules/**,**/.next/**,**/dist/**,**/build/**,**/bin/**,**/obj/**,**/coverage/**,**/vendor/**,**/*.min.js,**/*.min.css'
+  base="$base,$TEST_EXCLUDES"
   case "$1" in
     cli-nocs) printf '%s,%s' "$base" '**/*.cs,**/*.vb' ;;
     *)        printf '%s' "$base" ;;
@@ -535,7 +556,7 @@ fetch_sonar_measures() {
 # translate가 실제로 넘기는 대상과 같은 제외 규칙을 적용해야 한다.
 # 분모가 다르면 커버리지 게이트가 거짓 PARTIAL을 낸다
 # (실측: tobe에서 min.js 104건이 분모에만 남아 84%로 오판됐다).
-readonly EXPECTED_EXCLUDE_RE='(^|/)(node_modules|\.next|dist|build|bin|obj|coverage|vendor)/|\.min\.(js|css)$|(^|/)docs/|\.md$'
+readonly EXPECTED_EXCLUDE_RE='(^|/)(node_modules|\.next|dist|build|bin|obj|coverage|vendor)/|\.min\.(js|css)$|(^|/)docs/|\.md$|/src/test/|/src/testFixtures/|(^|/)(e2e|cypress|playwright)/|(^|/)\.devops/tests/|\.(test|spec)\.[jt]sx?$|\.test\.mjs$|(Test|Tests)\.cs$'
 
 expected_file_count() {
   local src="$1" globs="$2" mode="$3" srcdirs="${4:-}" total=0 g ext n re d pathspec
@@ -619,6 +640,11 @@ run_fortify() {
     -exclude "**/*.min.js" -exclude "**/*.min.css"
     -exclude "**/docs/**" -exclude "**/*.md"
   )
+  # 테스트 코드 제외 (TEST_EXCLUDES 와 동일 목록)
+  local _te _ifs="$IFS"
+  IFS=','
+  for _te in $TEST_EXCLUDES; do tr_excl+=(-exclude "$_te"); done
+  IFS="$_ifs"
   [ "$mode" = "nocs" ] && tr_excl+=(-exclude "**/*.cs" -exclude "**/*.vb")
 
   # -filter 는 scan 단계 인자다. translate에 주면 적용되지 않는다.
@@ -662,8 +688,19 @@ run_fortify() {
     return 0
   fi
 
-  local translated expected pct
-  translated=$("$sa" -b "$buildid" -show-files 2>/dev/null | wc -l | tr -d ' ')
+  local translated expected pct ext_re
+  # 분자·분모의 단위를 맞춘다. -show-files는 import 추적으로 글로브에 없는 확장자까지 세므로
+  # (실측: lib/*.ts 30개 전달 시 결과에 .cjs 1건 포함) 그대로 비교하면 다른 확장자가
+  # 누락분을 메워 임계를 통과하는 거짓 OK가 난다. Windows판(ps1)과 동일한 처리다.
+  ext_re=$(printf '%s' "$globs" | tr ' ' '\n' | sed -n 's/.*\.\([A-Za-z0-9]*\)$/\1/p' \
+           | sort -u | paste -sd'|' -)
+  if [ -n "$ext_re" ]; then
+    translated=$("$sa" -b "$buildid" -show-files 2>/dev/null \
+                 | grep -icE "\.($ext_re)\$" || true)
+  else
+    translated=$("$sa" -b "$buildid" -show-files 2>/dev/null | wc -l | tr -d ' ')
+  fi
+  [ -n "$translated" ] || translated=0
   expected=$(expected_file_count "$src" "$globs" "$mode" "$srcdirs")
   if [ "${expected:-0}" -gt 0 ]; then
     pct=$(( translated * 100 / expected ))

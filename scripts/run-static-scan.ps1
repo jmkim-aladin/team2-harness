@@ -81,6 +81,25 @@ $TokenFile = Join-Path $env:LOCALAPPDATA 'team2\sonarqube-token.dpapi'
 $FortifyHome = if ($env:FORTIFY_HOME) { $env:FORTIFY_HOME } else { 'C:\Program Files\Fortify\Fortify_SCA_26.2.0' }
 $FortifyHeapDefault = if ($env:FORTIFY_HEAP) { $env:FORTIFY_HEAP } else { '4G' }
 
+# 테스트 코드 제외 패턴 (2026-07-30 확정, macOS `.sh` 의 TEST_EXCLUDES 와 동일 목록).
+#
+# 실측 근거: NaruServer는 코드가 1월 이후 한 줄도 안 바뀌었는데 high 4 → 38로 늘었다.
+# 1월 스캔이 src/test 를 제외했고 이번 스캔이 포함한 탓이다(38건 중 24건이 src/test).
+# 제외 적용 후 kotlin ncloc 20,295 → 15,844 로 1월 값과 정확히 일치했다.
+#
+# 디렉토리명 기반 `**/test/**` 는 쓰지 않는다. 운영 코드를 버린다:
+#   Tobe      Aladin.ToBe.Web\{Views,ViewsReact}\App\Test\**  Applink·Bridge·Device 앱 연동 뷰 12파일
+#   max-front src\components\test\**                          AppLinkTest·BridgeTest 등 디버깅 페이지 7파일
+# Kotlin은 파일명만으로 부족하다 — TestConfiguration.kt·TestFixtures.kt 가 Test* 접두어라
+# `*Test.kt` 에 안 걸린다. src/test/ 경로로 잡는다 (Gradle 규약이라 운영 코드가 없다).
+$TestExcludes = @(
+  '**/src/test/**','**/src/testFixtures/**','e2e/**','.devops/tests/**'
+  '**/cypress/**','**/playwright/**'
+  '**/*.test.ts','**/*.test.tsx','**/*.test.js','**/*.test.jsx','**/*.test.mjs'
+  '**/*.spec.ts','**/*.spec.tsx','**/*.spec.js','**/*.spec.jsx'
+  '**/*Test.cs','**/*Tests.cs'
+)
+
 # translate 후 번역 파일 수가 git 추적 파일 수의 이 비율 미만이면 PARTIAL로 본다.
 $CoverageThresholdPct = 90
 
@@ -192,6 +211,8 @@ $Registry = [ordered]@{
     BuildTarget = 'Aladin.MaxCms\Aladin.MaxCms.sln'
     Note = '.NET 8 SDK-style. macOS에서는 Fortify SKIP이었으나 Windows에서는 커버된다'
   }
+  # max-db-script·tobe-db-script 는 점검 대상에서 제외 (2026-07-30 결정).
+  # 정의는 남겨 둔다 — -Target max-db-script 로는 여전히 실행 가능하다.
   'max-db-script' = @{
     Path = 'max\max-db-script'; Ref = 'origin/master'; SonarKey = 'max-db-script'
     SonarMode = 'cli'; FortifyMode = 'yes'; Globs = $GlobsTsql
@@ -242,8 +263,8 @@ $Registry = [ordered]@{
 $ServiceMap = @{
   'aasm' = @('aasm')
   'naru' = @('naru-server')
-  'max'  = @('max-server','max-front','maxcms-front','maxcms-api','max-db-script','max-api')
-  'tobe' = @('tobe-db-script','tobe')
+  'max'  = @('max-server','max-front','maxcms-front','maxcms-api','max-api')
+  'tobe' = @('tobe')
 }
 
 # ── 인자 처리 ───────────────────────────────────────────────────────────────
@@ -258,7 +279,9 @@ if ($SonarOnly -and $FortifyOnly) { Die '-SonarOnly 와 -FortifyOnly 는 동시�
 $requested = New-Object System.Collections.Generic.List[string]
 foreach ($t in $Target) {
   if ($t -eq 'all') {
-    $Registry.Keys | ForEach-Object { $requested.Add($_) }
+    # 점검 대상 제외분(T-SQL 2건)은 all 에서 빠진다. 개별 키 지정으로는 실행 가능.
+    $excludedFromAll = @('max-db-script','tobe-db-script')
+    $Registry.Keys | Where-Object { $excludedFromAll -notcontains $_ } | ForEach-Object { $requested.Add($_) }
   } elseif ($t -like 'svc:*') {
     $svc = $t.Substring(4)
     if (-not $ServiceMap.ContainsKey($svc)) { Die "알 수 없는 서비스: $svc (aasm naru max tobe)" }
@@ -273,6 +296,7 @@ foreach ($t in $Target) {
   }
 }
 # 레지스트리 순서 유지 + 중복 제거
+# 정렬은 레지스트리 전체 키 기준(제외 대상도 개별 지정 시 살아 있어야 한다).
 $selected = @($Registry.Keys | Where-Object { $requested -contains $_ })
 
 # ── 사전 점검 ───────────────────────────────────────────────────────────────
@@ -550,7 +574,10 @@ function Wait-CeTask {
   return "TIMEOUT_${CePollMaxSec}s"
 }
 
-$SonarExclusions = '**/node_modules/**,**/.next/**,**/dist/**,**/build/**,**/bin/**,**/obj/**,**/coverage/**,**/vendor/**,**/*.min.js,**/*.min.css'
+$SonarExclusions = (@(
+  '**/node_modules/**','**/.next/**','**/dist/**','**/build/**','**/bin/**','**/obj/**'
+  '**/coverage/**','**/vendor/**','**/*.min.js','**/*.min.css'
+) + $TestExcludes) -join ','
 
 function Invoke-SonarScan {
   param($Key, $Cfg, $Wt, [string]$LogFile)
@@ -647,7 +674,7 @@ function Invoke-SonarScan {
 # translate가 실제로 넘기는 대상과 같은 제외 규칙을 적용해야 한다.
 # 분모가 다르면 커버리지 게이트가 거짓 PARTIAL을 낸다
 # (macOS 실측: tobe에서 min.js 104건이 분모에만 남아 84%로 오판됐다).
-$ExpectedExcludeRe = '(^|/)(node_modules|\.next|dist|build|bin|obj|coverage|vendor)/|\.min\.(js|css)$|(^|/)docs/|\.md$'
+$ExpectedExcludeRe = '(^|/)(node_modules|\.next|dist|build|bin|obj|coverage|vendor)/|\.min\.(js|css)$|(^|/)docs/|\.md$|/src/test/|/src/testFixtures/|(^|/)(e2e|cypress|playwright)/|(^|/)\.devops/tests/|\.(test|spec)\.[jt]sx?$|\.test\.mjs$|(Test|Tests)\.cs$'
 
 function Get-ExpectedFileCount {
   param($Src, $Globs, $SrcDirs)
@@ -725,6 +752,8 @@ function Invoke-FortifyScan {
     '-exclude','**/*.min.js','-exclude','**/*.min.css'
     '-exclude','**/docs/**','-exclude','**/*.md'
   )
+  # 테스트 코드 제외 (TestExcludes 와 동일 목록)
+  foreach ($te in $TestExcludes) { $trExcl += @('-exclude', $te) }
 
   # -filter 는 scan 단계 인자다. translate에 주면 적용되지 않는다 (macOS 실측 확인).
   $scanArgs = @()
