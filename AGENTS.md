@@ -50,7 +50,6 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 
 ## Claude Code 전역 규칙 동기화
 
-- 코드를 작성·수정·리뷰·리팩터하기 전에는 사소한 오타·포맷 수정이 아닌 한 `$karpathy-guidelines`를 먼저 호출한다.
 - 커밋 메시지에 AI co-author footer나 도구 자기참조 footer를 추가하지 않는다.
 - 커밋 본문은 의사결정·영향 범위 중심으로 짧게 작성하고, 코드 수준 구현 디테일 bullet 나열은 피한다.
 
