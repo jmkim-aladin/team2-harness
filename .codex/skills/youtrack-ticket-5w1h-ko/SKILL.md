@@ -21,6 +21,8 @@ description: "Use when drafting or creating DEV2 YouTrack tickets in Korean, esp
 - YouTrack은 REST API와 `curl`만 사용한다. MCP 도구는 사용하지 않는다.
 - `YOUTRACK_TOKEN`이 shell 환경에 없으면 `~/.claude/settings.json`의 `env.YOUTRACK_TOKEN`을 읽되 값을 출력하지 않는다.
 - Feature는 1주 이하, Task는 1일 이하로 유지한다. 초과하면 분할을 제안한다.
+- Feature 하위 Task는 개발 / 검증 / 배포·운영 반영 단계로 분리한다. 판정은 생략할 수 없고, 필요하면 별도 Task로 만들고 해당 없으면 Feature 본문에 사유를 남긴다. 하나의 Task에 개발과 검증, 배포를 섞지 않는다.
+- 검증은 테스트(개발2팀 내부) / QA(시너지팀) / 테스트 후 QA 중 하나로 판정한다. 대부분은 내부 테스트다. `테스트 → QA`면 Task 2개로 나눈다.
 - 13점 단일 티켓은 스프린트 투입 금지다. 8점 이하로 분할한다.
 - 담당자 미설정 티켓을 만들지 않는다.
 

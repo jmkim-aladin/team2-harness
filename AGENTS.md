@@ -41,6 +41,7 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 - 모든 작업은 YouTrack 티켓(5W1H)에서 시작한다. 단, 개발2팀 하네스 자체 변경은 [브랜치 전략](./policies/branching-strategy.md)의 하네스 예외를 따른다.
 - YouTrack 티켓/Task 생성, 상태 변경, KB 변경, 커밋, 푸시, 머지, PR 생성/머지는 사용자 확인 후에만 수행한다. 하네스 예외 작업은 DEV2 티켓 없이도 사용자 명시 지시로 commit/merge/push 가능하다.
 - Feature는 1주 이하, Task는 1일 이하로 유지한다. 초과 시 분할한다.
+- Feature 하위 Task는 개발 / 검증 / 배포·운영 반영 단계로 분리한다. 검증은 테스트(개발2팀 내부), QA(시너지팀), 테스트 후 QA 중 하나로 판정한다. 판정은 생략할 수 없고, 해당하면 별도 Task로 만들고 해당 없으면 Feature 본문에 사유를 남긴다. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md) 2-2항.
 - DB/SP 변경은 별도 승인, 프로덕션 배포는 사람 승인이 필요하다.
 - 알라딘 인증, 뉴빌링 등 공통 서비스 영향은 [policies/common-service-policy.md](./policies/common-service-policy.md)와 [catalog/common-services/registry.yaml](./catalog/common-services/registry.yaml)을 함께 확인한다.
 - 신규 빌링, 결제, 정산, 구독, 빌링키 기능은 [catalog/common-services/new-billing.yaml](./catalog/common-services/new-billing.yaml)의 뉴빌링 API 경계를 먼저 확인한다. 현재 팀 서비스 active 연동은 없는 상태로 기록한다.
@@ -100,6 +101,7 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 - `$ad-capacity-plan` → `/ad:capacity-plan`
 - `$ad-granola-sync` → `/ad:granola-sync`
 - `$ad-new-note` → `/ad:new-note`
+- `$ad-tldr` → `/ad:tldr`
 
 - 티켓 생성, YouTrack 티켓: `/ad:ticket`
 - 작업 준비, 티켓번호/할일로 위키 노트 + 업무 컨텍스트 묶기: `/ad:work-prep`
@@ -116,6 +118,7 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 - 다음달 가용 맨데이/velocity, capacity plan: `/ad:capacity-plan`
 - Granola 회의록 가져오기, Tolaría 회의록 동기화: `/ad:granola-sync`
 - 신규 운영 위키 노트 작성: `/ad:new-note`
+- 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성: `/ad:tldr`
 
 ## gstack 스킬
 
@@ -149,6 +152,7 @@ gstack 본문은 Claude Code 도구명을 사용하므로 Codex에서는 다음�
 - CLAUDE.md/AGENTS.md는 최소화 원칙(`policies/claude-md-policy.md`)을 따른다.
 - 모든 작업은 YouTrack 티켓(5W1H)에서 시작. 단, 개발2팀 하네스 자체 변경은 티켓 없이 진행 가능
 - Feature ≤ 1주 (필수) / Task ≤ 1일 (필수) — 초과 시 분할. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md)
+- Feature 하위 Task는 개발 / 검증 / 배포·운영 반영으로 분리 — 판정 필수, 해당 시 별도 Task, 해당 없으면 Feature 본문에 사유 기재. 검증은 테스트(내부) / QA(시너지팀) / 테스트→QA 중 선택 ([ticket-guide.md](./docs/sprint/ticket-guide.md) 2-2항)
 - DB/SP 변경 별도 승인, 프로덕션 배포 사람 승인
 - 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지
 

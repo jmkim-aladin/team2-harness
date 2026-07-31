@@ -25,7 +25,7 @@
 
 ## 점검 카테고리
 
-D-5 / D-4 마감 점검 항목을 5개 범주로 압축. 각 항목은 **본인이 직접 판단·처리**해야 하므로 스킬은 후보만 추출한다.
+D-5 / D-4 마감 점검 항목을 6개 범주로 압축. 각 항목은 **본인이 직접 판단·처리**해야 하므로 스킬은 후보만 추출한다.
 
 | # | 카테고리 | 검출 조건 | 단계 |
 |---|----------|-----------|------|
@@ -34,6 +34,7 @@ D-5 / D-4 마감 점검 항목을 5개 범주로 압축. 각 항목은 **본인�
 | 3 | **SP 미입력 Task** | `tag={tag}` && Assignee=본인 && Type=Task && Story points 값 비어 있음 | D-4 |
 | 4 | **5W1H 누락 Feature** | `tag={tag}` && Assignee=본인 && Type=Feature && description 휴리스틱 검사 실패 (아래 참조) | D-4 |
 | 5 | **OKR 연결 누락 의심** | `tag={tag}` && Assignee=본인 && (태그에 OKR/KR/`okr:` 키워드 없음 && description에 `REF-A-` 링크 없음) | D-4 |
+| 6 | **단계 분리 판정 누락 Feature** | `tag={tag}` && Assignee=본인 && Type=Feature && 검증(테스트·QA) 또는 배포·운영 반영 단계가 하위 Task에도 없고 "해당 없음" 사유도 없음 (아래 참조) | D-4 |
 
 > **휴리스틱일 뿐**, 최종 판단은 사용자가 한다. 결과는 "후보 목록"으로 제시한다.
 
@@ -49,6 +50,25 @@ Feature description을 lower-case로 정규화한 뒤 다음 키워드 셋 중 �
 - `how` 또는 `어떻게`
 
 6개 중 **3개 미만** 매칭 시 누락 후보로 분류. description 길이가 100자 미만이면 무조건 후보.
+
+### 단계 분리 판정 휴리스틱
+
+규칙 SoT: `docs/sprint/ticket-guide.md` 2-2항. Feature마다 **검증**과 **배포·운영 반영** 두 단계를 각각 판정한다.
+
+한 단계는 아래 둘 중 **하나라도 만족하면 정상**으로 본다.
+
+1. **하위 Task 존재** — subtask로 링크된 이슈 제목에 단계 키워드가 있음
+   - 검증: `테스트`, `qa`, `검증`, `test` — **테스트와 QA는 서로 대체 가능**하므로 둘 중 하나만 있어도 통과
+   - 배포·운영 반영: `배포`, `운영 반영`, `운영반영`, `릴리즈`, `deploy`
+2. **해당 없음 사유 기재** — Feature description에 `검증 해당 없음` / `테스트 해당 없음` / `QA 해당 없음` / `배포·운영 반영 해당 없음` (또는 `반영 해당 없음`) 문자열이 있음
+
+둘 다 없으면 해당 단계를 **판정 누락 후보**로 분류한다. 두 단계 모두 걸리면 한 항목에 함께 표기한다.
+
+> 검증은 내부 **테스트**(개발2팀)와 **QA**(시너지팀)로 나뉘고, `테스트만` / `QA만` / `테스트 → QA` 셋 다 정상이다. 이 스킬은 "검증 Task가 하나라도 있는가"만 판정하며, 테스트만 있는 Feature에 QA가 필요한지는 판정하지 않는다.
+
+- 하위 Task 조회는 아래 API의 `links` 필드를 사용한다 (`Subtask` linkType, `direction=OUTWARD`가 자식).
+- Feature 유형에만 적용한다. Task는 검사하지 않는다.
+- 개발 단계는 검사하지 않는다 (사실상 항상 존재하고, 없으면 카테고리 1·3에서 이미 잡힌다).
 
 ## 환경변수
 
@@ -66,7 +86,7 @@ AUTH="Authorization: Bearer $YOUTRACK_TOKEN"
 # 담당자 + 태그 + 본문/코멘트 포함 검색 (페이지당 50)
 curl -s -H "$AUTH" \
   --data-urlencode "query=tag: {tag} Assignee: {ytId}" \
-  --data-urlencode "fields=idReadable,summary,description,resolved,customFields(name,value(name,login,presentation)),tags(name),comments(text)" \
+  --data-urlencode "fields=idReadable,summary,description,resolved,customFields(name,value(name,login,presentation)),tags(name),comments(text),links(direction,linkType(name),issues(idReadable,summary))" \
   --data-urlencode '$top=50' \
   --data-urlencode '$skip=0' \
   -G "$BASE/api/issues"
@@ -74,6 +94,7 @@ curl -s -H "$AUTH" \
 
 - 응답 50개를 채우면 `$skip` 50씩 증가시켜 끝까지 페이지네이션
 - `customFields`에서 `Type`, `State`, `Assignee`, `Story points` 추출
+- `links`에서 `linkType.name == "Subtask"` && `direction == "OUTWARD"` 인 항목의 `issues[].summary`가 하위 Task 제목 (카테고리 6 판정용)
 - 다른 MCP 도구 사용 금지 (REST API만)
 
 ## 출력 형식
@@ -101,6 +122,9 @@ curl -s -H "$AUTH" \
 ## 5. OKR 연결 누락 의심 (D-4)
 - [{idReadable}]({BASE}/issue/{idReadable}) — {summary} ({담당자})
 
+## 6. 단계 분리 판정 누락 Feature (D-4)
+- [{idReadable}]({BASE}/issue/{idReadable}) — 누락 단계: {검증|배포·운영 반영|검증, 배포·운영 반영} — {summary} ({담당자})
+
 ## 요약
 | 카테고리 | 건수 |
 |----------|------|
@@ -109,6 +133,7 @@ curl -s -H "$AUTH" \
 | SP 미입력 Task | {n3} |
 | 5W1H 누락 Feature | {n4} |
 | OKR 연결 누락 의심 | {n5} |
+| 단계 분리 판정 누락 Feature | {n6} |
 ```
 
 링크 형식: `{BASE}/issue/{idReadable}` (예: `https://aladincommunication.youtrack.cloud/issue/DEV2-1234`).
@@ -128,7 +153,7 @@ curl -s -H "$AUTH" \
 
 ### 3. 카테고리 분류
 
-각 티켓에 대해 5개 조건을 평가하여 다중 카테고리 분류 허용 (예: 미종료 + 5W1H 누락 동시 가능).
+각 티켓에 대해 6개 조건을 평가하여 다중 카테고리 분류 허용 (예: 미종료 + 5W1H 누락 동시 가능).
 
 - `state_name = customFields["State"].value.name`
 - `type_name = customFields["Type"].value.name`
@@ -136,6 +161,8 @@ curl -s -H "$AUTH" \
 - `desc_text = description or ""`
 - `comments_text = "\n".join(c.text for c in comments)`
 - URL 패턴: `re.search(r"https?://", desc_text + comments_text)`
+- `subtask_titles = [i.summary for l in links if l.linkType.name == "Subtask" and l.direction == "OUTWARD" for i in l.issues]`
+- 카테고리 6은 `type_name == "Feature"` 일 때만 평가. 검증·배포 각각 "하위 Task 제목 키워드 매칭" 또는 "desc_text에 해당 없음 사유" 중 하나라도 있으면 통과, 둘 다 없으면 해당 단계를 누락으로 기록
 
 ### 4. 출력 생성
 
@@ -154,7 +181,7 @@ curl -s -H "$AUTH" \
 
 - **티켓 수정 금지**: 본 스킬은 조회만 수행. State 전환, 코멘트 추가, SP 입력, 태그 변경 모두 사용자가 YouTrack에서 직접.
 - **MCP 도구 사용 금지**: REST API만 사용 (정책: DB 계열 MCP 외에도 본 스킬은 단순 조회이므로 직접 호출이 단순).
-- **휴리스틱 false positive 안내**: 5W1H 누락 / OKR 누락 후보는 키워드 기반이므로 본인 확인 후 처리.
+- **휴리스틱 false positive 안내**: 5W1H 누락 / OKR 누락 / 단계 분리 판정 누락 후보는 키워드 기반이므로 본인 확인 후 처리. 특히 단계 분리는 Task 제목을 컨벤션(`— 테스트`, `— QA`, `— 배포·운영 반영`)대로 쓰지 않으면 오탐이 난다.
 - **다중 담당자**: 출력에 담당자 표기 포함하여 식별 가능하게 함.
 - **페이지네이션**: 50개 초과 시 `$skip`으로 끝까지.
 - **태그 변형**: `{YYMM}-planned` 외 다른 컨벤션(예: 2605-sprint)은 인자로 명시.

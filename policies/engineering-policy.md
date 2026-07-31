@@ -9,6 +9,7 @@
 - 모든 작업은 YouTrack 티켓에서 시작한다
 - 티켓은 5W1H 형식으로 작성한다 (What, Why, Who, Where, When, How)
 - 예측 소요시간이 2일을 초과하면 자식 이슈로 분할한다 (목표: 1일 이내 완료 단위)
+- Feature 하위 Task는 단계 기준으로 분리한다 — 하나의 Task에 개발과 검증, 배포·운영 반영을 섞지 않는다. Feature 설계 시 검증과 배포·운영 반영의 **해당 여부 판정은 필수**이며, 해당하면 별도 Task로 분리하고 해당 없으면 Feature 본문에 사유를 남긴다. 검증은 테스트(개발2팀 내부) / QA(시너지팀) / 테스트 후 QA 중 하나로 정한다. 상세: [ticket-guide.md 2-2항](../docs/sprint/ticket-guide.md)
 - In Progress 상태에서 매일 퇴근 전 소요시간을 기록한다
 - AI 도구(Codex, Claude Code 등)는 YouTrack 티켓/Task 생성, 티켓 상태 변경, 담당자/스프린트/Story points 변경 전에 사용자에게 명시 확인을 받는다
 
