@@ -25,6 +25,7 @@
 | `ad:ticket` | YouTrack 티켓 생성 (5W1H) | YouTrack | 구현됨 |
 | `ad:work-prep` | 티켓번호/자유글 → 로컬 위키 노트 + daily 아젠다 + 브랜치 제안 | YouTrack | 구현됨 |
 | `ad:code-review` | GitHub PR 코드 리뷰 (팀 체크리스트 기반) | gh CLI | 구현됨 |
+| `ad:tldr` | 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성 | - | 구현됨 |
 | `ad:ticket-split` | 2일 초과 이슈 자식 분할 | YouTrack | 미구현 |
 | `ad:time-log` | 소요시간 기록 | YouTrack | 미구현 |
 | `ad:status-update` | 티켓 상태 전환 + 검증 | YouTrack | 미구현 |
