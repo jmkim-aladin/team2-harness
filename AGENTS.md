@@ -102,6 +102,7 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 - `$ad-granola-sync` → `/ad:granola-sync`
 - `$ad-new-note` → `/ad:new-note`
 - `$ad-tldr` → `/ad:tldr`
+- `$ad-explain` → `/ad:explain`
 
 - 티켓 생성, YouTrack 티켓: `/ad:ticket`
 - 작업 준비, 티켓번호/할일로 위키 노트 + 업무 컨텍스트 묶기: `/ad:work-prep`
@@ -119,6 +120,7 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 - Granola 회의록 가져오기, Tolaría 회의록 동기화: `/ad:granola-sync`
 - 신규 운영 위키 노트 작성: `/ad:new-note`
 - 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성: `/ad:tldr`
+- 코드 변경·분석 결과 설명서(배경→직관→본체→퀴즈) 작성: `/ad:explain`
 
 ## gstack 스킬
 
