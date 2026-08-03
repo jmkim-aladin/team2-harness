@@ -1,6 +1,6 @@
 # 하네스 최적화 (업데이트·최신화·중복제거)
 
-하네스 문서의 최신화, 중복 제거, YouTrack KB 동기화를 수행합니다.
+하네스 문서의 최신화, 중복 제거, YouTrack KB 동기화를 수행한다.
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 
@@ -19,7 +19,7 @@
 
 ### 역할별 단일 책임 원칙
 
-각 주제는 **하나의 source of truth**만 가집니다. 다른 파일에서는 **링크로 참조**합니다.
+각 주제는 **하나의 source of truth**만 가진다. 다른 파일에서는 **링크로 참조**한다.
 
 | 주제 | Source of Truth | 참조하는 파일들 |
 |------|----------------|----------------|
@@ -37,7 +37,7 @@
 
 ### Step 1: 중복·불일치 감사
 
-아래 파일들을 모두 읽고 비교합니다:
+아래 파일들을 모두 읽고 비교한다:
 
 ```
 감사 대상 파일:
@@ -63,7 +63,7 @@
 
 ### Step 2: YouTrack KB 동기화
 
-KB 원본과 하네스 파일의 최신 여부를 비교합니다.
+KB 원본과 하네스 파일의 최신 여부를 비교한다.
 
 ```bash
 BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
@@ -79,6 +79,15 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-247
 curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content" # 2분기
 ```
 
+**전사 KB ↔ 하네스 매핑** (DEV2 외 참조 문서)
+
+| KB 문서 | 하네스 파일 |
+|---------|------------|
+| `REF-A-625` (Git Flow) | `policies/branching-strategy.md` |
+| `REF-A-1958` (Clean Architecture) | `policies/engineering-policy.md` |
+| `REF-A-3131` (Backend Environment) | 서비스 카탈로그 (naru, bazaar) |
+| `REF-A-3133` (Frontend Environment) | 서비스 카탈로그 (max-front, maxcms-front) |
+
 **동기화 규칙:**
 - KB의 `updated` 타임스탬프가 하네스 파일보다 최신이면 → 하네스 업데이트
 - 하네스에만 있는 내용(개인 OKR 초안 등)은 보존
@@ -86,7 +95,7 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-312
 
 ### Step 3: 중복 제거 및 정리
 
-감사에서 발견된 중복을 제거합니다.
+감사에서 발견된 중복을 제거한다.
 
 **중복 제거 원칙:**
 1. Source of truth 파일의 내용은 유지

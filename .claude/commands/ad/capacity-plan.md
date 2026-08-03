@@ -2,7 +2,7 @@
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 
-다음 달 개인 가용 맨데이 + 팀 dev 수용량 SP를 산출하고, `{YYMM}-planned` 태그 티켓 SP 합계와 비교하여 초과 여부를 판정합니다. 산식·양식 출처:
+다음 달 개인 가용 맨데이 + 팀 dev 수용량 SP를 산출하고, `{YYMM}-planned` 태그 티켓 SP 합계와 비교하여 초과 여부를 판정한다. 산식·양식 출처:
 - `docs/sprint/velocity-guide.md` (velocity 정의)
 - `docs/sprint/story-point-guide.md` (SP 환산)
 - `docs/sprint/2026-04-capacity-analysis.md` (개인 가용 맨데이 양식)
@@ -113,7 +113,7 @@ AASM 환산 = AASM SP × aasm_weight (기본 0.3)
 - AASM 제거 (0%)
 - **AASM 가중치 적용 (기본 30%, 권장)**
 
-3 시나리오 모두 출력하여 비교 가능하도록 한다.
+3 시나리오 모두 출력하여 비교 가능한다.
 
 ## YouTrack 쿼리 (BD PLAN 스냅샷)
 

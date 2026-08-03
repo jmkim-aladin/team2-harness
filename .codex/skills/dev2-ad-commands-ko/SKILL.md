@@ -24,7 +24,7 @@ Codex는 team2 하네스 command 파일을 source of truth로 읽고 같은 절�
 - `architecture-analysis`: 저장소 전체 아키텍처·설계 철학·네이밍 분석과 vault Markdown/HTML 저장
 - `weekly-report`, `weekly-planned`, `sprint-close-check`
 - `okr`
-- `team2-kb-read`, `team2-kb-list`, `team2-kb-sync`
+- `team2-kb-read` (`목록` 인자로 트리 조회)
 - `harness-optimize`: repo-vault 경계/정리
 - `data-request`, `service-activity`, `capacity-plan`
 - `granola-sync`, `new-note`

@@ -192,9 +192,7 @@ graph TB
     end
     subgraph CODE ["코드·KB"]
         S4["/ad:code-review<br/>PR 리뷰·하네스 노출 가드"]
-        S5["/ad:team2-kb-list"]
         S6["/ad:team2-kb-read"]
-        S7["/ad:team2-kb-sync<br/>KB → 하네스 동기화"]
     end
     subgraph META ["메타"]
         S8["/ad:harness-optimize<br/>하네스 자가 점검"]
@@ -274,7 +272,7 @@ flowchart LR
         S3[RUNBOOK.md]
     end
 
-    K1 -->|"/ad:team2-kb-sync"| H1
+    K1 -->|"/ad:harness-optimize 동기화"| H1
     H1 -->|참조| S1
     S1 -->|운영 학습| K2
 
@@ -303,7 +301,7 @@ flowchart LR
 | `REF-A-1958` (Clean Architecture) | `policies/engineering-policy.md` |
 | `REF-A-3131` (Backend Env) | `catalog/naru.yaml`, `catalog/bazaar.yaml` |
 
-KB가 변경되면 `/ad:team2-kb-sync REF-A-625` 한 줄로 하네스 갱신 제안을 받는다. 사람 확인 후 PR.
+KB가 변경되면 `/ad:harness-optimize 동기화`로 하네스 갱신 제안을 받는다. 사람 확인 후 PR.
 
 ---
 

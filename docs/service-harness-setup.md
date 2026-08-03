@@ -1,21 +1,21 @@
 # 서비스 레포에 팀 하네스 연결하기
 
-각 서비스 레포의 CLAUDE.md에 팀 하네스 참조를 추가하는 방법입니다.
+각 서비스 레포의 CLAUDE.md에 팀 하네스 참조를 추가하는 방법이다.
 
 ## 전제 조건
 
-`./scripts/setup.sh`가 실행되어 `$TEAM2_HARNESS_PATH` 환경변수가 설정되어 있어야 합니다.
+`./scripts/setup.sh`가 실행되어 `$TEAM2_HARNESS_PATH` 환경변수가 설정되어 있어야 한다.
 
 ---
 
 ## 방법 1: 기존 CLAUDE.md가 있는 경우 (naru, max)
 
-CLAUDE.md 상단에 아래 섹션을 추가합니다:
+CLAUDE.md 상단에 아래 섹션을 추가한다:
 
 ```markdown
 ## 팀 하네스
 
-> 이 서비스는 개발 2팀 하네스를 따릅니다.
+> 이 서비스는 개발 2팀 하네스를 따른다.
 > 작업 전 팀 하네스의 관련 정책을 확인하세요.
 
 | 정책 | 파일 |
@@ -42,7 +42,7 @@ CLAUDE.md 상단에 아래 섹션을 추가합니다:
 
 ## 방법 2: CLAUDE.md가 없는 경우 (bazaar, tobe, aasm)
 
-`templates/service-harness/CLAUDE.md.tmpl`을 복사해서 서비스 정보를 채웁니다:
+`templates/service-harness/CLAUDE.md.tmpl`을 복사해서 서비스 정보를 채운다:
 
 ```bash
 cp $TEAM2_HARNESS_PATH/templates/service-harness/CLAUDE.md.tmpl ./CLAUDE.md
@@ -55,12 +55,12 @@ cp $TEAM2_HARNESS_PATH/templates/service-harness/CLAUDE.md.tmpl ./CLAUDE.md
 
 ### naru (기존 CLAUDE.md 있음)
 
-`/Users/user/Documents/workspace/naru/NaruServer/CLAUDE.md` 상단에 추가:
+`$TEAM2_WORKSPACE_PATH/naru/NaruServer/CLAUDE.md` 상단에 추가:
 
 ```markdown
 ## 팀 하네스
 
-> 이 서비스는 개발 2팀 하네스를 따릅니다.
+> 이 서비스는 개발 2팀 하네스를 따른다.
 
 | 정책 | 파일 |
 |------|------|
@@ -77,14 +77,14 @@ cp $TEAM2_HARNESS_PATH/templates/service-harness/CLAUDE.md.tmpl ./CLAUDE.md
 ### bazaar (CLAUDE.md 없음)
 
 ```bash
-cd /Users/user/Documents/workspace/bazaar/BazaarServer
+cd $TEAM2_WORKSPACE_PATH/bazaar/BazaarServer
 cp $TEAM2_HARNESS_PATH/templates/service-harness/CLAUDE.md.tmpl ./CLAUDE.md
 # 플레이스홀더 교체
 ```
 
 ### max (기존 CLAUDE.md 있음)
 
-`/Users/user/Documents/workspace/max-doc/CLAUDE.md` 상단에 동일한 팀 하네스 섹션 추가.
+`$TEAM2_WORKSPACE_PATH/max-doc/CLAUDE.md` 상단에 동일한 팀 하네스 섹션 추가.
 max는 레거시이므로 현대화 정책 참조도 중요:
 
 ```markdown
@@ -121,4 +121,4 @@ max와 동일하게 레거시 정책 참조 포함.
 이 서비스의 팀 하네스 정책을 확인해줘
 ```
 
-Claude가 `$TEAM2_HARNESS_PATH/policies/`의 파일들을 읽어서 답하면 연결 성공입니다.
+Claude가 `$TEAM2_HARNESS_PATH/policies/`의 파일들을 읽어서 답하면 연결 성공이다.

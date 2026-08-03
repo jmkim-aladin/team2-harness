@@ -1,6 +1,6 @@
 # Mermaid 다이어그램 작성 컨벤션
 
-> YouTrack KB, Typora 등 다양한 마크다운 뷰어에서 정상 렌더링되도록 하기 위한 규칙
+> YouTrack KB, Typora 등 다양한 마크다운 뷰어에서 정상 렌더링하기 위한 규칙
 
 ## 노드 텍스트 규칙
 

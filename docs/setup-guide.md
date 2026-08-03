@@ -145,7 +145,7 @@ gh auth login
 
 ## 서비스 레포 연결
 
-각 서비스 레포의 CLAUDE.md에 팀 하네스 참조가 필요합니다.
+각 서비스 레포의 CLAUDE.md에 팀 하네스 참조가 필요하다.
 
 ### 이미 연결된 서비스
 - naru (`NaruServer/CLAUDE.md`)
@@ -156,12 +156,12 @@ gh auth login
 
 ### 새 서비스 연결
 
-CLAUDE.md 상단에 팀 하네스 섹션을 추가합니다:
+CLAUDE.md 상단에 팀 하네스 섹션을 추가한다:
 
 ```markdown
 ## 팀 하네스
 
-> 이 서비스는 개발 2팀 하네스를 따릅니다.
+> 이 서비스는 개발 2팀 하네스를 따른다.
 
 | 정책 | 파일 |
 |------|------|
@@ -205,8 +205,6 @@ cd ~/workspace/team2
 claude
 
 # 팀 스킬 + 하네스 정책/카탈로그 직접 접근
-/ad:team2-kb-list           # KB 문서 목록
-/ad:team2-kb-sync           # KB → 하네스 동기화
 ```
 
 ### 언제 어디서 실행?
@@ -270,8 +268,6 @@ Codex Skill도 YouTrack은 REST API(`$YOUTRACK_TOKEN`)로만 호출한다.
 | `/ad:ticket` | O | - |
 | `/ad:code-review` | - | O |
 | `/ad:team2-kb-read` | O | - |
-| `/ad:team2-kb-list` | O | - |
-| `/ad:team2-kb-sync` | O | - |
 
 ---
 

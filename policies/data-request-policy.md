@@ -9,7 +9,7 @@ YouTrack으로 접수되는 운영 데이터 추출 요청의 SQL과 산출물�
 | 대상 | 저장소 |
 |---|---|
 | 추출 SQL, 요청별 산출물, 요청 이력 메모 | **`AladinCommunication/data-requests-dev2`** |
-| 데이터 추출 도메인 지식 (테이블 인벤토리, 도메인 매핑, 조인 패턴, 함정 테이블) | **Obsidian vault `wiki/inventory/`, `wiki/domains/`** |
+| 데이터 추출 도메인 지식 (테이블 인벤토리, 도메인 매핑, 조인 패턴, 함정 테이블) | **Obsidian vault `wiki/services/{service}/analysis/`, `wiki/services/{service}/domains/`** |
 | 데이터 추출 정책, 운영 가이드, 스킬 | **팀 하네스 `team2`** |
 
 운영 데이터 추출 SQL을 하네스(`team2/docs/`)나 서비스 레포에 새로 만들지 않는다. 단, 도메인 지식 정리(예: 어떤 테이블이 어떤 의미인지)는 Obsidian vault 인벤토리에 남기고, 실제 추출 쿼리는 data-requests-dev2 레포의 티켓 폴더에 둔다.
@@ -75,5 +75,5 @@ YouTrack으로 접수되는 운영 데이터 추출 요청의 SQL과 산출물�
 ## 예외
 
 - 데이터 추출과 무관한 일반 분석 SQL, 일회성 디버깅 SQL은 본 정책 대상이 아니다.
-- 도메인 지식 인벤토리는 Obsidian vault `wiki/inventory/`에 두고, 추출 쿼리만 data-requests-dev2에 둔다.
+- 도메인 지식 인벤토리는 Obsidian vault `wiki/services/{service}/analysis/`에 두고, 추출 쿼리만 data-requests-dev2에 둔다.
 - 본 정책 시행 이전에 하네스 `docs/`에 작성된 추출 SQL은 그대로 두고, 후속 이관은 별도 작업으로 처리한다.

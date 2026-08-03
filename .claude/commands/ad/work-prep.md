@@ -240,7 +240,7 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (vault `wiki
 
 - DB 계열 MCP 서버(postgres/mssql/mysql 등) 사용
 - SP 원문/운영 실데이터/시크릿/개인정보를 위키 본문에 저장
-- placeholder `/Users/user/...`를 실제 경로로 해석해 파일 생성 (반드시 `$LOCAL_WIKI_PATH` 사용)
+- vault 경로는 항상 `$LOCAL_WIKI_PATH` 기준으로 해석한다 (리터럴 경로 하드코딩 금지)
 - vault의 `<!-- GENERATED:START -->` ~ `<!-- GENERATED:END -->` 외부 영역 자동 갱신
 
 ## 문서 위치 결정

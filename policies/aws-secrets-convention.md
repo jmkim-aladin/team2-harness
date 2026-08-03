@@ -101,7 +101,7 @@ sm-aasm-web-prod-mall-prod-smb-credential              # AASM prod → mall prod
 > AASM dev 인스턴스는 보안상 mall prod 자격증명을 보유하지 않는다.
 
 > **Node.js 앱 참고:** Spring Boot의 `EnvironmentPostProcessor` 대신 `with-secrets.mjs` 래퍼 스크립트로
-> 런타임에 시크릿을 fetch하여 `process.env`에 주입합니다. `APP_ENV` 환경변수로 프로파일을 구분합니다.
+> 런타임에 시크릿을 fetch하여 `process.env`에 주입한다. `APP_ENV` 환경변수로 프로파일을 구분한다.
 
 ## JSON 구조
 

@@ -1,7 +1,7 @@
 # YouTrack 티켓 가이드
 
-> 전사 YouTrack 상태 플로우 기준 문서입니다.
-> DEV2팀 스프린트 운영 규칙은 [docs/sprint/](../docs/sprint/) 를 참조합니다.
+> 전사 YouTrack 상태 플로우 기준 문서이다.
+> DEV2팀 스프린트 운영 규칙은 [docs/sprint/](../docs/sprint/) 를 참조한다.
 
 ## DEV2팀 스프린트 운영 문서
 

@@ -2,7 +2,7 @@
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 
-본인 담당 티켓 중 마감 프로세스(`docs/sprint/sprint-closing-process.md`) D-5 / D-4 점검 항목에 걸리는 티켓을 카테고리별로 **목록·링크만** 출력합니다. 상태 변경·코멘트 추가·티켓 수정은 **수행하지 않습니다**. 처리는 사용자가 YouTrack에서 직접 합니다.
+본인 담당 티켓 중 마감 프로세스(`docs/sprint/sprint-closing-process.md`) D-5 / D-4 점검 항목에 걸리는 티켓을 카테고리별로 **목록·링크만** 출력한다. 상태 변경·코멘트 추가·티켓 수정은 **수행하지 않는다**. 처리는 사용자가 YouTrack에서 직접 한다.
 
 ## 사용법
 
@@ -201,7 +201,7 @@ curl -s -H "$AUTH" \
 출력 마지막에 한 줄로 안내:
 
 ```
-> 이 목록은 자가점검용 후보입니다. 상태 전환·이월·SP 입력·5W1H 보완은 YouTrack에서 직접 수행하세요.
+> 이 목록은 자가점검용 후보인다. 상태 전환·이월·SP 입력·5W1H 보완은 YouTrack에서 직접 수행하세요.
 > 이월 코멘트 양식: docs/sprint/plan-change-process.md
 ```
 

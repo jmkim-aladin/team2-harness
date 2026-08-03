@@ -51,7 +51,7 @@
 로컬 Obsidian vault:
 
 ```text
-/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2
+$LOCAL_WIKI_PATH
 ```
 
 필수 파일:
@@ -176,7 +176,7 @@ Ralph Loop로 {service_id} 서비스를 운영 지식 위키에 온보딩해줘.
 - inventory 또는 source snapshot 존재
 - Graphify sidecar queue가 최신 source hash 기준으로 갱신됨
 - P0 도메인 후보가 최소 1개 이상 선정됨
-- `wiki/tasks/discovery-queue.md` 또는 `graph/unresolved-queue.json`에 미해결 항목이 남음
+- `wiki/processes/tickets/discovery-queue.md` 또는 `graph/unresolved-queue.json`에 미해결 항목이 남음
 - `python3 tools/lint_vault.py --vault "$LOCAL_WIKI_PATH" --all` 실행 결과 error 0
 
 ## 주의

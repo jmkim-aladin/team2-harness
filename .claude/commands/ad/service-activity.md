@@ -2,7 +2,7 @@
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 
-YouTrack 티켓을 서비스 태그·기간으로 필터링하여 팀 작업 현황을 정리합니다. 운영 위키에 스냅샷 저장 가능.
+YouTrack 티켓을 서비스 태그·기간으로 필터링하여 팀 작업 현황을 정리한다. 운영 위키에 스냅샷 저장 가능.
 
 ## 사용법
 

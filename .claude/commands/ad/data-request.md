@@ -68,7 +68,7 @@ REPO="${DATA_REQUESTS_DEV2_PATH:-$HOME/Documents/workspace/data-requests-dev2}"
 
 # 레포 없으면 사용자에게 클론 안내
 if [ ! -d "$REPO/.git" ]; then
-  echo "레포가 없습니다. 다음 명령으로 클론 후 다시 실행하세요:"
+  echo "레포가 없다. 다음 명령으로 클론 후 다시 실행하세요:"
   echo "  git clone git@github.com:AladinCommunication/data-requests-dev2.git $REPO"
   exit 1
 fi

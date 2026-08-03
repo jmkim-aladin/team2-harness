@@ -4,7 +4,7 @@
 
 **하네스 = 마크다운 문서들 + 템플릿 + 체크리스트 + 자동화 규칙 + 그걸 계속 갱신하는 운영 방식**
 
-단순 문서 모음이 아니라, 실제 개발/운영/리뷰/배포 흐름에 연결되어 있어야 합니다.
+단순 문서 모음이 아니라, 실제 개발/운영/리뷰/배포 흐름에 연결되어 있어야 한다.
 
 ### 하네스가 아닌 것
 - 한 번 써놓고 안 보는 문서
@@ -26,8 +26,8 @@ git clone https://github.com/AladinCommunication/team2.git
 cd team2 && ./scripts/setup.sh
 ```
 
-셋업 후에는 **어떤 서비스 레포에서든** Claude Code를 실행하면 팀 스킬이 자동으로 사용 가능합니다.
-team2 레포에서 실행할 필요 없이, 평소처럼 각 서비스 레포에서 작업하면 됩니다.
+셋업 후에는 **어떤 서비스 레포에서든** Claude Code를 실행하면 팀 스킬이 자동으로 사용 가능하다.
+team2 레포에서 실행할 필요 없이, 평소처럼 각 서비스 레포에서 작업하면 된다.
 
 ---
 
@@ -62,11 +62,11 @@ team2 레포에서 실행할 필요 없이, 평소처럼 각 서비스 레포에
 - 장애/위험 포인트 추가
 - 금지 패턴 갱신
 
-운영 지식 위키 설계는 [operational-knowledge-wiki.md](./designs/operational-knowledge-wiki.md)를 따른다. 이 위키는 System Discovery Loop와 Ticket Execution Loop를 분리하여 전체 서비스 분석과 티켓 기반 실행을 같은 graph/wiki에 연결한다.
+운영 지식 위키 내부 구조는 vault `wiki/guides/taxonomy.md`를 따른다. 이 위키는 System Discovery Loop와 Ticket Execution Loop를 분리하여 전체 서비스 분석과 티켓 기반 실행을 같은 graph/wiki에 연결한다.
 Hermes, gbrain, Codex/Claude Code를 함께 쓰는 자동 prep, decision board, 야간 도메인 분석 루프는 [agentic-ticket-domain-loop-guide.md](./agentic-ticket-domain-loop-guide.md)를 따른다.
 Hermes에 연결된 기존 Discord bot을 control surface로 쓰는 역할 프로필 orchestration은 [discord-agent-orchestration-guide.md](./discord-agent-orchestration-guide.md)와 `configs/discord-agent-profiles.yaml`을 따른다. Claude Code와 Codex는 모두 같은 team2 `tools/` 명령과 vault 산출물 계약을 사용한다.
 
-운영 지식 위키의 Obsidian vault 경로는 `/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`로 둔다.
+운영 지식 위키의 Obsidian vault 경로는 `$LOCAL_WIKI_PATH` (기본 `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`)로 둔다.
 
 AI 도구는 하네스 문서를 갱신하거나 티켓 초안을 작성할 수 있지만, YouTrack 티켓/Task 생성, 티켓 상태/필드 변경, YouTrack KB 생성/수정/삭제/이동, 커밋/푸시/머지 전에는 반드시 사용자에게 확인한다.
 
@@ -87,7 +87,7 @@ IDC DB 운영 안정화와 AWS 전환을 위한 batch/SP/table/query 진단은 [
 서비스/API/SP/Table 관계를 탐색할 때는 로컬 Obsidian 운영 지식 위키의 graph를 먼저 확인한다.
 
 ```text
-/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/
+$LOCAL_WIKI_PATH/
   graph/contract-graph.json
   graph/source-inventory.json
   graph/unresolved-queue.json
@@ -99,9 +99,9 @@ Graphify sidecar 산출물이 있으면 `GRAPH_REPORT.md`의 god node, surprise 
 Obsidian에서 위키처럼 탐색할 때는 자동 생성 인덱스와 Related Links 블록을 진입점으로 쓴다.
 
 ```text
-wiki/indexes/services.md
-wiki/indexes/domains.md
-wiki/indexes/graphify.md
+wiki/services/services-index.md
+wiki/processes/processes-index.md
+wiki/wiki-index.md
 ```
 
 링크와 projection 유지는 팀 하네스의 `tools/generate_vault_indexes.py`와 `tools/lint_vault.py`가 담당한다. 문서 파일명을 바꾸거나 새 서비스/도메인/인벤토리 문서를 추가한 뒤에는 아래 명령으로 index, related-links block, frontmatter를 확인한다.
@@ -294,8 +294,6 @@ PR 생성 (체크리스트 포함)
 | 스킬 | 설명 | 상태 |
 |------|------|------|
 | `/ad:team2-kb-read` | YouTrack KB 문서 조회/검색 | 구현됨 |
-| `/ad:team2-kb-list` | YouTrack KB 문서 트리 조회 | 구현됨 |
-| `/ad:team2-kb-sync` | KB 변경 시 하네스 정책 동기화 | 구현됨 |
 | `/ad:team2-onboard` | 신규 서비스 하네스 생성 | 미구현 |
 | `/ad:team2-catalog` | 서비스 카탈로그 조회/갱신 | 미구현 |
 | `/ad:team2-harness-check` | 서비스 하네스 완성도 점검 | 미구현 |
