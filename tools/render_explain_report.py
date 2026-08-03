@@ -30,7 +30,14 @@ REQUIRED_SECTIONS: tuple[tuple[str, ...], ...] = (
     ("정답과 해설",),
 )
 
+QUIZ_QUESTION_COUNT = 5
+OPTION_LENGTH_SPREAD = 20
+BANNED_OPTIONS = ("모두 맞다", "모두 옳다", "모두 정답", "전부 맞다", "정답 없음", "해당 없음", "위 전부", "모두 아니다")
+
 HEADING2 = re.compile(r"^##\s+(.+?)\s*$")
+QUIZ_QUESTION = re.compile(r"^###\s+Q(\d+)\.\s*(.+?)\s*$")
+QUIZ_OPTION = re.compile(r"^-\s+([A-D])\)\s*(.+?)\s*$")
+ANSWER_ROW = re.compile(r"^\|\s*Q(\d+)\s*\|\s*([A-D])\s*\|")
 MERMAID_BLOCK = re.compile(
     r"<pre><code class=\"language-mermaid\">(.*?)</code></pre>",
     re.DOTALL,
@@ -57,6 +64,65 @@ def validate_required_sections(body: str) -> list[str]:
         if not any(title.startswith(candidate) for title in titles for candidate in candidates):
             missing.append(" 또는 ".join(candidates))
     return missing
+
+
+def section_body(body: str, prefix: str) -> list[str]:
+    """지정한 H2 섹션의 본문 줄만 잘라낸다."""
+    lines = body.splitlines()
+    collected: list[str] = []
+    inside = False
+    for line in lines:
+        heading = HEADING2.match(line)
+        if heading:
+            title = re.sub(r"[`*_]", "", heading.group(1)).strip()
+            if inside:
+                break
+            inside = title.startswith(prefix)
+            continue
+        if inside:
+            collected.append(line)
+    return collected
+
+
+def validate_quiz(body: str) -> list[str]:
+    """퀴즈 편향 규칙을 렌더 시점에 강제한다. 자기판정에 맡기면 규칙이 지켜졌는지 알 수 없다."""
+    errors: list[str] = []
+
+    questions: list[tuple[str, list[str]]] = []
+    for line in section_body(body, "퀴즈"):
+        question = QUIZ_QUESTION.match(line)
+        if question:
+            questions.append((f"Q{question.group(1)}", []))
+            continue
+        option = QUIZ_OPTION.match(line)
+        if option and questions:
+            questions[-1][1].append(option.group(2))
+
+    if len(questions) != QUIZ_QUESTION_COUNT:
+        errors.append(f"퀴즈 문항 {QUIZ_QUESTION_COUNT}개 필요, 현재 {len(questions)}개")
+
+    for label, options in questions:
+        if len(options) != 4:
+            errors.append(f"{label}: 보기 4개 필요, 현재 {len(options)}개")
+            continue
+        lengths = [len(option) for option in options]
+        spread = max(lengths) - min(lengths)
+        if spread > OPTION_LENGTH_SPREAD:
+            errors.append(f"{label}: 보기 길이 편차 {spread}자 (허용 {OPTION_LENGTH_SPREAD}자) — 길이로 정답이 드러난다")
+        for option in options:
+            if any(banned in option for banned in BANNED_OPTIONS):
+                errors.append(f"{label}: 금지 보기 사용 — {option}")
+
+    answers = [match.group(2) for line in section_body(body, "정답과 해설") if (match := ANSWER_ROW.match(line))]
+    if len(answers) != len(questions):
+        errors.append(f"정답 행 {len(answers)}개가 문항 {len(questions)}개와 맞지 않는다")
+    if any(answers[index] == answers[index + 1] == answers[index + 2] for index in range(len(answers) - 2)):
+        errors.append("같은 정답이 3연속이다")
+    if answers:
+        top = max(answers.count(choice) for choice in "ABCD")
+        if top * 2 > len(answers):
+            errors.append(f"정답 한 개 보기에 {top}/{len(answers)} 쏠림 — A~D로 분산한다")
+    return errors
 
 
 def promote_mermaid(content: str) -> tuple[str, int]:
@@ -92,6 +158,7 @@ def collapse_answers(content: str) -> str:
 def render_chips(metadata: dict[str, str]) -> str:
     labels = (
         ("mode", metadata.get("mode", "")),
+        ("reader", metadata.get("reader", "")),
         ("subject", metadata.get("subject", "")),
         ("base", metadata.get("base", "")),
         ("updated", metadata.get("updated_at", "")),
@@ -108,6 +175,13 @@ def build_html(source: str, source_name: str, mermaid: bool = True) -> str:
     missing = validate_required_sections(body)
     if missing:
         raise ValueError(f"필수 섹션 누락: {', '.join(missing)}")
+
+    if not metadata.get("reader"):
+        raise ValueError("frontmatter reader 누락: 이 문서가 누구 기준인지 남긴다")
+
+    quiz_errors = validate_quiz(body)
+    if quiz_errors:
+        raise ValueError("퀴즈 규칙 위반: " + " / ".join(quiz_errors))
 
     title = find_title(metadata, body, Path(source_name).stem)
     content, navigation = render_markdown(body)
