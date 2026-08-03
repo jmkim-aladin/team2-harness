@@ -284,6 +284,7 @@ PR 생성 (체크리스트 포함)
 | `/ad:time-log` | 소요시간 기록 | 미구현 |
 | `/ad:code-review` | GitHub PR 코드 리뷰 (팀 체크리스트 기반) | 구현됨 |
 | `/ad:tldr` | 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성 | 구현됨 |
+| `/ad:explain` | 코드 변경·분석 결과 설명서 (배경→직관→본체→퀴즈, md + HTML) | 구현됨 |
 | `/ad:status-update` | 티켓 상태 전환 | 미구현 |
 | `/ad:daily-report` | 일일 작업 요약 | 미구현 |
 | `/ad:sprint-plan` | 스프린트 계획 보조 | 미구현 |
