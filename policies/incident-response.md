@@ -79,4 +79,4 @@ YouTrack 장애 티켓 생성
 
 ## 장애보고서 양식
 
-재사용 템플릿은 [incident-report.md](/Users/user/Documents/workspace/team2/templates/incident-report.md)를 사용한다.
+재사용 템플릿은 [incident-report.md](../templates/incident-report.md)를 사용한다.

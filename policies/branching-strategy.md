@@ -3,7 +3,7 @@
 > 전사 Git Flow 상세: [REF-A-625](https://aladincommunication.youtrack.cloud/articles/REF-A-625) (YouTrack KB)
 > 필요 시 `/ad:team2-kb-read REF-A-625`로 조회 가능
 
-[nvie Git Flow](https://nvie.com/posts/a-successful-git-branching-model/) 브랜칭 모델을 따릅니다.
+[nvie Git Flow](https://nvie.com/posts/a-successful-git-branching-model/) 브랜칭 모델을 따른다.
 
 ## 브랜치 구조
 
@@ -17,17 +17,17 @@ master                        ← 항상 배포 가능한 상태
 
 ## 브랜치 명명 규칙
 
-브랜치명은 YouTrack **이슈 ID**로 생성합니다.
-Feature 티켓이 있으면 Feature ID, 없으면 Task ID를 사용합니다.
+브랜치명은 YouTrack **이슈 ID**로 생성한다.
+Feature 티켓이 있으면 Feature ID, 없으면 Task ID를 사용한다.
 
 ### 개발2팀 하네스 예외
 
-개발2팀 하네스(`team2`) 자체 변경은 YouTrack 티켓 없이 진행할 수 있습니다. 적용 범위는 정책, 카탈로그, 스킬, 템플릿, 하네스 도구, 에이전트 오케스트레이션, 운영 문서처럼 팀 운영 기준을 바꾸는 작업입니다. 서비스 제품 코드 변경은 이 예외에 포함하지 않습니다.
+개발2팀 하네스(`team2`) 자체 변경은 YouTrack 티켓 없이 진행할 수 있다. 적용 범위는 정책, 카탈로그, 스킬, 템플릿, 하네스 도구, 에이전트 오케스트레이션, 운영 문서처럼 팀 운영 기준을 바꾸는 작업이다. 서비스 제품 코드 변경은 이 예외에 포함하지 않는다.
 
 - 브랜치: `team2/{작업-slug}` 또는 현재 하네스 작업 브랜치
 - 커밋: `[TEAM2] {작업 내용}`
-- 사용자 명시 지시가 있으면 DEV2 티켓 없이 commit, merge, push를 수행할 수 있습니다.
-- protected branch, PR 리뷰, CI, 배포 승인, 시크릿/민감정보 금지 규칙은 그대로 적용합니다.
+- 사용자 명시 지시가 있으면 DEV2 티켓 없이 commit, merge, push를 수행할 수 있다.
+- protected branch, PR 리뷰, CI, 배포 승인, 시크릿/민감정보 금지 규칙은 그대로 적용한다.
 
 | 브랜치 | 형식 | 예시 |
 |--------|------|------|
@@ -52,7 +52,7 @@ Feature 티켓이 있으면 Feature ID, 없으면 Task ID를 사용합니다.
 
 ## 태그
 
-릴리즈 버전을 태그로 관리하며, YouTrack의 수정 버전과 동일하게 유지합니다.
+릴리즈 버전을 태그로 관리하며, YouTrack의 수정 버전과 동일하게 유지한다.
 
 | 태그 | 의미 |
 |------|------|
@@ -129,8 +129,8 @@ Feature 티켓이 있으면 Feature ID, 없으면 Task ID를 사용합니다.
 
 ## 커밋 메시지
 
-커밋 메시지는 YouTrack **Task 티켓 ID**를 포함합니다.
-단, 개발2팀 하네스 예외 작업은 `[TEAM2] {작업 내용}` 형식을 사용합니다.
+커밋 메시지는 YouTrack **Task 티켓 ID**를 포함한다.
+단, 개발2팀 하네스 예외 작업은 `[TEAM2] {작업 내용}` 형식을 사용한다.
 
 ### 형식
 ```
@@ -176,7 +176,7 @@ Task: DEV2-5678 "로그인 오류 수정"
 
 ### Merge 방식
 
-develop PR은 **squash merge를 사용하지 않습니다**. Task 단위 커밋 이력을 develop에 그대로 보존합니다.
+develop PR은 **squash merge를 사용하지 않는다**. Task 단위 커밋 이력을 develop에 그대로 보존한다.
 
 - 기본: merge commit (`--no-ff`) — Feature의 Task 커밋들을 개별로 유지
 - 이유: Task ID 기반 커밋 이력을 통해 YouTrack 연동 추적, `git bisect`, 변경 단위별 revert가 가능하도록 유지
@@ -191,7 +191,7 @@ gh pr merge {번호} --merge --delete-branch
 
 ## Git Worktree
 
-병렬 작업이 필요할 때 worktree를 사용합니다. 브랜치 규칙과 동일하게 이슈 ID로 생성합니다.
+병렬 작업이 필요할 때 worktree를 사용한다. 브랜치 규칙과 동일하게 이슈 ID로 생성한다.
 
 ```bash
 # worktree 생성 (브랜치명과 동일)

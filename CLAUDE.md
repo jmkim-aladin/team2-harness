@@ -9,10 +9,9 @@
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, storefront, caravan, pod, shopping, blog)
 - `catalog/common-services/registry.yaml` — 알라딘 인증, 뉴빌링 등 공통 서비스 영향 확인 registry
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
-- `.claude/commands/ad/` — 팀 스킬 (ticket, work-prep, code-review, architecture-analysis, kb-read, kb-list, kb-sync, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan, granola-sync, tldr, explain)
+- `.claude/commands/ad/` — 팀 스킬 (ticket, work-prep, work-board, code-review, architecture-analysis, team2-kb-read, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan, granola-sync, new-note, tldr, explain)
 - `scripts/setup.sh` — 원커맨드 셋업
 - `docs/` — 가이드 문서
-- `docs/designs/` — 설계 문서 (스토어프론트 플랫폼 방향, 테넌트 모델, 인증, 스코프 등)
 - `docs/sprint/` — 스프린트 운영 (워크플로우 실행, 티켓 가이드, SP 가이드, 계획 변경, Velocity, 마감 프로세스, 주간업무 보고, 주간 핵심 목표)
 
 ## 핵심 규칙

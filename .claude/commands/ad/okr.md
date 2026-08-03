@@ -1,6 +1,6 @@
 # OKR 조회 및 작성
 
-팀/개인 OKR을 조회하거나, 분기 개인 OKR 초안을 작성합니다.
+팀/개인 OKR을 조회하거나, 분기 개인 OKR 초안을 작성한다.
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 
@@ -18,7 +18,7 @@
 ## OKR 문서 위치 (Obsidian vault)
 
 OKR 문서는 Obsidian vault `wiki/processes/okr/`에 저장된다. 절대 경로 베이스:
-`/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/okr/`
+`$LOCAL_WIKI_PATH/wiki/processes/okr/`
 
 > **현재 상태 (2026-06 기준):** OKR 문서는 `team2-archive`에서 `wiki/processes/okr/`로 이관 완료(team/q1/q2 + 김정민 q1~q4 + q1 자기평가 + 조은흠 q2). 팀·김정민/조은흠 q2 등 KB 보유분은 KB 본문 기준으로 동기화함. **canonical은 YouTrack KB(REF-A-*)** — 이후 변경은 `/ad:okr 동기화`로 최신화한다. 연간 팀 OKR(`2026-team-okr.md`)은 분기 `quarter`가 없으므로 lint_vault okr 룰은 taxonomy(분기/연간 허용)에 맞춰 `required=[year,scope]` + 연간 파일명 허용으로 정렬됨.
 
@@ -70,7 +70,7 @@ OKR 문서는 Obsidian vault `wiki/processes/okr/`에 저장된다. 절대 경�
 
 ### 작성 모드
 
-개인 OKR 초안 작성 시 아래 원칙을 따릅니다:
+개인 OKR 초안 작성 시 아래 원칙을 따른다:
 
 1. **팀 OKR에서 담당 항목 추출**: vault `wiki/processes/okr/{year}-q{N}-team-okr.md`에서 해당 팀원이 배정된 KR 항목을 식별
 2. **전분기 OKR·마감 노트 참조**: 해당 팀원의 전분기 개인 OKR + 스프린트 마감 노트(`wiki/processes/sprint/`)로 실적·이월 파악 — 전분기 실적 코멘트의 근거
@@ -161,7 +161,7 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/DEV2-A-12
 
 ## 스프린트 연계
 
-OKR 작성 시 스프린트 운영 문서도 참조합니다:
+OKR 작성 시 스프린트 운영 문서도 참조한다:
 - `docs/sprint/sprint-planning-overview.md` — 맨데이 배분 및 계획 업무 비율
 - `docs/sprint/story-point-guide.md` — SP 산정 기준
 - `docs/sprint/ticket-guide.md` — 티켓 작성 규칙

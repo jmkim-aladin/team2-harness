@@ -21,9 +21,9 @@
 
 운영 위키의 인덱스와 각 문서의 `Related Links` generated block을 먼저 본다.
 
-- `wiki/indexes/services.md`
-- `wiki/indexes/domains.md`
-- `wiki/indexes/graphify.md`
+- `wiki/services/services-index.md`
+- `wiki/processes/processes-index.md`
+- `wiki/wiki-index.md`
 
 ### 3. Graphify sidecar
 

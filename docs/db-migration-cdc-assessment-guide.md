@@ -14,10 +14,10 @@ Ralph Loop 또는 수동 분석으로 서비스 DB 리소스를 읽을 때, batc
 예시:
 
 ```text
-Obsidian vault `wiki/inventory/{service}-db-migration-cdc-candidates.md`
-wiki/contracts/stored-procedures/{service}/{sp}.md
-wiki/contracts/tables/{service}/{table}.md
-wiki/execution/{date}-{service}-cdc-assessment-pass.md
+Obsidian vault `wiki/services/{service}/analysis/db-migration-cdc-candidates.md`
+wiki/services/{service}/analysis/{sp}.md
+wiki/services/{service}/analysis/{table}.md
+wiki/services/{service}/analysis/{date}-cdc-assessment-pass.md
 databases/_cross-db/{external-source}/db_script/{database}/StoredProcedures/{sp}.sql
 ```
 
@@ -112,6 +112,6 @@ Ralph Loop로 {service} DB 이관/CDC 1차 진단을 같이 수행해줘.
 산출:
 - Obsidian vault `wiki/inventory/{service}-db-migration-cdc-candidates.md`
 - 필요 시 contract 문서의 DB Migration / CDC Assessment 섹션 갱신
-- wiki/execution/{date}-{service}-cdc-assessment-pass.md
+- wiki/services/{service}/analysis/{date}-cdc-assessment-pass.md
 - lint 결과와 Needs Review 큐
 ```

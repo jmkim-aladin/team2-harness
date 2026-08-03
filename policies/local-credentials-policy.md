@@ -34,7 +34,7 @@ GUI(키체인 접근.app)로 직접 등록하거나 CLI로:
 security add-generic-password \
   -s "sm-max-admin-dev-database-read" \
   -a "$(whoami)" \
-  -w '비밀번호'        # -w 뒤 공백 후 입력하면 history에 안 남는 셸도 있음. 가급적 빈 -w로 두고 프롬프트 입력.
+  -w '비밀번호'        # -w 뒤 공백 후 입력하면 history에 안 남는 셸도 있음. 빈 -w로 두고 프롬프트 입력.
 ```
 
 업데이트는 `-U` 플래그. **단일 따옴표로 감싸 셸 history 노출을 줄인다**. `set -o history` 비활성 셸에서만 직접 인자 입력.

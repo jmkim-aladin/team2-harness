@@ -7,7 +7,7 @@
 1. Discord는 작업 표면이지 원장이 아니다.
 2. 원장은 YouTrack, vault, team2 하네스다.
 3. Hermes decision board JSON은 역할 프로필에 나눠줄 작업 큐다.
-4. 사용자는 기본적으로 오케스트레이터에게만 지시한다.
+4. 사용자는 오케스트레이터에게만 지시한다.
 5. 역할 프로필은 사용자에게 직접 원자료를 던지지 않고, Decision Packet 또는 Evidence 형태로만 올린다.
 6. YouTrack, KB, git, DB write, 배포, `canonical` 승격은 사용자 승인 전 실행하지 않는다.
 7. Claude Code와 Codex는 같은 team2 `tools/`와 vault 파일 계약을 사용한다.
@@ -64,7 +64,7 @@ Orchestrator Decision Packet
 | `#agent-domain` | 야간 도메인 분석과 evidence gap |
 | `#agent-archive` | 완료된 Decision Packet, 승인 기록 보관 |
 
-사용자 멘션은 기본적으로 `#jm-orchestrator`에서만 발생시킨다. 역할별 채널은 agent 간 작업 로그와 evidence용이다.
+사용자 멘션은 `#jm-orchestrator`에서만 발생시킨다. 역할별 채널은 agent 간 작업 로그와 evidence용이다.
 
 ## Board Projection 생성
 

@@ -57,8 +57,8 @@ vault **내부** 결정 트리(어느 디렉터리에 둘지)는 vault 측 [`wik
 | 특정 티켓 산출물 (DEV2-* 등) | vault |
 | 도메인 가이드, 도메인 분석 | vault |
 | 운영·도메인 노트의 근거 이미지/PDF/HTML | vault 노트 리소스 |
-| 회의록 | vault `wiki/meetings/` |
-| OKR 본문 | vault `wiki/okr/` |
+| 회의록 | vault `wiki/processes/meetings/` |
+| OKR 본문 | vault `wiki/processes/okr/` |
 
 ## 정적 파일 리소스 경계
 
@@ -85,7 +85,7 @@ vault **내부** 결정 트리(어느 디렉터리에 둘지)는 vault 측 [`wik
 - 리뷰 기준 상세
 - 온보딩 가이드
 
-회의록은 KB가 아니라 **vault `wiki/meetings/`**에 둔다.
+회의록은 KB가 아니라 **vault `wiki/processes/meetings/`**에 둔다.
 
 ## YouTrack KB API 접근
 
@@ -115,7 +115,7 @@ vault **내부** 결정 트리(어느 디렉터리에 둘지)는 vault 측 [`wik
 repo와 vault의 경계 위반을 정기적으로 점검한다. 절차는 `.claude/commands/ad/harness-optimize.md` 참조.
 
 점검 신호:
-- repo `policies/`, `templates/`, `catalog/`, `.claude/`, `docs/sprint/`, `docs/superpowers/`, `docs/` 잔류 가이드 외 위치에 운영업무·도메인·회의·티켓 성격 문서 발견
+- repo `policies/`, `templates/`, `catalog/`, `.claude/`, `docs/sprint/`, `docs/` 잔류 가이드 외 위치에 운영업무·도메인·회의·티켓 성격 문서 발견
 - vault에 정책·템플릿·카탈로그·스킬 성격 문서 발견
 - 양쪽에 동일 제목/내용 중복
 
@@ -139,7 +139,7 @@ repo와 vault의 경계 위반을 정기적으로 점검한다. 절차는 `.clau
 |------|------|
 | 브라우저 조회 | `https://aladincommunication.youtrack.cloud/articles/{문서ID}` |
 | 스킬로 조회 | `/ad:team2-kb-read {문서ID}` |
-| 목록 조회 | `/ad:team2-kb-list` |
+| 목록 조회 | `/ad:team2-kb-read 목록` |
 
 ### KB 변경 시 하네스 동기화
 

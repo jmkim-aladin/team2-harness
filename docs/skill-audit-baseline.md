@@ -2,7 +2,7 @@
 
 기준: [policies/skill-authoring-principles.md](../policies/skill-authoring-principles.md) | 갱신: `/ad:harness-optimize 스킬` | 통계: `python3 tools/skill_usage_report.py`
 
-최종 감사일: 2026-07-16 (최초 베이스라인)
+최종 감사일: 2026-08-03 (2회차 — 문체 통일·퇴적물 제거 포함)
 
 ## 사용 통계 (2026-05-31 ~ 07-16, Claude + Codex 로그 통합)
 
@@ -25,8 +25,10 @@
 | harness-optimize | 0 | 0 | 0 | - | 유지 — 본 감사 루프 실행 주체 |
 | service-activity | 0 | 0 | 0 | - | 관찰 — 다음 감사까지 0이면 삭제/통합 제안 |
 | work-board | 0 | 0 | 0 | - | 관찰 — 동상 |
-| team2-kb-list | 0 | 0 | 0 | - | 관찰 — kb-read 통합 후보 |
-| team2-kb-sync | 0 | 0 | 0 | - | 관찰 — harness-optimize 동기화와 중복 후보 |
+| team2-kb-list | — | — | — | — | **삭제 (2026-08-03)** — kb-read `목록` 모드로 통합 |
+| team2-kb-sync | — | — | — | — | **삭제 (2026-08-03)** — harness-optimize Step 2로 매핑표 흡수 |
+| tldr | 0 | 0 | 0 | - | 유지 — 신규, 사용자 호출 전용 |
+| explain | 1 | 0 | 0 | 08-03 | 활성 |
 | weekly-planned | 0 | 0 | 0 | - | 관찰 — weekly-report 초안 모드와 기능 겹침 검토 |
 
 ## 트리거 분배 (체크리스트 1단계)
@@ -34,7 +36,7 @@
 | 분류 | 스킬 | 부하 |
 |------|------|------|
 | 이중 (slash + CLAUDE.md routing) 13개 | ticket, work-prep, weekly-report, weekly-planned, sprint-close-check, okr, team2-kb-read, harness-optimize, data-request, service-activity, capacity-plan, granola-sync, architecture-analysis | routing 줄 13개가 매 요청 컨텍스트 상주 |
-| 사용자 호출 전용 5개 | code-review, new-note, work-board, team2-kb-list, team2-kb-sync | 인지 부하만 |
+| 사용자 호출 전용 4개 | code-review, new-note, work-board, tldr | 인지 부하만 |
 
 관찰: 최다 사용 스킬(code-review, 70회 전부 사용자 호출)은 routing 없이도 문제 없음. 반면 routing 등록 13개 중 6개는 관측 기간 모델 호출 0회 — routing 줄의 컨텍스트 비용 대비 효과 재검토 대상.
 
@@ -99,3 +101,22 @@
 - [x] Codex 로그 교차 확인 결과 routing **전부 유지** 결정
   - weekly-report(Codex 16회)·granola-sync(Codex+cron) — 사용 확인됨
   - weekly-planned·service-activity·capacity-plan·architecture-analysis — 전 경로 0회이나 routing 라인당 비용 미미(~15-20토큰), NL 트리거 실효 있음(work-prep·ticket·okr 모델 호출 실적). 스킬 자체는 "관찰" 판정으로 다음 감사에서 재평가
+
+## 2회차 감사 (2026-08-03)
+
+### 적용 완료
+
+- [x] **자기모순 제거** — `ticket.md`의 "13점 금지 → 8점 이하 분할"이 같은 파일의 "SP 상한 3" 규칙과 충돌. 폐기된 8점/13점 규칙을 velocity-guide·velocity-okr-sprint-policy·sprint-closing-process(2곳)에서도 SP 상한 3으로 갱신
+- [x] **퇴적물 제거** — `docs/superpowers/` 14개 파일 7,014줄(2026-05-27 완료 plans/specs), `docs/sprint/2026-0X-*` 6개 1,017줄(회고·보고 산출물). 참조 0건 확인 후 삭제
+- [x] **0회 스킬 정리** — `team2-kb-list`·`team2-kb-sync` 삭제 + Codex alias 동반 삭제. 기능은 kb-read `목록` 모드와 harness-optimize Step 2로 흡수
+- [x] **중복 → SoT 링크** — 수용량 산정식 4중복(velocity-guide를 SoT로), 이월 코멘트 필수항목 3중복(plan-change-process), 설계·분석 SP표 2중복(story-point-guide §6), `ticket.md`의 ticket-guide 2-2/2-3/3-0/3-2/3-3 재기술
+- [x] **vault 경로 규약 단일화** — `/Users/user/` placeholder·하드코딩 혼재 → `$LOCAL_WIKI_PATH`. 환경변수 이름 드리프트 `TEAM2_WORKSPACE_ROOT` → `TEAM2_WORKSPACE_PATH`
+- [x] **vault taxonomy 반영** — 2026-05-27 이관(`wiki/contracts`·`inventory`·`domains`·`execution`·`indexes`·`tasks`·`templates`·`meetings`·`okr` 폐지) 미반영 참조 18곳 갱신
+- [x] **문체 통일** — 하십시오체 → 한다체 전면 적용(37개 파일). 규칙은 [wiki-document-language-and-title-policy.md](../policies/wiki-document-language-and-title-policy.md) §문체. 외부 커뮤니케이션 문구는 예외로 보존
+- [x] **CLAUDE.md 드리프트** — 없는 `docs/designs/` 참조 삭제, 스킬 목록 최신화(new-note·work-board 누락분 추가)
+
+### 다음 감사 이관
+
+- `.planning/` 249파일 12,124줄 — 활성 GSD 프로젝트(B2B SSIS 전환 53 phase). "무엇을 일하나" 성격이라 repo↔vault 경계상 vault 후보이나 GSD 도구가 repo 루트 고정 경로를 읽으므로 이동 불가. 프로젝트 종료 후 재판정
+- `wiki/processes/activity/` — `service-activity` 스킬 출력 경로가 vault taxonomy에 없음. 첫 실행 시 생성되므로 동작은 하나 분류 근거 없음
+- 0회 잔존: `architecture-analysis`·`weekly-planned`·`work-board`·`tldr`·`service-activity`·`capacity-plan`. 도구·cron 연동이 있어 유지, 3회차에서 재평가

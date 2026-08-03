@@ -92,13 +92,13 @@ maxapi는 `trace.aspnet.request`만 실질 수집되고 `trace.http.request`, `t
 | 영역 | 위젯 |
 |---|---|
 | application errors | 5xx app error candidates, 5xx by service/status/resource |
-| business/auth noise | `Aladin.Tobe.Core.TobeException: 로그인이 필요합니다.` 로그 확인 |
+| business/auth noise | `Aladin.Tobe.Core.TobeException: 로그인이 필요하다.` 로그 확인 |
 | 4xx noise | 403/404 등 4xx access/resource noise를 app error에서 제외하고 별도 표시 |
 | latency / endpoint | p95, p99, apdex, top resources by requests/errors |
 | DB/cache 영향 | sqlserver/postgresql/redis hits, errors, p95 latency, resource별 오류 |
 | drill-down | Logs Explorer/Trace Explorer query |
 
-투비는 `Aladin.Tobe.Core.TobeException: 로그인이 필요합니다.`가 HTTP 500으로 떨어질 수 있으나 실제 장애가 아닌 로그인 필요 business/auth noise로 본다. Datadog APM metric만으로 message 제외가 어려우므로, 투비 대시보드는 5xx를 application error candidate로 표시하고 해당 문자열 로그를 별도 noise 영역에서 확인한다.
+투비는 `Aladin.Tobe.Core.TobeException: 로그인이 필요하다.`가 HTTP 500으로 떨어질 수 있으나 실제 장애가 아닌 로그인 필요 business/auth noise로 본다. Datadog APM metric만으로 message 제외가 어려우므로, 투비 대시보드는 5xx를 application error candidate로 표시하고 해당 문자열 로그를 별도 noise 영역에서 확인한다.
 
 ### blog
 

@@ -180,7 +180,7 @@ python3 tools/audit_vault.py \
 
 ### 분류 룰
 
-spec `docs/superpowers/specs/2026-05-27-vault-audit-migration-plan-design.md` 참조.
+설계 근거는 git 이력의 `docs/superpowers/specs/2026-05-27-vault-audit-migration-plan-design.md` 참조 (2026-08 하네스 정리 시 제거).
 
 요약:
 - service prefix(`tobe-`, `web-aladin-`, `max-`, `aasm-`, `shopping-`, `caravan-`, `naru-`, `bazaar-`, `storefront-`, `b2b-store-`, `blog-`, `bookple-`) → 해당 서비스 dir

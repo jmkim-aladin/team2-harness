@@ -41,7 +41,7 @@ templates/ 자체는 lint 예외 (스켈레톤 placeholder 포함).
 ### CLI (수동)
 
 ```bash
-cp "$VAULT/wiki/templates/{type}.md" "$VAULT/wiki/.../target.md"
+cp "$TEAM2_HARNESS_PATH/templates/vault-notes/{type}.md" "$LOCAL_WIKI_PATH/wiki/.../target.md"
 # 그 다음 placeholder 채움
 ```
 

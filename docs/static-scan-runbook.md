@@ -117,7 +117,7 @@ if($e){ $e | ForEach-Object { "line $($_.Extent.StartLineNumber): $($_.Message)"
 워크스페이스 경로가 `%USERPROFILE%\Documents\workspace`와 다르면:
 
 ```powershell
-$env:TEAM2_WORKSPACE_ROOT = 'D:\workspace'
+$env:TEAM2_WORKSPACE_PATH = 'D:\workspace'
 ```
 
 ## 실행
@@ -261,7 +261,7 @@ macOS `.sh`에는 없고 Windows PowerShell 판에만 있는 문제들이다. �
 | `-FortifyOnly`로 돌리면 Fortify C# 번역 0건 | 도구 탐지가 `$needSonar` 블록 안에만 있어 `$MsBuildExe`가 `$null` → `sourceanalyzer`가 솔루션·스위치를 '번역할 파일'로 취급 (FPR에 `[101] File t:Rebuild not found`) | MSBuild·nuget 탐지를 `$needSonar` 밖으로 이동. `$MsBuildExe`가 없으면 즉시 FAIL |
 | `.cs` 0건 번역, FPR에 `[1103] Translator execution failed` | Fortify `dotnet-translator`가 net10.0 대상인데 .NET 10 런타임 부재 | .NET 10 런타임 설치 (위 사전 조건 표) |
 | scan 단계 `[error]: No rules files found` | 룰팩 미설치 | 룰팩 복사 (위 사전 조건 표) |
-| `Web.Debug.config 파일을 찾을 수 없습니다` 로 빌드 실패 | `max-api`·`tobe`에 `Web.Debug.config`가 없는데 MSBuild 기본값이 `Configuration=Debug`라 `TransformWebConfig` 타겟이 실행됨. **`/p:TransformWebConfigEnabled=false`로는 회피되지 않는다(실측 반증)** | `/p:Configuration=Release` 지정. 두 repo 모두 `Web.Release.config`가 있다 |
+| `Web.Debug.config 파일을 찾을 수 없다` 로 빌드 실패 | `max-api`·`tobe`에 `Web.Debug.config`가 없는데 MSBuild 기본값이 `Configuration=Debug`라 `TransformWebConfig` 타겟이 실행됨. **`/p:TransformWebConfigEnabled=false`로는 회피되지 않는다(실측 반증)** | `/p:Configuration=Release` 지정. 두 repo 모두 `Web.Release.config`가 있다 |
 | Fortify 번역 파일 수가 0 또는 예상보다 훨씬 적음 (빌드 통합 모드) | Fortify 빌드 통합 번역은 **실제로 컴파일되는 파일만** 잡는다. 증분 빌드면 번역 대상이 없다 | `/t:Rebuild` 유지. NuGet 복원도 선행돼야 한다 |
 | 백그라운드로 띄운 러너가 CPU 0%로 무한 대기 | 부모 셸이 먼저 종료되어 자식이 상속한 출력 핸들에 쓰다가 블록 | 포그라운드 실행, 또는 `Start-Process -RedirectStandardOutput`으로 부모와 분리(파일 핸들은 파이프처럼 차지 않는다) |
 | **콘솔 없는 분리 프로세스에서 SonarQube 단계가 조용히 죽는다** (로그 5바이트, 오류 메시지 없음, 예외도 없음) | `dotnet-sonarscanner`·`SonarScanner.MSBuild`는 `Start-Process -WindowStyle Hidden` 처럼 콘솔이 없는 환경에서 실패한다. Fortify(`sourceanalyzer`)는 영향 없다. 실측 3회 재현 | **Sonar 단계는 포그라운드(실제 콘솔)에서 돌려라.** 장시간 Fortify만 분리 실행한다. 실무 조합: `-SonarOnly`를 포그라운드로, `-FortifyOnly`를 `Start-Process`로 |

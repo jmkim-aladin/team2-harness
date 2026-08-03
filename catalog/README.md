@@ -1,6 +1,6 @@
 # 서비스 카탈로그
 
-개발 2팀이 관리하는 서비스 인벤토리입니다.
+개발 2팀이 관리하는 서비스 인벤토리이다.
 
 팀이 직접 소유하거나 주도하는 서비스는 `catalog/{service_id}.yaml`에 둔다. 여러 팀/서비스가 함께 쓰는 공통 서비스는 팀 서비스 프로파일과 섞지 않고 [`catalog/common-services/registry.yaml`](common-services/registry.yaml)에 둔다. 공통 서비스 영향 확인 기준은 [공통 서비스 정책](../policies/common-service-policy.md)을 따른다.
 

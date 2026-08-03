@@ -10,7 +10,7 @@
 - `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, AGENTS.md, gstack 오버라이드, mermaid)
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, storefront, caravan, pod, shopping, blog) 및 `catalog/common-services/registry.yaml` 공통 서비스 registry
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
-- `.Codex/commands/ad/` — 팀 스킬 (ticket, code-review, kb-read, kb-list, kb-sync, okr, weekly-report, harness-optimize)
+- `.codex/skills/ad-*/` — 팀 스킬 (ticket, work-prep, code-review, kb-read, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan, granola-sync, architecture-analysis, new-note, work-board, tldr, explain)
 - `scripts/setup.sh` — 원커맨드 셋업
 - `docs/` — 가이드 문서
 - `docs/designs/` — 설계 문서 (스토어프론트 플랫폼 방향, 테넌트 모델, 인증, 스코프 등)
@@ -93,8 +93,6 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 - `$ad-sprint-close-check` → `/ad:sprint-close-check`
 - `$ad-okr` → `/ad:okr`
 - `$ad-team2-kb-read` → `/ad:team2-kb-read`
-- `$ad-team2-kb-list` → `/ad:team2-kb-list`
-- `$ad-team2-kb-sync` → `/ad:team2-kb-sync`
 - `$ad-harness-optimize` → `/ad:harness-optimize`
 - `$ad-data-request` → `/ad:data-request`
 - `$ad-service-activity` → `/ad:service-activity`
@@ -112,7 +110,7 @@ Codex에서는 아래 `/ad:*` 명령을 같은 의미의 `$ad-*` 스킬 alias로
 - 주간 계획 스냅샷: `/ad:weekly-planned`
 - 스프린트 마감 자가점검: `/ad:sprint-close-check`
 - OKR 조회/작성: `/ad:okr`
-- KB 조회/목록/동기화: `/ad:team2-kb-read`, `/ad:team2-kb-list`, `/ad:team2-kb-sync`
+- KB 조회/목록: `/ad:team2-kb-read` (`목록` 인자로 트리). KB→하네스 동기화: `/ad:harness-optimize 동기화`
 - 하네스 최적화, repo↔vault 경계 점검: `/ad:harness-optimize`
 - 데이터 추출 요청, SQL 등록: `/ad:data-request`
 - 서비스별 작업 활동 조회: `/ad:service-activity`

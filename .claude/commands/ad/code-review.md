@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # GitHub PR 코드 리뷰
 
-팀 하네스 기준에 따라 GitHub PR을 리뷰하고 pending review로 코멘트를 게시합니다.
+팀 하네스 기준에 따라 GitHub PR을 리뷰하고 pending review로 코멘트를 게시한다.
 
 ## 검증 순서
 
@@ -94,7 +94,7 @@ gh pr diff {N} --repo {owner}/{repo}
 
 ### 2. 팀 하네스 기준 리뷰
 
-PR을 아래 기준으로 리뷰합니다. `policies/code-review-policy.md` 참조.
+PR을 아래 기준으로 리뷰한다. `policies/code-review-policy.md` 참조.
 
 #### 리뷰 제외 항목 (지적 금지)
 - **티켓 ID 불일치**: PR/브랜치의 feature ID와 커밋의 task ID가 다른 것은 정상. 팀 관행에 따른 것이므로 지적하지 않는다.
@@ -171,7 +171,7 @@ GitHub에 게시하는 코멘트/리뷰 본문에는 로컬 하네스 내부 정
 
 ### 5. 사용자 승인 후 게시
 
-반드시 사용자 확인 후에만 게시합니다.
+반드시 사용자 확인 후에만 게시한다.
 
 **중요: `gh api -f 'comments[][...]'` 반복 브래킷 폼 인코딩은 금지.**
 GitHub API가 `side` 필드를 인식 못 하거나 배열 인덱스를 잘못 매핑해 422 에러가 난다.

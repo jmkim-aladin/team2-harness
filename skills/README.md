@@ -38,8 +38,6 @@
 | 스킬 | 설명 | 인증 | 상태 |
 |------|------|------|------|
 | `ad:team2-kb-read` | YouTrack KB 문서 조회/검색 | YouTrack | 구현됨 |
-| `ad:team2-kb-list` | YouTrack KB 문서 트리 조회 | YouTrack | 구현됨 |
-| `ad:team2-kb-sync` | KB 변경 시 하네스 정책 동기화 | YouTrack | 구현됨 |
 | `ad:team2-onboard` | 신규 서비스 하네스 생성 (템플릿 적용) | - | 미구현 |
 | `ad:team2-catalog` | 서비스 카탈로그 조회/갱신 | - | 미구현 |
 | `ad:team2-harness-check` | 서비스 하네스 완성도 점검 | - | 미구현 |

@@ -1,6 +1,6 @@
 # 주간 계획 스냅샷 작성
 
-YouTrack `{YYMM}-planned` 태그 + 담당자 조건으로 Epic→Feature→Task 트리를 만들고, 옵시디언 운영 위키 `wiki/processes/meetings/YYYY-MM-DD-wWW.md`에 주간 진행 현황 스냅샷을 저장합니다.
+YouTrack `{YYMM}-planned` 태그 + 담당자 조건으로 Epic→Feature→Task 트리를 만들고, 옵시디언 운영 위키 `wiki/processes/meetings/YYYY-MM-DD-wWW.md`에 주간 진행 현황 스냅샷을 저장한다.
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 
@@ -26,7 +26,7 @@ YouTrack `{YYMM}-planned` 태그 + 담당자 조건으로 Epic→Feature→Task 
 
 ## 저장 위치
 
-- 옵시디언 운영 위키 절대 경로: `/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`
+- 옵시디언 운영 위키 루트: `$LOCAL_WIKI_PATH` (기본 `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`)
 - 파일 경로: `wiki/processes/meetings/YYYY-MM-DD-wWW.md` (예: `wiki/processes/meetings/2026-05-12-w20.md`)
 - 날짜: 오늘(`date +%Y-%m-%d`), 주차: ISO week number (`date +%V`)
 - 이미 파일이 있으면 본문만 갱신, frontmatter는 유지 (`updated_at`만 갱신)
@@ -153,7 +153,7 @@ YouTrack 검색 API는 Due Date/Start date 커스텀 필드를 일관되게 반�
 
 ### 6. 파일 저장
 
-1. 옵시디언 위키 경로 계산: `/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/meetings/{date}-w{week}.md`
+1. 옵시디언 위키 경로 계산: `$LOCAL_WIKI_PATH/wiki/processes/meetings/{date}-w{week}.md`
 2. 파일 존재 여부 확인
    - 존재 → frontmatter는 보존하고 본문만 덮어씀, `updated_at`만 오늘 날짜로 갱신
    - 미존재 → frontmatter 포함 신규 생성

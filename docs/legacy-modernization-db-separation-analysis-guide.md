@@ -22,7 +22,7 @@
 | 판단 기준, 정책, 템플릿 | 팀 하네스 `docs/`, `policies/`, `templates/` |
 | 서비스별 분석 결과 | 로컬 Obsidian 운영 지식 위키 |
 | SP/API/Table contract | 로컬 Obsidian 운영 지식 위키 |
-| 실행 기록과 평가 결과 | 로컬 Obsidian 운영 지식 위키 `wiki/execution/` |
+| 실행 기록과 평가 결과 | 로컬 Obsidian 운영 지식 위키 `wiki/services/{service}/analysis/` |
 | 분석 중 필요한 외부 DB script mirror | 대상 db-script repo의 cross-db 영역. 예: `databases/_cross-db/{external-source}/db_script/` |
 | YouTrack KB/Issue 반영 | 사용자 승인 후에만 수행 |
 

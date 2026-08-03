@@ -1,6 +1,6 @@
 # 주간업무 보고서 작성
 
-YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를 조회·업데이트합니다.
+YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를 조회·업데이트한다.
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 
@@ -265,7 +265,7 @@ Feature는 총 기간 1주일 이내가 필수 규칙 (`docs/sprint/ticket-guide
 주간보고 동기화/업데이트 시 아래 검증을 수행:
 
 - **진행중 Feature의 시작일이 7일 이상 경과**: `⚠️ 기간 초과` 경고 표시
-- **경고 시 안내**: "Feature `{티켓ID}`가 {N}일째 진행 중입니다. 1주일 규칙 초과. 분할 또는 지연 사유 기재가 필요합니다."
+- **경고 시 안내**: "Feature `{티켓ID}`가 {N}일째 진행 중이다. 1주일 규칙 초과. 분할 또는 지연 사유 기재가 필요하다."
 - **지연 처리**: 보고서에 `- 지연` 표시 + 지연 사유 작성 유도
 
 ## 주의사항

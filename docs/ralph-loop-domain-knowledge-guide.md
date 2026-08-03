@@ -20,14 +20,14 @@
 로컬 Obsidian vault:
 
 ```text
-/Users/user/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2
+$LOCAL_WIKI_PATH
 ```
 
 ## 문서 언어와 제목
 
 Ralph Loop 산출물은 [wiki-document-language-and-title-policy.md](../policies/wiki-document-language-and-title-policy.md)를 따른다.
 
-- 파일명은 vault `wiki/domains/tobe-{domain}.md`, vault `wiki/inventory/web-aladin-{topic}.md`처럼 `service_id` 접두어와 `kebab-case.md`를 유지한다.
+- 파일명은 vault `wiki/services/tobe/domains/{domain}.md`, vault `wiki/services/{service}/analysis/{topic}.md`처럼 `service_id` 접두어와 `kebab-case.md`를 유지한다.
 - H1 제목과 `title` frontmatter는 `투비 ...`, `알라딘 웹 ...`처럼 한글 서비스 표시명으로 시작한다.
 - `Tobe SP Inventory`, `Web-Aladin Raw SQL Write Boundary`처럼 영어만 있는 제목은 새 산출물에 사용하지 않는다.
 - 공통 Queue/Register/Index도 `운영 위키 발견 큐`, `운영 위키 조치 등록부`처럼 한국어 범위 접두어를 둔다.
@@ -60,9 +60,9 @@ Ralph Loop를 사용해서 {서비스}의 {도메인명} 도메인 지식을 고
 - 장애 Querybook과 운영 판단 기준까지 포함한다
 
 산출물:
-- 로컬 Obsidian wiki/domains/{service}-{domain}.md
+- 로컬 Obsidian wiki/services/{service}/domains/{domain}.md
 - 필요 시 로컬 Obsidian wiki/guides/{service}-{domain}-querybook.md
-- 필요 시 로컬 Obsidian wiki/execution/{date}-{service}-modernization-db-separation-review.md
+- 필요 시 로컬 Obsidian wiki/services/{service}/analysis/{date}-modernization-db-separation-review.md
 - graph/generated 또는 discovery/action queue 갱신
 - 마지막에 lint 결과와 남은 미해결 큐 보고
 ```
@@ -113,7 +113,7 @@ pass:
 - wiki-sync-pass
 
 산출:
-- 로컬 Obsidian `wiki/domains/tobe-{domain}.md`
+- 로컬 Obsidian `wiki/services/tobe/domains/{domain}.md`
 - 필요한 경우 `wiki/guides/tobe-{domain}-querybook.md`
 - Needs Review와 Action Register 갱신
 ```
