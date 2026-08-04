@@ -21,6 +21,7 @@
 
 ## 운영 모니터링
 
+- Datadog 조직/API 접근 기준 (비민감): [`datadog.yaml`](datadog.yaml) — 키 취급 규칙은 [`policies/datadog-api-policy.md`](../policies/datadog-api-policy.md)
 - IDC DB 이전 Datadog 서비스 매핑: [`datadog-idc-db-monitoring.yaml`](datadog-idc-db-monitoring.yaml)
 - IDC DB 이전 Datadog 대시보드 구성: [`docs/datadog-idc-db-monitoring-dashboard.md`](../docs/datadog-idc-db-monitoring-dashboard.md)
 

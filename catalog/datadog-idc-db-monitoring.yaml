@@ -1,4 +1,5 @@
 # Datadog IDC DB 이전 모니터링 서비스 매핑
+# 조직/API 접근 기준은 catalog/datadog.yaml, 키 취급 규칙은 policies/datadog-api-policy.md
 
 monitoring_id: idc-db-migration
 tool: datadog

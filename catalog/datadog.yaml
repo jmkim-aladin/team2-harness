@@ -1,0 +1,52 @@
+# Datadog 조직/API 접근 기준 (비민감 정보만)
+
+tool_id: datadog
+purpose: "개발2팀이 Datadog API를 호출할 때 필요한 비민감 접근 정보(site, endpoint, 자격증명 참조명)"
+
+# 키 값은 이 파일에 절대 넣지 않는다. 취급 규칙: policies/datadog-api-policy.md
+site:
+  id: US1
+  web_host: app.datadoghq.com
+  api_base: https://api.datadoghq.com
+  note: "기존 팀 대시보드 URL이 app.datadoghq.com이므로 US1. AP1/EU로 옮기면 api_base도 함께 갱신한다."
+
+org:
+  name: TBD
+  note: "Datadog UI > Organization Settings의 조직명. 확인 후 채운다."
+
+# 실제 비밀값은 macOS Keychain에만 둔다 (policies/local-credentials-policy.md 컨벤션)
+credentials:
+  api_key:
+    keychain_service: team2-datadog-api-key
+    keychain_account: "{본인 이메일}"
+    header: DD-API-KEY
+    key_id: TBD
+    key_id_note: "Datadog UI가 보여주는 Key ID(UUID). 키를 식별할 뿐 접근 권한이 없어 비민감으로 본다. revoke/회전 시 대상 특정용."
+    scope_note: "org 단위. 단독으로는 intake(메트릭/로그/이벤트 전송)와 /api/v1/validate만 가능. 읽기 API는 app_key 필수."
+  app_key:
+    keychain_service: team2-datadog-app-key
+    keychain_account: "{본인 이메일}"
+    header: DD-APPLICATION-KEY
+    status: "미발급"
+    scope_note: "발급자 개인 권한에 종속. 대시보드 조회·생성·수정, 메트릭/로그 조회에 필수."
+    scopes:
+      read:
+        - dashboards_read
+        - monitors_read
+        - metrics_read
+        - timeseries_query
+        - logs_read_data
+        - apm_read
+      write:
+        - dashboards_write
+    scopes_note: "scope 이름은 Datadog UI(Personal Settings > Application Keys)에서 최종 확인. dashboards_write는 삭제 권한을 포함하므로 DELETE 호출 금지를 policies/datadog-api-policy.md에서 규칙으로 강제한다. monitors_write는 부여하지 않는다."
+
+related:
+  - path: policies/datadog-api-policy.md
+    role: "키 취급·호출·금지 규칙"
+  - path: catalog/datadog-idc-db-monitoring.yaml
+    role: "IDC DB 이관 이벤트 전용 대시보드/service tag 매핑"
+  - path: docs/datadog-idc-db-monitoring-dashboard.md
+    role: "대시보드 구성 문서"
+  - path: policies/local-credentials-policy.md
+    role: "Keychain 등록/조회 표준"
