@@ -86,6 +86,7 @@ evidence_level: E0 | E1 | E2 | E3 | E4 | E5
 | `daily` | 그날의 `related_tickets`, `related_meetings` |
 | `weekly-report` | 주간 `related_tickets`, `related_services`, `related_okrs` |
 | `analysis` / `decision` / `proposal` | `service_id`, `related_tickets`, `related_domains` |
+| 위 3개 중 `wiki/services/` 밖 문서 | 소유 서비스가 없으므로 `service_id` 대신 `related_services` 허용. 여러 서비스를 걸치는 분석은 `wiki/projects/` 하위에 둔다 |
 | `project` | `related_services`, `related_tickets`, `related_okrs` |
 
 ## 자동 보강 규칙

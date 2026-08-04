@@ -86,8 +86,10 @@ TYPE_RULES: dict[str, dict] = {
         "filename": r"^[a-z0-9-]+\.md$",
     },
     "analysis": {
+        # 단일 서비스 분석은 wiki/services/{svc}/analysis/.
+        # 여러 서비스를 걸치는 분석은 소유 서비스가 없으므로 wiki/projects/ 하위 허용.
         "required": ["service_id"],
-        "location": r"^wiki/services/[a-z0-9-]+/analysis/",
+        "location": r"(^wiki/services/[a-z0-9-]+/analysis/|^wiki/projects/)",
         "filename": r"^[a-z0-9-]+\.md$",
     },
     "decision": {
@@ -157,6 +159,12 @@ PREFIX_EXEMPT = re.compile(r"^storefront-ddd-")
 
 SIZE_WARN_LINES = 500
 
+# `service_id`는 wiki/services/ 소속 문서에서만 강제한다. 그 밖(예: wiki/projects/ 하위
+# cross-service 분석)은 단일 소유 서비스가 없으므로 `related_services`로 대체 가능.
+# 대체를 허용해도 서비스 그래프 연결은 유지된다 — 필드를 그냥 빼주는 게 아니다.
+SERVICE_ID_SCOPED = re.compile(r"^wiki/services/")
+SERVICE_ID_ALT = "related_services"
+
 # advisory 태그. 이 문자열을 포함한 violation은 경고로 분류 — exit code에 영향 없음.
 WARN_TAG = "WARN —"
 
@@ -168,7 +176,8 @@ def parse_frontmatter(text: str) -> dict[str, str] | None:
     if end < 0:
         return None
     fm: dict[str, str] = {}
-    for line in text[4:end].splitlines():
+    lines = text[4:end].splitlines()
+    for i, line in enumerate(lines):
         if line[:1].isspace():
             continue
         line = line.rstrip()
@@ -179,8 +188,16 @@ def parse_frontmatter(text: str) -> dict[str, str] | None:
         k, _, v = line.partition(":")
         k = k.strip()
         v = v.strip().strip('"').strip("'")
-        if k and v != "":
-            fm[k] = v
+        if not k:
+            continue
+        if v == "":
+            # `key:` 다음 줄이 들여쓰기거나 `-` 로 시작하면 YAML 블록 리스트/맵 —
+            # 값이 있는 필드로 취급한다. 이게 없으면 리스트형 필드는 존재 검사에서 항상 누락 처리됨.
+            nxt = lines[i + 1] if i + 1 < len(lines) else ""
+            if nxt[:1].isspace() or nxt.startswith("-"):
+                fm[k] = "<block>"
+            continue
+        fm[k] = v
     return fm
 
 
@@ -207,10 +224,19 @@ def lint_file(rel: str, abs_path: Path) -> list[str]:
 
     # 1b. type별 필수 필드
     for field in rules["required"]:
-        if field not in fm:
+        if field in fm:
+            continue
+        if field == "service_id" and not SERVICE_ID_SCOPED.match(rel):
+            if SERVICE_ID_ALT in fm:
+                continue
             violations.append(
-                f"{rel}: type=`{t}` 필수 필드 `{field}` 누락"
+                f"{rel}: type=`{t}` — wiki/services/ 밖 문서는 "
+                f"`service_id` 또는 `{SERVICE_ID_ALT}` 중 하나 필수"
             )
+            continue
+        violations.append(
+            f"{rel}: type=`{t}` 필수 필드 `{field}` 누락"
+        )
 
     # 2. 위치
     if not re.search(rules["location"], rel):
