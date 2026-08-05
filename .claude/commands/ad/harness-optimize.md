@@ -3,6 +3,7 @@
 하네스 문서의 최신화, 중복 제거, YouTrack KB 동기화를 수행한다.
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+> 유지보수 규칙(주기·권한·기록·SoT 등록부): [policies/harness-governance-policy.md](../../../policies/harness-governance-policy.md)
 
 ## 사용법
 
@@ -16,23 +17,9 @@
 /ad:harness-optimize 제약               # 지시 강도·과잉제약 감사
 ```
 
-## 문서 구조 및 Source of Truth
+## Source of Truth
 
-### 역할별 단일 책임 원칙
-
-각 주제는 **하나의 source of truth**만 가진다. 다른 파일에서는 **링크로 참조**한다.
-
-| 주제 | Source of Truth | 참조하는 파일들 |
-|------|----------------|----------------|
-| **5W1H 작성법** | `docs/sprint/ticket-guide.md` 3항 | `.claude/commands/ad/ticket.md`, `templates/ticket-templates/`, `youtrack/ticket-guide.md` |
-| **스토리 포인트** | `docs/sprint/story-point-guide.md` | `.claude/commands/ad/ticket.md`, `docs/sprint/sprint-planning-overview.md` |
-| **이월 절차** | `docs/sprint/plan-change-process.md` | `docs/sprint/ticket-guide.md` 7항 (요약+링크만) |
-| **맨데이 배분** | `docs/sprint/sprint-planning-overview.md` | - |
-| **전사 상태 플로우** | `youtrack/ticket-guide.md` | `docs/sprint/ticket-guide.md` 8항 (링크만) |
-| **OKR (팀/개인)** | Obsidian vault `wiki/processes/okr/` | `.claude/commands/ad/okr.md` |
-| **서비스 프로파일** | `catalog/*.yaml` | `.claude/commands/ad/ticket.md` |
-| **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/capacity-plan.md`, `.claude/commands/ad/sprint-close-check.md`, `.claude/commands/ad/weekly-planned.md` |
-| **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만) |
+주제별 SoT 등록부는 [policies/harness-governance-policy.md](../../../policies/harness-governance-policy.md) §Source of Truth 등록부 — 감사(Step 1·3)의 기준표로 사용한다.
 
 ## 실행 지침
 
@@ -98,13 +85,7 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-312
 
 ### Step 3: 중복 제거 및 정리
 
-감사에서 발견된 중복을 제거한다.
-
-**중복 제거 원칙:**
-1. Source of truth 파일의 내용은 유지
-2. 참조 파일에서는 본문 삭제 → `참조: [문서명](경로)` 링크로 교체
-3. 요약이 필요한 경우 3줄 이내 핵심만 남기고 "상세는 [문서명] 참조" 추가
-4. 스킬 파일(`.claude/commands/ad/`)은 실행에 필요한 최소 정보만 유지
+감사에서 발견된 중복을 제거한다. 원칙: [harness-governance-policy.md](../../../policies/harness-governance-policy.md) §변경 통제 (SoT 유지 / 참조는 링크 교체 / 요약 3줄 이내 / 스킬은 실행 최소 정보만).
 
 ### Step 4: 결과 보고
 
@@ -155,7 +136,7 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-312
    - 캐시(환경이 SoT인 사실의 재기술), 근거 없는 도구·명령·개수·순서 고정
 3. 발견별로 위치·원문·추론 의도·권장 조치(유지 / 완화 / 제거 / 도구화 / 근거 부착)·보존되는 불변조건을 제시한다
 4. 재제안 방지: [docs/skill-audit-baseline.md](../../../docs/skill-audit-baseline.md)의 기존 판정·기각 기록과 대조한다
-5. 적용은 삭제 테스트(재표현 전후 해당 스킬 1회 실행 비교) 후 PR로. **강도 하향(반드시→기본)과 invariant/policy 등급 변경은 review-required** — 사용자 판정 없이 반영하지 않는다
+5. 적용은 삭제 테스트(재표현 전후 해당 스킬 1회 실행 비교) 후 PR로. 강도 하향·등급 변경은 review-required — 기준·권한: [harness-governance-policy.md](../../../policies/harness-governance-policy.md)
 
 ## repo↔vault 드리프트 점검
 
