@@ -142,7 +142,7 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
   "$BASE/api/articles/{weekArticleId}?fields=idReadable,summary,content,updated"
 ```
 
-**API 응답 주의** (실측 확인 사항):
+**API 응답 주의** (근거: 2026-07-29 실측 — 실패 사례 기반, 완화 대상 아님):
 
 - `customFields`의 `Assignee.value`는 `name`(표시명)과 `login`이 함께 온다. 담당자 필터는 **`login`**으로 비교한다. `name`으로 비교하면 dev 필터가 전부 탈락해 신규 항목 탐색이 빈 결과를 낸다.
 - `activities`의 `field.name`은 **로컬라이즈되어 `상태`로 온다**. 착수일 판정은 `field.name in ("State", "상태")` 둘 다 허용해야 한다.

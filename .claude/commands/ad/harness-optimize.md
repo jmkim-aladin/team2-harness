@@ -13,6 +13,7 @@
 /ad:harness-optimize 스프린트            # 스프린트 관련 문서만 최적화
 /ad:harness-optimize okr               # OKR 문서만 최적화
 /ad:harness-optimize 스킬               # 스킬 사용 통계 + 작성 원칙 감사
+/ad:harness-optimize 제약               # 지시 강도·과잉제약 감사
 ```
 
 ## 문서 구조 및 Source of Truth
@@ -34,6 +35,8 @@
 | **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만) |
 
 ## 실행 지침
+
+Step 순서는 기본 접근이다 — 상황에 따라 순서 조정·병렬 수행 가능하며, 판정 기준은 각 Step의 완료(감사 결과 확보 → 동기화 diff 확인 → 중복 제거 → 보고)다.
 
 ### Step 1: 중복·불일치 감사
 
@@ -140,9 +143,23 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-312
    alias 누락·내용 복제(얇은 alias 위반)·깨진 SoT 참조를 surface한다
 5. **판정 보고**: 0회 스킬은 삭제/통합/유지(사유 필수) 중 하나로 사용자에게 제안. 삭제는 사용자 확인 후
 
+## 제약 감사 (제약 모드)
+
+기준: [policies/instruction-precedence-policy.md](../../../policies/instruction-precedence-policy.md)의 4등급·표기 규약.
+
+1. 대상 문서(정책·스킬·템플릿)의 지시문을 invariant / policy / heuristic / example로 분류한다
+2. 다음을 후보로 surface한다:
+   - "반드시/필수/금지"로 표기된 heuristic (강등 후보)
+   - 의도(왜) 미기재 규칙
+   - `근거:` 없는 실패-사례성 하드 게이트
+   - 캐시(환경이 SoT인 사실의 재기술), 근거 없는 도구·명령·개수·순서 고정
+3. 발견별로 위치·원문·추론 의도·권장 조치(유지 / 완화 / 제거 / 도구화 / 근거 부착)·보존되는 불변조건을 제시한다
+4. 재제안 방지: [docs/skill-audit-baseline.md](../../../docs/skill-audit-baseline.md)의 기존 판정·기각 기록과 대조한다
+5. 적용은 삭제 테스트(재표현 전후 해당 스킬 1회 실행 비교) 후 PR로. **강도 하향(반드시→기본)과 invariant/policy 등급 변경은 review-required** — 사용자 판정 없이 반영하지 않는다
+
 ## repo↔vault 드리프트 점검
 
-새 항목이 잘못된 저장소에 들어갔는지 정기 점검한다.
+새 항목이 잘못된 저장소에 들어갔는지 정기 점검한다. 아래 명령들은 예시다 — 목표는 성격이 위치와 어긋난 파일을 surface하는 것이고, 탐색 방법은 상황에 맞게 조정 가능하다.
 
 ### repo에서 vault 성격 파일 surface
 
