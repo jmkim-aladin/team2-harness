@@ -127,7 +127,7 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-312
 
 ## 스킬 감사 (스킬 모드)
 
-기준: [policies/skill-authoring-principles.md](../../../policies/skill-authoring-principles.md) 체크리스트 4단계.
+기준: [policies/skill-authoring-principles.md](../../../policies/skill-authoring-principles.md) 체크리스트 5단계.
 
 1. **사용 통계**: `python3 tools/skill_usage_report.py --days 90` 실행
    - 주의: Claude Code 로그만 집계. Codex(`.codex/skills/*`)·Hermes cron(granola-sync 등) 사용은 안 잡힘 — 0회여도 즉시 삭제 판단 금지, 사용 경로 확인 후 판정

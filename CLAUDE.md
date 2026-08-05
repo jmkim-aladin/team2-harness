@@ -5,7 +5,7 @@
 
 ## 구조
 
-- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, AWS Secrets, 로컬 자격증명/Keychain, Datadog API, DB 이관/CDC, 위키 문서 언어/제목, 데이터 추출 요청, 스킬 작성)
+- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, AWS Secrets, 로컬 자격증명/Keychain, Datadog API, DB 이관/CDC, 위키 문서 언어/제목, 데이터 추출 요청, 스킬 작성, 지시 강도·우선순위)
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, storefront, caravan, pod, shopping, blog)
 - `catalog/common-services/registry.yaml` — 알라딘 인증, 뉴빌링 등 공통 서비스 영향 확인 registry
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
@@ -16,6 +16,7 @@
 
 ## 핵심 규칙
 
+- 지시 강도(invariant/policy/heuristic/example)·충돌 시 우선순위·판단 경계: [policies/instruction-precedence-policy.md](./policies/instruction-precedence-policy.md)
 - 브랜치: `feature/{이슈ID}` | 커밋: `[{이슈ID}] 작업 내용`
 - 예외: 개발2팀 하네스(`team2`) 자체 변경은 티켓 없이 `team2/{작업-slug}` 브랜치와 `[TEAM2] 작업 내용` 커밋을 사용할 수 있다
 - 모든 작업은 YouTrack 티켓(5W1H)에서 시작. 단, 개발2팀 하네스 자체 변경은 [브랜치 전략](./policies/branching-strategy.md)의 하네스 예외를 따른다
