@@ -19,7 +19,7 @@ gstack 스킬 사용 시 팀 정책이 gstack 기본값보다 우선한다.
 - VERSION/CHANGELOG 커밋도 동일: `[{이슈ID}] 버전 범프 및 변경 로그 갱신`
 
 ### Co-Authored-By 삽입 금지
-- gstack 기본: 최종 커밋에 `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` 삽입
+- gstack 기본: 최종 커밋에 `Co-Authored-By: Claude {모델명} <noreply@anthropic.com>` 삽입 (모델명은 세션마다 다름)
 - **팀 규칙**: Co-Authored-By 관련 문구 일체 삽입 금지
 - `/ship`, `/land-and-deploy` 등 모든 커밋에서 제거
 

@@ -1,6 +1,6 @@
 # 하네스 지시문 리팩토링 계획 — 제약 메타 계층 도입
 
-> 상태: 제안 (2026-08-06, 감사 근거 확보). 실행은 Phase별 PR + 사용자 승인.
+> 상태: Phase 1·2 1차 적용 (2026-08-06, `team2/instruction-precedence`). Phase 2 잔여(DB/SP 승인 9곳·시크릿 3원칙 중복 통합)와 Phase 3은 미착수.
 > 입력: ① 제약 메타 계층 제안 (규칙을 intent/invariant/heuristic으로 분리), ② mattpocock/skills 설계 패턴 검토.
 > 근거 감사: 2026-08-06 전수 스캔 — policies 24 + 스킬 18 + docs/sprint 12 + templates 32.
 
