@@ -36,7 +36,7 @@ gstack 스킬 사용 시 팀 정책이 gstack 기본값보다 우선한다.
 
 ### DB/SP 변경 별도 승인
 - `/ship` PR에 DB/SP 변경이 포함된 경우 PR 본문에 명시
-- 영향 테이블, 입출력 계약, 롤백 스크립트, 스모크 테스트 시나리오 포함
+- 첨부물은 단계별 SoT를 따른다 — PR 단계: [code-review-policy.md](./code-review-policy.md), 배포 단계: [release-policy.md](./release-policy.md)
 
 ## 코드 리뷰 오버라이드
 

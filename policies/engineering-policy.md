@@ -36,7 +36,7 @@
   - `V` 접두사 + 타임스탬프 + 더블 언더스코어(`__`) + 이슈ID + 설명
 - 멱등성 보장: `IF EXISTS` / `IF NOT EXISTS` 로 반복 실행 안전하게 작성
 - `Tables/*.sql`은 자동 생성 참조용 — 직접 수정 금지, 변경은 반드시 `_migrations/`로
-- DB/SP 변경 PR은 별도 승인 + 롤백 스크립트 필수
+- DB/SP 변경 PR은 별도 승인 필수 — 첨부물 단계 기준: [code-review-policy.md](./code-review-policy.md)(PR)·[release-policy.md](./release-policy.md)(배포)
 
 ## 기술 스택 원칙
 
@@ -51,6 +51,16 @@
 - 신규 코드에서 SP 직접 호출 금지 — 반드시 legacy adapter를 통해 접근
 - SP 호출은 legacy adapter repo/service에서만 허용
 - 신규 서비스가 레거시 DB를 직접 조회/수정 금지 — adapter/facade 뒤로 숨김
+
+## ADR (아키텍처 결정 기록)
+
+서비스 repo `docs/adr/`에 기록한다. 다음 셋을 **모두** 충족할 때만 작성한다 — 하나라도 빠지면 ADR이 아니다:
+
+1. **되돌리기 어렵다** — 나중에 바꾸는 비용이 유의미
+2. **배경 없이는 의아하다** — 미래 독자가 "왜 이렇게 했지?"를 갖게 됨
+3. **실제 트레이드오프가 있었다** — 진짜 대안들 중 이유 있는 선택
+
+예: 공유 DB 제거·이벤트 전환, write owner 지정 = ADR / DTO 추가·메서드 리네임·라이브러리 마이너 선택 = ADR 아님.
 
 ## 서비스 소유권
 
