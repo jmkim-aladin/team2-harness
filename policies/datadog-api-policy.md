@@ -1,6 +1,6 @@
 # Datadog API 정책
 
-Datadog API 자격증명의 저장·사용·금지 규칙. 비민감 접근 정보(site, endpoint, 자격증명 참조명)는 [`catalog/datadog.yaml`](../catalog/datadog.yaml), Keychain 사용 표준은 [local-credentials-policy.md](./local-credentials-policy.md)를 따른다.
+Datadog API 자격증명의 저장·사용·금지 규칙. 비민감 접근 정보(site, endpoint, 자격증명 참조명)는 [`catalog/datadog.yaml`](../catalog/datadog.yaml), Keychain 사용 표준은 [local-credentials-policy.md](./local-credentials-policy.md), 공통 취급 원칙은 [security-policy.md](./security-policy.md) §취급 공통 원칙을 따른다.
 
 ## 민감/비민감 분리
 

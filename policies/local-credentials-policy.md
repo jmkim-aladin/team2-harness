@@ -4,6 +4,8 @@
 
 ## 범위
 
+공통 취급 원칙: [security-policy.md](./security-policy.md) §취급 공통 원칙.
+
 - 대상: 팀원 본인 개발 머신에 한정.
 - 저장 매체: macOS Keychain (login 키체인 권장). `~/.env`, 평문 파일, 프로젝트 디렉터리, vault, 하네스 저장 금지.
 - 보관 가능: dev/staging DB 비밀번호, dev 외부 API 키, 로컬 도구 토큰(YouTrack, GitHub, 사내 시스템 등).

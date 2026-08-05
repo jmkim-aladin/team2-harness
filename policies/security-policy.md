@@ -10,6 +10,14 @@
 - 환경별 시크릿은 GitHub Environments 또는 별도 시크릿 관리 시스템 사용
 - config(설정)은 공유 가능, secret(시크릿)은 로컬/환경별 분리
 
+### 취급 공통 원칙 (SoT — 모든 시크릿 정책에 적용)
+
+- 값은 로그·화면·리뷰 산출물·위키에 남기지 않는다 — 이름만 기록, 민감 필드는 마스킹
+- 평문 파일 대신 전용 저장소 사용 (운영: AWS Secrets Manager / 로컬: macOS Keychain)
+- 셸 전달은 프롬프트 입력 또는 환경변수로 — 인자 평문 전달은 `ps`·history에 노출된다. 사용 후 즉시 `unset`
+
+대상별 상세: [aws-secrets-convention.md](./aws-secrets-convention.md) · [local-credentials-policy.md](./local-credentials-policy.md) · [datadog-api-policy.md](./datadog-api-policy.md)
+
 ## 인증/권한
 
 - 공통 인증/권한/감사로그는 edge(API Gateway/BFF)에서 통일

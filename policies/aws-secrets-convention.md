@@ -273,6 +273,8 @@ Spring Boot `EnvironmentPostProcessor`로 앱 시작 전에 로딩:
 
 ### 보안 규칙
 
+공통 취급 원칙: [security-policy.md](./security-policy.md) §취급 공통 원칙.
+
 - 시크릿 값은 **절대 로그에 출력하지 않음** (이름만 로그)
 - 데이터 클래스 `toString()`에서 민감 필드 마스킹
 - 코드/문서에 실제 값 커밋 금지

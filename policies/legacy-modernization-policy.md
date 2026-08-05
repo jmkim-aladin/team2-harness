@@ -30,7 +30,7 @@ IDC DB 운영 안정화와 AWS 전환을 함께 고려하는 경우 [db-migratio
 ### SP 관련
 - 신규 코드에서 SP 직접 호출 금지
 - SP 호출은 legacy adapter repo/service에서만 허용
-- SP 변경 시 필수 첨부: 영향 테이블, 입출력 계약, 롤백 스크립트, 최소 재현 데이터셋, smoke test
+- SP 변경 첨부물은 단계별 SoT를 따른다 — PR 단계: [code-review-policy.md](./code-review-policy.md), 배포 단계: [release-policy.md](./release-policy.md)
 - SP를 없애는 프로젝트가 아니라 **SP가 퍼지는 걸 멈추는 프로젝트**부터 시작
 
 ### 추출 순서
