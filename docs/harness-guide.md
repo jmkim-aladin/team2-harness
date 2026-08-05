@@ -272,6 +272,14 @@ PR 생성 (체크리스트 포함)
 | 장애/위험 포인트 발견 | AGENTS.md 주의사항 |
 | 현대화 진행 상태 변경 | modernization-plan.md |
 
+## 팀 하네스 유지보수
+
+팀 하네스(이 repo) 자체의 감사 주기·판정 권한·기록 규칙은 [policies/harness-governance-policy.md](../policies/harness-governance-policy.md)가 SoT다. 요약:
+
+- 스프린트 마감 주간 1회 `/ad:harness-optimize` (`스킬`+`제약` 모드), 결과는 [skill-audit-baseline.md](./skill-audit-baseline.md)에 회차 기록
+- 실수 발생 시 즉시 보강 (ai-usage-policy §하네스 개선 루프)
+- 에이전트는 제안까지 — 강도 하향·등급 변경·스킬 삭제는 사람 판정
+
 ## 스킬 목록
 
 ### ad: (공통 업무)
