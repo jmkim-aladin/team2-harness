@@ -5,7 +5,7 @@
 
 ## 구조
 
-- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, AWS Secrets, 로컬 자격증명/Keychain, Datadog API, DB 이관/CDC, 위키 문서 언어/제목, 데이터 추출 요청, 스킬 작성, 지시 강도·우선순위, 하네스 거버넌스)
+- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, AWS Secrets, 로컬 자격증명/Keychain, Datadog API, DB 이관/CDC, 내부통신 도메인, 위키 문서 언어/제목, 데이터 추출 요청, 스킬 작성, 지시 강도·우선순위, 하네스 거버넌스)
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, storefront, caravan, pod, shopping, blog)
 - `catalog/common-services/registry.yaml` — 알라딘 인증, 뉴빌링 등 공통 서비스 영향 확인 registry
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
@@ -29,6 +29,7 @@
 - Feature 하위 Task는 개발 / 검증 / 배포·운영 반영으로 분리 — 판정 필수, 해당 시 별도 Task, 해당 없으면 Feature 본문에 사유 기재. 검증은 테스트(내부) / QA(시너지팀) / 테스트→QA 중 선택. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md) 2-2항
 - DB/SP 변경 별도 승인, 프로덕션 배포 사람 승인
 - 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지
+- 신규 앱 도메인: 내부 `{app}.internal.{service}[.{env}].aladin.co.kr` (Internal ALB) / 외부 `api.{service}[.{env}].aladin.co.kr/{app}` (API G/W, path strip). 앱 base-path·절대 URL·쿠키 인증 금지. 상세: [policies/internal-domain-policy.md](./policies/internal-domain-policy.md)
 - 운영 데이터 추출 SQL은 [`AladinCommunication/data-requests-dev2`](https://github.com/AladinCommunication/data-requests-dev2)에서 관리 (하네스 `docs/`에 신규 작성 금지). 상세: [policies/data-request-policy.md](./policies/data-request-policy.md)
 
 ## 서비스
