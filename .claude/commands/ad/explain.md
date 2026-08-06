@@ -77,6 +77,8 @@ python3 "$TEAM2_HARNESS_PATH/tools/render_explain_report.py" "$NOTE" "$HTML"
 
 frontmatter: `type: explain`, `title`, `mode`, `reader`, `subject`, `base`, `updated_at`, `summary`. `reader`가 없으면 렌더가 실패한다.
 
+이 표는 [`/ad:code-review`](./code-review.md) 3단계 이해 패스도 참조한다 — 1~5번만 쓰고 퀴즈·정답표·렌더는 제외한다. 표를 고칠 때 code-review 쪽 영향을 함께 본다.
+
 ## 퀴즈 규칙
 
 읽었는지 확인하는 장치다. 원안 공개 후 "가장 긴 보기가 정답"이라는 지적이 나왔으므로 편향을 명시적으로 막는다.
