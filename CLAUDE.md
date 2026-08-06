@@ -9,7 +9,7 @@
 - `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, storefront, caravan, pod, shopping, blog)
 - `catalog/common-services/registry.yaml` — 알라딘 인증, 뉴빌링 등 공통 서비스 영향 확인 registry
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
-- `.claude/commands/ad/` — 팀 스킬 (ticket, work-prep, work-board, code-review, architecture-analysis, team2-kb-read, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan, granola-sync, new-note, tldr, explain)
+- `.claude/commands/ad/` — 팀 스킬 (ticket, work-prep, work-close, work-board, code-review, architecture-analysis, team2-kb-read, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan, granola-sync, new-note, tldr, explain)
 - `scripts/setup.sh` — 원커맨드 셋업
 - `docs/` — 가이드 문서
 - `docs/sprint/` — 스프린트 운영 (워크플로우 실행, 티켓 가이드, SP 가이드, 계획 변경, Velocity, 마감 프로세스, 주간업무 보고, 주간 핵심 목표)
@@ -68,6 +68,7 @@ The skill has specialized workflows that produce better results than ad-hoc answ
 Key routing rules:
 - 티켓 생성, YouTrack 티켓 → invoke ad:ticket
 - 작업 준비, 티켓번호/할일로 위키 노트 + 업무 컨텍스트 묶기 → invoke ad:work-prep
+- 티켓 종료, Fixed 처리, 소요시간(work item) 입력 후 닫기 → invoke ad:work-close (위키 노트 종료 반영은 ad:work-prep)
 - 주간업무 보고, 보고서 → invoke ad:weekly-report
 - 주간 계획 스냅샷, planned 태그 트리, 위키 meetings 저장 → invoke ad:weekly-planned
 - 스프린트 마감 자가점검, 미종료/결과물링크/SP/5W1H/OKR 누락 후보 → invoke ad:sprint-close-check
