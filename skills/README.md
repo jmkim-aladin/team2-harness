@@ -24,7 +24,7 @@
 |------|------|------|------|
 | `ad:ticket` | YouTrack 티켓 생성 (5W1H) | YouTrack | 구현됨 |
 | `ad:work-prep` | 티켓번호/자유글 → 로컬 위키 노트 + daily 아젠다 + 브랜치 제안 | YouTrack | 구현됨 |
-| `ad:code-review` | GitHub PR 코드 리뷰 (이해 패스 → 팀 체크리스트 판정) | gh CLI | 구현됨 |
+| `ad:code-review` | GitHub PR 코드 리뷰 (이해 패스 → 팀 체크리스트 판정 → 조건부 Codex 교차검증) | gh CLI, codex CLI (조건부) | 구현됨 |
 | `ad:tldr` | 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성 | - | 구현됨 |
 | `ad:explain` | 코드 변경·분석 결과 설명서 (배경→직관→본체→퀴즈, md + HTML) | - | 구현됨 |
 | `ad:ticket-split` | 2일 초과 이슈 자식 분할 | YouTrack | 미구현 |

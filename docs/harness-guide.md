@@ -290,7 +290,7 @@ PR 생성 (체크리스트 포함)
 | `/ad:work-board` | Hermes work board projection + dispatch request 갱신 | 구현됨 |
 | `/ad:ticket-split` | 2일 초과 이슈 분할 | 미구현 |
 | `/ad:time-log` | 소요시간 기록 | 미구현 |
-| `/ad:code-review` | GitHub PR 코드 리뷰 (이해 패스 → 팀 체크리스트 판정) | 구현됨 |
+| `/ad:code-review` | GitHub PR 코드 리뷰 (이해 패스 → 팀 체크리스트 판정 → 조건부 Codex 교차검증) | 구현됨 |
 | `/ad:tldr` | 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성 | 구현됨 |
 | `/ad:explain` | 코드 변경·분석 결과 설명서 (배경→직관→본체→퀴즈, md + HTML) | 구현됨 |
 | `/ad:status-update` | 티켓 상태 전환 | 미구현 |
