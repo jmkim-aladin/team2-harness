@@ -134,6 +134,7 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-312
    - 의도(왜) 미기재 규칙
    - `근거:` 없는 실패-사례성 하드 게이트
    - 캐시(환경이 SoT인 사실의 재기술), 근거 없는 도구·명령·개수·순서 고정
+   - **모델 중첩 지시** — 모델 내장 행동을 재지시해 중첩되는 것: 자기 검증 재지시("다시 확인하라"), 진행 보고 강제("N번마다 요약"), 위임 유도("적극 위임"), 강조 부사("반드시 꼼꼼히"). 구모델 한계 보완용 잔재는 재작성이 아니라 **삭제**가 기본 (근거: 2026-07 Anthropic Opus 5/Fable 5 가이드)
 3. 발견별로 위치·원문·추론 의도·권장 조치(유지 / 완화 / 제거 / 도구화 / 근거 부착)·보존되는 불변조건을 제시한다
 4. 재제안 방지: [docs/skill-audit-baseline.md](../../../docs/skill-audit-baseline.md)의 기존 판정·기각 기록과 대조한다
 5. 적용은 삭제 테스트(재표현 전후 해당 스킬 1회 실행 비교) 후 PR로. 강도 하향·등급 변경은 review-required — 기준·권한: [harness-governance-policy.md](../../../policies/harness-governance-policy.md)
