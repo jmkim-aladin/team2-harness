@@ -250,6 +250,33 @@ infrastructure:
   # 출처: 개발3팀 양우석 (wsyang@aladin.co.kr), 2026-05-19 메일
   # 제목: [개발3팀] 만권당 API 인프라 구축 정보 공유 건 (개발계)
   # 대상: max-api 레포 deploy/max-dev-core 브랜치 (.NET Core 전환, 별도 레포 아님)
+
+  # 도메인 규칙 — 2026-08-05 개발3팀 합의 확정.
+  # 표준 SoT: policies/internal-domain-policy.md
+  domain_convention:
+    internal:
+      pattern: "{app}.internal.max[.{env}].aladin.co.kr"
+      entrypoint: "Internal ALB"
+      path_strip: "해당 없음 (경로 자체가 없음)"
+      apps:
+        max-batch: "batch.internal.max.dev.aladin.co.kr / batch.internal.max.aladin.co.kr"
+        max-admin-api: "admin-api.internal.max.dev.aladin.co.kr / admin-api.internal.max.aladin.co.kr"
+    public:
+      pattern: "api.max[.{env}].aladin.co.kr/{app}"
+      entrypoint: "API Gateway (기존 통합 도메인 유지)"
+      path_strip: "API G/W base path mapping이 strip → 앱 base-path 불필요"
+      note: "앱별 외부 도메인 발급 안 함. 도메인·인증서·Route 53 레코드 증분 0"
+    app_contract:
+      # 상세: policies/internal-domain-policy.md §3
+      - "앱 base-path 설정 금지 (spring.webflux.base-path 등)"
+      - "절대 URL 반환 금지 — Location 헤더, HATEOAS, 페이지네이션 next, redirect"
+      - "쿠키 기반 인증 금지 (퍼블릭 통합 도메인에서 Path=/ 쿠키는 앱 간 공유됨)"
+      - "actuator 경로 고정 — /actuator/health/*, /livez, /readyz, /actuator/prometheus"
+    verified_2026_08_05:
+      - "MaxServer 실측: base-path·forward-headers 설정 없음, 절대 URL 생성 없음, 쿠키·세션 없음(JWT Bearer), springdoc 없음"
+      - "prod 실증: api.max.aladin.co.kr/batch/actuator/health 정상 응답 (2026-07-30). 앱 base-path 없는 상태"
+    migration: "신규 앱부터 적용. 기존 앱은 Internal ALB 이관 시점에 적용 (인프라팀 2026-08-03 방침)"
+
   dev:
     aws_account: aladin-aws-max-dev
     components:
@@ -306,5 +333,18 @@ infrastructure:
         dst: "redis-cluster-68-max-dev (Valkey)"
         proto_port: "TCP/6379"
   prod:
-    status: "not-built"
-    note: "운영 인프라는 추후 구축 예정"
+    status: "built"  # 2026-07~08 max-batch 운영 배포 확인. 2026-05-19 메일 시점의 not-built는 과거 상태
+    aws_account: aladin-aws-max-prod
+    eks_cluster: eks-max-prod
+    gitops_path: "service/aladin-aws-max-prod/eks-max-prod/helm/max-batch/"
+    components:
+      max-batch:
+        pods: 1  # HPA max 2 (2026-07-22 인프라팀 설정)
+        api_gateway: "api.max.aladin.co.kr/batch"
+        health_check: "path /actuator/health, successCodes 200-499 (2026-07-30 인프라팀 설정)"
+    note: "Internal ALB 전환은 dev만 완료. prod 전환 일정 미정"
+    open_items:
+      # 상세: policies/internal-domain-policy.md §7
+      - "ALB target group health check port 실측 — admin-api actuator가 8081인데 port 미지정이면 8080 404가 healthy 처리됨"
+      - "successCodes 200 확정 협의 (현재 200-499)"
+      - "firewall_rules dst를 internal 도메인으로 갱신 (전환 시)"
