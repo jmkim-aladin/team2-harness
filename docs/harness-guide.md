@@ -160,6 +160,19 @@ team2-agent herdr worker --engine claude orch-worker-3 "추가 분석 작업"
 team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
 ```
 
+### Codex agent 모델 라우팅
+
+Claude 또는 herdr가 Codex engine을 시작하면 prompt의 역할명만 사용하는 것이 아니라 CLI model과 reasoning effort를 함께 지정한다. 각 agent는 새 작업의 첫 응답 첫 줄에 `[model] role=<role> model=<model> effort=<effort>`를 출력한다.
+
+| 실행 대상 | Codex launch role | 모델 |
+|---|---|---|
+| global orchestrator, ticket/work lead, planner, architect | `orchestrator` | `gpt-5.6-sol` · `xhigh` |
+| orch-worker, analyst, developer, designer, data | `worker` | `gpt-5.6-luna` · `max` |
+| reviewer | `reviewer` | `gpt-5.6-sol` · `xhigh` |
+| QA | `verifier` | `gpt-5.6-sol` · `xhigh` |
+
+이 launch role은 새 Codex 최상위 thread의 역할이다. 그 thread가 다시 Codex subagent를 생성하면 개인 `~/.codex/config.toml`과 custom agent 설정이 적용된다. Claude engine에는 이 Codex 전용 인자를 전달하지 않는다.
+
 사용자는 `global-orchestrator` pane에 자연어로 지시한다. 오래 걸리거나 병렬 처리할 비서비스 작업은 orchestrator가 `team2-agent herdr worker --engine {codex|claude} orch-worker-N "작업"`으로 작업 단위 worker를 동적으로 띄운다. instruction이 있는 worker는 결과를 읽은 뒤 자동으로 pane을 닫는다. DEV2 티켓 묶음은 orchestrator가 서비스 판정에 필요한 최소 정보만 확인한 뒤 `team2-agent herdr tickets --engine {codex|claude} --service {service}`로 서비스 space 안에 ticket tab을 만든다. 티켓 상세 정리, 분석, 상태 판단은 각 tab의 `ticket-lead`가 담당하며, `/ad:work-prep` 기준으로 필요한 role agent만 `team2-agent herdr role --engine {codex|claude} --service {service}`로 띄운다. 이미 생성된 티켓/작업에 후속 지시를 보낼 때는 `team2-agent herdr route --engine {codex|claude} --service {service} {DEV2-1234|work-id} "후속 지시"`를 사용하고, 결과 확인은 `team2-agent herdr collect {DEV2-1234|work-id}`로 한다. 종료할 때는 `team2-agent herdr close --service {service} {DEV2-1234|work-id}`로 tab 안의 lead/role pane을 함께 닫는다. 기본은 working/blocked pane이 있으면 닫지 않고, 강제 종료는 `--force`를 명시한다. `team2-agent board`, `cockpit`, `brief`, `ask`, `delegate`, `decide`, `done` 등은 orchestrator/worker/ticket-lead가 내부 도구로 사용한다.
 
 board projection과 dispatch request만 갱신할 때는 아래 runner를 사용한다. 기존 ack를 읽어 중복 전송을 막은 pending batch를 만든다.
@@ -293,6 +306,7 @@ PR 생성 (체크리스트 포함)
 | `/ad:code-review` | GitHub PR 코드 리뷰 (이해 패스 → 팀 체크리스트 판정 → 교차 모델 검증 → 승인 조건 게이트) | 구현됨 |
 | `/ad:tldr` | 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성 | 구현됨 |
 | `/ad:explain` | 코드 변경·분석 결과 설명서 (배경→직관→본체→퀴즈, md + HTML) | 구현됨 |
+| `/ad:orchestration` | Herdr pane peer-agent 협업 (핑퐁, 병렬 fan-out, 형제 pane 명령). `HERDR_ENV=1` 필요 | 구현됨 |
 | `/ad:status-update` | 티켓 상태 전환 | 미구현 |
 | `/ad:daily-report` | 일일 작업 요약 | 미구현 |
 | `/ad:sprint-plan` | 스프린트 계획 보조 | 미구현 |

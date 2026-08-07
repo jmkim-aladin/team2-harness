@@ -29,6 +29,7 @@ Codex는 team2 하네스 command 파일을 source of truth로 읽고 같은 절�
 - `harness-optimize`: repo-vault 경계/정리
 - `data-request`, `service-activity`, `capacity-plan`
 - `granola-sync`, `new-note`
+- `orchestration`: Herdr pane peer-agent 협업(핑퐁·병렬 fan-out·형제 pane 명령). `HERDR_ENV=1` 필요
 
 `$ad-{name}` alias는 같은 `{name}.md`로 매핑한다.
 

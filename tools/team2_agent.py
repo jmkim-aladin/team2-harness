@@ -73,6 +73,50 @@ class Config(NamedTuple):
     agent_engine: str = DEFAULT_AGENT_ENGINE
 
 
+class CodexLaunchProfile(NamedTuple):
+    role: str
+    model: str
+    effort: str
+
+
+CODEX_LAUNCH_PROFILES = {
+    "orchestrator": CodexLaunchProfile("orchestrator", "gpt-5.6-sol", "xhigh"),
+    "worker": CodexLaunchProfile("worker", "gpt-5.6-luna", "max"),
+    "reviewer": CodexLaunchProfile("reviewer", "gpt-5.6-sol", "xhigh"),
+    "verifier": CodexLaunchProfile("verifier", "gpt-5.6-sol", "xhigh"),
+}
+
+TEAM2_ROLE_TO_CODEX_ROLE = {
+    "planner": "orchestrator",
+    "architect": "orchestrator",
+    "reviewer": "reviewer",
+    "qa": "verifier",
+    "analyst": "worker",
+    "developer": "worker",
+    "designer": "worker",
+    "data": "worker",
+}
+
+
+def codex_launch_profile(
+    role: str,
+    *,
+    model: str | None = None,
+    effort: str | None = None,
+) -> CodexLaunchProfile:
+    default = CODEX_LAUNCH_PROFILES.get(role, CODEX_LAUNCH_PROFILES["worker"])
+    return CodexLaunchProfile(default.role, model or default.model, effort or default.effort)
+
+
+def codex_role_for_team2_role(role: str) -> str:
+    return TEAM2_ROLE_TO_CODEX_ROLE.get(role, "worker")
+
+
+def codex_start_instruction(profile: CodexLaunchProfile) -> str:
+    log = f"[model] role={profile.role} model={profile.model} effort={profile.effort}"
+    return f"첫 사용자 표시 응답의 첫 줄에 `{log}`를 한 번 출력한다."
+
+
 class ExecutionStep(NamedTuple):
     command: list[str]
     cwd: Path
@@ -542,11 +586,24 @@ def ai_argv(
     cwd: Path | None = None,
     non_interactive: bool = False,
     codex_output_path: Path | None = None,
+    codex_role: str = "worker",
+    codex_model: str | None = None,
+    codex_effort: str | None = None,
 ) -> list[str]:
     return [
         "zsh",
         "-ic",
-        ai_command_text(engine, prompt, config, cwd=cwd, non_interactive=non_interactive, codex_output_path=codex_output_path),
+        ai_command_text(
+            engine,
+            prompt,
+            config,
+            cwd=cwd,
+            non_interactive=non_interactive,
+            codex_output_path=codex_output_path,
+            codex_role=codex_role,
+            codex_model=codex_model,
+            codex_effort=codex_effort,
+        ),
     ]
 
 
@@ -558,13 +615,27 @@ def ai_command_text(
     cwd: Path | None = None,
     non_interactive: bool = False,
     codex_output_path: Path | None = None,
+    codex_role: str = "worker",
+    codex_model: str | None = None,
+    codex_effort: str | None = None,
 ) -> str:
     run_cwd = cwd or config.harness
     if engine == "codex":
+        profile = codex_launch_profile(codex_role, model=codex_model, effort=codex_effort)
         argv = [engine]
         if non_interactive:
             argv.append("exec")
-        argv.extend(["--sandbox", "danger-full-access"])
+        argv.extend(
+            [
+                "--model",
+                profile.model,
+                "--config",
+                f'model_reasoning_effort="{profile.effort}"',
+                "--sandbox",
+                "danger-full-access",
+            ]
+        )
+        prompt = f"{codex_start_instruction(profile)} {prompt}"
         if non_interactive and codex_output_path:
             argv.extend(["--output-last-message", str(codex_output_path)])
         if not non_interactive:
@@ -828,7 +899,7 @@ def start_orchestrator_command(
     if focus is not None:
         command.append("--focus" if focus else "--no-focus")
     selected_engine = engine or config.agent_engine
-    command.extend(["--", *ai_argv(selected_engine, orchestrator_prompt(config), config)])
+    command.extend(["--", *ai_argv(selected_engine, orchestrator_prompt(config), config, codex_role="orchestrator")])
     return command
 
 
@@ -866,6 +937,7 @@ def start_worker_command(
                 config,
                 non_interactive=bool(instruction and selected_engine == "codex"),
                 codex_output_path=codex_output_path,
+                codex_role="worker",
             ),
         ]
     )
@@ -900,7 +972,18 @@ def start_ticket_lead_command(
     command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT])
     if focus is not None:
         command.append("--focus" if focus else "--no-focus")
-    command.extend(["--", *ai_argv(selected_engine, ticket_lead_prompt(config, ticket_id, service=service), config, cwd=agent_cwd)])
+    command.extend(
+        [
+            "--",
+            *ai_argv(
+                selected_engine,
+                ticket_lead_prompt(config, ticket_id, service=service),
+                config,
+                cwd=agent_cwd,
+                codex_role="orchestrator",
+            ),
+        ]
+    )
     return command
 
 
@@ -933,7 +1016,18 @@ def start_work_lead_command(
     command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT])
     if focus is not None:
         command.append("--focus" if focus else "--no-focus")
-    command.extend(["--", *ai_argv(selected_engine, work_lead_prompt(config, work_id, service=service, instruction=instruction), config, cwd=agent_cwd)])
+    command.extend(
+        [
+            "--",
+            *ai_argv(
+                selected_engine,
+                work_lead_prompt(config, work_id, service=service, instruction=instruction),
+                config,
+                cwd=agent_cwd,
+                codex_role="orchestrator",
+            ),
+        ]
+    )
     return command
 
 
@@ -963,7 +1057,21 @@ def start_role_agent_command(
     elif workspace_id:
         command.extend(["--workspace", workspace_id])
     selected_engine = engine or config.agent_engine
-    command.extend(["--split", DEFAULT_HERDR_PANE_SPLIT, "--no-focus", "--", *ai_argv(selected_engine, role_agent_prompt(config, ticket_id, role, instruction, service=service), config, cwd=agent_cwd)])
+    command.extend(
+        [
+            "--split",
+            DEFAULT_HERDR_PANE_SPLIT,
+            "--no-focus",
+            "--",
+            *ai_argv(
+                selected_engine,
+                role_agent_prompt(config, ticket_id, role, instruction, service=service),
+                config,
+                cwd=agent_cwd,
+                codex_role=codex_role_for_team2_role(role),
+            ),
+        ]
+    )
     return command
 
 
@@ -983,7 +1091,13 @@ def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, se
                 DEFAULT_HERDR_PANE_SPLIT,
                 "--no-focus",
                 "--",
-                *ai_argv(config.agent_engine, ticket_lead_prompt(config, ticket_id, service=service, instruction=instruction), config, cwd=cwd),
+                *ai_argv(
+                    config.agent_engine,
+                    ticket_lead_prompt(config, ticket_id, service=service, instruction=instruction),
+                    config,
+                    cwd=cwd,
+                    codex_role="orchestrator",
+                ),
             ]
         else:
             command = start_ticket_lead_command(config, tab_id=tab.tab_id, ticket_id=ticket_id, service=service, cwd=cwd)
@@ -1004,7 +1118,13 @@ def start_ticket_lead_steps(config: Config, tab: HerdrTab, ticket_id: str, *, se
             "--split",
             DEFAULT_HERDR_PANE_SPLIT,
             "--",
-            *ai_argv(config.agent_engine, ticket_lead_prompt(config, ticket_id, service=service, instruction=instruction), config, cwd=cwd),
+            *ai_argv(
+                config.agent_engine,
+                ticket_lead_prompt(config, ticket_id, service=service, instruction=instruction),
+                config,
+                cwd=cwd,
+                codex_role="orchestrator",
+            ),
         ]
         return [ExecutionStep(command, config.harness)]
     return [ExecutionStep(start_ticket_lead_command(config, tab_id=tab.tab_id, ticket_id=ticket_id, service=service, cwd=cwd), config.harness)]
