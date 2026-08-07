@@ -46,6 +46,7 @@
 | pod | new | [catalog/pod.yaml](./catalog/pod.yaml) |
 | shopping (알라딘 쇼핑) | legacy | [catalog/shopping.yaml](./catalog/shopping.yaml) |
 | blog (블로그/북플) | legacy | [catalog/blog.yaml](./catalog/blog.yaml) |
+| attendance (근태관리) | new | [catalog/attendance.yaml](./catalog/attendance.yaml) |
 
 ## gstack 스킬
 

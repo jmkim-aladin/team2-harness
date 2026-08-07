@@ -13,7 +13,7 @@
 | 백엔드 개발자 | 김정민 | jmkim@aladin.co.kr | max, tobe, naru, aasm, caravan, shopping, storefront (메인) |
 | 백엔드 개발자 | 안혜련 | hyeryun@aladin.co.kr | blog (메인), shopping, storefront |
 | 백엔드 개발자 | 강인용 | iyk@aladin.co.kr | storefront (B2B), bazaar, shopping |
-| 프론트엔드 개발자 | 조은흠 | heum2@aladin.co.kr | max, tobe, caravan (서브) |
+| 프론트엔드 개발자 | 조은흠 | heum2@aladin.co.kr | attendance (메인), max, tobe, caravan (서브) |
 | 백엔드·프론트엔드 개발자 | 박민석 | pms0905@aladin.co.kr | max, tobe |
 
 > 강인용: 2026-07 프리랜서 → 정규직 전환, B2B(스토어프론트) 담당. 박민석: 주니어(5년차), 만권당·투비 담당.
@@ -38,6 +38,7 @@
 | caravan (가상 대기열) | 김정민 (jmkim) | 조은흠 (heum2) | AS-IS: [DEV2-A-985](https://aladincommunication.youtrack.cloud/articles/DEV2-A-985/7JWM652865SYIOuMgOq4sOyXtCDshJzrsoQ) |
 | shopping (알라딘 쇼핑) | 김정민 (jmkim) | 안혜련 (hyeryun), 강인용 (iyk) | 레거시 .NET FW + VB6 백오피스, B2B/C2C/중고매장 도메인 혼재 |
 | blog (블로그/북플) | 안혜련 (hyeryun) | | 레거시 ASP.NET Web Site, 블로그 + 북플 동거. DB 스크립트는 shopping-db-script(webcatalog) 공유 |
+| attendance (근태관리) | 조은흠 (heum2) | 김정민 (jmkim) | 신규 Next.js + NestJS 모노레포. 커밋 전량 조은흠 단독 |
 
 ## 역할 정의
 
