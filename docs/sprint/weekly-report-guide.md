@@ -1,5 +1,15 @@
 # 주간업무 보고 가이드
 
+> **절 단위 소비**: 통째로 읽지 않는다 — 필요한 절만 (`grep -n '^## '` → Read offset).
+
+| 절 | 내용 |
+|---|---|
+| §1~2 | 계획 업무 작성 원칙·상태별 구분 |
+| §3~4 | Task 관리·항목 표기 |
+| §4-B | 보고 포맷 개편 (2026-07~) — 예시 포함 |
+| §5 | 템플릿 |
+
+
 > 출처: [YouTrack KB DEV2-A-692](https://aladincommunication.youtrack.cloud/articles/DEV2-A-692/7KO86rCE7JeF66y0)
 
 ## 1. 계획 업무 작성 원칙

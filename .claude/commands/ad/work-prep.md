@@ -33,7 +33,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 
 | 문서 | 경로 | 참조 항목 |
 |------|------|-----------|
-| 티켓 작성 가이드 | `$TEAM2_HARNESS_PATH/docs/sprint/ticket-guide.md` | 5W1H 규칙, 티켓 크기, 위키 티켓 노트 작성 기준 |
+| 티켓 작성 가이드 | `$TEAM2_HARNESS_PATH/docs/sprint/ticket-guide.md` **§3-1만** | 위키 티켓 노트 작성 기준 (다른 절은 이 스킬에서 불필요) |
 | SP 가이드 | `$TEAM2_HARNESS_PATH/docs/sprint/story-point-guide.md` | SP 산정 |
 | 위키 탐색 가이드 | `$TEAM2_HARNESS_PATH/docs/wiki-navigation-guide.md` | graph 우선, indexes, Graphify |
 | 위키 문서 언어/제목 정책 | `$TEAM2_HARNESS_PATH/policies/wiki-document-language-and-title-policy.md` | H1/title 규칙 |

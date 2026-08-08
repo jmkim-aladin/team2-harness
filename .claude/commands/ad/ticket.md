@@ -71,7 +71,7 @@ description: YouTrack 티켓 생성 — DEV2 티켓, 5W1H 작성, Task 분할
 사용자가 `/ad:ticket` 또는 `/ad:ticket [설명]`을 입력하면:
 
 0. **토큰 owner 검증 (필수)**: [youtrack/api-guide.md](../../../youtrack/api-guide.md) §토큰 owner 규칙의 `users/me` 호출로 토큰 owner를 확인한다. 토큰 owner가 사용자 본인 계정(`$USER` 또는 git config user.email)과 일치하지 않으면 reporter가 토큰 owner로 박혀 변경할 수 없으므로 **티켓 생성을 중단**하고 사용자에게 본인 토큰 교체를 요청한다.
-1. **`docs/sprint/ticket-guide.md`를 읽어** 5W1H 작성법과 최신 규칙을 확인
+1. **`docs/sprint/ticket-guide.md`에서 필요 절만 읽는다** — 기본: §2(크기·단계·환경 분리)·§3·§3-0(5W1H·Task)·§3-2·§3-3(용어·서술). 상단 인덱스로 범위 확인, 통째로 읽지 않는다
 2. 사용자 입력이 있으면 해당 내용을 기반으로 티켓 작성
 3. 사용자 입력이 없으면 어떤 티켓을 만들지 질문. **질문 규율**: 한 번에 하나씩만 묻고, 각 질문에 추천안을 함께 제시한다. 파일·티켓·카탈로그에서 조회 가능한 **사실**은 직접 찾고 사용자에게는 **결정**만 묻는다. 5W1H 합의 전에 생성하지 않는다
 4. **대상 서비스가 명확하면** 서비스 카탈로그(`catalog/*.yaml`)를 읽어 컨텍스트 보강
