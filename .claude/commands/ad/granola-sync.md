@@ -1,3 +1,8 @@
+---
+description: Granola 회의록 동기화
+disable-model-invocation: true
+---
+
 # Granola 회의록 동기화
 
 Granola 공식 REST API에서 회의록을 가져와 로컬 Obsidian vault의 Tolaría 호환 `type: meeting` 노트로 저장한다.

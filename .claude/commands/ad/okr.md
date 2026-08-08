@@ -1,3 +1,8 @@
+---
+description: OKR 조회 및 작성
+disable-model-invocation: true
+---
+
 # OKR 조회 및 작성
 
 팀/개인 OKR을 조회하거나, 분기 개인 OKR 초안을 작성한다.

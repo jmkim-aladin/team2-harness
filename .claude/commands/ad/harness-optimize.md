@@ -1,3 +1,8 @@
+---
+description: 하네스 최적화 (업데이트·최신화·중복제거)
+disable-model-invocation: true
+---
+
 # 하네스 최적화 (업데이트·최신화·중복제거)
 
 하네스 문서의 최신화, 중복 제거, YouTrack KB 동기화를 수행한다.
@@ -15,6 +20,7 @@
 /ad:harness-optimize okr               # OKR 문서만 최적화
 /ad:harness-optimize 스킬               # 스킬 사용 통계 + 작성 원칙 감사
 /ad:harness-optimize 제약               # 지시 강도·과잉제약 감사
+/ad:harness-optimize 스택               # 컨텍스트 예산·외부 스킬 스택·훅 감사
 ```
 
 ## Source of Truth
@@ -123,6 +129,34 @@ curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-312
    ```
    alias 누락·내용 복제(얇은 alias 위반)·깨진 SoT 참조를 surface한다
 5. **판정 보고**: 0회 스킬은 삭제/통합/유지(사유 필수) 중 하나로 사용자에게 제안. 삭제는 사용자 확인 후
+
+## 스택 감사 (스택 모드)
+
+하네스 **바깥**을 본다 — 상주 컨텍스트 예산, 외부 스킬 스택(gstack·superpowers 등), 훅, 세션 지표. 스킬 모드가 "우리 스킬이 잘 쓰였나"를 보는 반면 이 모드는 "환경이 모델의 사고 대역을 좁히고 있지 않나"를 본다.
+
+기준·판정 근거: [docs/skill-stack-and-workflow-plan.md](../../../docs/skill-stack-and-workflow-plan.md)
+
+1. **실측**: `python3 tools/harness_context_audit.py --days 90`
+   - 상주 컨텍스트 예산 / 훅 목록 / 세션 지표 / 툴 분포·지연 / 반복 Read / 설치 스킬 실사용을 한 번에 출력한다
+   - 임계값 초과는 `[경고]`로 표시된다. 임계값은 도구의 `LIMITS`에 있고, 조정하려면 근거를 함께 남긴다
+
+2. **네 축으로 판정**:
+
+   | 축 | 후보 | 조치 |
+   |---|---|---|
+   | **컨텍스트 예산** | 상주 8,000 tok 초과 | 드리프트·중복 절 제거, 자동 호출 스킬을 사용자 호출로 전환 |
+   | **세션 컨텍스트** | 호출당 평균 200k 초과 (smart zone 이탈) | 단계 경계 `/clear` 규율 재고지, SoT 통째 읽기를 절 단위 참조로 전환 |
+   | **외부 스킬 스택** | 90일 0회 | 비활성 제안. **Codex `$alias`·Hermes cron 경로를 먼저 확인** — 도구가 Codex 세션도 집계하지만 cron은 안 잡힌다 |
+   | **훅** | 미사용 스택의 훅, 툴 호출마다 발화하는 것 | 제거 제안. 훅은 description과 달리 **왕복 지연**으로 나타나므로 스킬을 껐으면 훅도 함께 확인 |
+
+3. **행동 지표 점검** — 규율 이탈은 수치로 먼저 보인다:
+   - Bash 비중 50% 초과 → 파일을 `cat`·`sed`로 읽고 있다. Read 사용 규율 재고지
+   - Bash 중 `cd` 20% 초과 → 절대 경로 규율 재고지
+   - 같은 파일 5회 초과 재독 → 해당 문서가 스킬의 SoT 참조라면 절 단위 참조 대상
+
+4. **재제안 방지**: [docs/skill-audit-baseline.md](../../../docs/skill-audit-baseline.md)의 기존 판정·기각 기록과 대조한다. 이미 "관찰" 판정된 스킬은 회차를 세어 2회 연속 0회면 비활성으로 승격 제안한다.
+
+5. **적용**: 개인 환경(`~/.claude`) 변경은 PR 대상이 아니므로 **판정 근거만** audit baseline에 남긴다. 하네스 파일 변경은 PR. 비활성은 삭제가 아니라 `~/.claude/skills-disabled/` 이동 — 되돌릴 수 있어야 한다.
 
 ## 제약 감사 (제약 모드)
 

@@ -1,12 +1,6 @@
 ---
-description: >-
-  Herdr pane 위의 peer-agent 협업. 코덱스한테 물어봐, 클로드한테 시켜, 핑퐁, 서로 리뷰,
-  합의될 때까지, cross-review, 다른 에이전트로 병렬 돌려, peer agent, 다른 터미널에서,
-  양방향 — 단발 위임, 다중 턴 핑퐁, 병렬 fan-out 모두. caller/worker 판정, pane 열기,
-  agent 시작, prompt 전달, lifecycle 대기, 결과 회수, peer의 역방향 ping을 다룬다.
-  형제 pane에서 일반 장기 명령을 돌릴 때도 사용. HERDR_ENV=1 필요. Orca
-  `orchestration` / `orca-cli`보다 우선 — Orca는 이 흐름의 coordination transport가
-  아니다. in-process subagent(Agent tool)와는 무관하다.
+description: Herdr pane 위의 peer-agent 협업 (단발 위임·핑퐁·병렬 fan-out)
+disable-model-invocation: true
 ---
 
 # `/ad:orchestration`

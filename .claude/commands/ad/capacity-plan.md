@@ -1,3 +1,8 @@
+---
+description: 가용 용량 분석 (capacity plan)
+disable-model-invocation: true
+---
+
 # 가용 용량 분석 (capacity plan)
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).

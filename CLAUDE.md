@@ -17,6 +17,7 @@
 ## 핵심 규칙
 
 - 지시 강도(invariant/policy/heuristic/example)·충돌 시 우선순위·판단 경계: [policies/instruction-precedence-policy.md](./policies/instruction-precedence-policy.md)
+- 세션 컨텍스트는 **smart zone**(약 150k 토큰) 안에 둔다: 각 구현 앞에서 `/clear` / 파일은 Read로 읽고 `cat`·`sed`로 출력하지 않는다 / 셸 cwd는 호출마다 초기화되므로 절대 경로로 명령한다 / 넓은 조사는 서브에이전트로 보내고 결론만 회수한다. 근거: 2026-08-08 실측 호출당 평균 컨텍스트 470k (zone의 3배)
 - 브랜치: `feature/{이슈ID}` | 커밋: `[{이슈ID}] 작업 내용`
 - 예외: 개발2팀 하네스(`team2`) 자체 변경은 티켓 없이 `team2/{작업-slug}` 브랜치와 `[TEAM2] 작업 내용` 커밋을 사용할 수 있다
 - 모든 작업은 YouTrack 티켓(5W1H)에서 시작. 단, 개발2팀 하네스 자체 변경은 [브랜치 전략](./policies/branching-strategy.md)의 하네스 예외를 따른다
@@ -48,10 +49,11 @@
 | blog (블로그/북플) | legacy | [catalog/blog.yaml](./catalog/blog.yaml) |
 | attendance (근태관리) | new | [catalog/attendance.yaml](./catalog/attendance.yaml) |
 
-## gstack 스킬
+## 외부 스킬
 
-gstack 스킬(`/ship`, `/review`, `/cso`, `/qa` 등) 사용 시 반드시 [policies/gstack-override-policy.md](./policies/gstack-override-policy.md) 참조.
-팀 Git 컨벤션·배포 정책이 gstack 기본값보다 우선한다.
+gstack 스킬(`/ship`, `/review`, `/qa`, `/investigate`, `/plan-eng-review`, `/plan-ceo-review`, `/codex`, `/browse`, `/context-save`, `/context-restore`, `/document-generate`) 사용 시 [policies/gstack-override-policy.md](./policies/gstack-override-policy.md) 참조 — 팀 Git 컨벤션·배포 정책이 gstack 기본값보다 우선한다.
+
+superpowers는 `brainstorming`·`systematic-debugging`·`executing-plans` 3종만 사용한다. 나머지 외부 스킬(GSD 18종, ios-*, design-*, health, retro, office-hours 등)은 2026-08-08 실사용 실측으로 비활성 판정 — 근거는 [docs/skill-stack-and-workflow-plan.md](./docs/skill-stack-and-workflow-plan.md) §4.
 
 ## 문서 규칙
 
@@ -60,40 +62,17 @@ gstack 스킬(`/ship`, `/review`, `/cso`, `/qa` 등) 사용 시 반드시 [polic
 - CLAUDE.md 최소화 원칙: [policies/claude-md-policy.md](./policies/claude-md-policy.md)
 - 분석/평가 가이드 (Ralph Loop, 레거시 현대화, DB 이관, 운영 위키 탐색 등): [docs/analysis-guides.md](./docs/analysis-guides.md)
 
-## Skill routing
+## 스킬 호출
 
-When the user's request matches an available skill, ALWAYS invoke it using the Skill
-tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
-The skill has specialized workflows that produce better results than ad-hoc answers.
+스킬은 **사용자가 호출할 때만** 실행한다. 모든 `/ad:*`는 사용자 호출 전용(`disable-model-invocation: true`)이므로 모델이 자동으로 부르지 않는다.
 
-Key routing rules:
-- 티켓 생성, YouTrack 티켓 → invoke ad:ticket
-- 작업 준비, 티켓번호/할일로 위키 노트 + 업무 컨텍스트 묶기 → invoke ad:work-prep
-- 티켓 종료, Fixed 처리, 소요시간(work item) 입력 후 닫기 → invoke ad:work-close (위키 노트 종료 반영은 ad:work-prep)
-- 주간업무 보고, 보고서 → invoke ad:weekly-report
-- 주간 계획 스냅샷, planned 태그 트리, 위키 meetings 저장 → invoke ad:weekly-planned
-- 스프린트 마감 자가점검, 미종료/결과물링크/SP/5W1H/OKR 누락 후보 → invoke ad:sprint-close-check
-- OKR 조회/작성 → invoke ad:okr
-- KB 조회 → invoke ad:team2-kb-read
-- 하네스 최적화, 중복 제거 → invoke ad:harness-optimize
-- 데이터 추출 요청, SQL 등록, data-requests-dev2 → invoke ad:data-request
-- 서비스별 작업 활동 조회, "지난주 max/tobe/shopping 작업" → invoke ad:service-activity
-- 다음달 가용 맨데이/velocity, capacity plan, SP 초과 판정 → invoke ad:capacity-plan
-- Granola 회의록 가져오기, Tolaría 회의록 동기화 → invoke ad:granola-sync
-- 저장소 전체 아키텍처·Clean/Hexagonal/DDD·네이밍 분석 → invoke ad:architecture-analysis
-- Product ideas, "is this worth building", brainstorming → invoke office-hours
-- Bugs, errors, "why is this broken", 500 errors → invoke investigate
-- Ship, deploy, push, create PR → invoke ship
-- QA, test the site, find bugs → invoke qa
-- Code review, check my diff → invoke review
-- Update docs after shipping → invoke document-release
-- Weekly retro → invoke retro
-- Design system, brand → invoke design-consultation
-- Visual audit, design polish → invoke design-review
-- Architecture review → invoke plan-eng-review
-- Code quality, health check → invoke health
+근거: 2026-08-08 실측 — 라우팅 등록 13개 중 6개는 관측 기간 모델 호출 0회. 자동 호출은 컨텍스트 부하와 예측 불가를 동시에 부담한다. 판정·근거는 [docs/skill-stack-and-workflow-plan.md](./docs/skill-stack-and-workflow-plan.md) §3.
+
+어떤 스킬을 언제 부르는지는 [docs/harness-guide.md](./docs/harness-guide.md)의 **작업 플로우** 절 참조.
+
+모델이 스스로 적용하는 규칙(스킬 아님):
+
 - 새 문서 작성, 어디에 둘지 결정 → [policies/knowledge-base-policy.md](./policies/knowledge-base-policy.md) 결정 트리 즉시 적용 (사용자에게 매번 묻지 않음)
-- 드리프트 점검, repo↔vault 경계 위반 → invoke ad:harness-optimize
 
 ## GBrain Configuration (configured by /setup-gbrain)
 

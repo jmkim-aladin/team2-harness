@@ -1,3 +1,8 @@
+---
+description: YouTrack 티켓 생성
+disable-model-invocation: true
+---
+
 # YouTrack 티켓 생성
 
 사용자 요청을 기반으로 5W1H 형식의 YouTrack 티켓을 생성한다.

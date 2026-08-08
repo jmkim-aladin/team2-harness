@@ -535,3 +535,46 @@ frontmatter `updated_at` 또는 `date`가 N일 전 이상이면 `archive/YYYY/`�
 python3 tools/archive_vault.py --vault "$VAULT" --days 180
 python3 tools/archive_vault.py --vault "$VAULT" --days 180 --apply
 ```
+
+## harness_context_audit.py — 컨텍스트·스택·훅 감사
+
+`/ad:harness-optimize 스택` 모드가 호출한다. 하네스 **바깥**(환경)이 모델의 사고 대역을 좁히고 있는지 실측한다.
+
+### 사용법
+
+```bash
+python3 tools/harness_context_audit.py              # 기본 90일
+python3 tools/harness_context_audit.py --days 30
+python3 tools/harness_context_audit.py --json       # 기계 판독용
+```
+
+### 출력
+
+1. **상주 컨텍스트 예산** — CLAUDE.md·AGENTS.md·개인 메모리·모델 호출 스킬 description. `disable-model-invocation: true`인 스킬은 0으로 계산
+2. **훅 목록** — 이벤트·매처·명령. 훅은 상주 예산이 아니라 왕복 지연으로 나타난다
+3. **세션 지표** — 호출당 평균 컨텍스트, Bash 비중, Bash 중 `cd` 비율
+4. **툴 분포·지연** — 호출 수, 지연 중앙값, 총 소요, 결과 chars, 오류
+5. **반복 Read** — 같은 파일 재독. 스킬의 SoT 참조가 여기 뜨면 절 단위 참조 대상
+6. **설치 스킬 실사용** — Claude 슬래시 + Skill 툴 + Codex `$alias` 집계, 미사용 목록
+
+### 임계값
+
+코드 상단 `LIMITS`에 있다. 초과 시 `[경고]`로 표시된다. 조정하려면 근거를 함께 남긴다.
+
+| 키 | 기본값 | 의미 |
+|---|---:|---|
+| `resident_tokens` | 8,000 | 상주 컨텍스트 상한 |
+| `avg_context_tokens` | 200,000 | 호출당 평균 컨텍스트 (smart zone 약 150k) |
+| `bash_share` | 0.50 | Bash가 전체 툴 호출에서 차지하는 비중 |
+| `cd_share` | 0.20 | Bash 중 `cd` 비율 |
+| `reread_count` | 5 | 같은 파일 재독 보고 기준 |
+
+### 한계
+
+- Claude Code 세션 로그(`~/.claude/projects`)와 Codex 세션(`~/.codex/sessions`)만 집계한다. **Hermes cron 실행은 안 잡힌다** — 0회여도 즉시 비활성 판단 금지
+- 토큰은 chars/4 근사. 절대값보다 회차 간 추이를 본다
+- 판정·조치는 사람이 한다. 도구는 후보만 surface한다
+
+### 기준 문서
+
+정책은 [policies/harness-governance-policy.md](../policies/harness-governance-policy.md) §컨텍스트 예산, 판정 근거는 [docs/skill-stack-and-workflow-plan.md](../docs/skill-stack-and-workflow-plan.md).

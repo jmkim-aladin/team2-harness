@@ -1,3 +1,8 @@
+---
+description: 주간 계획 스냅샷 작성
+disable-model-invocation: true
+---
+
 # 주간 계획 스냅샷 작성
 
 YouTrack `{YYMM}-planned` 태그 + 담당자 조건으로 Epic→Feature→Task 트리를 만들고, 옵시디언 운영 위키 `wiki/processes/meetings/YYYY-MM-DD-wWW.md`에 주간 진행 현황 스냅샷을 저장한다.

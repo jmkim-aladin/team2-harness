@@ -231,6 +231,43 @@ python3 "$TEAM2_HARNESS_PATH/tools/import_hermes_discord_receipt.py" --vault "$L
 
 git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙일 경우 queue item 생성까지만 허용한다.
 
+## 작업 플로우 — 어떤 스킬을 언제 부르나
+
+모든 스킬은 **사용자 호출 전용**이다. 모델이 알아서 부르지 않으므로 이 절이 인덱스 역할을 한다.
+
+```
+정렬 → 스펙+분할 → 착수 준비 → 구현 → 리뷰 → 종료
+```
+
+| 단계 | 명령 | 하는 일 |
+|---|---|---|
+| 정렬 | (신설 예정 `/ad:grill`) — 그때까지 `superpowers:brainstorming` | 설계 트리를 소진할 때까지 인터뷰. 프론티어가 빌 때까지 |
+| 스펙+분할 | `/ad:ticket` | 5W1H Feature 발행 → Task 분할 |
+| 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
+| 구현 | (신설 예정 `/ad:implement`) — 그때까지 직접 + `superpowers:test-driven-development` | 사전 합의된 seam에서 red→green |
+| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 |
+| 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
+
+**온램프** (플로우 밖에서 시작하는 상황)
+
+| 상황 | 명령 |
+|---|---|
+| 버그·장애 | `/investigate` 또는 `superpowers:systematic-debugging` |
+| 운영 데이터 추출 필요 | `/ad:data-request` |
+| 월말 주기 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-planned` |
+| 주간 보고 | `/ad:weekly-report` |
+| 저장소 구조 분석 | `/ad:architecture-analysis` |
+| 하네스 점검 | `/ad:harness-optimize` |
+| 다른 에이전트와 협업 | `/ad:orchestration` |
+
+**단계 경계**
+
+- 정렬 → 분할은 한 창에서 끊지 않는다. 분할이 정렬 사고 위에 서야 한다
+- 각 구현 앞에서 `/clear`. 티켓은 자족적이므로 앞 티켓 컨텍스트는 버린다
+- 판단은 단계 경계에서만. 순서: 계속 → `/clear` → handoff → 서브에이전트 → `/compact`. `/compact`는 기본값이지 첫 선택이 아니다
+
+> 스킬을 추가·개명·삭제하면 이 절도 함께 갱신한다. 갱신하지 않은 지도는 거짓말을 한다 — `/ad:harness-optimize` 체크리스트 항목.
+
 ## 실제 작업 흐름
 
 ```

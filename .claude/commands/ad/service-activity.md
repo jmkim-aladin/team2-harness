@@ -1,3 +1,8 @@
+---
+description: 서비스 작업 활동 조회
+disable-model-invocation: true
+---
+
 # 서비스 작업 활동 조회
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
