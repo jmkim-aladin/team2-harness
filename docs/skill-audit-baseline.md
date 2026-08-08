@@ -1,8 +1,9 @@
 # 스킬 감사 베이스라인
 
-기준: [policies/skill-authoring-principles.md](../policies/skill-authoring-principles.md) | 갱신: `/ad:harness-optimize 스킬` | 통계: `python3 tools/skill_usage_report.py`
+기준: [policies/skill-authoring-principles.md](../policies/skill-authoring-principles.md) | 갱신: `/ad:harness-optimize 스킬`·`제약`·`스택`
+통계: `python3 tools/skill_usage_report.py` (팀 스킬) | `python3 tools/harness_context_audit.py` (컨텍스트·외부 스택·훅)
 
-최종 감사일: 2026-08-03 (2회차 — 문체 통일·퇴적물 제거 포함)
+최종 감사일: 2026-08-08 (3회차 — 스택 모드 신설, 외부 스킬·훅 정리)
 
 ## 사용 통계 (2026-05-31 ~ 07-16, Claude + Codex 로그 통합)
 
@@ -120,3 +121,40 @@
 - `.planning/` 249파일 12,124줄 — 활성 GSD 프로젝트(B2B SSIS 전환 53 phase). "무엇을 일하나" 성격이라 repo↔vault 경계상 vault 후보이나 GSD 도구가 repo 루트 고정 경로를 읽으므로 이동 불가. 프로젝트 종료 후 재판정
 - `wiki/processes/activity/` — `service-activity` 스킬 출력 경로가 vault taxonomy에 없음. 첫 실행 시 생성되므로 동작은 하나 분류 근거 없음
 - 0회 잔존: `architecture-analysis`·`weekly-planned`·`work-board`·`tldr`·`service-activity`·`capacity-plan`. 도구·cron 연동이 있어 유지, 3회차에서 재평가
+
+## 3회차 감사 (2026-08-08) — 스택 모드 신설
+
+기준·판정 전문: [docs/skill-stack-and-workflow-plan.md](./skill-stack-and-workflow-plan.md). 측정: `python3 tools/harness_context_audit.py`
+
+### 실측
+
+| 지표 | 값 | 판정 |
+|---|---:|---|
+| 상주 컨텍스트 | 8,858 → 6,011 tok | 상한 8,000 이내로 복귀 |
+| 호출당 평균 컨텍스트 | 470,000 tok | **경고** — smart zone(약 150k)의 3배 |
+| Bash 비중 / 그중 `cd` | 64.9% / 35.9% | **경고** — 파일을 Read 대신 Bash로 읽음 |
+| 설치 스킬 | 79 → 21종 | 90일 실사용 12종 + 인프라·배포 9종 |
+| 훅 | 22 → 13개 | GSD 훅 9개 제거 (Edit당 약 280ms) |
+
+### 적용 완료
+
+- [x] **GSD 비활성** — 스킬 18종 + 훅 9개. 90일 Claude 호출 0, Codex 3세션(전부 6월), `.planning/` 최종 수정 07-16. 훅이 모든 `Write`/`Edit`/`Read`/`Bash`를 검문하고 있었다. `~/.claude/skills-disabled/`로 이동(삭제 아님), `.planning/` 산출물 보존
+- [x] **미사용 외부 스킬 58종 비활성** — gstack 미사용 48종 등. 유지 21종은 실사용 12 + 인프라·배포 9(`gstack`·`gstack-upgrade`·`setup-gbrain`·`sync-gbrain`·`ship`·`review`·`qa`·`investigate`·`computer-use`, **관찰** 판정)
+- [x] **모델 자동 호출 폐지** — `/ad:*` 20종 전부 `disable-model-invocation: true`. CLAUDE.md `Skill routing` 절 제거, `docs/harness-guide.md` §작업 플로우가 인덱스 역할 대체. `orchestration` description의 트리거 나열을 한 줄로 축약
+- [x] **AGENTS.md 재구성** — 13.8KB → 5.0KB. H1 2개, `gstack 스킬`·`문서 규칙`·`Skill routing` 절 각 2회 중복, 없는 경로(`docs/designs/`·`docs/okr/`), 없는 스킬(`checkpoint`) 라우팅 제거. Codex 고유 내용만 남기고 나머지는 CLAUDE.md 링크
+- [x] **컨텍스트 예산 정책 신설** — [harness-governance-policy.md](../policies/harness-governance-policy.md) §컨텍스트 예산 (상주 8,000 tok / 세션 평균 200,000 tok)
+- [x] **사용자 호출 전용을 팀 표준으로 확정** — [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §1 갱신. 2층 구조의 아래층을 모델 호출 스킬 → 참조 파일로 변경
+- [x] **`스택` 모드 신설** — `/ad:harness-optimize 스택`. 월 1회 + 외부 스킬 설치 시·체감 저하 시 즉시
+- [x] **측정 도구 신설** — `tools/harness_context_audit.py`
+
+### 2회차 이관 항목 처리
+
+- `.planning/` — GSD 비활성으로 도구 경로 제약 해소. 프로젝트 재개 시 GSD 재활성이 선행 조건. **다음 감사로 재이관**
+- 0회 잔존 스킬(`architecture-analysis`·`weekly-planned`·`work-board`·`tldr`·`service-activity`·`capacity-plan`) — 자동 호출 폐지로 routing 비용은 소멸. 인지 부하만 남으므로 flow 지도 등재 여부로 판정. **4회차에서 재평가**
+
+### 다음 감사 이관
+
+- **세션 컨텍스트 470k** — 규율(단계 경계 `/clear`, Read 우선, 절대 경로)은 CLAUDE.md·AGENTS.md에 박았으나 정착은 미확인. 4회차에서 재측정해 200k 이내 진입 여부 판정. 미달이면 규율이 아니라 구조(SoT 통째 읽기) 문제로 재진단
+- **SoT 로드 다이어트** — `ticket-guide.md`(35KB)를 절 단위 참조로. 반복 Read 실측에서 14회 재독 확인
+- **지시 강도 재표현 완주** — 1차 15선 이후 미완. 호출량 순(`code-review` → `work-prep` → `ticket`)
+- **superpowers** — description 465 tok + SessionStart 주입 762 tok은 유지 중. `~/.claude/CLAUDE.md` 오버라이드로 자동 호출만 무력화. 실사용 3종(`brainstorming`·`systematic-debugging`·`executing-plans`)이 계속 쓰이는지 4회차 확인

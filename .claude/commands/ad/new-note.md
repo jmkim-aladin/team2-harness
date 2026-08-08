@@ -1,3 +1,8 @@
+---
+description: 신규 노트 작성 (vault write-time AI 분류)
+disable-model-invocation: true
+---
+
 # 신규 노트 작성 (vault write-time AI 분류)
 
 새 vault 노트 작성 시 type·위치·frontmatter·llm-hint를 자동 결정하고 lint-pass 상태로 생성한다.

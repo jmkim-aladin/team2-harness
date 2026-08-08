@@ -18,6 +18,7 @@
 | [caravan](caravan.yaml) | new | Spring Boot 3.3.7 + Kotlin + Spring Cloud Gateway + Next.js 14 | PostgreSQL + Redis 7 | 없음 | Observe | 미시작 |
 | [pod](pod.yaml) | new | Spring Boot 3.5.1 + Kotlin | PostgreSQL + S3/KMS | 없음 | Observe | 초기 등록 |
 | [스토어프론트](storefront.yaml) | new | Spring Boot 4.1.0 + Kotlin 2.3.21 | PostgreSQL 17 로컬 스켈레톤, 앱 연결 미구현 | 없음 | Observe | 갱신 중 |
+| [근태관리 (attendance)](attendance.yaml) | new | Next.js + NestJS + TypeScript (Turborepo) | PostgreSQL (Prisma) | 없음 | Observe | 초기 등록 |
 
 ## 운영 모니터링
 
@@ -38,6 +39,7 @@
 | caravan | Clean Architecture (domain/application/infra) + Reverse-Proxy Gateway | JPA/Hibernate (Admin) | Docker → Kubernetes | Kubernetes |
 | pod | Spring Boot layered service (Controller→Service→Repository/JPA) | JPA/Hibernate | TODO | TODO |
 | storefront | Gradle 멀티모듈 모놀리식 + DDD/Hexagonal/Clean 스켈레톤 | 미구현 | 미정 | 미정 |
+| attendance | Turborepo 모노레포 (Next.js BFF + NestJS 도메인) + 팩토리 패턴 | Prisma | Docker → AWS ECR → CodeBuild → ArgoCD | AWS EKS |
 
 ## 공유 DB 현황
 

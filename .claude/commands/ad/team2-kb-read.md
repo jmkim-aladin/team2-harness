@@ -1,3 +1,8 @@
+---
+description: YouTrack KB 문서 조회
+disable-model-invocation: true
+---
+
 # YouTrack KB 문서 조회
 
 YouTrack Knowledge Base에서 DEV2 프로젝트 문서를 조회한다.

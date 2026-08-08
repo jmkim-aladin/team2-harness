@@ -1,3 +1,8 @@
+---
+description: 작업 종료 (Work Close)
+disable-model-invocation: true
+---
+
 # 작업 종료 (Work Close)
 
 Feature/Task를 팀 규칙에 맞게 YouTrack에서 종료한다: 상태 정렬 → 완료 코멘트 → 소요시간(work item) 입력 → **Fixed**.

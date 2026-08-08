@@ -34,6 +34,60 @@ def seeds_orch_worker(command: Sequence[str]) -> bool:
 
 
 class Team2AgentTests(unittest.TestCase):
+    def test_codex_launch_profiles_match_team_roles(self) -> None:
+        expected = {
+            "orchestrator": ("orchestrator", "gpt-5.6-sol", "xhigh"),
+            "worker": ("worker", "gpt-5.6-luna", "max"),
+            "reviewer": ("reviewer", "gpt-5.6-sol", "xhigh"),
+            "verifier": ("verifier", "gpt-5.6-sol", "xhigh"),
+        }
+        for requested, values in expected.items():
+            profile = agent.codex_launch_profile(requested)
+            self.assertEqual(tuple(profile), values)
+
+    def test_team2_role_to_codex_role(self) -> None:
+        expected = {
+            "planner": "orchestrator",
+            "architect": "orchestrator",
+            "reviewer": "reviewer",
+            "qa": "verifier",
+            "analyst": "worker",
+            "developer": "worker",
+            "designer": "worker",
+            "data": "worker",
+        }
+        for team_role, codex_role in expected.items():
+            self.assertEqual(agent.codex_role_for_team2_role(team_role), codex_role)
+
+    def test_ai_argv_routes_codex_worker_and_emits_start_log(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        command = agent.ai_argv("codex", "hello", config, codex_role="worker")[2]
+        self.assertIn("--model gpt-5.6-luna", command)
+        self.assertIn('model_reasoning_effort="max"', command)
+        self.assertIn("[model] role=worker model=gpt-5.6-luna effort=max", command)
+
+    def test_ai_argv_routes_codex_reviewer_and_emits_start_log(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        command = agent.ai_argv("codex", "hello", config, codex_role="reviewer")[2]
+        self.assertIn("--model gpt-5.6-sol", command)
+        self.assertIn('model_reasoning_effort="xhigh"', command)
+        self.assertIn("[model] role=reviewer model=gpt-5.6-sol effort=xhigh", command)
+
+    def test_ai_argv_keeps_codex_model_flags_off_claude_but_emits_start_log(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        command = agent.ai_argv("claude", "hello", config, codex_role="reviewer")[2]
+        # Codex 전용 옵션은 Claude에 전달하지 않는다.
+        self.assertNotIn("--model", command)
+        self.assertNotIn("model_reasoning_effort", command)
+        # role은 넘기되 model/effort는 Claude가 스스로 보고한다.
+        self.assertIn("[model] role=reviewer model=<실제 model> effort=<실제 effort>", command)
+        self.assertIn("unknown", command)
+
+    def test_ai_argv_normalizes_unknown_claude_role_to_worker(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        command = agent.ai_argv("claude", "hello", config, codex_role="nonsense")[2]
+        self.assertIn("[model] role=worker", command)
+
     def test_default_config_uses_container_paths_when_mounted(self) -> None:
         mounted = {"/workspace/team2", "/workspace/team2-vault", "/opt/hermes/.venv/bin/hermes"}
 
@@ -233,7 +287,7 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.orchestrator_prompt(config), config),
+                    *agent.ai_argv("codex", agent.orchestrator_prompt(config), config, codex_role="orchestrator"),
                 ],
             ],
         )
@@ -260,7 +314,7 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config),
+                    *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config, codex_role="orchestrator"),
                 ],
             ],
         )
@@ -658,6 +712,7 @@ class Team2AgentTests(unittest.TestCase):
                         "codex",
                         agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 템플릿 적용"),
                         config,
+                        codex_role="orchestrator",
                     ),
                 ],
                 ["herdr", "agent", "focus", "work-aasm-resource-url-copy"],
@@ -718,6 +773,7 @@ class Team2AgentTests(unittest.TestCase):
                         "codex",
                         agent.work_lead_prompt(config, "aasm-global-file-search-fallback", service="aasm", instruction="전체 검색 판정"),
                         config,
+                        codex_role="orchestrator",
                     ),
                 ],
                 ["herdr", "pane", "close", "p-root"],
@@ -778,7 +834,10 @@ class Team2AgentTests(unittest.TestCase):
         argv = agent.ai_argv("codex", "hello", config)
 
         self.assertEqual(argv[:2], ["zsh", "-ic"])
-        self.assertIn("codex --sandbox danger-full-access --ask-for-approval never hello", argv[2])
+        self.assertIn("codex --model gpt-5.6-luna", argv[2])
+        self.assertIn('model_reasoning_effort="max"', argv[2])
+        self.assertIn("--sandbox danger-full-access --ask-for-approval never", argv[2])
+        self.assertIn("[model] role=worker model=gpt-5.6-luna effort=max", argv[2])
 
     def test_ai_argv_can_run_from_service_workspace(self) -> None:
         config = agent.Config(harness=Path("/workspace/team2"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
@@ -1039,7 +1098,7 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.orchestrator_prompt(config), config),
+                    *agent.ai_argv("codex", agent.orchestrator_prompt(config), config, codex_role="orchestrator"),
                 ],
                 ["herdr", "pane", "close", "p-root"],
                 ["herdr", "notification", "show", "team2-agent", "--body", "Opened team2 orchestrator workspace", "--sound", "done"],
@@ -1091,7 +1150,7 @@ class Team2AgentTests(unittest.TestCase):
                 "right",
                 "--no-focus",
                 "--",
-                *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config),
+                *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config, codex_role="orchestrator"),
             ],
             seen,
         )
@@ -1138,6 +1197,7 @@ class Team2AgentTests(unittest.TestCase):
                         config,
                         non_interactive=True,
                         codex_output_path=result_path,
+                        codex_role="worker",
                     ),
                 ],
             ],
@@ -1148,8 +1208,10 @@ class Team2AgentTests(unittest.TestCase):
 
         command = agent.start_worker_command(config, workspace_id="w2", name="orch-worker-3", instruction="DEV2-6509 브리프")
 
-        self.assertIn("codex exec --sandbox danger-full-access", command[-1])
-        self.assertNotIn("codex --sandbox danger-full-access", command[-1])
+        self.assertIn("codex exec --model gpt-5.6-luna", command[-1])
+        self.assertIn('model_reasoning_effort="max"', command[-1])
+        self.assertIn("[model] role=worker model=gpt-5.6-luna effort=max", command[-1])
+        self.assertNotIn("codex --model gpt-5.6-luna", command[-1])
 
     def test_run_herdr_worker_uses_requested_engine(self) -> None:
         seen: list[list[str]] = []
@@ -1221,7 +1283,7 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.worker_prompt(config), config),
+                    *agent.ai_argv("codex", agent.worker_prompt(config), config, codex_role="worker"),
                 ],
             ],
         )
@@ -1262,7 +1324,7 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.orchestrator_prompt(config), config),
+                    *agent.ai_argv("codex", agent.orchestrator_prompt(config), config, codex_role="orchestrator"),
                 ],
                 ["herdr", "notification", "show", "team2-agent", "--body", "Refreshed global orchestrator", "--sound", "done"],
             ],
@@ -1403,7 +1465,12 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.ticket_lead_prompt(config, "DEV2-6509", service="max"), config),
+                    *agent.ai_argv(
+                        "codex",
+                        agent.ticket_lead_prompt(config, "DEV2-6509", service="max"),
+                        config,
+                        codex_role="orchestrator",
+                    ),
                 ],
                 ["herdr", "pane", "close", "p-root"],
                 [
@@ -1459,7 +1526,7 @@ class Team2AgentTests(unittest.TestCase):
                 "right",
                 "--no-focus",
                 "--",
-                *agent.ai_argv("claude", agent.ticket_lead_prompt(engine_config, "DEV2-6509", service="max"), engine_config),
+                *agent.ai_argv("claude", agent.ticket_lead_prompt(engine_config, "DEV2-6509", service="max"), engine_config, codex_role="orchestrator"),
             ],
             seen,
         )
@@ -1518,6 +1585,7 @@ class Team2AgentTests(unittest.TestCase):
                         "codex",
                         agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"),
                         config,
+                        codex_role="orchestrator",
                     ),
                 ],
                 ["herdr", "pane", "close", "p-root"],
@@ -1584,7 +1652,12 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.ticket_lead_prompt(config, "DEV2-6509", service="max"), config),
+                    *agent.ai_argv(
+                        "codex",
+                        agent.ticket_lead_prompt(config, "DEV2-6509", service="max"),
+                        config,
+                        codex_role="orchestrator",
+                    ),
                 ],
                 ["herdr", "tab", "list", "--workspace", "w-max"],
                 ["herdr", "tab", "create", "--workspace", "w-max", "--cwd", "/repo", "--label", "DEV2-6510", "--no-focus"],
@@ -1603,7 +1676,12 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.ticket_lead_prompt(config, "DEV2-6510", service="max"), config),
+                    *agent.ai_argv(
+                        "codex",
+                        agent.ticket_lead_prompt(config, "DEV2-6510", service="max"),
+                        config,
+                        codex_role="orchestrator",
+                    ),
                 ],
                 [
                     "herdr",
@@ -1701,7 +1779,12 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"), config),
+                    *agent.ai_argv(
+                        "codex",
+                        agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"),
+                        config,
+                        codex_role="orchestrator",
+                    ),
                 ],
                 [
                     "herdr",
@@ -1758,6 +1841,7 @@ class Team2AgentTests(unittest.TestCase):
                     "claude",
                     agent.work_lead_prompt(engine_config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"),
                     engine_config,
+                    codex_role="orchestrator",
                 ),
             ],
             seen,
@@ -1804,7 +1888,12 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.role_agent_prompt(config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"), config),
+                    *agent.ai_argv(
+                        "codex",
+                        agent.role_agent_prompt(config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"),
+                        config,
+                        codex_role="worker",
+                    ),
                 ],
             ],
         )
@@ -1854,7 +1943,12 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("codex", agent.role_agent_prompt(config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"), config),
+                    *agent.ai_argv(
+                        "codex",
+                        agent.role_agent_prompt(config, "DEV2-6509", "analyst", "요구사항과 코드 진입점 분석", service="max"),
+                        config,
+                        codex_role="worker",
+                    ),
                 ],
                 ["herdr", "pane", "close", "p-root"],
             ],
@@ -2153,6 +2247,7 @@ class Team2AgentTests(unittest.TestCase):
                     "codex",
                     agent.orchestrator_prompt(agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")),
                     agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2"),
+                    codex_role="orchestrator",
                 ),
             ],
             seen,

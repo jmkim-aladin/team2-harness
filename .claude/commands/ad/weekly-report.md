@@ -1,3 +1,8 @@
+---
+description: 주간업무 보고서 작성
+disable-model-invocation: true
+---
+
 # 주간업무 보고서 작성
 
 YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를 조회·업데이트한다.

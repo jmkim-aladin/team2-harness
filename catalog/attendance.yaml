@@ -1,0 +1,134 @@
+# 알라딘 근태관리 서비스 프로파일
+# 소스: /Users/jm/Documents/workspace/aladin-attendance
+
+service_id: attendance
+name: 알라딘 근태관리 (attendance)
+type: new
+description: "매장 스태프 근태·휴가·근무표 관리 웹서비스. 세콤 출입 이벤트를 원본 적재해 근태일로 가공하고, 휴가 신청·승인·원장·월 마감까지 처리한다. max-monoplate 보일러플레이트 스냅샷에서 출발"
+
+owners:
+  primary: "heum2@aladin.co.kr" # 조은흠
+  backup: "jmkim@aladin.co.kr" # 김정민
+
+components:
+  web:
+    description: "근태관리 프론트 (w.App / BFF) — 화면 서빙 + httpOnly 쿠키 인증 + 미들웨어 토큰 주입 + /api rewrite 프록시. DB 직접 접근 없음"
+    runtime:
+      type: nextjs
+      language: "TypeScript"
+      hosting: "AWS EKS (ECR + CodeBuild + ArgoCD)"
+  api:
+    description: "근태관리 백엔드 (n.App) — 비즈니스 로직·데이터 접근 전부. 전역 prefix `api`, 포트 8080"
+    runtime:
+      type: nestjs
+      language: "TypeScript"
+      hosting: "AWS EKS (ECR + CodeBuild + ArgoCD)"
+  storybook:
+    description: "packages/ui 컴포넌트 스토리북"
+    runtime:
+      type: storybook
+      language: "TypeScript"
+
+repo: "https://github.com/AladinCommunication/aladin-attendance.git"
+
+youtrack:
+  project_key: DEV2
+
+monorepo:
+  build: "Turborepo + pnpm workspaces (pnpm 9.0.0, Node >= 18)"
+  apps: [web, api, storybook]
+  planned_apps:
+    - "secom-ingest — 세콤 수신·적재·가공 (2차 신설 예정, docs/secom-ingest-app.md)"
+    - "portal — 외부(모바일)용 얇은 BFF, 본인 기능만 (2차 신설 예정)"
+  packages:
+    - "packages/ui — @repo/ui, shadcn/ui new-york 스타일"
+    - "packages/config — eslint / typescript / prettier / tailwind"
+    - "packages/db — @repo/db, Prisma 스키마·마이그레이션"
+  modules:
+    - "modules/query — @repo/query, TanStack Query"
+    - "modules/api-client — @repo/api-client, createClient"
+    - "modules/auth — @repo/auth, 팩토리 패턴 (API + Query)"
+    - "modules/stores — @repo/stores, Zustand"
+    - "modules/excel — @repo/excel, 엑셀 반출 (client + server)"
+
+architecture:
+  pattern: "Next.js(BFF) + NestJS(도메인) 모노레포. 코드는 배포 토폴로지와 독립 — 망 분리안이 확정돼도 배포 위치만 달라진다"
+  key_patterns:
+    - "팩토리 패턴 — createXxxApi(client) + createXxxQueries(api), 앱별 src/apis/{domain}/{api,queries,keys,types}.ts"
+    - "조회 상태 nuqs URL 동기화 (새로고침·공유·뒤로가기 유지) — docs/data-table-patterns.md"
+    - "서버 페이지네이션 + 집계 분리"
+    - "RBAC — 권한 키(permission-catalog.ts) 기반, 역할 스코프는 서버 강제 (WORKER=본인 / MANAGER=자기 지점 / ADMIN 계열=전 지점)"
+    - "휴가 카테고리 정책 단일 출처 apps/api/src/leave/leave-category-policy.ts — DB화하지 않고 코드 리뷰로 변경"
+    - "휴가 승인 시 AttendanceDay에 물리 반영 + 원장(LeaveLedger) 기재를 단일 트랜잭션으로"
+    - "월 마감 = 개근 확정 시점 — 마감 훅이 연차 발생을 실행"
+  network_separation:
+    status: "미확정 (2026-07-09 기준 후보 3안)"
+    doc: "docs/architecture.md · docs/network-separation.md"
+    principles:
+      - "연결 방향은 내부망→외부망 아웃바운드만 (5안의 web→api 인바운드 1규칙이 유일 예외)"
+      - "원본은 받은 곳이 즉시 저장 (멱등 INSERT) — 세콤 재전송 보장이 약함"
+      - "망을 넘는 데이터 최소화 — 사번·이름·지점·직책·재직상태·입사일만"
+
+data:
+  db_type: postgresql
+  orm: "Prisma"
+  schema: "packages/db/prisma/schema.prisma"
+  migration: "packages/db/prisma/migrations (prisma migrate)"
+  shared_db: false
+  direct_sp_write: false
+  domains:
+    조직: [Branch, User, Role, Permission, RolePermission, UserRoleAssignment, BranchManager]
+    근무표: [WorkTimeSetting, ScheduleAssignment]
+    수집: [SourceFile, IngestBatch, SecomEvent, SecomPerson, AttendanceEvent, UnmatchedRemap]
+    근태: [AttendanceDay, AttendanceChangeRequest, AttendanceChangeLog]
+    휴일마감: [Holiday, MonthlyClosing]
+    휴가: [LeaveRequest, LeaveYearSettlement, LeaveLedger]
+    감사: [AuditLog]
+
+deploy:
+  ci: "AWS CodeBuild (.devops/{web,api}/{dev,prod}/buildspec.yml)"
+  registry: "AWS ECR"
+  cd: "ArgoCD (buildspec post_build에서 restartedAt 패치 + sync 호출)"
+  branches:
+    main: "기본 브랜치"
+    develop: "통합 브랜치 — feature PR의 머지 대상"
+    deploy: [deploy/dev-web, deploy/dev-api, deploy/prod-web, deploy/prod-api]
+  secrets: "AWS Secrets Manager (ArgoCD 토큰 등)"
+
+dev:
+  root_path: "/Users/jm/Documents/workspace/aladin-attendance"
+  install: "pnpm install"
+  run_dev: "pnpm dev  # 특정 앱: pnpm dev --filter=<app>"
+  build: "pnpm build"
+  test: "pnpm test  # e2e: pnpm test:e2e / 컴포넌트: pnpm test:ct"
+  lint: "pnpm lint"
+  typecheck: "pnpm check-types"
+  format: "pnpm format"
+
+docs:
+  design_system: "DESIGN.md (UI 작업 전 필독 — 색·타이포·간격·라운드 토큰, 컴포넌트 규격)"
+  architecture: "docs/architecture.md (망 분리 대응)"
+  conventions: "docs/conventions.md"
+  testing: "docs/testing-guide.md"
+  auth: "docs/project_auth_login_flow.md"
+  data_table: "docs/data-table-patterns.md"
+  leave_domain: "docs/leave-domain.md"
+  ui_components: "docs/ui-components.md"
+  secom_ingest: "docs/secom-ingest-app.md"
+  obsidian: "1. Project/알라딘 근태관리/구조/ (근태관리 설계 · DB 설계 · 망 분리 아키텍처 · 저장소 구조)"
+
+risk:
+  change_frequency: high
+  incident_impact: "매장 스태프 출퇴근·휴가·근무표 운영 중단. 월 마감·연차 발생이 걸려 총무팀 정산 업무에 직접 영향"
+  data_coupling: low
+  security_sensitivity: high # 인사 정보(사번·이름·지점·재직상태) 취급, 망 분리 정책 대상
+
+modernization:
+  track: observe
+  status: "not-started"
+  notes: |
+    레거시 없이 신규로 시작한 서비스라 현대화 대상이 아니다. 대신 확인이 필요한 것:
+    망 분리 배치안 확정, 인사 DB 연동 방식, 세콤 Push 수신 경로.
+    레거시 DB/SP 경로가 없으므로 코드리뷰의 레거시 경계 체크는 해당없음.
+
+harness_status: "not-started"

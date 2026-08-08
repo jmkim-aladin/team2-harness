@@ -1,3 +1,8 @@
+---
+description: 작업 준비 (Work Prep)
+disable-model-invocation: true
+---
+
 # 작업 준비 (Work Prep)
 
 YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obsidian 운영 위키에 티켓 노트를 생성·갱신하고 업무를 시작할 컨텍스트를 묶어준다.

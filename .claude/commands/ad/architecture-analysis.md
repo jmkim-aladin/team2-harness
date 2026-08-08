@@ -1,3 +1,8 @@
+---
+description: DEV2 저장소 아키텍처 분석
+disable-model-invocation: true
+---
+
 # DEV2 저장소 아키텍처 분석
 
 저장소 전체를 근거 기반으로 분석해 설계 철학, 실제 실행 구조, Clean/Hexagonal/DDD 적합성, 운영 위험과 네이밍을 정리한다. Markdown 원본과 self-contained HTML Reader를 DEV2 로컬 wiki에 저장한다.

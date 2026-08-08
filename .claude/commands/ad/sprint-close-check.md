@@ -1,3 +1,8 @@
+---
+description: 스프린트 마감 자가점검 (D-5 / D-4)
+disable-model-invocation: true
+---
+
 # 스프린트 마감 자가점검 (D-5 / D-4)
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).

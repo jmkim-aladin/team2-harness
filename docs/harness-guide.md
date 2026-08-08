@@ -160,6 +160,19 @@ team2-agent herdr worker --engine claude orch-worker-3 "추가 분석 작업"
 team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
 ```
 
+### Codex agent 모델 라우팅
+
+Claude 또는 herdr가 Codex engine을 시작하면 prompt의 역할명만 사용하는 것이 아니라 CLI model과 reasoning effort를 함께 지정한다. 각 agent는 새 작업의 첫 응답 첫 줄에 `[model] role=<role> model=<model> effort=<effort>`를 출력한다.
+
+| 실행 대상 | Codex launch role | 모델 |
+|---|---|---|
+| global orchestrator, ticket/work lead, planner, architect | `orchestrator` | `gpt-5.6-sol` · `xhigh` |
+| orch-worker, analyst, developer, designer, data | `worker` | `gpt-5.6-luna` · `max` |
+| reviewer | `reviewer` | `gpt-5.6-sol` · `xhigh` |
+| QA | `verifier` | `gpt-5.6-sol` · `xhigh` |
+
+이 launch role은 새 Codex 최상위 thread의 역할이다. 그 thread가 다시 Codex subagent를 생성하면 개인 `~/.codex/config.toml`과 custom agent 설정이 적용된다. Claude engine에는 이 Codex 전용 인자를 전달하지 않는다.
+
 사용자는 `global-orchestrator` pane에 자연어로 지시한다. 오래 걸리거나 병렬 처리할 비서비스 작업은 orchestrator가 `team2-agent herdr worker --engine {codex|claude} orch-worker-N "작업"`으로 작업 단위 worker를 동적으로 띄운다. instruction이 있는 worker는 결과를 읽은 뒤 자동으로 pane을 닫는다. DEV2 티켓 묶음은 orchestrator가 서비스 판정에 필요한 최소 정보만 확인한 뒤 `team2-agent herdr tickets --engine {codex|claude} --service {service}`로 서비스 space 안에 ticket tab을 만든다. 티켓 상세 정리, 분석, 상태 판단은 각 tab의 `ticket-lead`가 담당하며, `/ad:work-prep` 기준으로 필요한 role agent만 `team2-agent herdr role --engine {codex|claude} --service {service}`로 띄운다. 이미 생성된 티켓/작업에 후속 지시를 보낼 때는 `team2-agent herdr route --engine {codex|claude} --service {service} {DEV2-1234|work-id} "후속 지시"`를 사용하고, 결과 확인은 `team2-agent herdr collect {DEV2-1234|work-id}`로 한다. 종료할 때는 `team2-agent herdr close --service {service} {DEV2-1234|work-id}`로 tab 안의 lead/role pane을 함께 닫는다. 기본은 working/blocked pane이 있으면 닫지 않고, 강제 종료는 `--force`를 명시한다. `team2-agent board`, `cockpit`, `brief`, `ask`, `delegate`, `decide`, `done` 등은 orchestrator/worker/ticket-lead가 내부 도구로 사용한다.
 
 board projection과 dispatch request만 갱신할 때는 아래 runner를 사용한다. 기존 ack를 읽어 중복 전송을 막은 pending batch를 만든다.
@@ -217,6 +230,43 @@ python3 "$TEAM2_HARNESS_PATH/tools/import_hermes_discord_receipt.py" --vault "$L
 | 동기화/주기 실행 이후 | index/projection/lint는 하네스 `tools/`로 실행하고, Graphify full pipeline은 별도 승인된 환경에서만 처리 |
 
 git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙일 경우 queue item 생성까지만 허용한다.
+
+## 작업 플로우 — 어떤 스킬을 언제 부르나
+
+모든 스킬은 **사용자 호출 전용**이다. 모델이 알아서 부르지 않으므로 이 절이 인덱스 역할을 한다.
+
+```
+정렬 → 스펙+분할 → 착수 준비 → 구현 → 리뷰 → 종료
+```
+
+| 단계 | 명령 | 하는 일 |
+|---|---|---|
+| 정렬 | (신설 예정 `/ad:grill`) — 그때까지 `superpowers:brainstorming` | 설계 트리를 소진할 때까지 인터뷰. 프론티어가 빌 때까지 |
+| 스펙+분할 | `/ad:ticket` | 5W1H Feature 발행 → Task 분할 |
+| 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
+| 구현 | (신설 예정 `/ad:implement`) — 그때까지 직접 + `superpowers:test-driven-development` | 사전 합의된 seam에서 red→green |
+| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 |
+| 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
+
+**온램프** (플로우 밖에서 시작하는 상황)
+
+| 상황 | 명령 |
+|---|---|
+| 버그·장애 | `/investigate` 또는 `superpowers:systematic-debugging` |
+| 운영 데이터 추출 필요 | `/ad:data-request` |
+| 월말 주기 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-planned` |
+| 주간 보고 | `/ad:weekly-report` |
+| 저장소 구조 분석 | `/ad:architecture-analysis` |
+| 하네스 점검 | `/ad:harness-optimize` |
+| 다른 에이전트와 협업 | `/ad:orchestration` |
+
+**단계 경계**
+
+- 정렬 → 분할은 한 창에서 끊지 않는다. 분할이 정렬 사고 위에 서야 한다
+- 각 구현 앞에서 `/clear`. 티켓은 자족적이므로 앞 티켓 컨텍스트는 버린다
+- 판단은 단계 경계에서만. 순서: 계속 → `/clear` → handoff → 서브에이전트 → `/compact`. `/compact`는 기본값이지 첫 선택이 아니다
+
+> 스킬을 추가·개명·삭제하면 이 절도 함께 갱신한다. 갱신하지 않은 지도는 거짓말을 한다 — `/ad:harness-optimize` 체크리스트 항목.
 
 ## 실제 작업 흐름
 
@@ -293,6 +343,7 @@ PR 생성 (체크리스트 포함)
 | `/ad:code-review` | GitHub PR 코드 리뷰 (이해 패스 → 팀 체크리스트 판정 → 교차 모델 검증 → 승인 조건 게이트) | 구현됨 |
 | `/ad:tldr` | 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성 | 구현됨 |
 | `/ad:explain` | 코드 변경·분석 결과 설명서 (배경→직관→본체→퀴즈, md + HTML) | 구현됨 |
+| `/ad:orchestration` | Herdr pane peer-agent 협업 (핑퐁, 병렬 fan-out, 형제 pane 명령). `HERDR_ENV=1` 필요 | 구현됨 |
 | `/ad:status-update` | 티켓 상태 전환 | 미구현 |
 | `/ad:daily-report` | 일일 작업 요약 | 미구현 |
 | `/ad:sprint-plan` | 스프린트 계획 보조 | 미구현 |
