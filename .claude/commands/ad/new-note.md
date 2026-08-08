@@ -1,6 +1,5 @@
 ---
-description: 신규 노트 작성 (vault write-time AI 분류)
-disable-model-invocation: true
+description: 신규 운영 위키 노트 작성 (write-time 분류)
 ---
 
 # 신규 노트 작성 (vault write-time AI 분류)

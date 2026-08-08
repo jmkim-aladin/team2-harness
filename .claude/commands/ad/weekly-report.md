@@ -1,6 +1,5 @@
 ---
 description: 주간업무 보고서 작성
-disable-model-invocation: true
 ---
 
 # 주간업무 보고서 작성

@@ -1,6 +1,5 @@
 ---
 description: Granola 회의록 동기화
-disable-model-invocation: true
 ---
 
 # Granola 회의록 동기화

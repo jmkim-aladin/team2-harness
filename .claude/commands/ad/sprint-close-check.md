@@ -1,6 +1,5 @@
 ---
-description: 스프린트 마감 자가점검 (D-5 / D-4)
-disable-model-invocation: true
+description: 스프린트 마감 자가점검 — 미종료·SP·5W1H·OKR 누락 후보
 ---
 
 # 스프린트 마감 자가점검 (D-5 / D-4)

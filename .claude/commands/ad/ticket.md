@@ -1,6 +1,5 @@
 ---
-description: YouTrack 티켓 생성
-disable-model-invocation: true
+description: YouTrack 티켓 생성 — DEV2 티켓, 5W1H 작성, Task 분할
 ---
 
 # YouTrack 티켓 생성

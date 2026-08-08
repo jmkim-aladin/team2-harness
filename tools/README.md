@@ -578,3 +578,19 @@ python3 tools/harness_context_audit.py --json       # 기계 판독용
 ### 기준 문서
 
 정책은 [policies/harness-governance-policy.md](../policies/harness-governance-policy.md) §컨텍스트 예산, 판정 근거는 [docs/skill-stack-and-workflow-plan.md](../docs/skill-stack-and-workflow-plan.md).
+
+## setup_harness.py — 환경 수렴 (초기화 도구)
+
+`harness.manifest.json` 선언 상태로 `~/.claude`, `~/.codex`를 맞춘다. 멱등 — "초기화 후 재설치"가 아니라 "선언으로 수렴". 새 머신 = clone → 실행 → 토큰 입력. Mac/Windows 동일 (Windows는 junction 폴백, 실기 검증 필요).
+
+```bash
+python3 tools/setup_harness.py            # 수렴 — 부족한 것 추가, 초과분 경고
+python3 tools/setup_harness.py --check    # 보고만 (드리프트 시 exit 1)
+python3 tools/setup_harness.py --reset    # 관리 영역 초과분 격리 후 수렴
+```
+
+- 관리 영역: skills, commands/ad, codex skills, 훅, env, 팀 메모리 링크
+- 절대 안 건드림: 인증·토큰 값, 세션 로그, 개인 CLAUDE.md 내용, 플러그인 on/off(경고만)
+- `--reset`도 삭제하지 않는다 — `~/.claude/harness-quarantine-<ts>/` 이동, 되돌리기는 `mv`
+- 의존성 stdlib만 (새 머신에서 pip 없이 실행)
+- 계획 스택(`planned`)은 `[계획]`으로 표시만 — 설치는 사람이 결정

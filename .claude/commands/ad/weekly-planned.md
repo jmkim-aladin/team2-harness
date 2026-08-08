@@ -1,6 +1,5 @@
 ---
-description: 주간 계획 스냅샷 작성
-disable-model-invocation: true
+description: 주간 계획 스냅샷 — planned 태그 트리를 위키 meetings에 저장
 ---
 
 # 주간 계획 스냅샷 작성

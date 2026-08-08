@@ -1,6 +1,7 @@
 # 하네스 거버넌스 정책
 
 하네스(팀 repo) 자체의 유지보수 규칙 — 언제 감사하고, 누가 판정하고, 어떻게 기록하는가.
+**방향 판정은 [harness-north-star.md](./harness-north-star.md)** — 모든 개선 제안은 북극성 원칙 중 무엇을 전진시키는지 명시한다.
 실행 절차는 [`/ad:harness-optimize`](../.claude/commands/ad/harness-optimize.md), 지시문 해석·강도 기준은 [instruction-precedence-policy.md](./instruction-precedence-policy.md).
 
 ## 주기
@@ -23,7 +24,7 @@
 | **세션 컨텍스트** | 평균 200,000 tok | 툴 호출 시점의 창 크기. **smart zone**(약 150k)을 넘으면 모델이 놓치기 시작한다 |
 
 - 측정은 `python3 tools/harness_context_audit.py`. 임계값은 도구의 `LIMITS`에 있고, 조정하려면 근거를 함께 남긴다
-- **스킬 트리거 기본값은 사용자 호출 전용**이다. 모델 호출로 만들면 description이 상주 예산을 영구 점유하므로, 다른 스킬이 불러 써야 하는 경우에만 선택하고 근거를 남긴다 ([skill-authoring-principles.md](./skill-authoring-principles.md) §1)
+- **라우팅은 description 한 곳에만 둔다.** `/ad:*`는 모델 호출이고, CLAUDE.md·AGENTS.md에 라우팅 목록을 병행하지 않는다 — 이중화가 상주 예산을 두 번 쓰고 한쪽을 낡게 만든다. 사용자 호출 전용은 사이드이펙트 스킬에 한정 ([skill-authoring-principles.md](./skill-authoring-principles.md) §1)
 - **훅은 상주 예산이 아니라 지연으로 나타난다.** 툴 호출마다 발화하는 훅은 왕복마다 프로세스를 스폰한다. 외부 스택을 비활성할 때 그 스택의 훅도 함께 확인한다
 - 외부 스킬 비활성은 **삭제가 아니라 `~/.claude/skills-disabled/` 이동**. 되돌릴 수 있어야 한다
 
@@ -63,6 +64,7 @@
 | **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/capacity-plan.md`, `.claude/commands/ad/sprint-close-check.md`, `.claude/commands/ad/weekly-planned.md` |
 | **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만) |
 | **지시 강도·우선순위** | `policies/instruction-precedence-policy.md` | CLAUDE.md, `policies/skill-authoring-principles.md`, `.claude/commands/ad/harness-optimize.md` (전부 링크만) |
+| **하네스 개선 방향(북극성)** | `policies/harness-north-star.md` | harness-governance-policy, `.claude/commands/ad/harness-optimize.md`, CLAUDE.md (전부 링크만) |
 | **컨텍스트 예산·외부 스택 판정** | `policies/harness-governance-policy.md` §컨텍스트 예산 + `docs/skill-stack-and-workflow-plan.md` | CLAUDE.md, AGENTS.md, `.claude/commands/ad/harness-optimize.md` (링크만) |
 | **작업 플로우·스킬 인덱스** | `docs/harness-guide.md` §작업 플로우 | CLAUDE.md, AGENTS.md (링크만) |
 | **DB/SP 첨부물 (PR 단계)** | `policies/code-review-policy.md` | engineering/legacy-modernization/gstack-override-policy, templates (링크만) |

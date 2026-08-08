@@ -1,6 +1,5 @@
 ---
 description: YouTrack KB 문서 조회
-disable-model-invocation: true
 ---
 
 # YouTrack KB 문서 조회

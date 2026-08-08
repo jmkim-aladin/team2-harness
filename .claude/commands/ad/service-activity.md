@@ -1,6 +1,5 @@
 ---
-description: 서비스 작업 활동 조회
-disable-model-invocation: true
+description: 서비스별 작업 활동 조회
 ---
 
 # 서비스 작업 활동 조회

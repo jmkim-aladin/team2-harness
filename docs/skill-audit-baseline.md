@@ -140,7 +140,11 @@
 
 - [x] **GSD 비활성** — 스킬 18종 + 훅 9개. 90일 Claude 호출 0, Codex 3세션(전부 6월), `.planning/` 최종 수정 07-16. 훅이 모든 `Write`/`Edit`/`Read`/`Bash`를 검문하고 있었다. `~/.claude/skills-disabled/`로 이동(삭제 아님), `.planning/` 산출물 보존
 - [x] **미사용 외부 스킬 58종 비활성** — gstack 미사용 48종 등. 유지 21종은 실사용 12 + 인프라·배포 9(`gstack`·`gstack-upgrade`·`setup-gbrain`·`sync-gbrain`·`ship`·`review`·`qa`·`investigate`·`computer-use`, **관찰** 판정)
-- [x] **모델 자동 호출 폐지** — `/ad:*` 20종 전부 `disable-model-invocation: true`. CLAUDE.md `Skill routing` 절 제거, `docs/harness-guide.md` §작업 플로우가 인덱스 역할 대체. `orchestration` description의 트리거 나열을 한 줄로 축약
+- [x] **라우팅 이중화 제거** — CLAUDE.md·AGENTS.md `Skill routing` 절 제거, 라우팅은 각 스킬 `description` 한 곳으로 단일화. routing 블록(약 350 tok)을 걷고 트리거를 담은 짧은 description(약 135 tok)만 남겨 **자동 호출을 유지하면서 215 tok 절감**
+  - 1차 판정은 "자동 호출 전면 폐지"였으나 재검토 결과 문제는 자동 호출이 아니라 **이중화**였다. routing 0회 6건은 트리거 문구가 약했던 것 — 판정 정정 (2026-08-08)
+  - `/ad:*` 16종 모델 호출 유지, 사이드이펙트 4종(`code-review`·`work-board`·`tldr`·`explain`)만 사용자 호출. 2026-07 팀 판정 승계
+  - 부작용 확인: 사용자 호출 전용은 다른 스킬도 못 부른다. `ad:*` 간 상호 호출 0건이라 영향 없음
+- [x] **비활성 스킬 참조 정정** — `docs/gstack-usage-guide.md` 재작성(비활성 `/cso`·`/land-and-deploy`·`/qa-only`·`/retro`·`/careful`·`/freeze`·`/benchmark`·`/canary`·`/document-release`·`/design-*` 제거), `policies/gstack-override-policy.md` 적용 범위표 갱신. 보안 감사는 내장 `/security-review`로 대체 명시
 - [x] **AGENTS.md 재구성** — 13.8KB → 5.0KB. H1 2개, `gstack 스킬`·`문서 규칙`·`Skill routing` 절 각 2회 중복, 없는 경로(`docs/designs/`·`docs/okr/`), 없는 스킬(`checkpoint`) 라우팅 제거. Codex 고유 내용만 남기고 나머지는 CLAUDE.md 링크
 - [x] **컨텍스트 예산 정책 신설** — [harness-governance-policy.md](../policies/harness-governance-policy.md) §컨텍스트 예산 (상주 8,000 tok / 세션 평균 200,000 tok)
 - [x] **사용자 호출 전용을 팀 표준으로 확정** — [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §1 갱신. 2층 구조의 아래층을 모델 호출 스킬 → 참조 파일로 변경
@@ -158,3 +162,24 @@
 - **SoT 로드 다이어트** — `ticket-guide.md`(35KB)를 절 단위 참조로. 반복 Read 실측에서 14회 재독 확인
 - **지시 강도 재표현 완주** — 1차 15선 이후 미완. 호출량 순(`code-review` → `work-prep` → `ticket`)
 - **superpowers** — description 465 tok + SessionStart 주입 762 tok은 유지 중. `~/.claude/CLAUDE.md` 오버라이드로 자동 호출만 무력화. 실사용 3종(`brainstorming`·`systematic-debugging`·`executing-plans`)이 계속 쓰이는지 4회차 확인
+
+## 북극성 원칙별 거리 (회차마다 갱신)
+
+기준: [policies/harness-north-star.md](../policies/harness-north-star.md). 측정 신호가 좁혀지는지 회차 간 추이로 본다.
+
+| # | 원칙 | 측정 신호 | 3회차 (2026-08-08) |
+|---|---|---|---|
+| 1 | 검증 루프 > 지시 | 카탈로그 검증 루프 필드 보유율 | 미표준화 — 0/11 |
+| 2 | 문제 단위 위임 | 근거 없는 순서·개수·도구 고정 발견 수 | 1차 15선 재표현 완료, 전수 미완 |
+| 3 | smart zone | 호출당 평균 컨텍스트 / 상주 예산 | 470k (목표 200k) / 6,032 tok (상한 8,000) |
+| 4 | 환경=진실 | 캐시·죽은 참조 발견 수 | AGENTS.md 죽은 경로 2건 정리, 전수 스캔 미실시 |
+| 5 | 게이트 기계화 | INVARIANT 중 훅·권한 강제 비율 | 훅 2건 (DB MCP 차단, sqlcmd readonly) |
+| 6 | 아티팩트 기억 | glossary 항목 / decisions 수 | 0건 / 7건 |
+
+### 3회차 추가 (2026-08-08 후속) — 환경 선언화
+
+- [x] **`harness.manifest.json` 신설** — `~/.claude`·`~/.codex` 관리 영역의 SoT. env·팀 링크·외부 스킬 존치·훅 allow·계획 스택(mattpocock)·제거 기록 선언 [북극성 4·5]
+- [x] **`tools/setup_harness.py` 신설** — 선언으로 수렴하는 멱등 초기화 도구 (`--check`/`--reset`, 격리 방식, stdlib만). 새 머신 = clone → 실행 [북극성 4·5]
+- [x] **Codex 쪽 다이어트** — `~/.codex/skills` 선언 밖 61종 격리 (GSD 18, gstack 미사용분, 깨진 ad-* 링크 2). Claude 쪽만 정리됐던 비대칭 해소
+- [x] **개인/팀 메모리 분리** — 팀 규율을 repo `memory/claude-base.md`로 이관, `~/.claude/team2-base.md` 링크 + `@team2-base.md` import. 개인 CLAUDE.md에는 개인 것만 남음 [북극성 4]
+- 이관: 팀 스킬 체계 재편(작은 불변 프리미티브로 쪼개고 결합) — manifest 위에서 진행. `scripts/setup.sh`·`setup.ps1` 제거는 Windows 실기 검증 후
