@@ -2,6 +2,21 @@
 
 > YouTrack KB: DEV2-A-818 | 상위: DEV2-A-785 (Sprints)
 
+> **절 단위 소비**: 이 문서는 통째로 읽지 않는다. 아래 인덱스에서 필요한 절을 찾아 그 범위만 읽는다 (`grep -n '^## ' 본 파일` → Read offset). 스킬 참조도 절 번호를 지목한다.
+
+| 절 | 내용 | 주 소비자 |
+|---|---|---|
+| §1 | 스프린트 상태 | ticket, sprint-close-check |
+| §2 (2-1~2-3) | 티켓 크기·외부 티켓·단계 분리·환경 분리 | ticket |
+| §3, 3-0 | 5W1H·Task 작성 규칙 | ticket |
+| §3-1 | 로컬 위키 티켓 노트 기준 | work-prep |
+| §3-2, 3-3 | 용어·계획 시점 서술 원칙 | ticket, weekly-planned |
+| §4~7 | 팀원 표기·예상 시작일·계획 시점·점진적 강화 | ticket, capacity-plan |
+| §8~9 | 이월(상세 SoT는 plan-change-process)·월말 분리 | sprint-close-check, work-close |
+| §10~11 | 태그·필수 커스텀 필드 | ticket, weekly-planned, service-activity |
+| §12 | OKR → 스프린트 변환 | okr, capacity-plan |
+| §13~15 | YouTrack 서식·전사 상태 플로우(SoT: youtrack/ticket-guide)·주간 핵심 목표 | weekly-report |
+
 ## 1. 스프린트 상태 (상태값 기준)
 
 아래 3개 상태는 스프린트 운영상 필수로 이행되어야 한다. 그 외 상태는 담당자 재량에 따라 자율적으로 운영하되, 업무 종료 시점에는 반드시 "종료" 상태로 전환되어야 한다.
