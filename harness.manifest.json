@@ -127,7 +127,13 @@
         "improve-codebase-architecture"
       ],
       "exclude_reason": "팀 ad:* 와 중복 또는 팀 규칙 우회 위험 — docs/skill-stack-and-workflow-plan.md §3",
-      "sunset": "2026-11-08"
+      "sunset": "2026-11-08",
+      "link_exclude": [
+        "grill-with-docs",
+        "grill-me",
+        "implement"
+      ],
+      "_link_exclude_doc": "ad:* wrapper가 진입점 — 메뉴 이중화 방지. vendor에는 남는다(SoT)"
     }
   }
 }

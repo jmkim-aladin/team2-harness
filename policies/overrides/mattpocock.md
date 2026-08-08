@@ -17,7 +17,9 @@
 | `writing-for-agents` | 번안 완료 | [skill-authoring-principles.md](../skill-authoring-principles.md) |
 | `improve-codebase-architecture` | 기능 중복 | `/ad:architecture-analysis` |
 
-superpowers 대체: `brainstorming` → `/grill-with-docs`, `systematic-debugging` → `diagnosing-bugs`, `executing-plans`·`test-driven-development` → `implement`+`tdd`.
+superpowers 대체: `brainstorming` → `/ad:grill`, `systematic-debugging` → `diagnosing-bugs`, `executing-plans`·`test-driven-development` → `/ad:implement`+`tdd`.
+
+**동사층 wrapper**: `grill-with-docs`·`grill-me`·`implement`는 링크하지 않고 `/ad:grill`·`/ad:implement`가 진입점이다 (메뉴 이중화 방지, [skill-authoring-principles.md](../skill-authoring-principles.md) §구조). vendor 사본은 SoT로 유지.
 
 ## 오버라이드 규칙
 

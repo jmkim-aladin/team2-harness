@@ -231,55 +231,91 @@ python3 "$TEAM2_HARNESS_PATH/tools/import_hermes_discord_receipt.py" --vault "$L
 
 git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙일 경우 queue item 생성까지만 허용한다.
 
-## 작업 플로우 — 어떤 스킬을 언제 부르나
+## 작업 플로우 — 업무 상황 지도
 
-`/ad:*`는 모델 호출이므로 요청에 맞으면 에이전트가 스스로 부른다. 이 절은 **사람이 플로우 전체를 보는 지도**이자, 스킬 증감 시 갱신 대상이다 — 갱신하지 않은 지도는 거짓말을 한다.
+**상황당 동사 하나** — 어떤 업무든 아래 표에서 상황을 찾으면 진입 동사(`ad:*`)가 나온다. 대부분 모델 호출이라 요청에 맞으면 에이전트가 스스로 부르고, 이 절은 사람이 전체를 보는 지도다. 층 설계(동사/엔진/자료)는 [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §구조.
 
-사용자 호출 전용 4종(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`.
+사용자 호출 전용(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:implement`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`.
+
+### 1. 개발 티켓 (메인 플로우)
 
 ```
-정렬 → 스펙+분할 → 착수 준비 → 구현 → 리뷰 → 종료
+/ad:grill → /ad:ticket → /ad:work-prep → /ad:implement → /ad:code-review → /ad:work-close
+  정렬        스펙+분할      착수 준비        구현(tdd)       리뷰            종료
 ```
 
-| 단계 | 명령 | 하는 일 |
+| 단계 | 동사 | 엔진 |
 |---|---|---|
-| 정렬 | `/grill-with-docs` | 설계 트리를 소진할 때까지 frontier 라운드 인터뷰 + 용어집·결정 기록 |
-| 스펙+분할 | `/ad:ticket` | 5W1H Feature 발행 → Task 분할 |
+| 정렬 | `/ad:grill` | `grilling` + `domain-modeling` — frontier 라운드, 용어집·결정 기록 |
+| 스펙+분할 | `/ad:ticket` | 5W1H 합성 + Task 분할 (YouTrack) |
 | 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
-| 구현 | `/implement` (내부 `tdd`) | 사전 합의된 seam에서 red→green |
+| 구현 | `/ad:implement` | vendored `implement`(내부 `tdd`) — seam 합의, red→green |
 | 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 |
 | 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
 
-**온램프** (플로우 밖에서 시작하는 상황)
+규모별: 1시간 이내(오타·설정) 바로 처리 / 반나절(버그) 준비→구현→리뷰 / 1일 이상 전체.
 
-| 상황 | 명령 |
+### 2. 서비스 구상·설계 (신규 서비스, 대형 기능)
+
+| 상황 | 동사·엔진 |
 |---|---|
-| 버그·장애 | `diagnosing-bugs`(모델 호출) 또는 `/investigate` |
-| 운영 데이터 추출 필요 | `/ad:data-request` |
-| 월말 주기 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-planned` |
-| 주간 보고 | `/ad:weekly-report` |
-| 저장소 구조 분석 | `/ad:architecture-analysis` |
-| 하네스 점검 | `/ad:harness-optimize` |
-| 다른 에이전트와 협업 | `/ad:orchestration` |
+| 아이디어를 세션 안에서 정리 가능 | `/ad:grill` → 메인 플로우 합류 |
+| 세션보다 큰 안개 과제 | `/wayfinder` — 결정 티켓 지도, 길이 보이면 `/ad:ticket`으로 합류 |
+| 설계 질문을 코드로 답해야 | `prototype` (모델 호출) |
+| 문서·API 조사 위임 | `research` (모델 호출, 백그라운드) |
+| 아키텍처 검토 | `/ad:architecture-analysis`, `/plan-eng-review`, `/plan-ceo-review` |
+| 다른 조직에 결정 질문 | `/to-questionnaire` |
 
-**설계·탐구 보조** (mattpocock vendored — [overrides/mattpocock.md](../policies/overrides/mattpocock.md))
+### 3. 버그·장애
 
-| 상황 | 명령 |
+| 상황 | 동사·엔진 |
 |---|---|
-| 설계 질문을 코드로 답해야 | `prototype` |
-| 문서·API 조사 위임 | `research` |
-| 세션보다 큰 안개 과제 | `/wayfinder` |
-| 다른 조직에 질문지 | `/to-questionnaire` |
-| 사람만 할 수 있는 절차 | `wizard` |
-| 세션 이동·인수인계 | `/handoff` |
+| 어려운 버그·성능 회귀 | `diagnosing-bugs` (모델 호출 — "고장났다" 신호에 자동) |
+| 근본 원인 조사 | `/investigate` |
+| 장애 대응 절차 | [policies/incident-response.md](../policies/incident-response.md) |
 
-**단계 경계**
+### 4. 스프린트·팀 운영 (주기 업무)
+
+| 주기 | 동사 |
+|---|---|
+| 월말 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-planned` |
+| 주간 | `/ad:weekly-report` |
+| 수시 | `/ad:okr`, `/ad:service-activity`, `/ad:granola-sync` |
+
+### 5. 지식·문서 작업
+
+| 상황 | 동사 |
+|---|---|
+| 신규 위키 노트 | `/ad:new-note` (배치는 [knowledge-base-policy.md](../policies/knowledge-base-policy.md) 결정 트리) |
+| KB 조회 | `/ad:team2-kb-read` |
+| 아키텍처 한 장 요약 | `/ad:tldr` |
+| 변경 설명서 | `/ad:explain` |
+| 문서 생성 | `/document-generate` |
+
+### 6. 데이터 요청
+
+운영 데이터 추출 SQL → `/ad:data-request` (data-requests-dev2 등록)
+
+### 7. 협업·세션 이동
+
+| 상황 | 동사 |
+|---|---|
+| 다른 에이전트와 협업 (Herdr) | `/ad:orchestration` |
+| Hermes work board | `/ad:work-board` |
+| 새 하네스·디렉토리·동료에게 인계 | `/handoff` |
+| 사람만 할 수 있는 절차 (자격증명·대시보드) | `wizard` (모델 호출) |
+
+### 8. 하네스 유지보수
+
+`/ad:harness-optimize` — 스킬·제약·스택·동기화 모드. 주기는 [harness-governance-policy.md](../policies/harness-governance-policy.md).
+
+### 단계 경계
 
 - 정렬 → 분할은 한 창에서 끊지 않는다. 분할이 정렬 사고 위에 서야 한다
 - 각 구현 앞에서 `/clear`. 티켓은 자족적이므로 앞 티켓 컨텍스트는 버린다
 - 판단은 단계 경계에서만. 순서: 계속 → `/clear` → handoff → 서브에이전트 → `/compact`. `/compact`는 기본값이지 첫 선택이 아니다
 
-> 스킬을 추가·개명·삭제하면 이 절도 함께 갱신한다. 갱신하지 않은 지도는 거짓말을 한다 — `/ad:harness-optimize` 체크리스트 항목.
+> 스킬을 추가·개명·삭제하면 이 지도도 같은 PR에서 갱신한다. 갱신하지 않은 지도는 거짓말을 한다 — `/ad:harness-optimize` 체크리스트 항목.
 
 ## 실제 작업 흐름
 

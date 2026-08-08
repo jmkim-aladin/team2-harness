@@ -136,10 +136,13 @@ def converge_vendored(m, apply):
     for name, e in (m.get("vendored") or {}).items():
         if not isinstance(e, dict):
             continue
+        excl = set(e.get("link_exclude", []))
         for src in sorted(glob.glob(os.path.join(REPO, e["src_glob"]))):
             if not os.path.isdir(src):
                 continue
             base = os.path.basename(src)
+            if base in excl:
+                continue
             make_link(src, os.path.join(CLAUDE, "skills", base), apply)
             make_link(src, os.path.join(CODEX, "skills", base), apply)
 
