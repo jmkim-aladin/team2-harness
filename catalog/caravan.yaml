@@ -218,4 +218,25 @@ modernization:
     - 기존 판매 서비스 보호 wrapper 역할이므로 다른 레거시의 Wrap/Extract 트랙과 함께 활용 가능
     - 하네스 정착·관측 지표 정립이 우선
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: verified
+  loops:
+    - component: caravan-server # caravan-api / caravan-admin / caravan-scheduler / gateway 공통 Gradle 멀티모듈
+      cwd: /Users/jm/Downloads/workspace/caravan
+      build: "./gradlew build"
+      test: "./gradlew test"
+      evidence: "caravan/gradlew; caravan/build.gradle.kts (kotlin jvm 2.1.0 + subprojects tasks.withType<Test>{useJUnitPlatform()}); settings.gradle.kts include(caravan-domain, caravan-application, caravan-infrastructure, caravan-api, caravan-admin, caravan-scheduler, gateway); 7개 모듈 전부 src/test 보유; catalog caravan.yaml build.commands.build|test"
+
+    - component: caravan-frontend
+      cwd: /Users/jm/Downloads/workspace/caravan/caravan-frontend
+      build: "npm run build"
+      lint: "npm run lint"
+      evidence: "caravan/caravan-frontend/package.json scripts.build(next build)|lint(next lint); catalog caravan.yaml build.commands.run_frontend"
+  notes: |
+    로컬 체크아웃 경로가 표준 워크스페이스(~/Documents/workspace) 밖인 /Users/jm/Downloads/workspace/caravan 이고
+    git remote 가 설정돼 있지 않다 (`git remote -v` 결과 없음) — repo 필드의 GitHub URL과 연결 확인 필요.
+    백엔드에는 lint 플러그인(ktlint/detekt)이 없다. frontend 에는 테스트 스크립트가 없다.
+    e2e(./scripts/scenario-test.sh)와 부하 테스트(k6 run k6/*.js)는 파일은 실재하나 docker compose 인프라(Redis/PostgreSQL/LocalStack)가 필요해 기본 루프에서 분리했다.
+
 harness_status: "not-started"

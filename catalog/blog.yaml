@@ -86,4 +86,14 @@ modernization:
     블로그/북플 동거 + App_Code/Bookple.cs 단일 파일 ~325KB → 도메인 분해/모듈 분리가 선결 과제.
     ucl_editor/ 는 pre-commit + CI에서 변경 차단 (외부 의존 영역).
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: 미구축
+  notes: |
+    빌드·테스트·린트 명령이 존재하지 않는다. ASP.NET Web Site 프로젝트라 .csproj 가 없고 App_Code/ 는 런타임 컴파일된다.
+    근거: blog-web/CLAUDE.md L22 "Blog.sln is the only entry point — no .csproj exists because of the Web Site
+    project type. There is no CLI build." / L24 "There is no test project and no test runner configured in this repo."
+    CI(.github/workflows/vsbuild.yml)도 self-hosted runner에서 git pull만 수행하고 MSBuild 단계가 없다.
+    자동 게이트는 hooks/pre-commit + vsbuild.yml 의 ucl_editor/ 변경 차단뿐이라 red/green 루프로 쓸 수 없다.
+
 harness_status: "not-started"

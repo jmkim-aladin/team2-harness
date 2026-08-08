@@ -169,7 +169,7 @@
 
 | # | 원칙 | 측정 신호 | 3회차 (2026-08-08) |
 |---|---|---|---|
-| 1 | 검증 루프 > 지시 | 카탈로그 검증 루프 필드 보유율 | 미표준화 — 0/11 |
+| 1 | 검증 루프 > 지시 | 카탈로그 검증 루프 필드 보유율 | **9/11 실증** (verified 7·partial 2·미구축 2 — shopping·blog는 러너 부재가 사실, 2026-08-08) |
 | 2 | 문제 단위 위임 | 근거 없는 순서·개수·도구 고정 발견 수 | 1차 15선 재표현 완료, 전수 미완 |
 | 3 | smart zone | 호출당 평균 컨텍스트 / 상주 예산 | 470k (목표 200k) / 6,032 tok (상한 8,000) |
 | 4 | 환경=진실 | 캐시·죽은 참조 발견 수 | AGENTS.md 죽은 경로 2건 정리, 전수 스캔 미실시 |
@@ -225,3 +225,9 @@
 - [x] 표기 모범 확인: orchestration `Measured:`, work-close 절별 완료 기준, explain "렌더러가 강제" — 이식 후보로 기록
 - 2회차 판정 오류 정정: "2026-04-capacity-analysis 참조 0건 확인 후 삭제" — 실제 3곳 참조 중이었음. 감사 방법 교훈: 삭제 전 참조 grep은 판정 시점이 아니라 적용 직전에
 - 발견 0 파일: grill·implement·team2-kb-read
+
+### 3회차 추가 (2026-08-08 후속 7) — 카탈로그 검증 루프 (북극성 1)
+
+- [x] **catalog 11종 + 템플릿에 `verification` 블록** — 명령 49개 전부 repo 파일 실증(evidence 필수, 날조 금지 철칙). verified 7 / partial 2 / 미구축 2(shopping·blog — 러너 부재 명시가 곧 정보)
+- [x] 스킬 효과: implement·diagnosing-bugs·code-review가 서비스 진입 시 red/green 명령을 조회 1회로 획득
+- 조사 중 드리프트 10건 발견 (catalog 버전 낡음, storefront ci/모듈 경로, blog source_path, README 불일치 등) — 정정은 별도 트랙

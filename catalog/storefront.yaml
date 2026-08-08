@@ -158,6 +158,31 @@ build:
   profiles: "추적 설정에는 기본 profile만 존재"
 
 verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: verified
+  loops:
+    - component: jvm # Gradle 멀티모듈 (contexts / platform / processes / integrations / instances)
+      cwd: /Users/jm/Documents/workspace/storefront
+      build: "./gradlew build"
+      test: "./gradlew check"
+      lint: "./gradlew ktlintCheck detekt"
+      evidence: "storefront/gradlew; build.gradle.kts plugins(detekt, ktlint) + subprojects 자동 적용 + tasks.withType<Test>{useJUnitPlatform()}; docs/acceptance/kotlin-foundation.md L28(./gradlew build); docs/evidence/foundation/evd-foundation-001.md L39(./gradlew --no-daemon check → module boundary·compile·ktlint·detekt); 16개 모듈 src/test 보유"
+
+    - component: tooling # repo 도구(docs/contracts/database/catalog/governance) 단위 테스트
+      cwd: /Users/jm/Documents/workspace/storefront
+      test: "npm test"
+      evidence: "storefront/package.json scripts.test(node --test tools/{dev,contracts,database,catalog,governance}/test/*.test.mjs, packages/storefront-contract/test/*.test.mjs)"
+
+    - component: integrated # CI가 실제로 도는 통합 게이트
+      cwd: /Users/jm/Documents/workspace/storefront
+      test: "./dev verify"
+      evidence: ".github/workflows/verify-docs.yml(./dev bootstrap → ./dev verify → ./dev up simulated); tools/dev/src/cli.mjs L103(verify 서브커맨드); tools/dev/src/verify.mjs L45(내부에서 ./gradlew --no-daemon check 실행)"
+  notes: |
+    최초 1회 ./dev bootstrap 이 필요하다 (project-local mise + Node 설치, .github/workflows/verify-docs.yml).
+    JVM toolchain은 Java 25 (build.gradle.kts jvmToolchain(25), allWarningsAsErrors=true) — 로컬 JDK가 낮으면 build가 compile 전에 중단된다.
+    ./dev up simulated (StoreFront·Naru·Bazaar simulated E2E + PII 경계)은 로컬 리소스를 띄우므로 기본 루프에서 분리했다 — 사용 후 ./dev down.
+
+  # --- 아래 항목은 2026-07-12 1회성 소스 분석 스냅샷 (기존 기록 유지, 현재 소스와 불일치) ---
   analyzed_at: "2026-07-12"
   revision: "1eab9afa"
   branch: master

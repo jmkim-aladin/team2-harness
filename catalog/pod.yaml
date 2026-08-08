@@ -100,4 +100,18 @@ modernization:
     신규 Spring Boot/Kotlin 서비스. 독립 PostgreSQL 스키마와 S3/KMS 기반 콘텐츠 저장소를 사용한다.
     우선 하네스 문서화, 배포 경로 확정, 운영 지표/감사 로그 기준 정립이 필요하다.
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: verified
+  loops:
+    - cwd: /Users/jm/Documents/workspace/pod/pod-content-service
+      build: "./gradlew build"
+      test: "./gradlew test"
+      evidence: "pod-content-service/build.gradle.kts L65(testImplementation spring-boot-starter-test)·L84(useJUnitPlatform); pod-content-service/gradlew; src/test/kotlin/** 8개 테스트 클래스(encryption/otp/download/upload); catalog pod.yaml dev.build|dev.test"
+  notes: |
+    lint 명령 없음 — ktlint/detekt 플러그인이 build.gradle.kts 에 적용돼 있지 않다.
+    통합 실행(bootRun)은 docker compose 로컬 인프라(LocalStack S3/KMS + PostgreSQL 17)와
+    DB_USER/DB_PASSWORD/S3_BUCKET/KMS_KEY_ID/AWS_REGION/DOWNLOAD_ALLOWED_IPS 환경변수가 필요하다.
+    CI 파이프라인은 아직 없다 (docker.ci: TODO).
+
 harness_status: "not-started"
