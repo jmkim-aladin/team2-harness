@@ -84,11 +84,19 @@ to Orca. `herdr --skill` prints the version-matched command surface and is
 command below errors, re-read `herdr --skill` and its group (`herdr agent`,
 `herdr pane`) rather than guessing flags.
 
-**Codex callers:** check socket access before planning anything. The default Codex
-sandbox denies writes to `$HERDR_SOCKET_PATH`, so `herdr pane current` can fail with
-`Operation not permitted` even though `herdr --skill` succeeded. Starting the *peer*
-with a bypass flag does not grant *your own* access — you need your own escalation for
-`split` / `start` / `prompt` / `read`, or the flow stalls on approval prompts. Only the
+**Codex callers:** probe before planning anything. A Codex agent without a bypass flag
+can get `Error: Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }`
+from `herdr` even though `herdr --skill` succeeded. Observed properties, not a theory:
+
+- It is **not** uniform across the CLI. In one shell, `agent get` / `agent read` /
+  `agent list` succeeded while `pane layout` failed with that error.
+- It is **not** `$HERDR_PANE_ID` being unset — the variable resolves correctly, and the
+  same id passed as a literal worked.
+- Once the run is approved, the same commands succeed.
+
+So do not assume the socket is either fully open or fully closed. Run one cheap probe
+(`herdr pane layout --current`) before committing to a plan, and expect to escalate. Note
+that starting the *peer* with a bypass flag does not grant *your own* access. Only the
 caller needs it: the coordinator polls the pane, so the worker never calls back and a
 worker with no socket access still works.
 
@@ -312,6 +320,10 @@ herdr agent read codex1 --source recent-unwrapped --lines 120
 
 `herdr --skill` covers the alternate-screen fallback: when a larger `--lines` reveals
 nothing new, have the peer write its answer to a temp file and reply with the path.
+
+Raise `--lines` first and actually check — the pane holds more than you expect. Measured
+on a deliberately long answer: `--lines 60` returned 59 rows, `--lines 400` returned 360.
+The fallback is for when that stops helping, not for every long answer.
 
 The part it does not cover: **that is a write.** If you told the peer read-only, you
 cannot quietly grant yourself the exception — ask the user to widen the scope, or ask
