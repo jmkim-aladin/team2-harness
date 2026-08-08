@@ -38,17 +38,19 @@ components:
       - Dapper
       - Swashbuckle 7.1.0
 
+  # 프론트엔드 스택은 2026-08-08 각 레포 package.json 실측으로 갱신
   max-front:
     description: "소비자용 프론트엔드"
     runtime:
       type: nextjs
-      version: "14.2.3"
+      version: "15.5.18" # max-front/package.json dependencies.next ^15.5.18
       language: "TypeScript 5.2.2"
       hosting: docker # Node.js 20.9.0-alpine
     dependencies:
-      - Recoil (state)
-      - styled-components
-      - "@tanstack/react-query 4.0.0"
+      - Jotai 2.20 (state) # Recoil 아님 — recoil 의존성 없음
+      - React 19.2.6
+      - styled-components 5.3
+      - "@tanstack/react-query 5.100.9"
       - Swiper
       - dnd-kit
 
@@ -56,16 +58,17 @@ components:
     description: "CMS 관리자 프론트엔드"
     runtime:
       type: nextjs
-      version: "14.2.35"
-      language: "TypeScript 5.1"
+      version: "15.5.18" # maxcms-front/package.json dependencies.next 15.5.18
+      language: "TypeScript 5.9.3" # package-lock.json 확정 버전
       hosting: docker
     dependencies:
-      - Jotai (state)
-      - Tailwind CSS
-      - Ant Design 5.22.7
-      - React Hook Form
-      - Zod
-      - "@tanstack/react-query 5.62.10"
+      - Jotai 2.11 (state)
+      - React 19.2.6
+      - Tailwind CSS 3.4
+      - Ant Design 6.4.3
+      - React Hook Form 7.54
+      - Zod 3.24
+      - "@tanstack/react-query 5.100.11"
 
   max-batch:
     description: "배치 작업 (SQL Server Agent)"
@@ -227,10 +230,10 @@ modernization:
       target: "Kotlin + Spring Boot (장기)"
       track: observe # 이미 modern, 급하지 않음
     max-front:
-      current: "Next.js 14"
+      current: "Next.js 15"
       track: observe # modern stack
     maxcms-front:
-      current: "Next.js 14"
+      current: "Next.js 15"
       track: observe # modern stack
     max-batch:
       current: "SQL Server Agent + T-SQL"

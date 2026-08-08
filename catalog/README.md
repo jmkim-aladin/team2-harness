@@ -8,7 +8,7 @@
 
 | 서비스 | 유형 | 스택 | DB | SP | 현대화 트랙 후보 | 하네스 상태 |
 |--------|------|------|-----|-----|-----------------|-------------|
-| [만권당 (max)](max.yaml) | legacy | .NET FW 4.8 / .NET 8 / Next.js 14 | MSSQL 5개 공유 | 580+ | Wrap/Extract | 미시작 |
+| [만권당 (max)](max.yaml) | legacy | .NET FW 4.8 / .NET 8 / Next.js 15 | MSSQL 5개 공유 | 580+ | Wrap/Extract | 미시작 |
 | [투비컨티뉴드 (tobe)](tobe.yaml) | legacy | .NET FW 4.8 (ASP.NET MVC + React SSR) | MSSQL 5개 공유 | 200+ | Wrap | 미시작 |
 | [알라딘 쇼핑 (shopping)](shopping.yaml) | legacy | .NET FW 4.8 ASP.NET (web) + VB6 (백오피스) | MSSQL (webcatalog/ebookcms) | TBD | Wrap | 미시작 |
 | [블로그/북플 (blog)](blog.yaml) | legacy | .NET FW 4.8 ASP.NET Web Site | MSSQL (webcatalog 공유) | TBD | Wrap | 미시작 |

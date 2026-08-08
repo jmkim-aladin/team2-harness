@@ -152,7 +152,8 @@ build:
   commands:
     build: "./gradlew build"
     test: "./gradlew test"
-    lint: "./gradlew ktlintFormat"
+    lint: "./gradlew ktlintCheck" # 판정용. ktlintFormat은 자동 포매터라 red/green 신호가 아니다
+    format: "./gradlew ktlintFormat"
     coverage: "./gradlew koverHtmlReport"
     run_sso: "./gradlew :apps:sso-api:bootRun"
     run_account: "./gradlew :apps:account-api:bootRun"
@@ -197,7 +198,7 @@ verification:
       lint: "./gradlew ktlintCheck"
       evidence: "NaruServer/README.md L84(build)·L97-104(test); NaruServer/build.gradle.kts L16·L41 (org.jlleitschuh.gradle.ktlint 전 subproject 적용 → ktlintCheck 태스크); NaruServer/gradlew; 8개 모듈 전부 src/test 보유"
   notes: |
-    카탈로그 build.commands.lint 는 ktlintFormat(자동 포매팅)이라 red/green 판정용이 아니다 — 검증 루프는 ktlintCheck 사용.
+    lint 는 ktlintCheck(판정)로 통일했다. ktlintFormat 은 자동 포매터라 red/green 신호가 아니어서 build.commands.format 으로 분리했다.
     커버리지는 ./gradlew koverHtmlReport (build.gradle.kts L18 kover 플러그인).
     README.md의 `./gradlew :domain:test`, `:apps:naru-sso-api:bootRun` 표기는 settings.gradle.kts 실제 모듈명
     (`core-domain`, `apps:sso-api`, `apps:account-api`)과 불일치하므로 모듈 지정 명령은 루프에 넣지 않았다.
