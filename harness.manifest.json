@@ -135,5 +135,20 @@
       ],
       "_link_exclude_doc": "ad:* wrapper가 진입점 — 메뉴 이중화 방지. vendor에는 남는다(SoT)"
     }
-  }
+  },
+  "credentials": [
+    {
+      "name": "youtrack-token",
+      "hint": "YouTrack > Profile > Account Security > New Token"
+    },
+    {
+      "name": "cool-dev",
+      "hint": "공유 MSSQL dev 읽기 계정 — 매핑: policies/local-credentials-policy.md"
+    },
+    {
+      "name": "lego-dev",
+      "hint": "Lego 통계/로그 dev — 본인 등록값"
+    }
+  ],
+  "_credentials_doc": "필요한 자격증명 이름 목록 (값 절대 아님). 각자 OS 금고에 등록: python3 tools/cred.py set <name>. 검사: cred.py check / setup_harness.py --check"
 }

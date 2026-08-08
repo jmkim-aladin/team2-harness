@@ -19,8 +19,11 @@
 
 ```bash
 BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
+YOUTRACK_TOKEN="${YOUTRACK_TOKEN:-$(python3 "${TEAM2_HARNESS_PATH:-$HOME/Documents/workspace/team2}/tools/cred.py" get youtrack-token)}"
 AUTH="Authorization: Bearer $YOUTRACK_TOKEN"
 ```
+
+토큰은 OS 금고(macOS Keychain / Windows Credential Manager)에 산다 — env는 폴백일 뿐, **settings.json·.env 등 평문 파일에 두지 않는다** ([local-credentials-policy.md](../policies/local-credentials-policy.md)).
 
 스킬의 코드 블록에서 `$BASE`·`$AUTH`가 보이면 이 셋업을 전제한다.
 

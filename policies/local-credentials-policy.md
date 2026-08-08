@@ -7,7 +7,10 @@
 공통 취급 원칙: [security-policy.md](./security-policy.md) §취급 공통 원칙.
 
 - 대상: 팀원 본인 개발 머신에 한정.
-- 저장 매체: macOS Keychain (login 키체인 권장). `~/.env`, 평문 파일, 프로젝트 디렉터리, vault, 하네스 저장 금지.
+- 저장 매체: **OS 네이티브 금고** — macOS는 Keychain(login), **Windows는 Credential Manager**(DPAPI, 사용자별 암호화). `~/.env`, 평문 파일, 프로젝트 디렉터리, vault, 하네스, **`~/.claude/settings.json` env** 저장 금지 (근거: 2026-08-08 — settings.json에 YOUTRACK_TOKEN 평문 발견, Keychain 이관)
+- 접근 인터페이스는 OS 공통으로 **`python3 tools/cred.py`** 하나 — `get <name>`(stdout) / `set <name>`(프롬프트, 인자 금지 — 셸 히스토리 방지) / `check`(manifest 선언분 존재 검사, 값 미출력). macOS는 `security` CLI 폴백이라 의존성 0, Windows는 `pip install keyring` 1회
+- 필요한 자격증명 **이름 목록**(값 아님)은 [harness.manifest.json](../harness.manifest.json) `credentials`가 SoT — `setup_harness.py --check`가 누락을 검출하고 등록 명령을 안내한다
+- 유출 감시: `python3 tools/secret_scan.py` — repo+vault 패턴 스캔, `/ad:harness-optimize 스택` 모드에 포함. 발견 시 제거 + **해당 자격증명 재발급**이 원칙 (한 번 파일에 닿은 값은 오염으로 간주)
 - 보관 가능: dev/staging DB 비밀번호, dev 외부 API 키, 로컬 도구 토큰(YouTrack, GitHub, 사내 시스템 등).
 - 보관 금지: 운영 DB 비밀번호, 운영 API 시크릿, 타인 계정 자격증명, 결제·개인정보 관련 운영 자격증명.
 
