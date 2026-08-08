@@ -6,14 +6,10 @@ status: canonical
 updated_at: {{date}}
 year: {{year}}
 month: {{month}}
-assignees:
-  - jmkim
-  - heum2
-  - pms0905
-  - hyeryun
+assignees: []  # policies/team-members.md 참조 ({{month}}월 팀장 지침 확인)
 ---
 
-<!-- llm-hint>
+<!-- llm-hint -->
 월별 가용 맨데이·velocity 스냅샷. /ad:capacity-plan 결과 저장.
 산식: 스프린트 평일 - 공휴일 - PTO × 계획업무 비율.
 <!-- /llm-hint -->
@@ -32,11 +28,7 @@ assignees:
 
 ## 팀 수용량 (KB DEV2-A-1122 BD PLAN)
 
-| 시나리오 | 전월 velocity | ×80% | ×가용률 | 수용량 |
-|----------|---------------|------|---------|--------|
-| 전체 (AASM 100%) | | | | SP |
-| AASM 제거 (0%) | | | | SP |
-| **AASM 30% (권장)** | | | | **SP** |
+산식·계수·시나리오 구성은 `/ad:capacity-plan` 스킬이 SoT — 스킬 출력 표를 그대로 붙인다.
 
 ## 본인 계획 SP
 

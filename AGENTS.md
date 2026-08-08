@@ -13,13 +13,13 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 
 - 가이드·정책·스킬·서비스 카탈로그·스프린트 산출물: 팀 하네스 (`$TEAM2_HARNESS_PATH`)
 - 도메인 분석, Graphify 산출물, Querybook, daily/meetings/tickets 노트: 로컬 Obsidian vault (`$LOCAL_WIKI_PATH`)
-- `YOUTRACK_TOKEN`이 환경에 없으면 `~/.claude/settings.json`의 `env.YOUTRACK_TOKEN`을 읽되 값은 출력하지 않는다
+- 토큰 조달: [youtrack/api-guide.md](./youtrack/api-guide.md) §환경변수·§셋업(cred.py 체인)을 따른다
 
 ## 스킬 호출
 
 요청이 스킬에 맞으면 다른 도구보다 먼저 호출한다. 판단 근거는 각 스킬의 `description`이며, 이 파일에 라우팅 목록을 따로 두지 않는다 — 같은 일을 두 곳에서 하면 한쪽이 반드시 낡는다.
 
-**사용자 호출 전용 4종**(사이드이펙트): `$ad-code-review`, `$ad-work-board`, `$ad-tldr`, `$ad-explain`.
+**사용자 호출 전용 5종**(사이드이펙트): `$ad-code-review`, `$ad-work-board`, `$ad-tldr`, `$ad-explain`, `$ad-implement`.
 
 어떤 스킬을 언제 부르는지의 지도는 [docs/harness-guide.md](./docs/harness-guide.md) §작업 플로우.
 
@@ -27,9 +27,9 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 
 ### `$ad-*` ↔ `/ad:*` alias
 
-`architecture-analysis` `capacity-plan` `code-review` `data-request` `explain` `granola-sync` `harness-optimize` `new-note` `okr` `orchestration` `service-activity` `sprint-close-check` `team2-kb-read` `ticket` `tldr` `weekly-planned` `weekly-report` `work-board` `work-close` `work-prep`
+`.codex/skills/` 디렉토리가 SoT — `ad-{name}` = `/ad:{name}`.
 
-20종 전부 `$ad-{name}` = `/ad:{name}`. 컨텍스트 스킬 3종: `$dev2-team-harness-ko`(정책·카탈로그·KB·주간업무 컨텍스트), `$youtrack-ticket-5w1h-ko`(DEV2 티켓 작성), `$dev2-ad-commands-ko`(`/ad:*` 호환 실행).
+컨텍스트 스킬 3종: `$dev2-team-harness-ko`(정책·카탈로그·KB·주간업무 컨텍스트), `$youtrack-ticket-5w1h-ko`(DEV2 티켓 작성), `$dev2-ad-commands-ko`(`/ad:*` 호환 실행).
 
 ## 도구 대응
 
@@ -38,6 +38,8 @@ gstack 본문은 Claude Code 도구명을 사용하므로 Codex에서는 이렇�
 gstack 스킬 사용 시 [policies/gstack-override-policy.md](./policies/gstack-override-policy.md)를 참조한다 — 팀 Git 컨벤션·배포 정책이 gstack 기본값보다 우선한다.
 
 ## 세션 컨텍스트 규율
+
+> SoT: [memory/claude-base.md](./memory/claude-base.md) §세션 컨텍스트 규율 — Codex 로드 경로 부재로 여기 복제.
 
 세션 컨텍스트는 **smart zone**(약 150k 토큰) 안에 둔다.
 
@@ -54,19 +56,12 @@ gstack 스킬 사용 시 [policies/gstack-override-policy.md](./policies/gstack-
 - **YouTrack**: `https://aladincommunication.youtrack.cloud` — REST API(`$YOUTRACK_TOKEN`)만 사용. MCP 미사용
 - **GitHub**: `gh` CLI로 PR·이슈 조회. Org는 `AladinCommunication`, 개인 계정은 `jmkim-aladin`
 - **DB**: DB 관련 MCP 도구는 사용하지 않는다. dev RDS `sqlcmd`는 read-only 조회만 허용
+- **공통 서비스 영향**: 로그인·결제·정산·구독 등이 걸리면 [policies/common-service-policy.md](./policies/common-service-policy.md) + [catalog/common-services/registry.yaml](./catalog/common-services/registry.yaml) 확인
 
 ## GBrain 공유 brain
 
-- DEV2 공유 brain은 Hermes Docker의 `gbrain-team2` 서비스가 제공하는 HTTP MCP다
-- 로컬 에이전트 MCP URL `http://127.0.0.1:3131/mcp`, Hermes 컨테이너 내부 URL `http://gbrain-team2:3131/mcp`
-- Codex·Claude Code·Hermes가 같은 MCP를 쓴다. Mac의 직접 `gbrain` CLI는 개인 로컬 PGLite일 수 있으므로 공유 brain 운영 명령은 `docker exec gbrain-team2 ...`로 실행한다
-- Docker runtime은 `GBRAIN_SOURCE=team2-vault`로 실행해 vault를 기본 검색 범위로 둔다. 하네스 검색이 필요하면 source를 명시한다
-- 상시 지식 강화 주체는 Hermes다. cron이 `tools/run_team2_knowledge_cycle.py`로 vault projection·board·outbox·status를 갱신하고, `tools/run_granola_sync_cycle.py`를 10분마다 실행해 Granola 회의록을 동기화한다
-- PGLite maintenance는 host LaunchAgent `com.team2.gbrain-maintenance`가 01:40 KST에 수행한다. 상태 조회는 `/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh --status`이며 maintenance를 실행하지 않는다
-- gbrain 검색 결과는 **후보 근거**다. 확정 지식·승인·done/canonical 상태는 vault/YouTrack/코드/사용자 확인으로 검증한다
-- gbrain bearer token과 API key는 문서나 커밋에 기록하지 않는다
+설정·검색 가이드: [docs/gbrain-config.md](./docs/gbrain-config.md)
 
 ## 커밋 메시지
 
-- AI co-author footer나 도구 자기참조 footer를 추가하지 않는다
-- 본문은 의사결정·영향 범위 중심으로 짧게. 코드 수준 구현 디테일 bullet 나열은 피한다
+[policies/ai-usage-policy.md](./policies/ai-usage-policy.md) §메시지 작성 품질을 따른다.

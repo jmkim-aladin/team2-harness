@@ -56,14 +56,14 @@
 |------|----------------|----------------|
 | **5W1H 작성법** | `docs/sprint/ticket-guide.md` 3항 | `.claude/commands/ad/ticket.md`, `templates/ticket-templates/`, `youtrack/ticket-guide.md` |
 | **스토리 포인트** | `docs/sprint/story-point-guide.md` | `.claude/commands/ad/ticket.md`, `docs/sprint/sprint-planning-overview.md` |
-| **이월 절차** | `docs/sprint/plan-change-process.md` | `docs/sprint/ticket-guide.md` 7항 (요약+링크만) |
-| **맨데이 배분** | `docs/sprint/sprint-planning-overview.md` | - |
+| **이월 절차** | `docs/sprint/plan-change-process.md` | `docs/sprint/ticket-guide.md` §8 (요약+링크만) |
+| **맨데이 배분** | `docs/sprint/sprint-planning-overview.md` | `docs/sprint/velocity-guide.md`, `docs/sprint/sprint-workflow-execution.md`, `youtrack/ticket-guide.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/harness-optimize.md` (링크만) |
 | **YouTrack API 공통 호출** | `youtrack/api-guide.md` | `.claude/commands/ad/*` 13종 (참조만) |
-| **전사 상태 플로우** | `youtrack/ticket-guide.md` | `docs/sprint/ticket-guide.md` 8항 (링크만) |
+| **전사 상태 플로우** | `youtrack/ticket-guide.md` | `docs/sprint/ticket-guide.md` §14 (링크만) |
 | **OKR (팀/개인)** | Obsidian vault `wiki/processes/okr/` | `.claude/commands/ad/okr.md` |
 | **서비스 프로파일** | `catalog/*.yaml` | `.claude/commands/ad/ticket.md` |
 | **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/capacity-plan.md`, `.claude/commands/ad/sprint-close-check.md`, `.claude/commands/ad/weekly-planned.md` |
-| **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만) |
+| **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만). 필드 스펙은 여기가 SoT, **티켓 노트의 구조·본문 스켈레톤**은 아래 "티켓 노트 스켈레톤" 행이 SoT |
 | **지시 강도·우선순위** | `policies/instruction-precedence-policy.md` | CLAUDE.md, `policies/skill-authoring-principles.md`, `.claude/commands/ad/harness-optimize.md` (전부 링크만) |
 | **하네스 개선 방향(북극성)** | `policies/harness-north-star.md` | harness-governance-policy, `.claude/commands/ad/harness-optimize.md`, CLAUDE.md (전부 링크만) |
 | **컨텍스트 예산·외부 스택 판정** | `policies/harness-governance-policy.md` §컨텍스트 예산 + `docs/skill-stack-and-workflow-plan.md` | CLAUDE.md, AGENTS.md, `.claude/commands/ad/harness-optimize.md` (링크만) |
@@ -71,3 +71,9 @@
 | **DB/SP 첨부물 (PR 단계)** | `policies/code-review-policy.md` | engineering/legacy-modernization/gstack-override-policy, templates (링크만) |
 | **DB/SP 첨부물 (배포 단계)** | `policies/release-policy.md` | 동일 |
 | **시크릿 취급 공통 원칙** | `policies/security-policy.md` §취급 공통 원칙 | aws-secrets-convention, local-credentials-policy, datadog-api-policy (링크만) |
+| **Co-Authored·커밋 메시지 품질** | `policies/ai-usage-policy.md` §메시지 작성 품질 | `policies/engineering-policy.md`, `policies/branching-strategy.md`, `policies/gstack-override-policy.md`, AGENTS.md (전부 링크만) |
+| **세션 컨텍스트 규율** | `memory/claude-base.md` §세션 컨텍스트 규율 | CLAUDE.md (링크만), AGENTS.md (Codex 로드 경로 부재로 기능적 복제 — 머리에 SoT 주석) |
+| **하네스 갱신 트리거** | `docs/harness-guide.md` §하네스 갱신 트리거 | `templates/dod-checklist.md`, `templates/pr-template.md` (링크만) |
+| **현대화 4트랙** | `policies/legacy-modernization-policy.md` §현대화 4트랙 | `templates/service-harness/*.tmpl` 5종, `templates/ticket-templates/modernization.md` (링크만) |
+| **SP 직접 호출 금지** | `policies/engineering-policy.md` §기술 스택 원칙 | `policies/legacy-modernization-policy.md`, `policies/gstack-override-policy.md`, CLAUDE.md (링크만) |
+| **티켓 노트 스켈레톤** | `docs/sprint/work-prep-note-template.md` | `templates/vault-notes/ticket.md` (최소 스켈레톤 + 링크) |

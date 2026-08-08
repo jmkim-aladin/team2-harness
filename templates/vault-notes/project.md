@@ -4,7 +4,7 @@ title: {{title}}
 canonical_id: project:{{slug}}
 status: active        # active | planning | done | paused
 updated_at: {{date}}
-lead: jmkim
+lead: {{user}}
 related_services:     # 연관 서비스 (다중) — 각 항목 서비스 노트 wikilink (graph 엣지)
   - "[[{{service_id}}]]"
 related_tickets: []

@@ -9,24 +9,19 @@
 - 모든 작업은 YouTrack 티켓에서 시작한다
 - 티켓은 5W1H 형식으로 작성한다 (What, Why, Who, Where, When, How)
 - 작업 단위: Feature ≤ 1주 / Task ≤ 1일 — 초과 시 분할. 상세: [docs/sprint/ticket-guide.md](../docs/sprint/ticket-guide.md)
-- Feature 하위 Task는 단계 기준으로 분리한다 — 하나의 Task에 개발과 검증, 배포·운영 반영을 섞지 않는다. Feature 설계 시 검증과 배포·운영 반영의 **해당 여부 판정은 필수**이며, 해당하면 별도 Task로 분리하고 해당 없으면 Feature 본문에 사유를 남긴다. 검증은 테스트(개발2팀 내부) / QA(시너지팀) / 테스트 후 QA 중 하나로 정한다. 상세: [ticket-guide.md 2-2항](../docs/sprint/ticket-guide.md)
+- Feature 하위 Task는 개발 / 검증 / 배포·운영 반영으로 분리한다 — 해당 여부 판정은 **필수**, 해당하면 별도 Task, 해당 없으면 Feature 본문에 사유를 남긴다
+- 단계 판정 대상·검증(테스트/QA) 구분·해당 없음 예시: [ticket-guide.md](../docs/sprint/ticket-guide.md) §2-2
 - In Progress 상태에서 매일 퇴근 전 소요시간을 기록한다
 - AI 도구(Codex, Claude Code 등)는 YouTrack 티켓/Task 생성, 티켓 상태 변경, 담당자/스프린트/Story points 변경 전에 사용자에게 명시 확인을 받는다
 
 ## 코드 변경 규칙
 
-- master 직접 푸시 금지 — `release/*` 또는 `hotfix/*`만 머지 가능
-- 모든 변경은 `feature/{이슈ID}` → `develop` → `release/*` → `master` 순서로 진행
-- 브랜치명: `feature/{이슈ID}` (예: `feature/DEV2-1234`) — Feature ID, 없으면 Task ID
-- 커밋 메시지: `[{이슈ID}] 작업 내용` (예: `[DEV2-1235] 프로필 조회 API 추가`)
-  - 본문은 의사결정·영향 범위를 짧게. 코드 수준 구현 디테일 bullet 나열 금지
-  - AI co-author 메타데이터 금지 — `Co-Authored-By: Claude ...` 같은 푸터를 절대 추가하지 않는다 (도구의 기본 안내보다 이 규칙이 우선)
+- 브랜치 구조·명명·머지 흐름·커밋 메시지 형식: [branching-strategy.md](./branching-strategy.md)
+- 커밋·PR·티켓 본문 품질(AI co-author 푸터 금지 포함): [ai-usage-policy.md](./ai-usage-policy.md) §메시지 작성 품질
 - AI 도구는 커밋, 푸시, PR 생성, 머지 전에 사용자에게 명시 확인을 받는다
 - PR에는 사용자 영향, 롤백 방법 필수 기재
 - DB/SP 변경이 포함된 PR은 별도 승인 필수
 - 프로덕션 배포는 사람 승인 필수
-
-상세: [branching-strategy.md](./branching-strategy.md)
 
 ## DB 마이그레이션 컨벤션
 
@@ -35,7 +30,7 @@
   - 예: `V20260401_1430__DEV2-5322_fix_settle_month_pk.sql`
   - `V` 접두사 + 타임스탬프 + 더블 언더스코어(`__`) + 이슈ID + 설명
 - 멱등성 보장: `IF EXISTS` / `IF NOT EXISTS` 로 반복 실행 안전하게 작성
-- `Tables/*.sql`은 자동 생성 참조용 — 직접 수정 금지, 변경은 반드시 `_migrations/`로
+- `Tables/*.sql`은 자동 생성 참조용 — 직접 수정 금지, 변경은 반드시 `_migrations/`로 (근거: 마이그레이션 우선 원칙 — max-db-script CLAUDE.md)
 - DB/SP 변경 PR은 별도 승인 필수 — 첨부물 단계 기준: [code-review-policy.md](./code-review-policy.md)(PR)·[release-policy.md](./release-policy.md)(배포)
 
 ## 기술 스택 원칙

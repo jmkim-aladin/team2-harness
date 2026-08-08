@@ -29,7 +29,6 @@ relation_sources:
 - 발생: {{date}} HH:MM
 - 복구: {{date}} HH:MM
 - 영향: 
-- severity: P2
 - 서비스: {{service_id}}
 
 ## 타임라인

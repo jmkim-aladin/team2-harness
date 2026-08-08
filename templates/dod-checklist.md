@@ -13,18 +13,7 @@
 
 ## 하네스 갱신 확인
 
-아래 변경이 있었다면 해당 하네스 파일을 갱신:
-
-| 변경 유형 | 갱신 대상 |
-|-----------|-----------|
-| 신규 외부 연동 추가 | AGENTS.md (의존 시스템) |
-| 주요 API 경로 변경 | AGENTS.md (엔드포인트) |
-| 배포/롤백 절차 변경 | RUNBOOK.md |
-| DB/SP 영향 범위 변경 | LEGACY_BOUNDARY.md |
-| 서비스 책임 이동 | service-manifest.yaml |
-| 장애/위험 포인트 발견 | AGENTS.md (주의사항) |
-| 현대화 진행 상태 변경 | modernization-plan.md |
-| 금지 패턴 추가 | AGENTS.md (금지 사항) |
+- [ ] 변경 유형별 갱신 대상 확인 — SoT: [docs/harness-guide.md](../docs/harness-guide.md) §하네스 갱신 트리거
 
 ## 배포 후
 

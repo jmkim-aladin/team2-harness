@@ -23,10 +23,12 @@
 - 신규 빌링, 결제, 청구, 환불, 정산, 구독, 빌링키 기능을 만든다.
 - 주문/배송/클레임 상태가 다른 서비스에 이벤트나 API로 전파된다.
 - 공유 DB, 공유 SP, 공통 batch, 공통 메시지/이벤트/outbox를 읽거나 쓴다.
-- storefront, bazaar, max, tobe, shopping, blog, naru, aasm 등이 같은 기능에서 함께 언급된다.
+- 팀 서비스 여럿이 같은 기능에서 함께 언급된다 (서비스 목록은 `catalog/`가 SoT).
 - 운영 장애/데이터 추출 요청에서 원인 서비스와 영향 서비스가 다를 수 있다.
 
-## 필수 절차
+## 기본 순서
+
+1~4항은 **기본** 순서다 — 티켓 성격에 따라 조정할 수 있다. 5·6항(확인 수준 명시·owner-confirmed 전 승격 금지)은 예외 없다.
 
 1. 대상 팀 서비스를 먼저 식별한다.
 2. `catalog/{service_id}.yaml`의 `dependencies`를 확인한다.
@@ -40,12 +42,9 @@
 
 ## 자동화 경계
 
-Hermes, Codex, Claude Code, GBrain은 공통 서비스 후보를 찾고 위키 draft를 보강할 수 있다. 하지만 아래는 사용자 승인 없이 하지 않는다.
+Hermes, Codex, Claude Code, GBrain은 공통 서비스 후보를 찾고 위키 draft를 보강할 수 있다. 공통 금지 목록의 SoT는 [ai-usage-policy.md](./ai-usage-policy.md) §금지(AI 작업 가드레일)이며, 아래는 공통 서비스 문맥의 고유 항목이다 — 사용자 승인 없이 하지 않는다.
 
 - 공통 서비스 owner에게 요청 발송
-- YouTrack 티켓/Task 생성 또는 상태 변경
-- YouTrack KB 생성/수정/삭제
-- DB/SP/schema 변경
 - 운영 설정, 인증, 결제, 정산 상태 변경
 - vault 문서의 `confirmed`, `canonical`, `done` 승격
 

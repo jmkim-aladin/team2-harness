@@ -15,25 +15,9 @@ domains/, analysis/, decisions/, proposals/, processes/ 안 `{name}-index` 또�
 # {{service_id}}
 
 <!-- generated:vault-index source=services/{{service_id}}/ updated={{date}} -->
-## domains
-- (없음)
-
-## analysis
-- (없음)
-
-## decisions
-- (없음)
-
-## proposals
-- (없음)
-
-## processes
-- (없음)
+<!-- 이 블록은 tools/generate_vault_indexes.py가 채운다 — 직접 작성하지 않는다 -->
 <!-- /generated -->
 
 <!-- generated:harness-link source=team2/catalog/{{service_id}}.yaml updated={{date}} -->
-- 이름: 
-- 분류: 
-- 카탈로그: [`catalog/{{service_id}}.yaml`]
-- 오너: 
+<!-- 이 블록은 tools/generate_vault_indexes.py가 채운다 — 직접 작성하지 않는다 -->
 <!-- /generated -->

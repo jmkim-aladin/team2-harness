@@ -1,5 +1,7 @@
 # 리팩토링 티켓 템플릿
 
+> 5W1H 상세 작성법: [docs/sprint/ticket-guide.md](../../docs/sprint/ticket-guide.md) 3항 참조
+
 ## What (무엇을 리팩토링)
 {{대상 모듈/코드 영역}}
 
@@ -20,4 +22,4 @@
 - 레거시 경계 영향: {{있음/없음}}
 
 ## 예상 소요
-{{시간 — 2일 초과 시 분할}}
+{{시간 — Task ≤ 1일 / Feature ≤ 1주, 초과 시 분할 (ticket-guide)}}
