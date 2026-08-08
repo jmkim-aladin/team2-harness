@@ -17,9 +17,11 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 
 ## 스킬 호출
 
-스킬은 **사용자가 호출할 때만** 실행한다. 어떤 스킬을 언제 부르는지는 [docs/harness-guide.md](./docs/harness-guide.md)의 **작업 플로우** 절이 인덱스다.
+요청이 스킬에 맞으면 다른 도구보다 먼저 호출한다. 판단 근거는 각 스킬의 `description`이며, 이 파일에 라우팅 목록을 따로 두지 않는다 — 같은 일을 두 곳에서 하면 한쪽이 반드시 낡는다.
 
-근거: 2026-08-08 실사용 실측 — 판정은 [docs/skill-stack-and-workflow-plan.md](./docs/skill-stack-and-workflow-plan.md) §3.
+**사용자 호출 전용 4종**(사이드이펙트): `$ad-code-review`, `$ad-work-board`, `$ad-tldr`, `$ad-explain`.
+
+어떤 스킬을 언제 부르는지의 지도는 [docs/harness-guide.md](./docs/harness-guide.md) §작업 플로우.
 
 절차의 SoT는 `.claude/commands/ad/{name}.md` 하나다. `.codex/skills/ad-{name}/`은 SoT를 런타임에 읽는 얇은 alias이므로 `$ad-*` 호출 시 해당 command 문서를 먼저 읽고 같은 절차로 수행한다.
 

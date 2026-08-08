@@ -1,6 +1,5 @@
 ---
-description: 작업 종료 (Work Close)
-disable-model-invocation: true
+description: 작업 종료 — Fixed 처리, 소요시간(work item) 입력 후 티켓 닫기
 ---
 
 # 작업 종료 (Work Close)

@@ -1,6 +1,5 @@
 ---
-description: 작업 준비 (Work Prep)
-disable-model-invocation: true
+description: 작업 준비 — 티켓번호나 작업 설명으로 위키 노트와 코드 진입점 묶기
 ---
 
 # 작업 준비 (Work Prep)

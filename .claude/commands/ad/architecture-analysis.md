@@ -1,6 +1,5 @@
 ---
-description: DEV2 저장소 아키텍처 분석
-disable-model-invocation: true
+description: 저장소 아키텍처 분석 — Clean/Hexagonal/DDD, 네이밍
 ---
 
 # DEV2 저장소 아키텍처 분석

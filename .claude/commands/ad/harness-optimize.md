@@ -1,6 +1,5 @@
 ---
-description: 하네스 최적화 (업데이트·최신화·중복제거)
-disable-model-invocation: true
+description: 하네스 최적화 — 중복 제거, KB 동기화, 스킬·제약·스택 감사, repo↔vault 드리프트
 ---
 
 # 하네스 최적화 (업데이트·최신화·중복제거)

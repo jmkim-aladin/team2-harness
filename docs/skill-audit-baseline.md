@@ -140,7 +140,11 @@
 
 - [x] **GSD 비활성** — 스킬 18종 + 훅 9개. 90일 Claude 호출 0, Codex 3세션(전부 6월), `.planning/` 최종 수정 07-16. 훅이 모든 `Write`/`Edit`/`Read`/`Bash`를 검문하고 있었다. `~/.claude/skills-disabled/`로 이동(삭제 아님), `.planning/` 산출물 보존
 - [x] **미사용 외부 스킬 58종 비활성** — gstack 미사용 48종 등. 유지 21종은 실사용 12 + 인프라·배포 9(`gstack`·`gstack-upgrade`·`setup-gbrain`·`sync-gbrain`·`ship`·`review`·`qa`·`investigate`·`computer-use`, **관찰** 판정)
-- [x] **모델 자동 호출 폐지** — `/ad:*` 20종 전부 `disable-model-invocation: true`. CLAUDE.md `Skill routing` 절 제거, `docs/harness-guide.md` §작업 플로우가 인덱스 역할 대체. `orchestration` description의 트리거 나열을 한 줄로 축약
+- [x] **라우팅 이중화 제거** — CLAUDE.md·AGENTS.md `Skill routing` 절 제거, 라우팅은 각 스킬 `description` 한 곳으로 단일화. routing 블록(약 350 tok)을 걷고 트리거를 담은 짧은 description(약 135 tok)만 남겨 **자동 호출을 유지하면서 215 tok 절감**
+  - 1차 판정은 "자동 호출 전면 폐지"였으나 재검토 결과 문제는 자동 호출이 아니라 **이중화**였다. routing 0회 6건은 트리거 문구가 약했던 것 — 판정 정정 (2026-08-08)
+  - `/ad:*` 16종 모델 호출 유지, 사이드이펙트 4종(`code-review`·`work-board`·`tldr`·`explain`)만 사용자 호출. 2026-07 팀 판정 승계
+  - 부작용 확인: 사용자 호출 전용은 다른 스킬도 못 부른다. `ad:*` 간 상호 호출 0건이라 영향 없음
+- [x] **비활성 스킬 참조 정정** — `docs/gstack-usage-guide.md` 재작성(비활성 `/cso`·`/land-and-deploy`·`/qa-only`·`/retro`·`/careful`·`/freeze`·`/benchmark`·`/canary`·`/document-release`·`/design-*` 제거), `policies/gstack-override-policy.md` 적용 범위표 갱신. 보안 감사는 내장 `/security-review`로 대체 명시
 - [x] **AGENTS.md 재구성** — 13.8KB → 5.0KB. H1 2개, `gstack 스킬`·`문서 규칙`·`Skill routing` 절 각 2회 중복, 없는 경로(`docs/designs/`·`docs/okr/`), 없는 스킬(`checkpoint`) 라우팅 제거. Codex 고유 내용만 남기고 나머지는 CLAUDE.md 링크
 - [x] **컨텍스트 예산 정책 신설** — [harness-governance-policy.md](../policies/harness-governance-policy.md) §컨텍스트 예산 (상주 8,000 tok / 세션 평균 200,000 tok)
 - [x] **사용자 호출 전용을 팀 표준으로 확정** — [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §1 갱신. 2층 구조의 아래층을 모델 호출 스킬 → 참조 파일로 변경

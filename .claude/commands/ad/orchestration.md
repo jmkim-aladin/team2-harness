@@ -1,6 +1,5 @@
 ---
-description: Herdr pane 위의 peer-agent 협업 (단발 위임·핑퐁·병렬 fan-out)
-disable-model-invocation: true
+description: Herdr pane peer-agent 협업 — 단발 위임, 다중 턴 핑퐁, 병렬 fan-out. HERDR_ENV=1 필요
 ---
 
 # `/ad:orchestration`

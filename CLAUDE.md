@@ -64,11 +64,11 @@ superpowers는 `brainstorming`·`systematic-debugging`·`executing-plans` 3종�
 
 ## 스킬 호출
 
-스킬은 **사용자가 호출할 때만** 실행한다. 모든 `/ad:*`는 사용자 호출 전용(`disable-model-invocation: true`)이므로 모델이 자동으로 부르지 않는다.
+`/ad:*`는 **모델 호출**이다 — 요청이 스킬에 맞으면 다른 도구보다 먼저 호출한다. 판단 근거는 각 스킬의 `description`이며, CLAUDE.md에 라우팅 목록을 따로 두지 않는다. 같은 일을 두 곳에서 하면 한쪽이 반드시 낡는다.
 
-근거: 2026-08-08 실측 — 라우팅 등록 13개 중 6개는 관측 기간 모델 호출 0회. 자동 호출은 컨텍스트 부하와 예측 불가를 동시에 부담한다. 판정·근거는 [docs/skill-stack-and-workflow-plan.md](./docs/skill-stack-and-workflow-plan.md) §3.
+**사용자 호출 전용 4종** — `/ad:code-review`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`. 게시·dispatch 같은 사이드이펙트가 있어 사람이 시점을 정한다.
 
-어떤 스킬을 언제 부르는지는 [docs/harness-guide.md](./docs/harness-guide.md)의 **작업 플로우** 절 참조.
+어떤 스킬을 언제 부르는지의 지도는 [docs/harness-guide.md](./docs/harness-guide.md) §작업 플로우. 트리거 설계 기준은 [policies/skill-authoring-principles.md](./policies/skill-authoring-principles.md) §1.
 
 모델이 스스로 적용하는 규칙(스킬 아님):
 

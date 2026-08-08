@@ -1,6 +1,5 @@
 ---
 description: OKR 조회 및 작성
-disable-model-invocation: true
 ---
 
 # OKR 조회 및 작성

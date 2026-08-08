@@ -21,7 +21,7 @@ gstack 스킬 사용 시 팀 정책이 gstack 기본값보다 우선한다.
 ### Co-Authored-By 삽입 금지
 - gstack 기본: 최종 커밋에 `Co-Authored-By: Claude {모델명} <noreply@anthropic.com>` 삽입 (모델명은 세션마다 다름)
 - **팀 규칙**: Co-Authored-By 관련 문구 일체 삽입 금지
-- `/ship`, `/land-and-deploy` 등 모든 커밋에서 제거
+- `/ship` 등 모든 커밋에서 제거
 
 ### PR 타이틀 형식
 - gstack 기본: `<type>: <summary>`
@@ -30,9 +30,9 @@ gstack 스킬 사용 시 팀 정책이 gstack 기본값보다 우선한다.
 ## 배포 오버라이드
 
 ### 프로덕션 배포 사람 승인 필수
-- gstack `/land-and-deploy`의 자동 배포 기능 사용 금지
+- 어떤 스킬도 프로덕션 자동 배포를 수행하지 않는다
 - staging 배포 → staging 검증 → 프로덕션 요청 → 승인 → 프로덕션 배포 절차 준수
-- `/land-and-deploy` 사용 시 merge까지만 수행, 프로덕션 배포는 사람에게 위임
+- 자동 배포 스킬(`/land-and-deploy`, `/canary`)은 비활성 상태다. 되살릴 경우 merge까지만 수행하고 프로덕션 배포는 사람에게 위임한다
 
 ### DB/SP 변경 별도 승인
 - `/ship` PR에 DB/SP 변경이 포함된 경우 PR 본문에 명시
@@ -45,16 +45,16 @@ gstack 스킬 사용 시 팀 정책이 gstack 기본값보다 우선한다.
 - 셀프 리뷰 불가
 
 ### 레거시 경계 확인
-- `/review`, `/cso` 실행 시 서비스 하네스의 `LEGACY_BOUNDARY.md` 참조
+- `/review`, `/ad:code-review`, `/security-review` 실행 시 서비스 하네스의 `LEGACY_BOUNDARY.md` 참조
 - SP 직접 호출 금지 정책 준수 여부 점검
 
 ## 보안 오버라이드
 
 ### AWS Secrets 컨벤션
-- `/cso` 실행 시 `sm-{service}-{module}-{environment}-{resource}` 네이밍 준수 확인
+- 보안 점검(`/security-review`) 시 `sm-{service}-{module}-{environment}-{resource}` 네이밍 준수 확인
 - 시크릿 값 로깅 금지, 민감 필드 마스킹 확인
 
-## Retro 오버라이드
+## 커밋 분류 오버라이드 (회고·집계 스킬 공통)
 
 ### 커밋 분류
 - gstack 기본: conventional commits (feat/fix/refactor 등) 기준 분류
@@ -64,9 +64,15 @@ gstack 스킬 사용 시 팀 정책이 gstack 기본값보다 우선한다.
 
 ## 적용 범위
 
-이 정책은 gstack의 모든 스킬에 적용된다:
-- `/ship`, `/land-and-deploy`: Git 컨벤션, 배포 오버라이드
-- `/review`, `/cso`: 코드 리뷰, 보안 오버라이드
-- `/retro`: Retro 오버라이드
-- `/qa`, `/qa-only`: 레거시 경계 확인
-- 기타 스킬: 팀 정책 우선 원칙 적용
+이 정책은 gstack의 모든 스킬에 적용된다. 활성 스킬 목록과 비활성 판정은 [docs/gstack-usage-guide.md](../docs/gstack-usage-guide.md).
+
+| 스킬 | 적용되는 오버라이드 |
+|---|---|
+| `/ship` | Git 컨벤션, 배포 |
+| `/review` | 코드 리뷰, 레거시 경계 |
+| `/qa`, `/browse` | 레거시 경계 확인 |
+| `/security-review` (내장) | 보안, AWS Secrets 네이밍 |
+| 회고·집계 스킬 | 커밋 분류 |
+| 기타 | 팀 정책 우선 원칙 적용 |
+
+비활성 스킬(`/cso`, `/land-and-deploy`, `/canary`, `/retro`, `/qa-only` 등)을 되살릴 경우 같은 오버라이드가 그대로 적용된다.

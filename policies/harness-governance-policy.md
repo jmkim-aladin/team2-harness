@@ -23,7 +23,7 @@
 | **세션 컨텍스트** | 평균 200,000 tok | 툴 호출 시점의 창 크기. **smart zone**(약 150k)을 넘으면 모델이 놓치기 시작한다 |
 
 - 측정은 `python3 tools/harness_context_audit.py`. 임계값은 도구의 `LIMITS`에 있고, 조정하려면 근거를 함께 남긴다
-- **스킬 트리거 기본값은 사용자 호출 전용**이다. 모델 호출로 만들면 description이 상주 예산을 영구 점유하므로, 다른 스킬이 불러 써야 하는 경우에만 선택하고 근거를 남긴다 ([skill-authoring-principles.md](./skill-authoring-principles.md) §1)
+- **라우팅은 description 한 곳에만 둔다.** `/ad:*`는 모델 호출이고, CLAUDE.md·AGENTS.md에 라우팅 목록을 병행하지 않는다 — 이중화가 상주 예산을 두 번 쓰고 한쪽을 낡게 만든다. 사용자 호출 전용은 사이드이펙트 스킬에 한정 ([skill-authoring-principles.md](./skill-authoring-principles.md) §1)
 - **훅은 상주 예산이 아니라 지연으로 나타난다.** 툴 호출마다 발화하는 훅은 왕복마다 프로세스를 스폰한다. 외부 스택을 비활성할 때 그 스택의 훅도 함께 확인한다
 - 외부 스킬 비활성은 **삭제가 아니라 `~/.claude/skills-disabled/` 이동**. 되돌릴 수 있어야 한다
 
