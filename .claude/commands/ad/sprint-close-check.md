@@ -90,16 +90,12 @@ Feature description이 5W1H 여섯 항목(What/무엇, Why/왜, Who/누가/사�
 
 ## 환경변수
 
-| 변수 | 용도 |
-|------|------|
-| `$YOUTRACK_TOKEN` | YouTrack API 인증 토큰 |
-| `$YOUTRACK_BASE_URL` | 기본 `https://aladincommunication.youtrack.cloud` |
+> YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ## API 호출
 
 ```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
-AUTH="Authorization: Bearer $YOUTRACK_TOKEN"
+# BASE·AUTH 셋업: youtrack/api-guide.md
 
 # 담당자 + 태그 + 본문/코멘트 포함 검색 (페이지당 50)
 curl -s -H "$AUTH" \

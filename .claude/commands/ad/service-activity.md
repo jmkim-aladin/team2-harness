@@ -44,20 +44,17 @@ YouTrack 티켓을 서비스 태그·기간으로 필터링하여 팀 작업 현
 
 ## 환경변수
 
-| 변수 | 용도 |
-|------|------|
-| `$YOUTRACK_TOKEN` | YouTrack API 인증 토큰 |
-| `$YOUTRACK_BASE_URL` | YouTrack 베이스 URL (기본: `https://aladincommunication.youtrack.cloud`) |
+> YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ## API 호출
 
 YouTrack 쿼리 파서가 `()` 그룹 OR를 지원하지 않으므로 태그 패턴별 별도 호출 후 ID 기준 dedup.
 
 ```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
+# BASE·AUTH 셋업: youtrack/api-guide.md
 
 # 태그 패턴별 호출 (URL 인코딩 필수)
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -H "$AUTH" \
   "$BASE/api/issues?query=project:DEV2+updated:{FROM}+..+{TO}+summary:{TAG_ENCODED}&fields=idReadable,summary,customFields(name,value(name,login)),updated,resolved&\$top=200"
 ```
 

@@ -43,18 +43,11 @@ description: YouTrack 티켓 생성 — DEV2 티켓, 5W1H 작성, Task 분할
 
 ## 환경변수
 
-| 변수 | 용도 |
-|------|------|
-| `$YOUTRACK_TOKEN` | YouTrack API 인증 토큰 |
-| `$YOUTRACK_BASE_URL` | YouTrack 베이스 URL (기본: `https://aladincommunication.youtrack.cloud`) |
+> YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ### 토큰 owner 규칙 (필수)
 
-- `$YOUTRACK_TOKEN`은 **티켓을 발행하는 본인 계정의 토큰**이어야 한다.
-- YouTrack은 issue 생성 시 reporter(작성자) 필드를 자동으로 토큰 owner로 박는다. 일반 사용자 권한으로는 reporter 필드를 다른 사람으로 변경할 수 없다.
-- 다른 사람의 토큰(예: 팀장 토큰)을 그대로 쓰면 모든 티켓이 그 사람 명의로 등록되어 작성자 추적이 어그러진다.
-- 검증 방법: `curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$YOUTRACK_BASE_URL/api/users/me?fields=login,fullName,email"` 로 본인 계정인지 확인.
-- 토큰이 본인 것이 아니면 본인 YouTrack 토큰을 발급받아 `.envrc` 또는 셸 rc 파일에 교체한 뒤 진행한다.
+**쓰기(티켓 생성·담당자 변경) 전 필수 확인.** 규칙과 검증 방법은 [youtrack/api-guide.md](../../../youtrack/api-guide.md) §토큰 owner 규칙을 따른다 — owner가 본인이 아니면 티켓이 그 사람 명의로 박히므로 중단한다.
 
 ## 참조 정보
 
@@ -62,44 +55,9 @@ description: YouTrack 티켓 생성 — DEV2 티켓, 5W1H 작성, Task 분할
 
 티켓 생성·담당자 변경·KB 조회는 모두 YouTrack REST API를 사용한다. MCP 도구를 호출하지 않는다.
 
-```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
-AUTH="Authorization: Bearer $YOUTRACK_TOKEN"
+> YouTrack 호출은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)의 DEV2 프로젝트 internal id · KB 검색 · 이슈 생성 · Assignee 갱신을 따른다.
 
-# 1. DEV2 프로젝트 internal id 조회 (create_issue 입력값)
-curl -s -H "$AUTH" \
-  "$BASE/api/admin/projects?fields=id,shortName&query=DEV2"
-
-# 2. 관련 KB 검색 (티켓 컨텍스트 보강)
-curl -s -H "$AUTH" \
-  "$BASE/api/articles?\$top=10&fields=id,idReadable,summary,content,parentArticle(summary)&query=project:DEV2"
-
-# 3. 티켓 생성
-curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
-  -d '{
-        "project": {"id": "<DEV2 internal id>"},
-        "summary": "[{서비스}] {작업 요약}",
-        "description": "{5W1H 본문}"
-      }' \
-  "$BASE/api/issues?fields=idReadable,summary"
-
-# 4. 담당자 설정 (Assignee 커스텀 필드 갱신)
-curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
-  -d '{
-        "customFields": [{
-          "name": "Assignee",
-          "$type": "SingleUserIssueCustomField",
-          "value": {"login": "<YouTrack login>"}
-        }]
-      }' \
-  "$BASE/api/issues/{idReadable}?fields=idReadable,customFields(name,value(login))"
-```
-
-**DEV2 KB 구조:**
-- `DEV2-A-1` (Team): 팀 운영 (온보딩, 서버접속, 보안, 장애대응, OKR, 스프린트)
-- `DEV2-A-21` (Shared): 공유 문서 (만권당, 투비 등 서비스별)
-- `DEV2-A-22` (Onboarding): 온보딩
-- `DEV2-A-108`: 😺만권당
+**DEV2 KB 구조:** [youtrack/api-guide.md](../../../youtrack/api-guide.md) §DEV2 KB 루트를 따른다.
 
 ### 서비스 카탈로그 참조
 - 위치: `catalog/` (max, tobe, naru, bazaar, aasm)
@@ -112,7 +70,7 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 
 사용자가 `/ad:ticket` 또는 `/ad:ticket [설명]`을 입력하면:
 
-0. **토큰 owner 검증 (필수)**: `curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$YOUTRACK_BASE_URL/api/users/me?fields=login,fullName,email"` 로 토큰 owner를 확인한다. 토큰 owner가 사용자 본인 계정(`$USER` 또는 git config user.email)과 일치하지 않으면 reporter가 토큰 owner로 박혀 변경할 수 없으므로 **티켓 생성을 중단**하고 사용자에게 본인 토큰 교체를 요청한다.
+0. **토큰 owner 검증 (필수)**: [youtrack/api-guide.md](../../../youtrack/api-guide.md) §토큰 owner 규칙의 `users/me` 호출로 토큰 owner를 확인한다. 토큰 owner가 사용자 본인 계정(`$USER` 또는 git config user.email)과 일치하지 않으면 reporter가 토큰 owner로 박혀 변경할 수 없으므로 **티켓 생성을 중단**하고 사용자에게 본인 토큰 교체를 요청한다.
 1. **`docs/sprint/ticket-guide.md`를 읽어** 5W1H 작성법과 최신 규칙을 확인
 2. 사용자 입력이 있으면 해당 내용을 기반으로 티켓 작성
 3. 사용자 입력이 없으면 어떤 티켓을 만들지 질문. **질문 규율**: 한 번에 하나씩만 묻고, 각 질문에 추천안을 함께 제시한다. 파일·티켓·카탈로그에서 조회 가능한 **사실**은 직접 찾고 사용자에게는 **결정**만 묻는다. 5W1H 합의 전에 생성하지 않는다

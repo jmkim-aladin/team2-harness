@@ -24,20 +24,21 @@ YouTrack Knowledge Base에서 DEV2 프로젝트 문서를 조회한다.
 
 ## API 접근
 
-```bash
-TOKEN="$YOUTRACK_TOKEN"
-BASE="$YOUTRACK_BASE_URL"  # 기본: https://aladincommunication.youtrack.cloud
+환경변수·인증 셋업과 KB 검색/상세 호출은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다. 아래는 트리 출력에 필요한 이 스킬 고유의 필드 조합이다.
 
-# 문서 ID로 조회
-curl -s -H "Authorization: Bearer $TOKEN" \
+```bash
+# BASE·AUTH 셋업: youtrack/api-guide.md
+
+# 문서 ID로 조회 (부모·자식 필드 포함 — 트리 출력용)
+curl -s -H "$AUTH" \
   "$BASE/api/articles/{articleId}?fields=id,idReadable,summary,content,parentArticle(idReadable,summary),childArticles(idReadable,summary),created,updated,reporter(name)"
 
 # 프로젝트 문서 목록 (검색)
-curl -s -H "Authorization: Bearer $TOKEN" \
+curl -s -H "$AUTH" \
   "$BASE/api/admin/projects/DEV2/articles?\$top=50&fields=id,idReadable,summary,parentArticle(idReadable,summary)"
 
 # 하위 문서 조회
-curl -s -H "Authorization: Bearer $TOKEN" \
+curl -s -H "$AUTH" \
   "$BASE/api/articles/{articleId}/childArticles?fields=idReadable,summary"
 ```
 

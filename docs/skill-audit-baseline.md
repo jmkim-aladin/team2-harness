@@ -200,3 +200,10 @@
 - [x] **`/ad:grill`(모델 호출)·`/ad:implement`(사용자 호출) 신설** — vendored 엔진 위 얇은 wrapper. 플로우 전 단계가 `ad:*`로 통일. wrapper 생긴 vendored 3종(grill-with-docs·grill-me·implement)은 링크 제외
 - [x] **작업 플로우 → 업무 상황 지도** — 개발 티켓 / 서비스 구상·설계 / 버그·장애 / 스프린트·팀 운영 / 지식·문서 / 데이터 / 협업·세션 / 하네스, 상황당 동사 하나
 - **엔진 추출 백로그** (monolith 판정 실측): YouTrack API 블록 13스킬×43회 → 공용 참조 1곳 / 환경변수 표 10곳 / 팀원 참조 8곳. 4회차에서 착수 판정
+
+### 3회차 추가 (2026-08-08 후속 4) — 엔진 추출 1차 (YouTrack API)
+
+- [x] **`youtrack/api-guide.md` 신설** — 환경변수·셋업·토큰 owner 규칙·공통 호출 7패턴·KB 루트. 스킬 13종의 중복(환경변수 표 10곳·셋업 11곳·동일 curl 2~6곳)을 여기로 [북극성 2·4]
+- [x] **스킬 13종 치환** — 서브에이전트(opus) 위임, 메인에서 diff·잔존 0건·frontmatter 불변·참조 13/13 검증. 순감 71줄 (ticket.md 단독 -42)
+- 남긴 것: 스킬 고유 쿼리(work item, KB 문서 ID 매핑, 태그 검색 등)는 보존 — 애매하면 보존 원칙
+- 다음 후보: `docs/sprint/ticket-guide.md` 35KB 절 단위 참조 (Phase 4-3 잔여)

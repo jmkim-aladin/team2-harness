@@ -58,6 +58,7 @@
 | **스토리 포인트** | `docs/sprint/story-point-guide.md` | `.claude/commands/ad/ticket.md`, `docs/sprint/sprint-planning-overview.md` |
 | **이월 절차** | `docs/sprint/plan-change-process.md` | `docs/sprint/ticket-guide.md` 7항 (요약+링크만) |
 | **맨데이 배분** | `docs/sprint/sprint-planning-overview.md` | - |
+| **YouTrack API 공통 호출** | `youtrack/api-guide.md` | `.claude/commands/ad/*` 13종 (참조만) |
 | **전사 상태 플로우** | `youtrack/ticket-guide.md` | `docs/sprint/ticket-guide.md` 8항 (링크만) |
 | **OKR (팀/개인)** | Obsidian vault `wiki/processes/okr/` | `.claude/commands/ad/okr.md` |
 | **서비스 프로파일** | `catalog/*.yaml` | `.claude/commands/ad/ticket.md` |

@@ -49,8 +49,8 @@ disable-model-invocation: true
 | 변수 | 용도 | 설정 위치 |
 |------|------|-----------|
 | `GITHUB_TOKEN` | GitHub API 인증 (gh CLI) | `gh auth login`으로 설정 |
-| `$YOUTRACK_TOKEN` | YouTrack KB/티켓 참조 | 개인 `~/.claude/settings.json` |
-| `$YOUTRACK_BASE_URL` | YouTrack 베이스 URL | 프로젝트 `.claude/settings.json` |
+
+> YouTrack KB/티켓 참조에 쓰는 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ## 사전 확인
 

@@ -147,18 +147,21 @@ OKR 문서는 Obsidian vault `wiki/processes/okr/`에 저장된다. 절대 경�
 2. vault `wiki/processes/okr/`의 기존 문서와 비교
 3. 변경 사항이 있으면 업데이트
 
+> YouTrack 호출은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)의 KB 상세를 따른다. 아래는 이 스킬이 조회하는 OKR 문서 ID 목록이다.
+
 ```bash
-BASE="https://aladincommunication.youtrack.cloud"
+# BASE·AUTH 셋업: youtrack/api-guide.md
+
 # 팀 연간 OKR
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-2175?fields=id,idReadable,summary,content,updated"
+curl -s -H "$AUTH" "$BASE/api/articles/REF-A-2175?fields=id,idReadable,summary,content,updated"
 # 1분기
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-2470?fields=id,idReadable,summary,content,updated"
+curl -s -H "$AUTH" "$BASE/api/articles/REF-A-2470?fields=id,idReadable,summary,content,updated"
 # 2분기
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-3122?fields=id,idReadable,summary,content,updated"
+curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=id,idReadable,summary,content,updated"
 # 3분기
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-4032?fields=id,idReadable,summary,content,updated"
+curl -s -H "$AUTH" "$BASE/api/articles/REF-A-4032?fields=id,idReadable,summary,content,updated"
 # 김정민 3분기 개인 (DEV2 KB)
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/DEV2-A-1265?fields=id,idReadable,summary,content,updated"
+curl -s -H "$AUTH" "$BASE/api/articles/DEV2-A-1265?fields=id,idReadable,summary,content,updated"
 ```
 
 > vault 파일에 linter가 괄호를 `\(`로 이스케이프할 수 있음 — 문자열 매칭 편집 시 이스케이프 변형 허용 필요. Edit 도구가 iCloud 경로에서 간헐 EPERM을 내면 python 파일 쓰기로 우회.
