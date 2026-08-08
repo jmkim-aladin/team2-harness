@@ -187,4 +187,19 @@ modernization:
     - 현대화 대상이 아니라 참조 아키텍처에 가까움
     - Observe 트랙이 적합
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: verified
+  loops:
+    - cwd: /Users/jm/Documents/workspace/naru/NaruServer
+      build: "./gradlew build"
+      test: "./gradlew test"
+      lint: "./gradlew ktlintCheck"
+      evidence: "NaruServer/README.md L84(build)·L97-104(test); NaruServer/build.gradle.kts L16·L41 (org.jlleitschuh.gradle.ktlint 전 subproject 적용 → ktlintCheck 태스크); NaruServer/gradlew; 8개 모듈 전부 src/test 보유"
+  notes: |
+    카탈로그 build.commands.lint 는 ktlintFormat(자동 포매팅)이라 red/green 판정용이 아니다 — 검증 루프는 ktlintCheck 사용.
+    커버리지는 ./gradlew koverHtmlReport (build.gradle.kts L18 kover 플러그인).
+    README.md의 `./gradlew :domain:test`, `:apps:naru-sso-api:bootRun` 표기는 settings.gradle.kts 실제 모듈명
+    (`core-domain`, `apps:sso-api`, `apps:account-api`)과 불일치하므로 모듈 지정 명령은 루프에 넣지 않았다.
+
 harness_status: "not-started"

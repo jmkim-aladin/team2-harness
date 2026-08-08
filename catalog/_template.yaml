@@ -35,4 +35,20 @@ modernization:
   track: ""              # observe / wrap / extract / freeze
   status: "not-started"  # not-started / in-progress / complete
 
+# 검증 루프 — 에이전트가 이 서비스에서 스스로 red/green을 판정할 신호
+# 철칙: repo 파일에서 실증된 명령만 적는다. 각 루프에 evidence(출처 파일 + 키) 필수.
+#       실증 못 한 명령은 쓰지 않는다. 검증 수단이 하나도 없으면 status: 미구축 + notes에 사유 한 줄.
+#       그럴듯한 관례 명령(npm test 등)을 파일 확인 없이 넣지 않는다.
+verification:
+  status: ""              # verified(전 컴포넌트 커버) / partial(일부만) / 미구축
+  loops:
+    - component: ""       # 단일 컴포넌트 서비스는 생략
+      cwd: ""             # 명령 실행 위치 (절대 경로)
+      build: ""
+      test: ""            # 없으면 키 생략 (빈 문자열 금지)
+      lint: ""            # 없으면 키 생략
+      typecheck: ""       # 선택 — 타입 체크가 별도 명령일 때만
+      evidence: ""        # 출처 표기: "max-front/package.json scripts.build|lint", "max/CLAUDE.md §Common Commands L44"
+  notes: ""               # 제약 (예: .NET FW 4.8은 mac 빌드 불가 — Windows + VS 2022 전용)
+
 harness_status: "not-started"  # not-started / in-progress / complete

@@ -20,6 +20,14 @@
 | [스토어프론트](storefront.yaml) | new | Spring Boot 4.1.0 + Kotlin 2.3.21 | PostgreSQL 17 로컬 스켈레톤, 앱 연결 미구현 | 없음 | Observe | 갱신 중 |
 | [근태관리 (attendance)](attendance.yaml) | new | Next.js + NestJS + TypeScript (Turborepo) | PostgreSQL (Prisma) | 없음 | Observe | 초기 등록 |
 
+## 검증 루프 (verification)
+
+각 서비스 프로파일의 `verification` 블록은 **에이전트가 사람에게 묻지 않고 스스로 red/green을 판정할 명령**을 담는다 ([북극성 원칙](../policies/harness-north-star.md) — 검증 루프 > 지시). `loops[]`는 컴포넌트별로 `cwd`(절대 경로)와 `build` / `test` / `lint` / `typecheck` 명령을 두고, 없는 신호는 키를 생략한다.
+
+**모든 명령에는 `evidence`(출처 파일 + 키)가 필수다.** repo 파일에서 실증하지 못한 명령은 적지 않는다 — `npm test` 같은 그럴듯한 관례 명령을 파일 확인 없이 넣는 것이 이 블록의 유일한 실패 모드다. 검증 수단이 하나도 없으면 `status: 미구축` + `notes`에 사유를 남긴다 (`verified` = 전 컴포넌트 커버 / `partial` = 일부 / `미구축`).
+
+DB·외부 인프라·브라우저가 필요한 검증(통합 테스트, E2E, 부하 테스트)은 기본 루프에서 빼고 `notes`에 제약과 함께 적는다. 명령이 바뀌면 evidence 출처 파일과 함께 갱신한다.
+
 ## 운영 모니터링
 
 - Datadog 조직/API 접근 기준 (비민감): [`datadog.yaml`](datadog.yaml) — 키 취급 규칙은 [`policies/datadog-api-policy.md`](../policies/datadog-api-policy.md)

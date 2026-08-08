@@ -244,6 +244,49 @@ modernization:
     - "4. .NET Core → Kotlin 전환"
     - "5. SP를 서비스 코드로 점진 이관"
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: partial
+  loops:
+    - component: max-front
+      cwd: /Users/jm/Documents/workspace/max/max-front
+      build: "npm run build"
+      test: "npm run test:e2e:smoke"
+      lint: "npm run lint"
+      typecheck: "npm run typecheck"
+      evidence: "max/max-front/package.json scripts.build|lint|typecheck|test:e2e:smoke; max/CLAUDE.md §Common Commands L44-49; max-front/playwright.config.ts"
+
+    - component: maxcms-front
+      cwd: /Users/jm/Documents/workspace/max/maxcms-front
+      build: "npm run build"
+      lint: "npm run lint"
+      evidence: "max/maxcms-front/package.json scripts.build|lint(eslint .); max/CLAUDE.md §Common Commands L44-45"
+
+    - component: maxcms-api
+      cwd: /Users/jm/Documents/workspace/max/maxcms-api/Aladin.MaxCms
+      build: "dotnet build Aladin.MaxCms.sln"
+      test: "dotnet test Aladin.MaxCms.sln"
+      evidence: "maxcms-api/Aladin.MaxCms/Aladin.MaxCms.sln; 전 프로젝트 *.csproj TargetFramework=net8.0; Aladin.MaxCms.Tests/Aladin.MaxCms.Tests.csproj (xunit 2.8.1 + Microsoft.NET.Test.Sdk 17.10.0); catalog build.maxcms-api.command"
+
+    - component: MaxServer # Kotlin 전환 레포. prod max-batch 런타임
+      cwd: /Users/jm/Documents/workspace/max/MaxServer
+      build: "./gradlew build architectureCheck"
+      test: "./gradlew test ktlintCheck"
+      lint: "./gradlew ktlintCheck"
+      evidence: "max/MaxServer/CLAUDE.md L25(build architectureCheck)·L28(test ktlintCheck); MaxServer/build.gradle.kts plugins(architecture-rules, ktlint, kover); build-logic/convention/src/main/kotlin/kotlin-common.gradle.kts L3(ktlint)"
+
+    - component: EbookApiServer # 뷰어 접근권한 API (Kotlin/Spring)
+      cwd: /Users/jm/Documents/workspace/max/EbookApiServer
+      build: "./gradlew build"
+      test: "./gradlew test"
+      evidence: "max/CLAUDE.md §EbookApiServer L62-63; EbookApiServer/gradlew; build.gradle.kts tasks.withType<Test>{useJUnitPlatform()}; 4개 모듈 전부 src/test 보유"
+  notes: |
+    max-api(.NET Framework 4.8)와 max-batch(SQL Server Agent)는 mac에서 실행 가능한 검증 명령이 없다.
+    max-api는 Visual Studio 2022 + MSBuild(Windows) 전용이고 테스트 프로젝트가 없다 (max/CLAUDE.md §max-api/maxcms-api,
+    max-api/.devops/build.ps1). max-batch는 T-SQL 스케줄 잡이라 코드 레벨 검증 루프가 없다.
+    max-front E2E는 .env.test(.env.test.example 복사) + Aladin SSO 인증이 필요하다 (max/CLAUDE.md L54).
+    MaxServer :adapters:maxpass-sync-mssql:integrationTest 는 MSSQL 컨테이너가 필요하다 (MaxServer/CLAUDE.md L35).
+
 harness_status: "not-started"
 
 infrastructure:

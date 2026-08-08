@@ -131,4 +131,37 @@ modernization:
     망 분리 배치안 확정, 인사 DB 연동 방식, 세콤 Push 수신 경로.
     레거시 DB/SP 경로가 없으므로 코드리뷰의 레거시 경계 체크는 해당없음.
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: verified
+  loops:
+    - component: monorepo # turbo가 전 워크스페이스로 fan-out
+      cwd: /Users/jm/Documents/workspace/aladin-attendance
+      build: "pnpm build"
+      test: "pnpm test"
+      lint: "pnpm lint"
+      typecheck: "pnpm check-types"
+      evidence: "aladin-attendance/package.json scripts.build|test|lint|check-types(turbo run …); turbo.json tasks[build,check-types,lint,test,test:ct,test:e2e]; CLAUDE.md L22·L25·L28"
+
+    - component: web
+      cwd: /Users/jm/Documents/workspace/aladin-attendance/apps/web
+      build: "pnpm build"
+      test: "pnpm test"
+      lint: "pnpm lint"
+      typecheck: "pnpm check-types"
+      evidence: "apps/web/package.json scripts.build(next build)|test(vitest run)|lint(eslint --max-warnings 0)|check-types(tsc --noEmit); apps/web/vitest.config.ts"
+
+    - component: api
+      cwd: /Users/jm/Documents/workspace/aladin-attendance/apps/api
+      build: "pnpm build"
+      test: "pnpm test"
+      lint: "pnpm lint"
+      typecheck: "pnpm check-types"
+      evidence: "apps/api/package.json scripts.build(prisma generate && nest build)|test(vitest run)|lint(eslint --max-warnings 0)|check-types(prisma generate && tsc --noEmit); apps/api/vitest.config.ts"
+  notes: |
+    pnpm 9.0.0 고정 (package.json packageManager), Node >= 18. 최초 1회 pnpm install 필요.
+    e2e/컴포넌트 테스트는 pnpm test:e2e / pnpm test:ct (apps/web playwright.config.ts, playwright-ct.config.ts) —
+    실행 중인 앱과 브라우저 바이너리가 필요해 기본 루프에서 분리했다.
+    apps/api 의 build·check-types 는 prisma generate 를 포함하므로 DB 스키마 파일이 유효해야 통과한다.
+
 harness_status: "not-started"

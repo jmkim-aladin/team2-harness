@@ -213,4 +213,19 @@ modernization:
     - Wrap 트랙 유력: adapter로 감싸고 SP 확산 방지 우선
     - max와 WebCatalog, WebLog 등 공유 DB 겹침 — 현대화 시 함께 고려 필요
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: partial
+  loops:
+    - component: tobe-web-devops # 배포 스크립트(PowerShell) 계약 검증 — 앱 코드는 커버하지 않음
+      cwd: /Users/jm/Documents/workspace/tobe/Tobe
+      test: "node .devops/tests/apple-signin-key-secret.test.mjs"
+      evidence: "tobe/Tobe/.devops/tests/apple-signin-key-secret.test.mjs (top-level assert 스크립트, 2026-08-08 실행 확인 exit 0 'apple-signin-key-secret tests passed')"
+  notes: |
+    tobe-web 본체(.NET Framework 4.8 / Aladin.Tobe.sln)는 mac에서 실행 가능한 빌드·테스트 명령이 없다.
+    Visual Studio 2022 + MSBuild(Windows) 전용이며 sln에 테스트 프로젝트가 없다 (Tobe/CLAUDE.md §Build L20-24,
+    Tobe/Aladin.Tobe.sln, Tobe/.devops/build.ps1). tobe-batch는 SQL Server Agent + SSIS라 코드 레벨 루프가 없다.
+    .devops/tests/s3-private-uif-key.test.mjs 는 csc + mono가 필요해 기본 mac 환경에서 실행 불가라 루프에 넣지 않았다.
+    CI는 .github/workflows/code-review.yml (ChatGPT 리뷰)뿐이라 빌드·테스트 게이트가 아니다.
+
 harness_status: "not-started"

@@ -117,4 +117,17 @@ modernization:
     B2B/C2C/중고매장 도메인이 한 코드베이스에 혼재 → 현대화 시 도메인 식별/분리가 선결 과제.
     백오피스는 VB6 → 단계적 대체(웹/현대 백오피스) 검토 필요.
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: 미구축
+  notes: |
+    세 컴포넌트 모두 mac에서 실행 가능한 빌드·테스트·린트 명령이 없다.
+    - aladin-mall-migration: Windows 전용. shopping/CLAUDE.md §Build & CI "There is no local cross-platform build
+      (the host is macOS; the project is Windows-only)" / "There is no test runner configured — no NUnit/xUnit
+      projects in the solution. Don't claim 'tests pass'; there are no tests to run."
+      build.ps1 L1은 MSBuild.exe 절대경로(VS 2022 Enterprise)를 하드코딩한다.
+    - dev1-backoffice-thanks / dev1-backoffice-packman: VB6 IDE(Windows) 전용, MSBuild·CI 대상 아님 (shopping/CLAUDE.md L11).
+    유일한 자동 게이트는 커밋 훅 aladin-mall-migration/hooks/pre-commit (WebRelease/ucl_editor/ 변경 차단)뿐이라
+    빌드·테스트 루프로 쓸 수 없다.
+
 harness_status: "not-started"

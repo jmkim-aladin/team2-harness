@@ -187,4 +187,19 @@ modernization:
     - CI/CD 파이프라인 구성 필요
     - Observe 트랙
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: verified
+  loops:
+    - cwd: /Users/jm/Documents/workspace/AASM
+      build: "npm run build"
+      test: "npm run test:unit"
+      lint: "npm run lint"
+      evidence: "AASM/package.json scripts.build(next build)|test:unit(node --experimental-strip-types --test tests/*.test.ts 33개)|lint(eslint); AASM/tests/ 실재; AASM/CLAUDE.md L39(build)"
+  notes: |
+    test:unit 은 외부 의존 없이 도는 순수 단위 테스트다.
+    npm run test:postgres 는 실행 중인 PostgreSQL(DATABASE_URL)과 drizzle-kit push 가,
+    npm run test:integration:local 은 LocalStack(docker:local:up)이 필요하므로 기본 루프에서 분리했다.
+    AASM/CLAUDE.md 에는 test·lint 명령 안내가 없다 — 근거는 package.json scripts.
+
 harness_status: "not-started"

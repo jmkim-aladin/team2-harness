@@ -193,4 +193,26 @@ modernization:
     - MSSQL 읽기 의존만 있으므로 독립성 높음
     - Observe 트랙이 적합
 
+verification:
+  # 에이전트가 스스로 판정할 red/green 신호. repo 파일에서 실증된 명령만 기록 (evidence 필수).
+  status: verified
+  loops:
+    - component: BazaarServer
+      cwd: /Users/jm/Documents/workspace/bazzar/BazaarServer
+      build: "./gradlew clean build"
+      test: "./gradlew test"
+      lint: "./gradlew ktlintCheck"
+      evidence: "bazzar/CLAUDE.md L22(clean build)·L25(ktlintCheck)·L26(test); BazaarServer/build.gradle.kts L16·L32 (ktlint 전 subproject 적용); BazaarServer/gradlew; 10개 모듈 src/test 보유"
+
+    - component: bazaar-admin-front
+      cwd: /Users/jm/Documents/workspace/bazzar/bazaar-admin-front
+      build: "pnpm build"
+      lint: "pnpm lint"
+      typecheck: "pnpm typecheck"
+      evidence: "bazaar-admin-front/package.json scripts.build|lint|typecheck; bazzar/CLAUDE.md L81-83; pnpm-lock.yaml"
+  notes: |
+    로컬 워크스페이스 디렉토리명은 `bazzar`(오타 유지), 카탈로그 service_id 는 `bazaar`.
+    admin-front 의존성 설치에는 ALADIN_SSO_GITHUB_TOKEN 이 필요하다 (bazzar/CLAUDE.md L86, .npmrc).
+    커버리지는 ./gradlew koverHtmlReport (bazzar/CLAUDE.md L29). admin-front에는 테스트 스크립트가 없다.
+
 harness_status: "not-started"
