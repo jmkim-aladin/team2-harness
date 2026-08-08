@@ -16,6 +16,7 @@
 
 ## 핵심 규칙
 
+- 하네스 개선의 방향 판정: [policies/harness-north-star.md](./policies/harness-north-star.md) — 검증 루프 > 지시, 문제 단위 위임, smart zone, 환경=진실, 게이트 기계화, 아티팩트 기억
 - 지시 강도(invariant/policy/heuristic/example)·충돌 시 우선순위·판단 경계: [policies/instruction-precedence-policy.md](./policies/instruction-precedence-policy.md)
 - 세션 컨텍스트는 **smart zone**(약 150k 토큰) 안에 둔다: 각 구현 앞에서 `/clear` / 파일은 Read로 읽고 `cat`·`sed`로 출력하지 않는다 / 셸 cwd는 호출마다 초기화되므로 절대 경로로 명령한다 / 넓은 조사는 서브에이전트로 보내고 결론만 회수한다. 근거: 2026-08-08 실측 호출당 평균 컨텍스트 470k (zone의 3배)
 - 브랜치: `feature/{이슈ID}` | 커밋: `[{이슈ID}] 작업 내용`

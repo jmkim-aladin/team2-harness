@@ -162,3 +162,16 @@
 - **SoT 로드 다이어트** — `ticket-guide.md`(35KB)를 절 단위 참조로. 반복 Read 실측에서 14회 재독 확인
 - **지시 강도 재표현 완주** — 1차 15선 이후 미완. 호출량 순(`code-review` → `work-prep` → `ticket`)
 - **superpowers** — description 465 tok + SessionStart 주입 762 tok은 유지 중. `~/.claude/CLAUDE.md` 오버라이드로 자동 호출만 무력화. 실사용 3종(`brainstorming`·`systematic-debugging`·`executing-plans`)이 계속 쓰이는지 4회차 확인
+
+## 북극성 원칙별 거리 (회차마다 갱신)
+
+기준: [policies/harness-north-star.md](../policies/harness-north-star.md). 측정 신호가 좁혀지는지 회차 간 추이로 본다.
+
+| # | 원칙 | 측정 신호 | 3회차 (2026-08-08) |
+|---|---|---|---|
+| 1 | 검증 루프 > 지시 | 카탈로그 검증 루프 필드 보유율 | 미표준화 — 0/11 |
+| 2 | 문제 단위 위임 | 근거 없는 순서·개수·도구 고정 발견 수 | 1차 15선 재표현 완료, 전수 미완 |
+| 3 | smart zone | 호출당 평균 컨텍스트 / 상주 예산 | 470k (목표 200k) / 6,032 tok (상한 8,000) |
+| 4 | 환경=진실 | 캐시·죽은 참조 발견 수 | AGENTS.md 죽은 경로 2건 정리, 전수 스캔 미실시 |
+| 5 | 게이트 기계화 | INVARIANT 중 훅·권한 강제 비율 | 훅 2건 (DB MCP 차단, sqlcmd readonly) |
+| 6 | 아티팩트 기억 | glossary 항목 / decisions 수 | 0건 / 7건 |

@@ -8,6 +8,7 @@ description: 하네스 최적화 — 중복 제거, KB 동기화, 스킬·제약
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 > 유지보수 규칙(주기·권한·기록·SoT 등록부): [policies/harness-governance-policy.md](../../../policies/harness-governance-policy.md)
+> **방향 판정**: 모든 모드의 권장 조치에 [harness-north-star.md](../../../policies/harness-north-star.md) 원칙 번호(1~6)를 명시한다. 어느 원칙과도 무관한 제안은 기각 후보로 표시. 회차마다 원칙별 측정 신호를 audit baseline에 기록한다.
 
 ## 사용법
 

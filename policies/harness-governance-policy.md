@@ -1,6 +1,7 @@
 # 하네스 거버넌스 정책
 
 하네스(팀 repo) 자체의 유지보수 규칙 — 언제 감사하고, 누가 판정하고, 어떻게 기록하는가.
+**방향 판정은 [harness-north-star.md](./harness-north-star.md)** — 모든 개선 제안은 북극성 원칙 중 무엇을 전진시키는지 명시한다.
 실행 절차는 [`/ad:harness-optimize`](../.claude/commands/ad/harness-optimize.md), 지시문 해석·강도 기준은 [instruction-precedence-policy.md](./instruction-precedence-policy.md).
 
 ## 주기
@@ -63,6 +64,7 @@
 | **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/capacity-plan.md`, `.claude/commands/ad/sprint-close-check.md`, `.claude/commands/ad/weekly-planned.md` |
 | **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만) |
 | **지시 강도·우선순위** | `policies/instruction-precedence-policy.md` | CLAUDE.md, `policies/skill-authoring-principles.md`, `.claude/commands/ad/harness-optimize.md` (전부 링크만) |
+| **하네스 개선 방향(북극성)** | `policies/harness-north-star.md` | harness-governance-policy, `.claude/commands/ad/harness-optimize.md`, CLAUDE.md (전부 링크만) |
 | **컨텍스트 예산·외부 스택 판정** | `policies/harness-governance-policy.md` §컨텍스트 예산 + `docs/skill-stack-and-workflow-plan.md` | CLAUDE.md, AGENTS.md, `.claude/commands/ad/harness-optimize.md` (링크만) |
 | **작업 플로우·스킬 인덱스** | `docs/harness-guide.md` §작업 플로우 | CLAUDE.md, AGENTS.md (링크만) |
 | **DB/SP 첨부물 (PR 단계)** | `policies/code-review-policy.md` | engineering/legacy-modernization/gstack-override-policy, templates (링크만) |
