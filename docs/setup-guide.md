@@ -29,6 +29,8 @@ team2 레포에서 Codex 실행 시:
 
 ## 셋업 (1회)
 
+> **신규 표준**: `python3 tools/setup_harness.py` — [harness.manifest.json](../harness.manifest.json) 선언으로 환경을 수렴시킨다 (멱등, Mac/Windows 공통, `--check`/`--reset` 지원. 상세: [tools/README.md](../tools/README.md)). 아래 `setup.sh`/`setup.ps1`은 레거시 경로로, Windows 실기 검증 후 제거 예정.
+
 ### 자동 셋업
 
 ```bash

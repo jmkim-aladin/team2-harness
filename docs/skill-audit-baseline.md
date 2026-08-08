@@ -175,3 +175,11 @@
 | 4 | 환경=진실 | 캐시·죽은 참조 발견 수 | AGENTS.md 죽은 경로 2건 정리, 전수 스캔 미실시 |
 | 5 | 게이트 기계화 | INVARIANT 중 훅·권한 강제 비율 | 훅 2건 (DB MCP 차단, sqlcmd readonly) |
 | 6 | 아티팩트 기억 | glossary 항목 / decisions 수 | 0건 / 7건 |
+
+### 3회차 추가 (2026-08-08 후속) — 환경 선언화
+
+- [x] **`harness.manifest.json` 신설** — `~/.claude`·`~/.codex` 관리 영역의 SoT. env·팀 링크·외부 스킬 존치·훅 allow·계획 스택(mattpocock)·제거 기록 선언 [북극성 4·5]
+- [x] **`tools/setup_harness.py` 신설** — 선언으로 수렴하는 멱등 초기화 도구 (`--check`/`--reset`, 격리 방식, stdlib만). 새 머신 = clone → 실행 [북극성 4·5]
+- [x] **Codex 쪽 다이어트** — `~/.codex/skills` 선언 밖 61종 격리 (GSD 18, gstack 미사용분, 깨진 ad-* 링크 2). Claude 쪽만 정리됐던 비대칭 해소
+- [x] **개인/팀 메모리 분리** — 팀 규율을 repo `memory/claude-base.md`로 이관, `~/.claude/team2-base.md` 링크 + `@team2-base.md` import. 개인 CLAUDE.md에는 개인 것만 남음 [북극성 4]
+- 이관: 팀 스킬 체계 재편(작은 불변 프리미티브로 쪼개고 결합) — manifest 위에서 진행. `scripts/setup.sh`·`setup.ps1` 제거는 Windows 실기 검증 후
