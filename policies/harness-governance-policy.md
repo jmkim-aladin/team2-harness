@@ -33,6 +33,7 @@
 ## 권한
 
 - 에이전트는 **제안까지** — 판정·머지는 사람
+- **정책·INVARIANT 변경 PR은 팀원 1인 리뷰 필수** — invariant/policy 등급의 신설·변경·강등이 판별 기준. 그 외 하네스 PR은 셀프 머지 허용 + 사후 공유 (근거: 2026-08-09 확정 — 정비 21건 전건 셀프 머지의 구조 보완)
 - 강도 하향(반드시→기본)·invariant/policy 등급 변경은 review-required ([instruction-precedence-policy.md](./instruction-precedence-policy.md) §판단 경계)
 - 스킬 신설·삭제는 사용자 확인 후, Codex alias 동반 생성/삭제 ([skill-authoring-principles.md](./skill-authoring-principles.md) 대전제)
 
