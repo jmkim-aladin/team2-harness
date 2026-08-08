@@ -618,3 +618,7 @@ python3 tools/secret_scan.py --staged    # pre-commit 용
 ```
 
 오탐 방지: placeholder(`<...>`·`XXXX`·`$VAR`), 스캔 명령 자기 자신(rg/grep 패턴 인자), `.obsidian` 서드파티 코드는 제외.
+
+## rotate_hermes_outbox.py — Discord outbox 회전
+
+vault의 `hermes-discord-outbox/`가 무한 누적되지 않게 14일 경과 요청 디렉토리를 `~/.hermes-team2/archive/discord-outbox/YYYY-MM/`로 이동. dry-run 기본, `--apply`로 실행. `/ad:harness-optimize 스택` 주기에 포함 권장. 근거: 2026-08-08 실측 — 15,447 JSON/74MB가 vault git의 94.6% 점유.
