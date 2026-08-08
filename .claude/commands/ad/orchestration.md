@@ -143,6 +143,10 @@ same command.
 Pick the peer's role from the work, then start it with that role's model and effort.
 Never leave them implicit.
 
+Model line-ups change. The line-up in effect is whatever `herdr --help` or the team
+announcement says; the table below is a 2026-08 snapshot, so verify the model id before
+relying on it.
+
 | role | use for | Codex model | effort |
 |---|---|---|---|
 | `worker` | implementation, exploration, investigation, documentation | `gpt-5.6-luna` | `max` |
@@ -260,7 +264,8 @@ Stop when one holds:
 1. **Converged** — the peer agrees, or its remaining objections are ones you accept.
 2. **Stable disagreement** — a round produces no new argument on either side.
    Report both positions to the user; do not keep looping to manufacture agreement.
-3. **Round cap** — 5 exchanges. Report where it stands.
+3. **Round cap** — default 5 exchanges; adjust if the topic warrants. Report where it
+   stands.
 4. **Off the rails** — the peer is hallucinating files or looping. Stop, say so, and
    fall back to doing it yourself.
 
@@ -305,9 +310,9 @@ herdr agent read codex1 --source recent-unwrapped --lines 120
   approval *or question* UI, not always a keypress.
 - Never send `enter` or `y` without verifying what is selected. `unknown` state is not
   proof of completion.
-- `agent_prompt_stalled` means no lifecycle change was observed within 5s — **not**
-  that the text failed to land. Inspect with `agent get` / `agent read` and resend only
-  with evidence that submission failed, or you duplicate a task already running.
+- On `agent_prompt_stalled` (semantics: `herdr --skill`), inspect with `agent get` /
+  `agent read` and resend only with evidence that submission failed, or you duplicate a
+  task already running.
 
 ## 8. Truncated output fallback
 
@@ -387,38 +392,8 @@ exit status (`rc=1` on failure).
 - Clear your name only if section 2 is what set it:
   `herdr agent rename "$HERDR_PANE_ID" --clear`. Never clear a name you did not create.
 
-## 12. Install notes (this machine)
+## 12. Install notes
 
-Lifecycle hooks are what make `--wait` reliable; both sides are wired:
-
-- Claude: `SessionStart` hook in `~/.claude/settings.json` →
-  `~/.claude/hooks/herdr-agent-state.sh`
-- Codex: `SessionStart` hook in `~/.codex/hooks.json` →
-  `~/.codex/herdr-agent-state.sh`
-
-If a peer's state stays `unknown` and `--wait` degrades to a plain timeout, check the
-hook with `herdr integration status`. `herdr integration install claude` /
-`herdr integration install codex` rewires the file but **does not repair a running
-session** — the hook only fires at SessionStart, so the peer must be restarted
-afterwards. Hook presence on disk is not proof that it executed.
-
-### Where this file lives
-
-Git-managed in the team2 harness. Source of truth:
-
-```
-team2/.claude/commands/ad/orchestration.md      ← this file, the whole procedure
-team2/.codex/skills/ad-orchestration/SKILL.md   ← thin Codex alias that reads it
-```
-
-`scripts/setup.sh` wires both:
-
-- `~/.claude/commands/ad` → `team2/.claude/commands/ad` (one symlink for the whole
-  directory), so Claude gets `/ad:orchestration`.
-- `~/.codex/skills/ad-orchestration` → `team2/.codex/skills/ad-orchestration`, so Codex
-  resolves `$ad-orchestration` and then reads this file.
-- `~/.claude/skills/` deliberately skips every `ad-*` skill — in Claude they would
-  duplicate the `/ad:*` command.
-
-Edit this file, not the symlinks. There is no separate Codex copy to keep in sync: the
-alias skill holds no procedure, only the pointer.
+Install state (hooks, symlinks, where this file lives) is owned by
+`harness.manifest.json` and `tools/setup_harness.py` — check there, and run
+`herdr integration status` when `--wait` degrades to a plain timeout.

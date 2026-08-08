@@ -215,3 +215,13 @@
 - [x] **`tools/secret_scan.py`** — repo+vault 패턴 스캔, 스택 모드 배선. 첫 실행: 실유출 0 (오탐 14건은 스캔 명령 자신·서드파티 코드 — 필터 보정)
 - [x] **평문 이관** — `~/.claude/settings.json` env의 YOUTRACK_TOKEN을 Keychain으로 (발견된 정책 위반 해소). api-guide 셋업은 env→cred.py 폴백 체인
 - [x] 정책 갱신 — local-credentials-policy에 Windows 절·공통 인터페이스·유출 시 재발급 원칙
+
+### 3회차 추가 (2026-08-08 후속 6) — 제약 감사 전수 적용 (Phase 4-2 완주)
+
+- [x] **`ad:*` 22종 전수 제약 감사** — 서브에이전트(opus) 발견 126건 → 사용자 전체 승인 → 적용 88건 (강등 21·근거부착/형식화 12·중복 삭제 24·모델 중첩 11·캐시/드리프트 정정 20). INVARIANT 32건 불변 (첫 출현 보존 + 삭제줄 전수 스캔으로 증빙) [북극성 2]
+- [x] **확정 드리프트 6건 정정** — capacity-plan 죽은 참조 3곳, new-note 구명칭 env·없는 경로, weekly-report 죽은 CLAUDE.md 인용, service-activity pod·attendance 누락, code-review 모델 하드코딩, vault 리터럴 6곳
+- [x] **자기모순 2건 해소** — ticket.md "5종 전량 읽기"↔"절 단위"(절 단위 승리), "7일 차단"↔"예외 진행"(기본+예외 조건 병기)
+- [x] "반드시/필수" 총량 75 → 59 — 남은 것은 INVARIANT. 순감 94줄
+- [x] 표기 모범 확인: orchestration `Measured:`, work-close 절별 완료 기준, explain "렌더러가 강제" — 이식 후보로 기록
+- 2회차 판정 오류 정정: "2026-04-capacity-analysis 참조 0건 확인 후 삭제" — 실제 3곳 참조 중이었음. 감사 방법 교훈: 삭제 전 참조 grep은 판정 시점이 아니라 적용 직전에
+- 발견 0 파일: grill·implement·team2-kb-read

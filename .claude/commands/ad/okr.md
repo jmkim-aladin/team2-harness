@@ -24,24 +24,11 @@ description: OKR 조회 및 작성
 OKR 문서는 Obsidian vault `wiki/processes/okr/`에 저장된다. 절대 경로 베이스:
 `$LOCAL_WIKI_PATH/wiki/processes/okr/`
 
-> **현재 상태 (2026-06 기준):** OKR 문서는 `team2-archive`에서 `wiki/processes/okr/`로 이관 완료(team/q1/q2 + 김정민 q1~q4 + q1 자기평가 + 조은흠 q2). 팀·김정민/조은흠 q2 등 KB 보유분은 KB 본문 기준으로 동기화함. **canonical은 YouTrack KB(REF-A-*)** — 이후 변경은 `/ad:okr 동기화`로 최신화한다. 연간 팀 OKR(`2026-team-okr.md`)은 분기 `quarter`가 없으므로 lint_vault okr 룰은 taxonomy(분기/연간 허용)에 맞춰 `required=[year,scope]` + 연간 파일명 허용으로 정렬됨.
-
-| 파일 | 내용 | YouTrack KB |
-|------|------|-------------|
-| vault `wiki/processes/okr/2026-team-okr.md` | 팀 연간 OKR | REF-A-2175 |
-| vault `wiki/processes/okr/2026-q1-team-okr.md` | 1분기 팀 + 개인별 OKR | REF-A-2470 |
-| vault `wiki/processes/okr/2026-q2-team-okr.md` | 2분기 팀 OKR (담당자·월 배정) | REF-A-3122 |
-| vault `wiki/processes/okr/2026-q3-team-okr.md` | 3분기 팀 OKR | REF-A-4032 |
-| vault `wiki/processes/okr/2026-q1-kimjeongmin.md` | 김정민 1분기 개인 OKR | REF-A-2566 |
-| vault `wiki/processes/okr/2026-q2-kimjeongmin.md` | 김정민 2분기 개인 OKR | - |
-| vault `wiki/processes/okr/2026-q2-joeunheum.md` | 조은흠 2분기 개인 OKR | - |
-| vault `wiki/processes/okr/2026-q3-kimjeongmin.md` | 김정민 3분기 작업용 초안 (조정 이력·Baseline lock·메모) | DEV2-A-1265 |
-| vault `wiki/processes/okr/2026-q3-kimjeongmin-final.md` | 김정민 3분기 최종본 (KB 반영용 클린) | DEV2-A-1265 |
-| vault `wiki/processes/okr/2026-q3-kimjeongmin-candidates.md` | 김정민 3분기 KR 후보 풀 | - |
-| vault `wiki/processes/okr/2026-q4-kimjeongmin.md` | 김정민 4분기 개인 OKR | - |
+디렉토리가 파일 목록의 SoT — 어떤 문서가 있는지는 `ls`로 확인한다. canonical 본문은 YouTrack KB(`REF-A-*` 팀 / `DEV2-A-*` 개인)이며, 변경은 `/ad:okr 동기화`로 최신화한다.
 
 ### 파일명 규칙
 
+- 팀: 연간 `{year}-team-okr.md` / 분기 `{year}-q{N}-team-okr.md`
 - 작업용 초안: `{year}-q{N}-{이름접미사}.md` — 조정 이력·Baseline lock 현황·제외/위임·보완 필요 메모 포함
 - 최종본: `{year}-q{N}-{이름접미사}-final.md` — KB 반영용. 메타 표기(분모 lock 날짜, 후보 코드, 조정 이력) 없이 내용만
 - KR 후보 풀(선택): `{year}-q{N}-{이름접미사}-candidates.md`
@@ -164,14 +151,14 @@ curl -s -H "$AUTH" "$BASE/api/articles/REF-A-4032?fields=id,idReadable,summary,c
 curl -s -H "$AUTH" "$BASE/api/articles/DEV2-A-1265?fields=id,idReadable,summary,content,updated"
 ```
 
-> vault 파일에 linter가 괄호를 `\(`로 이스케이프할 수 있음 — 문자열 매칭 편집 시 이스케이프 변형 허용 필요. Edit 도구가 iCloud 경로에서 간헐 EPERM을 내면 python 파일 쓰기로 우회.
+> vault 파일에 linter가 괄호를 `\(`로 이스케이프할 수 있음 — 문자열 매칭 편집 시 이스케이프 변형 허용 필요. Edit 도구가 iCloud 경로에서 EPERM을 내면 python 파일 쓰기로 우회 (근거: iCloud Drive 파일 프로비저닝 지연, 재현 간헐).
 
 ## 스프린트 연계
 
-OKR 작성 시 스프린트 운영 문서도 참조한다:
-- `docs/sprint/sprint-planning-overview.md` — 맨데이 배분 및 계획 업무 비율
-- `docs/sprint/story-point-guide.md` — SP 산정 기준
-- `docs/sprint/ticket-guide.md` — 티켓 작성 규칙
+필요 시 스프린트 운영 문서를 참조한다:
+- 맨데이 배분·계획 업무 비율이 걸리면 `docs/sprint/sprint-planning-overview.md`
+- KR 분모를 SP로 잡을 때 `docs/sprint/story-point-guide.md`
+- OKR → 티켓 발행 단계에서 `docs/sprint/ticket-guide.md`
 
 ## OKR 문서 frontmatter
 

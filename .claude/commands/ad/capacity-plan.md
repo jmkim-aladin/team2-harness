@@ -9,7 +9,6 @@ description: 가용 맨데이·velocity 기반 capacity plan, SP 초과 판정
 다음 달 개인 가용 맨데이 + 팀 dev 수용량 SP를 산출하고, `{YYMM}-planned` 태그 티켓 SP 합계와 비교하여 초과 여부를 판정한다. 산식·양식 출처:
 - `docs/sprint/velocity-guide.md` (velocity 정의)
 - `docs/sprint/story-point-guide.md` (SP 환산)
-- `docs/sprint/2026-04-capacity-analysis.md` (개인 가용 맨데이 양식)
 - **YouTrack KB DEV2-A-1122** (Velocity-OKR 스프린트 정책 — BD PLAN 번다운 → 다음달 수용량 산식)
 
 ## 사용법
@@ -55,10 +54,10 @@ description: 가용 맨데이·velocity 기반 capacity plan, SP 초과 판정
 
 - 스프린트 평일: `1일~26일` 범위 평일만 카운트 (4주 ≈ 20일)
 - D-5는 별도 운영이므로 차감하지 않음 (스프린트 외)
-- 공휴일: 사용자에게 질문 (한국 공휴일 자동 판별 도구 없음). 스프린트 범위(1~26일) 내만 카운트
+- 공휴일: 사용자에게 질문 (한국 공휴일 자동 판별 도구 없음). 스프린트 범위(1~26일) 내만 카운트 — 자동 판별 수단이 없으므로 사용자 입력이 유일한 출처다
 - PTO: 사용자에게 질문
 - **계획업무 비율**:
-  - 기본 50% (운영업무 50% 보정) — `docs/sprint/2026-04-capacity-analysis.md` 4월 패턴
+  - 기본 50% (운영업무 50% 보정)
   - **6월부터 팀장 지침으로 100%** — 매월 지침 확인 후 입력
   - 다른 비율도 사용자 입력 허용
 
@@ -77,9 +76,9 @@ description: 가용 맨데이·velocity 기반 capacity plan, SP 초과 판정
 
 미산정 Task 기본 추정: **0.5일** (가이드 4월 분석 사례 기준). 협의/논의 성격은 SP 1 일괄 권고.
 
-계획 SP 합산 시 **검증(테스트·QA)·배포·운영 반영 Feature 하위 Task의 SP를 반드시 포함**한다 ([티켓 가이드 2-2항](../../../docs/sprint/ticket-guide.md)). 단계는 Feature 단위로 갈리므로 개발 Feature만 세면 수용량이 과대 산정되어 월말 이월로 되돌아온다. 환경별로도 Feature가 갈리므로 개발 환경 반영과 운영 환경 반영을 각각 센다 ([2-3항](../../../docs/sprint/ticket-guide.md)). 개발 Feature에 대응하는 검증·배포 Feature가 없는데 "해당 없음" 사유도 없으면 판정 누락 가능성이 있으므로 계획 검토 시 확인 대상으로 표시한다.
+계획 SP 합산 시 **검증(테스트·QA)·배포·운영 반영 Feature 하위 Task의 SP를 포함**한다 (근거: 단계가 Feature 단위로 갈려 개발 Feature만 세면 수용량 과대 산정 → 월말 이월) ([티켓 가이드 2-2항](../../../docs/sprint/ticket-guide.md)). 환경별로도 Feature가 갈리므로 개발 환경 반영과 운영 환경 반영을 각각 센다 ([2-3항](../../../docs/sprint/ticket-guide.md)). 개발 Feature에 대응하는 검증·배포 Feature가 없는데 "해당 없음" 사유도 없으면 판정 누락 가능성이 있으므로 계획 검토 시 확인 대상으로 표시한다.
 
-**시너지팀 QA Task는 별도 취급**한다. SP는 우리 팀 공수로 계산하되, 착수 시점이 타팀 일정에 묶이므로 가용 맨데이 배치 시 대기 구간을 감안한다. 과거 QA 대기가 스프린트 간 이월로 누적된 사례가 있다 (`docs/sprint/2026-04-capacity-analysis.md`).
+**시너지팀 QA Task는 별도 취급**한다. SP는 우리 팀 공수로 계산하되, 착수 시점이 타팀 일정에 묶이므로 가용 맨데이 배치 시 대기 구간을 감안한다. 과거 QA 대기가 스프린트 간 이월로 누적된 사례가 있다.
 
 ## 팀 수용량 산식 (KB DEV2-A-1122 BD PLAN 패턴)
 
@@ -111,13 +110,13 @@ AASM 환산 = AASM SP × aasm_weight (기본 0.3)
 
 이유: AASM은 개인 도구·실험 성격으로 팀 baseline 산정에서 비중 축소. 매월 팀장 지침 확인.
 
-### 시나리오 제시 (필수)
+### 시나리오 제시
 
 - 전체 (AASM 100%)
 - AASM 제거 (0%)
 - **AASM 가중치 적용 (기본 30%, 권장)**
 
-3 시나리오 모두 출력하여 비교 가능한다.
+기본: 위 3개 시나리오를 모두 출력하여 비교 가능하게 한다. 단, 상황에 따라 시나리오 구성 조정 가능.
 
 ## YouTrack 쿼리 (BD PLAN 스냅샷)
 
@@ -125,7 +124,7 @@ AASM 환산 = AASM SP × aasm_weight (기본 0.3)
 # BASE·AUTH 셋업: youtrack/api-guide.md
 
 # 전월 BD PLAN 스냅샷 (예: 5월 = 2605-planned, dev 전체)
-# YouTrack 쿼리는 --data-urlencode 사용 필수 (공백 포함 query)
+# YouTrack 쿼리는 --data-urlencode 사용 (근거: 공백 포함 query — 미인코딩 시 URL 깨짐)
 curl -s -G -H "$AUTH" \
   --data-urlencode "query=tag: 2605-planned" \
   --data-urlencode "fields=idReadable,summary,customFields(name,value(name,presentation))" \
@@ -158,6 +157,8 @@ curl -s -G -H "$AUTH" \
 > YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ## 실행 지침
+
+순서는 기본 접근 — 완료 기준: 가용 맨데이 표 + 전월 velocity 환산 + 대상 월 수용량 3시나리오 + 계획 SP 대비 판정 + (저장 인자 시) vault 노트.
 
 1. **인자 파싱** → 대상 월·담당자·저장 여부
 2. **가용 맨데이 입력 수집** (사용자 질문):
@@ -253,7 +254,7 @@ AASM 환산 = {aasm_sp} × {weight} = {a}
 
 ## 저장 (옵션)
 
-- vault 경로: `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/`
+- vault 경로: `$LOCAL_WIKI_PATH`
 - 파일 경로: `wiki/processes/capacity/{YYYY-MM}-{담당자}.md`
 - 파일 존재 시 덮어쓰기 전 사용자 확인
 - frontmatter:
@@ -307,10 +308,7 @@ status: draft
 - 가용 맨데이·팀 수용량은 **목표가 아닌 입력값** (velocity-guide.md 철학)
 - 초과 판정 = 즉시 컷 신호 아님. 우선순위 재배치 + OKR 연계 검토
 - 미산정 Task 다수면 SP 산정 회의 먼저 권고
-- 한국 공휴일 자동 판별 없음 → 사용자 입력 필수
 - YouTrack 쿼리는 `--data-urlencode` 사용 필수 (공백 포함 query). `tag: {YYMM}-planned` 정확 매칭
-- `Story points` customField value는 int/float 직접 (dict 아님) — 파싱 시 타입 분기 필요
-- 박민석 등 SP 산정 누락 케이스 다수 — baseline 정확도 위해 산정 완료 권고
 - AASM 가중치는 팀장 지침. 변경 시 frontmatter `aasm_weight` 갱신
 
 ARGUMENTS: $ARGUMENTS

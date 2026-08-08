@@ -108,7 +108,7 @@ Feature 자체에는 코멘트·work item을 넣지 않는다 — 소요시간·
 1. State ≠ In Progress → `In Progress` 전환 (이미 In Progress면 생략)
 2. SP 미입력이면 Story points 입력
 3. 코멘트 등록 (아래 "코멘트 규칙")
-4. work item 등록 — **SP 1개 = work item 1개**, SP당 시간, 시작일부터 **영업일(주말 제외) 순차 분산**
+4. work item 등록 — 기본: SP당 work item 1개를 SP당 시간으로, 시작일부터 **영업일(주말 제외) 순차 분산**
 5. State → `Fixed`
 
 **Feature**: 하위 Task 실행이 전부 끝난 뒤 State ≠ In Progress면 `In Progress` 경유 후 `Fixed`.
@@ -171,13 +171,12 @@ curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
 ```
 
 - epoch ms 계산 (macOS, 자정 고정): `echo $(($(date -j -f "%Y-%m-%d %H:%M:%S" "2026-08-04 00:00:00" "+%s") * 1000))`
-- MCP 도구 사용 금지 — REST API만 (기존 `ad:*` 패턴)
+- 기본: REST 직접 호출 — 호출 규약은 [youtrack/api-guide.md](../../../youtrack/api-guide.md) §원칙을 따른다
 
 ## 주의사항
 
 - 이미 종료된 티켓(resolved)은 다시 열지 않는다 — skip 보고만
 - Won't fix·Obsolete 등 "미처리 종료" 상태도 resolved로 잡힌다 — 재오픈하지 않는다
-- 승인 없이 상태 전환·코멘트·work item을 실행하지 않는다 (4단계 게이트가 유일한 승인 지점)
 - 전사 상태 머신(`youtrack/ticket-guide.md`): In Progress → Fixed가 표준 경로. Fixed 이후 QA·Closed 처리는 이 스킬 범위 밖
 
 ARGUMENTS: $ARGUMENTS
