@@ -22,10 +22,10 @@
 
 | 단계 | 명령 | 하는 일 |
 |---|---|---|
-| 정렬 | `/grill-with-docs` | 설계 트리를 소진할 때까지 frontier 라운드 인터뷰 + 용어집·결정 인라인 기록 |
+| 정렬 | `/ad:grill` | `grilling`+`domain-modeling` — frontier 라운드, 용어집·결정 기록 |
 | 스펙+분할 | `/ad:ticket` | 5W1H Feature 발행 → Task 분할 |
 | 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
-| 구현 | `/implement` (내부 `tdd` 구동) | 사전 합의된 seam에서 red→green, 마감 리뷰는 `/ad:code-review` |
+| 구현 | `/ad:implement` | vendored `implement`(내부 `tdd`) — seam 합의, red→green |
 | 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 |
 | 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
 

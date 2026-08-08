@@ -193,3 +193,10 @@
 - [x] **포인터 편집 3건** — implement·domain-modeling·diagnosing-bugs. 등록부: overrides/mattpocock.md §diff
 - 계획 변경: Phase 4-5(`/ad:grill`)·4-7(`/ad:implement`) 신설 → **grill-with-docs·implement 채택으로 대체**. Phase 4-4 용어집은 domain-modeling + domain.md 오버라이드가 담당
 - 검증 이관: 실 티켓 1건으로 grill→ticket→work-prep→implement→ad:code-review 전 구간 주행 (다음 실작업에서)
+
+### 3회차 추가 (2026-08-08 후속 3) — 스킬 체계 3층화
+
+- [x] **3층 구조 정식화** — 동사(ad:*, 팀 언어) / 엔진(upstream·leading word, 개명 금지) / 자료(SoT). [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §구조 [북극성 2·6]
+- [x] **`/ad:grill`(모델 호출)·`/ad:implement`(사용자 호출) 신설** — vendored 엔진 위 얇은 wrapper. 플로우 전 단계가 `ad:*`로 통일. wrapper 생긴 vendored 3종(grill-with-docs·grill-me·implement)은 링크 제외
+- [x] **작업 플로우 → 업무 상황 지도** — 개발 티켓 / 서비스 구상·설계 / 버그·장애 / 스프린트·팀 운영 / 지식·문서 / 데이터 / 협업·세션 / 하네스, 상황당 동사 하나
+- **엔진 추출 백로그** (monolith 판정 실측): YouTrack API 블록 13스킬×43회 → 공용 참조 1곳 / 환경변수 표 10곳 / 팀원 참조 8곳. 4회차에서 착수 판정
