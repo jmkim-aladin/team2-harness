@@ -314,6 +314,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 - 정렬 → 분할은 한 창에서 끊지 않는다. 분할이 정렬 사고 위에 서야 한다
 - 각 구현 앞에서 `/clear`. 티켓은 자족적이므로 앞 티켓 컨텍스트는 버린다
 - 판단은 단계 경계에서만. 순서: 계속 → `/clear` → handoff → 서브에이전트 → `/compact`. `/compact`는 기본값이지 첫 선택이 아니다
+- **서브에이전트 판정**: 다음 단계가 조향 없이 돌 수 있으면(스코프 확정 + headless 검증 루프) 새 세션 대신 서브에이전트. 업무별 모델 매트릭스는 [memory/claude-base.md](../memory/claude-base.md) §서브에이전트 위임
 
 > 스킬을 추가·개명·삭제하면 이 지도도 같은 PR에서 갱신한다. 갱신하지 않은 지도는 거짓말을 한다 — `/ad:harness-optimize` 체크리스트 항목.
 
