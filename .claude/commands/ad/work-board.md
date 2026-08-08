@@ -44,42 +44,22 @@ team2-agent decide t_36a47508 "A안으로 결정"
 
 ## 생성 산출물
 
-- `wiki/projects/agentic-os/hermes-decision-board.md`
-- `wiki/projects/agentic-os/hermes-decision-board.json`
+산출물 경로의 SoT는 각 도구의 `DEFAULT_*_PATH` 상수다 (`tools/generate_decision_board.py`, `tools/generate_discord_orchestrator_payload.py`, `tools/generate_decision_cockpit.py`). 대표 산출물:
+
+- `wiki/projects/agentic-os/hermes-decision-board.md` / `.json`
 - `wiki/projects/agentic-os/hermes-discord-dispatch-request.json`
-- `wiki/projects/agentic-os/hermes-discord-dispatch-batch.json` (Hermes runtime용 pending batch)
-- `wiki/projects/agentic-os/hermes-discord-outbox/{request_id}/manifest.json` (Hermes bot adapter용 파일 handoff)
-- `wiki/projects/agentic-os/hermes-discord-delivery-receipt.json` (Hermes bot adapter 전송 결과)
-- `wiki/projects/agentic-os/hermes-discord-dispatch-ack.json` (Hermes 처리 후)
-- `wiki/projects/agentic-os/hermes-kanban-sync-state.json` (vault card와 Hermes Kanban task 매핑)
-- `wiki/projects/agentic-os/hermes-board-action-queue.jsonl` / `.json` (보드 지시 이벤트)
-- `wiki/projects/agentic-os/desktop-decision-cockpit.md` / `.json` (컴퓨터 앞 decision cockpit)
+- `wiki/projects/agentic-os/desktop-decision-cockpit.md` / `.json`
 
 ## 원칙
 
 - board의 기본 단위는 `work_id`가 있는 work item이다.
 - `ticket_id`는 YouTrack 티켓이 있을 때만 채운다.
-- Hermes가 기존 Discord bot을 통해 dispatch request를 처리한다.
-- Hermes runtime은 `tools/run_hermes_dispatch_cycle.py`로 board 갱신, pending payload 계산, outbox export를 수행한다.
-- Hermes Kanban은 `tools/sync_hermes_kanban.py`로 동기화한다. active 카드는 사람 결정/검토 대기이므로 `blocked` 상태로 고정하고, source card가 사라진 task는 `done`으로 이동한다.
-- Hermes Board 댓글의 `/brief`, `/ask`, `/delegate`, `/decide`, `/approve`, `/revise`, `/split`, `/snooze`, `/done` 지시는 `tools/import_hermes_board_actions.py`가 action queue로 가져온다.
-- 컴퓨터 앞에서는 `desktop-decision-cockpit.md`를 주 화면으로 보고, 외부/모바일에서는 Discord 1:1을 리모컨처럼 사용한다.
-- Hermes bot adapter 실행은 `tools/run_hermes_discord_adapter.py`로 명시적 adapter command에 outbox item을 넘긴다.
-- Hermes bot adapter는 delivery receipt를 남기고 `tools/import_hermes_discord_receipt.py`로 ack를 갱신한다.
 - 이 명령은 Discord API, webhook, bot token을 직접 다루지 않는다.
 - 이 명령은 YouTrack, KB, git, DB, 배포를 변경하지 않는다.
-- Claude Code와 Codex는 같은 `tools/run_work_board.py`와 같은 vault 파일 계약을 사용한다.
 
 ## 카드 생성 조건
 
-- `decision_status: decision-needed`
-- `decision_status: approval-needed`
-- `decision_status: blocked`
-- `decision_status: review-needed`
-- `ticket_status: blocked`
-- `ticket_status: review-needed`
-- `ticket_status: done-candidate`
-- `review_state: needs-review`
+카드 생성 조건은 `tools/generate_decision_board.py`의 분류 로직에 있다 — 조건 변경은 도구에서 한다.
 
 ## 실행 절차
 
@@ -94,8 +74,7 @@ team2-agent decide t_36a47508 "A안으로 결정"
 
 ## 금지
 
-- Discord 송신 직접 실행 금지. 송신은 Hermes의 기존 bot 통합에서 처리한다.
 - dispatch request JSON을 원장처럼 수동 수정하지 않는다.
-- `canonical` 승격, YouTrack 상태 변경, KB 수정, git commit/push/PR은 이 명령의 책임이 아니다.
+- 나머지 경계(Discord 직접 송신, `canonical` 승격 등)는 §원칙의 무변경 선언을 따른다.
 
 ARGUMENTS: $ARGUMENTS

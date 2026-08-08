@@ -107,14 +107,14 @@ Task 라인(Feature 바로 아래, `:` 기호 prefix):
 
 ### 2. 티켓 수집
 
-각 담당자에 대해 다음 쿼리를 YouTrack REST API로 실행한다. MCP 도구는 사용하지 않는다.
+각 담당자에 대해 다음 쿼리를 실행한다. 호출 규약은 [youtrack/api-guide.md](../../../youtrack/api-guide.md) §원칙을 따른다.
 
 쿼리 식: `tag: {tag} Assignee: {ytId}`
 
 ```bash
 # BASE·AUTH 셋업: youtrack/api-guide.md
 
-# 담당자별 티켓 검색 (페이지당 20개)
+# 담당자별 티켓 검색
 curl -s -H "$AUTH" \
   --data-urlencode "query=tag: {tag} Assignee: {ytId}" \
   --data-urlencode "fields=idReadable,summary,resolved,customFields(name,value(name,login))" \
@@ -124,7 +124,7 @@ curl -s -H "$AUTH" \
 ```
 
 - 응답 필드: `Type`, `State`, `Assignee`, `Sprints` (모두 `customFields`로 노출)
-- 결과가 20개를 채우면 `$skip` 값을 20씩 증가시켜 끝까지 페이지네이션
+- 기본: 페이지당 20개 — 응답이 20개를 채우면 `$skip` 값을 20씩 증가시켜 끝까지 페이지네이션
 
 ### 3. 부모 해석
 
@@ -141,7 +141,7 @@ curl -s -H "$AUTH" \
 
 ### 4. 일정 추출
 
-YouTrack 검색 API는 Due Date/Start date 커스텀 필드를 일관되게 반환하지 않으므로 다음 우선순위로 추출:
+다음 우선순위로 추출한다 (근거: YouTrack 필드 반환 비일관 실측 — Due Date/Start date 커스텀 필드):
 1. 티켓 코멘트의 "예상 시작 일자" / "시작일 변경" 텍스트
 2. `resolvedAt` (완료 항목)
 3. 추출 실패 시 일정 비워둠
@@ -176,10 +176,7 @@ YouTrack 검색 API는 Due Date/Start date 커스텀 필드를 일관되게 반�
 
 ## 주의사항
 
-- 옵시디언 위키 파일은 로컬 동기화 대상이므로 직접 Write로 저장한다 (별도 PR/커밋 없음).
-- 이미 동일 파일이 있으면 본문만 갱신한다 (frontmatter `canonical_id` 보존).
-- 검색 결과가 20개를 넘으면 offset 페이지네이션으로 끝까지 수집한다.
 - 부모 해석 단계에서 같은 부모를 여러 번 호출하지 않도록 캐시한다.
-- 사용자 확인 없이 파일을 저장하지 않는다 (저장 직전 경로·섹션 요약 후 확인 요청).
+- **신규 파일 저장은 사용자 확인 후.** 기존 파일 본문 갱신은 경로·섹션 요약 미리보기를 출력한 뒤 진행한다 (frontmatter는 `updated_at` 외 보존).
 
 ARGUMENTS: $ARGUMENTS

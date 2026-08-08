@@ -30,10 +30,10 @@ Granola 공식 REST API에서 회의록을 가져와 로컬 Obsidian vault의 To
 
 | 항목 | 값 |
 |---|---|
-| 하네스 | `/Users/jm/Documents/workspace/team2` |
-| vault | `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2` |
 | 도구 | `tools/sync_granola_meetings.py` |
 | API key | `GRANOLA_API_KEY` 또는 macOS Keychain service `team2-granola-api-key` |
+
+하네스·vault 경로는 실행 절차 1의 `TEAM2_HARNESS_PATH`/`LOCAL_WIKI_PATH` env 폴백 정의가 SoT다.
 
 API key 값은 절대 출력하지 않는다.
 
@@ -110,8 +110,6 @@ python3 "$TEAM2_HARNESS_PATH/tools/sync_granola_meetings.py" \
 python3 "$TEAM2_HARNESS_PATH/tools/lint_vault.py" \
   --vault "$LOCAL_WIKI_PATH" \
   --files wiki/processes/meetings/meetings-index.md
-
-python3 -m unittest tests/test_sync_granola_meetings.py
 ```
 
 ARGUMENTS: $ARGUMENTS

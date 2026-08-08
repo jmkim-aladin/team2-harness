@@ -33,10 +33,11 @@ Step 순서는 기본 접근이다 — 상황에 따라 순서 조정·병렬 �
 
 ### Step 1: 중복·불일치 감사
 
-아래 파일들을 모두 읽고 비교한다:
+SoT 등록부의 주제별 SoT와 그것을 참조하는 파일 간 불일치(본문 복사, 낡은 재진술, 링크 깨짐)를 탐지한다. 어디까지 읽을지는 감사 주제에 따라 정한다.
+
+대상 예시:
 
 ```
-감사 대상 파일:
 ├── docs/sprint/ticket-guide.md          (5W1H, 스프린트 상태)
 ├── docs/sprint/story-point-guide.md     (SP 산정)
 ├── docs/sprint/plan-change-process.md   (이월/긴급 절차)
@@ -190,7 +191,7 @@ find "$REPO/docs" -maxdepth 2 -type f -name '*.md' \
 ### vault에서 정책/템플릿 성격 파일 surface
 
 ```bash
-VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+VAULT="$LOCAL_WIKI_PATH"
 find "$VAULT/wiki" -type f -name '*.md' \
   | grep -E 'policy|template|catalog|skill|harness-setup' \
   | head -20
@@ -200,7 +201,7 @@ find "$VAULT/wiki" -type f -name '*.md' \
 
 ```bash
 REPO="/Users/jm/Documents/workspace/team2"
-VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+VAULT="$LOCAL_WIKI_PATH"
 (find "$REPO/docs" "$REPO/policies" "$REPO/templates" "$REPO/catalog" -name '*.md' -exec basename {} \; ;
  find "$VAULT/wiki" -name '*.md' -exec basename {} \;) | sort | uniq -d
 ```
@@ -212,7 +213,7 @@ VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
 vault 티켓 산출물 frontmatter 표준 준수 확인:
 
 ```bash
-VAULT="/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
+VAULT="$LOCAL_WIKI_PATH"
 for f in $(find "$VAULT/wiki/processes/tickets" -name '*.md' ! -name '_index.md'); do
   for key in ticket_id ticket_status assignee service sprint; do
     grep -q "^$key:" "$f" || echo "MISSING $key in $(basename $f)"

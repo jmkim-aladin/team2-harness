@@ -69,6 +69,24 @@ curl -s -H "$AUTH" \
 curl -s -H "$AUTH" "$BASE/api/articles/{idReadable}?fields=idReadable,summary,content,updated"
 ```
 
+## Subtask 링크 생성
+
+linkType id는 인스턴스 설정값이므로 하드코딩하지 않고 조회해서 쓴다.
+
+```bash
+# linkType 조회 (2026-08 스냅샷: Subtask = 161-3)
+curl -s -H "$AUTH" "$BASE/api/issueLinkTypes?fields=id,name,sourceToTarget,targetToSource"
+
+# 링크 추가 — suffix `s` = sourceToTarget(parent for). {parent}가 부모
+curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"idReadable":"{자식ID}"}' \
+  "$BASE/api/issues/{parent}/links/{linkTypeId}s/issues"
+
+# 링크 제거 — 자식의 internal id(`3-XXXXX`)가 필요
+curl -s -X DELETE -H "$AUTH" \
+  "$BASE/api/issues/{parent}/links/{linkTypeId}s/issues/{internal_id}"
+```
+
 ## DEV2 KB 루트
 
 - `DEV2-A-1` (Team): 팀 운영 (온보딩, 서버접속, 보안, 장애대응, OKR, 스프린트)

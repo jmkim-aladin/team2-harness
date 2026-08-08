@@ -77,16 +77,17 @@ type 결정 후 `wiki/guides/frontmatter-spec.md` 기준 필수 필드 자동 �
    - 기타: `## 개요`만
 6. **dry-run 미리보기** — 사용자에게 `vault/wiki/processes/.../foo.md` 경로·frontmatter·본문 스켈레톤 보여줌
 7. **사용자 confirm** → `Write` 도구로 생성
-8. **lint check** — 즉시 `python3 harness/tools/lint_vault.py --vault {VAULT} --files {new}` 호출, exit 0 확인
+8. **lint check** — 즉시 `python3 "$TEAM2_HARNESS_PATH/tools/lint_vault.py" --vault "$LOCAL_WIKI_PATH" --files {new}` 호출, exit 0 확인
 9. **안내** — Obsidian에서 열고 본문 작성하라고 surface, `git add` + commit 시 pre-commit 한 번 더 검증됨
 
 ## 환경
 
 | 변수 | 용도 |
 |---|---|
-| `VAULT` | vault 경로 (기본 `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`) |
-| `HARNESS_ROOT` | harness repo (기본 `~/Documents/workspace/team2`) |
+| `$LOCAL_WIKI_PATH` | Obsidian vault 루트 (기본: `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`) |
+| `$TEAM2_HARNESS_PATH` | 팀 하네스 루트 (기본: `/Users/jm/Documents/workspace/team2`) |
 | `YOUTRACK_USER` | assignee 기본값 (기본 `jmkim`) |
+| `OBSIDIAN_VAULT_NAME` | Obsidian 안 vault 이름 (기본 `team2`) |
 
 ## frontmatter 표준 (티켓 산출물)
 
@@ -120,11 +121,5 @@ $TEAM2_HARNESS_PATH/tools/obsidian_open.sh "{rel-path}"
 - 모호한 type → 옵션 제시 + AskUserQuestion
 - 기존 파일 충돌 → 덮어쓰기 vs 다른 이름 묻기
 - 작성 후 Obsidian 자동 오픈 (사용자 선호 시 --no-open 옵션으로 끔)
-
-## 환경 (추가)
-
-| 변수 | 용도 |
-|---|---|
-| `OBSIDIAN_VAULT_NAME` | Obsidian 안 vault 이름 (기본 `team2`) |
 
 ARGUMENTS: $ARGUMENTS

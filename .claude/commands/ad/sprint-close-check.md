@@ -50,6 +50,8 @@ Feature description이 5W1H 여섯 항목(What/무엇, Why/왜, Who/누가/사�
 
 ### 단계·환경 분리 판정 휴리스틱
 
+아래 제목 문자열 규칙은 **기본 휴리스틱**이다 — 컨벤션을 벗어난 제목에서 오탐이 나며, 최종 판단은 후보를 제시한 뒤 사용자가 한다.
+
 규칙 SoT: `docs/sprint/ticket-guide.md` 2-2항(단계) · 2-3항(환경). 단계는 **Feature 단위로 갈린다** — 검증·배포는 개발 Feature의 하위 Task가 아니라 **별도 Feature**다.
 
 #### 검사 대상 고르기
@@ -109,7 +111,7 @@ curl -s -H "$AUTH" \
 - 응답 50개를 채우면 `$skip` 50씩 증가시켜 끝까지 페이지네이션
 - `customFields`에서 `Type`, `State`, `Assignee`, `Story points` 추출
 - `links`에서 `linkType.name == "Subtask"` && `direction == "OUTWARD"` 인 항목의 `issues[].summary`가 하위 Task 제목 (카테고리 6 판정용)
-- 다른 MCP 도구 사용 금지 (REST API만)
+- 기본: REST 직접 호출. 조회만 하므로 MCP 경유보다 단순하다
 
 ## 출력 형식
 
@@ -171,18 +173,13 @@ curl -s -H "$AUTH" \
 
 각 티켓에 대해 6개 조건을 평가하여 다중 카테고리 분류 허용 (예: 미종료 + 5W1H 누락 동시 가능).
 
-- `state_name = customFields["State"].value.name`
-- `type_name = customFields["Type"].value.name`
-- `sp_value = customFields["Story points"].value` (없으면 미입력)
-- `desc_text = description or ""`
-- `comments_text = "\n".join(c.text for c in comments)`
-- URL 패턴: `re.search(r"https?://", desc_text + comments_text)`
-- `subtask_titles = [i.summary for l in links if l.linkType.name == "Subtask" and l.direction == "OUTWARD" for i in l.issues]`
-- `linked_titles = [i.summary for l in links for i in l.issues]` (선행·후행 포함 — 형제 Feature 탐색용)
-- 카테고리 6은 `type_name == "Feature"` 이고 **제목에 단계 구분자(`— 설계` / `— 테스트` / `— QA` / `— 배포`)가 없을 때만** 평가 (= 개발 Feature)
-  - 형제 Feature 후보 = `linked_titles` ∪ 같은 담당자·같은 태그 수집분에서 `[{서비스}] {업무 요약}` 접두가 일치하는 Feature 제목
-  - 검증·배포 각각 "형제 Feature 제목 키워드 매칭" 또는 "desc_text에 해당 없음 사유" 중 하나라도 있으면 통과, 둘 다 없으면 해당 단계를 누락으로 기록
-  - **Task 구분자 잔존**: `subtask_titles` 중 하나라도 단계 구분자를 포함하면 별도 후보로 기록. 부모가 개발 Feature이고 구분자가 검증·배포 계열이면 단계 혼입으로 표기
+- 상태·유형·SP는 `customFields`의 `State` / `Type` / `Story points`에서 읽는다 (`Story points` 값이 없으면 미입력)
+- **결과물 링크**: description + 코멘트 전체 텍스트에 결과물 링크(URL)가 있는지 판정한다 — 방법은 모델 판단이며, 후보로 올릴 때 사유를 병기한다
+- **하위 Task 제목**은 `links`의 `Subtask` linkType `OUTWARD` 항목에서, **형제 Feature 후보 제목**은 링크된 이슈 전체(선행·후행 포함)에서 모은다
+- 카테고리 6은 `Type == Feature` 이고 **제목에 단계 구분자(`— 설계` / `— 테스트` / `— QA` / `— 배포`)가 없을 때만** 평가 (= 개발 Feature)
+  - 형제 Feature 후보 = 링크된 이슈 제목 ∪ 같은 담당자·같은 태그 수집분에서 `[{서비스}] {업무 요약}` 접두가 일치하는 Feature 제목
+  - 검증·배포 각각 "형제 Feature 제목 키워드 매칭" 또는 "description에 해당 없음 사유" 중 하나라도 있으면 통과, 둘 다 없으면 해당 단계를 누락으로 기록
+  - **Task 구분자 잔존**: 하위 Task 제목 중 하나라도 단계 구분자를 포함하면 별도 후보로 기록. 부모가 개발 Feature이고 구분자가 검증·배포 계열이면 단계 혼입으로 표기
   - **환경 표기 누락**: 제목에 `배포·반영` 이 있는데 `(개발)` / `(운영)` / `(스테이징)` 이 없으면 별도 후보로 기록
 
 ### 4. 출력 생성
@@ -194,17 +191,14 @@ curl -s -H "$AUTH" \
 출력 마지막에 한 줄로 안내:
 
 ```
-> 이 목록은 자가점검용 후보인다. 상태 전환·이월·SP 입력·5W1H 보완은 YouTrack에서 직접 수행하세요.
+> 이 목록은 자가점검용 후보다. 상태 전환·이월·SP 입력·5W1H 보완은 YouTrack에서 직접 수행하세요.
 > 이월 코멘트 양식: docs/sprint/plan-change-process.md
 ```
 
 ## 주의사항
 
-- **티켓 수정 금지**: 본 스킬은 조회만 수행. State 전환, 코멘트 추가, SP 입력, 태그 변경 모두 사용자가 YouTrack에서 직접.
-- **MCP 도구 사용 금지**: REST API만 사용 (정책: DB 계열 MCP 외에도 본 스킬은 단순 조회이므로 직접 호출이 단순).
 - **휴리스틱 false positive 안내**: 5W1H 누락 / OKR 누락 / 단계·환경 분리 판정 누락 후보는 키워드 기반이므로 본인 확인 후 처리. 특히 단계 분리는 Feature 제목을 컨벤션(`— 설계`, `— 테스트`, `— QA`, `— 배포·반영 (환경)`)대로 쓰지 않으면 오탐이 난다. 형제 Feature 매칭도 제목 문자열 기반이라 업무 요약 표현이 Feature마다 다르면 누락으로 잡힌다.
 - **다중 담당자**: 출력에 담당자 표기 포함하여 식별 가능하게 함.
-- **페이지네이션**: 50개 초과 시 `$skip`으로 끝까지.
 - **태그 변형**: `{YYMM}-planned` 외 다른 컨벤션(예: 2605-sprint)은 인자로 명시.
 
 ## frontmatter 표준 (티켓 산출물)

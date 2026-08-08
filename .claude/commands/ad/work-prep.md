@@ -31,6 +31,8 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 
 ## 참조 문서 (Source of Truth)
 
+전량 선로드가 아니다 — 무엇을 언제 읽을지는 §3 "서비스 추정 + 카탈로그 로드" 이하의 조건부 로드 규칙을 따른다.
+
 | 문서 | 경로 | 참조 항목 |
 |------|------|-----------|
 | 티켓 작성 가이드 | `$TEAM2_HARNESS_PATH/docs/sprint/ticket-guide.md` **§3-1만** | 위키 티켓 노트 작성 기준 (다른 절은 이 스킬에서 불필요) |
@@ -86,7 +88,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 
 탐색 우선순위 (도구는 서비스 환경에 따라 선택):
 
-1. **콜그래프 DB 활용** — 서비스에 sqlite 콜그래프(graphify 등) 인덱스가 있으면 우선 사용. 예) shopping은 `/Users/jm/Documents/workspace/shopping/graphify/graph.db`:
+1. **콜그래프 DB 활용** — 서비스에 sqlite 콜그래프(graphify 등) 인덱스가 있으면 우선 사용한다 (인덱스 위치는 서비스 카탈로그 또는 해당 repo에서 확인). 질의 예:
    - aspx/엔드포인트 경로 단서: `fromAspx <path>` / `fromAlajax <name>`
    - SP 이름 단서: `whoCalls <sp>`
    - 영향 분석: `impact <file|sp>`
@@ -124,6 +126,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 - `비즈니스 로직`은 트리거/정책/예외/영향을 3-5개 bullet로 요약한다.
 - `기술 근거`는 재탐색용 식별자만 남긴다. raw evidence는 티켓 하위 근거 파일이나 별도 분석 노트로 분리한다.
 - 본문에 SP 원문, 운영 실데이터, 시크릿, 개인정보를 저장하지 않는다.
+- vault 경로는 `$LOCAL_WIKI_PATH` 기준으로 해석한다 (리터럴 경로 하드코딩 금지).
 
 ### 6. 관련 KB 검색
 
@@ -234,19 +237,12 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (vault `wiki
 **항상 금지** (확인으로도 해제 불가):
 
 - DB 계열 MCP 서버(postgres/mssql/mysql 등) 사용
-- SP 원문/운영 실데이터/시크릿/개인정보를 위키 본문에 저장
-- vault 경로는 항상 `$LOCAL_WIKI_PATH` 기준으로 해석한다 (리터럴 경로 하드코딩 금지)
+- §5 위키 노트 작성에 열거된 본문 저장 금지 항목
 - vault의 `<!-- GENERATED:START -->` ~ `<!-- GENERATED:END -->` 외부 영역 자동 갱신
 
 ## 문서 위치 결정
 
-작업 중 생성하는 노트·산출물은 `policies/knowledge-base-policy.md`의 결정 트리에 따라 즉시 위치를 결정한다. 매번 사용자에게 묻지 않는다.
-
-- 정책/템플릿/카탈로그/스킬 → repo
-- 전사·사내 공통 컨벤션·온보딩 → YouTrack KB
-- 운영 데이터 추출 SQL/결과물 → data-requests-dev2 repo
-- 특정 서비스 코드와만 의미 있는 매뉴얼 → 그 서비스 repo
-- 그 외 (프로젝트 진행·운영·도메인·회의·일지·티켓 산출물·OKR) → Obsidian vault
+작업 중 생성하는 노트·산출물은 [policies/knowledge-base-policy.md](../../../policies/knowledge-base-policy.md)의 결정 트리에 따라 즉시 위치를 결정한다. 매번 사용자에게 묻지 않는다.
 
 ## 사전 분석 (auto-prep) 활용
 

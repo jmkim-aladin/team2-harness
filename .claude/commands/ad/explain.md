@@ -92,7 +92,7 @@ frontmatter: `type: explain`, `title`, `mode`, `reader`, `subject`, `base`, `upd
 
 ## 다이어그램
 
-mermaid 2~4개. 섹션당 최대 1개. [policies/mermaid-convention.md](../../../policies/mermaid-convention.md)를 따른다.
+기본: mermaid 2~4개, 섹션당 최대 1개. [policies/mermaid-convention.md](../../../policies/mermaid-convention.md)를 따른다.
 
 - 종류를 재사용한다 — 흐름은 `flowchart TD`, 구성은 `graph TB`, 호출은 `sequenceDiagram`으로 고정하고 문서 안에서 섞지 않는다
 - **ASCII 다이어그램 금지.** mermaid 또는 표를 쓴다

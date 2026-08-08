@@ -21,14 +21,14 @@ YouTrack 티켓을 서비스 태그·기간으로 필터링하여 팀 작업 현
 ```
 
 인자 파싱:
-- 서비스 슬러그(`max`, `tobe`, `shopping`, `naru`, `bazaar`, `aasm`, `storefront`, `caravan`, `blog`) → `services`
+- 서비스 슬러그(`max`, `tobe`, `shopping`, `naru`, `bazaar`, `aasm`, `storefront`, `caravan`, `pod`, `blog`, `attendance`) → `services`
 - `이번주` / `지난주` / `Nd` / `YYYY-MM-DD..YYYY-MM-DD` → `period`
 - `저장` 또는 `save` → Obsidian vault 저장 플래그
 - 미지정: services 필수, period 기본 = `지난주`
 
 ## 서비스 → YouTrack 태그 매핑
 
-티켓 `summary` 앞 대괄호 prefix 기준. 신규 서비스 추가 시 이 표에 행 추가.
+티켓 `summary` 앞 대괄호 prefix 기준. 서비스 목록의 SoT는 `catalog/*.yaml` — 아래 표는 그 위의 summary prefix 스냅샷이다. 신규 서비스 추가 시 이 표에 행 추가.
 
 | 슬러그 | summary 패턴 (OR 조건) |
 |--------|------------------------|
@@ -40,7 +40,9 @@ YouTrack 티켓을 서비스 태그·기간으로 필터링하여 팀 작업 현
 | aasm | `[aasm]` |
 | storefront | `[스토어프론트]`, `[storefront]`, `[b2b-store]` |
 | caravan | `[가상대기열]`, `[caravan]` |
+| pod | `[POD]`, `[pod]` |
 | blog | `[블로그]`, `[북플]`, `[blog]` |
+| attendance | `[근태관리]`, `[근태]`, `[attendance]` |
 
 ## 환경변수
 
@@ -48,7 +50,7 @@ YouTrack 티켓을 서비스 태그·기간으로 필터링하여 팀 작업 현
 
 ## API 호출
 
-YouTrack 쿼리 파서가 `()` 그룹 OR를 지원하지 않으므로 태그 패턴별 별도 호출 후 ID 기준 dedup.
+태그 패턴별 별도 호출 후 ID 기준 dedup (근거: YouTrack 쿼리 문법 제약 — `()` 그룹 OR 미지원).
 
 ```bash
 # BASE·AUTH 셋업: youtrack/api-guide.md
@@ -97,6 +99,8 @@ LAST_SUN=$(date -v-mon -v-1d +%Y-%m-%d)
 
 ## 실행 지침
 
+순서는 기본 접근 — 완료 기준: dedup된 티켓 목록이 서비스·상태별로 정리돼 출력(+저장 인자 시 vault 노트)되는 것.
+
 1. 인자 파싱 → 서비스 목록·기간·저장 여부 결정
 2. 서비스별 태그 패턴 전개 → YouTrack API 호출
 3. ID 기준 dedup, 상태/담당자 추출
@@ -106,7 +110,7 @@ LAST_SUN=$(date -v-mon -v-1d +%Y-%m-%d)
 
 ## 저장 (옵션)
 
-- vault 경로: `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/`
+- vault 경로: `$LOCAL_WIKI_PATH`
 - 파일 경로: `wiki/processes/activity/{YYYY-MM-DD}-{services}-{from}_{to}.md`
   - 예: `wiki/processes/activity/2026-05-26-max-tobe-2026-05-18_2026-05-24.md`
 - 파일 존재 시 덮어쓰기 전 사용자 확인
@@ -125,8 +129,6 @@ generated_at: 2026-05-26
 ## 주의
 
 - KB 자동 반영 금지 (Obsidian 로컬 저장만)
-- 신규 서비스 추가 시 본 문서의 매핑 표 갱신
 - summary 패턴은 prefix 기준이라 본문에 우연히 포함된 경우는 매칭되지 않음 (의도된 동작)
-- YouTrack 쿼리 `()` 그룹 OR 미지원 → 태그별 별도 호출 + dedup
 
 ARGUMENTS: $ARGUMENTS
