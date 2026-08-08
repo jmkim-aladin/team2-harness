@@ -260,6 +260,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 상황 | 동사·엔진 |
 |---|---|
 | 아이디어를 세션 안에서 정리 가능 | `/ad:grill` → 메인 플로우 합류 |
+| 다세션 계획·미성숙 구상을 위키에 | `/ad:plan` — grill 결과를 계획 노트로 합성 (티켓 전 단계 — 발행 시 SoT는 5W1H로) |
 | 세션보다 큰 안개 과제 | `/wayfinder` — 결정 티켓 지도, 길이 보이면 `/ad:ticket`으로 합류 |
 | 설계 질문을 코드로 답해야 | `prototype` (모델 호출) |
 | 문서·API 조사 위임 | `research` (모델 호출, 백그라운드) |
@@ -290,6 +291,8 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | KB 조회 | `/ad:team2-kb-read` |
 | 아키텍처 한 장 요약 | `/ad:tldr` |
 | 변경 설명서 | `/ad:explain` |
+| 방금 설명이 이해 안 될 때 재설명 | `/wait-what` — 팀 용어집 어휘로 재피치 |
+| 새 기술·개념 다세션 학습 | `/teach` — 현재 디렉토리를 학습 워크스페이스로 |
 | 문서 생성 | `/document-generate` |
 
 ### 6. 데이터 요청

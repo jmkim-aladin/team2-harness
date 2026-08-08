@@ -3,7 +3,7 @@
 [vendor/mattpocock/](../../vendor/mattpocock/) 스킬 사용 시 팀 규칙이 원본보다 우선한다. gstack의 [gstack-override-policy.md](../gstack-override-policy.md)와 같은 계층.
 
 - 원본: [mattpocock/skills](https://github.com/mattpocock/skills) v1.2.3 (`6acc160e`), MIT
-- 설치: 15종 vendor (repo에 고정, `setup_harness.py`가 링크). 설치 목록·제외 목록은 [harness.manifest.json](../../harness.manifest.json)이 SoT
+- 설치: 17종 vendor (2026-08-09 teach·wait-what 추가 — 최초 채택 시 판정 누락분 정정, 이로써 upstream promoted 25종 전수 판정: 설치 17 + 제외 8) (repo에 고정, `setup_harness.py`가 링크). 설치 목록·제외 목록은 [harness.manifest.json](../../harness.manifest.json)이 SoT
 
 ## 제외 8종과 이유
 
@@ -41,6 +41,7 @@ vendor 사본에 가한 편집은 아래 전부다. 재동기화 시 이 표만 
 | `implement/SKILL.md` | 리뷰를 `/ad:code-review`로, 커밋 전 사용자 확인 — 포인터 1줄 |
 | `domain-modeling/SKILL.md` | 파일 위치를 `docs/agents/domain.md`로 — 포인터 1줄 |
 | `diagnosing-bugs/SKILL.md` | 사후 아키텍처 핸드오프를 `/ad:architecture-analysis`로 — 포인터 1줄 |
+| `wait-what/SKILL.md` | 어휘 원천을 `CONTEXT.md` → 팀 용어집(docs/agents/domain.md)으로 — 포인터 1줄 |
 
 ## 재동기화 절차
 

@@ -241,3 +241,11 @@
 - [x] 기존 결함 테스트 수리 — AGENTS.md common-service 링크 누락(HEAD에서도 실패하던 것) → 168/168 green
 - 플래그: `/sync-gbrain` 마커가 gbrain-config.md로 이동 — 다음 sync 실행 시 CLAUDE.md 재주입 여부 관찰, 재주입하면 스킬 경로 설정 조정
 - 4회차 이관: weekly-report 레거시 만료(2026-10-01 재확인), 근거 캠페인 잔여, youtrack 전사↔팀 우선순위 소통
+
+### 3회차 추가 (2026-08-09) — mattpocock 장부 완결
+
+- [x] **판정 누락 2종 발견·정정** — upstream promoted 25종 대비 install 15+exclude 8=23으로 teach·wait-what이 무판정 상태였음 (장부 검산으로 발견). 둘 다 vendor 추가 (v1.2.3 pin 동일) — 전수 판정 완결: 설치 17 + 제외 8
+- [x] wait-what 포인터 편집 (CONTEXT.md → 팀 용어집) — diff 등록부 4건째
+- [x] `/ad:grill` 문구 보강 — grill-with-docs 등가(용어·결정 즉시 기록)임을 명시
+- 교훈: 외부 스택 채택 시 **전수 대비표**(upstream 총수 = 채택+제외+보류) 검산을 manifest 규칙으로 — 차기 채택부터
+- [x] **`/ad:plan` 신설** (2026-08-09 사용자 제안) — grill 후 세 번째 분기(다세션·미성숙 계획 → vault 노트)에 동사 부여. spec 금지 판정과 경계 명시: 티켓 발행 시 SoT는 5W1H로 이양. 동사 23종
