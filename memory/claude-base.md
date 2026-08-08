@@ -14,12 +14,6 @@
 
 근거: 2026-08-08 30일 실측 — 호출당 평균 컨텍스트 470k(zone의 3배), Bash가 호출의 64.9%, 그중 `cd` 4,152회.
 
-## Skill invocation
-
-스킬은 요청이 맞으면 호출하되, `superpowers:using-superpowers`의 자동 호출 지시(1% 규칙, 응답 전 스킬 스캔, 체크리스트 todo 강제)는 적용하지 않는다.
-
-근거: 2026-08-08 실측 — superpowers 28종 중 실사용 3종. 매 턴 스캔 강제가 지연 유발.
-
 ## 작업 플로우
 
 ```
@@ -28,14 +22,14 @@
 
 | 단계 | 명령 | 하는 일 |
 |---|---|---|
-| 정렬 | (신설 예정 `/ad:grill`) — 그때까지 `superpowers:brainstorming` | 설계 트리를 소진할 때까지 인터뷰 |
+| 정렬 | `/grill-with-docs` | 설계 트리를 소진할 때까지 frontier 라운드 인터뷰 + 용어집·결정 인라인 기록 |
 | 스펙+분할 | `/ad:ticket` | 5W1H Feature 발행 → Task 분할 |
 | 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
-| 구현 | (신설 예정 `/ad:implement`) — 그때까지 직접 + TDD | 사전 합의된 seam에서 red→green |
+| 구현 | `/implement` (내부 `tdd` 구동) | 사전 합의된 seam에서 red→green, 마감 리뷰는 `/ad:code-review` |
 | 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 |
 | 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
 
-온램프: 버그 → `/investigate` / 데이터 추출 → `/ad:data-request` / 월말 → `/ad:sprint-close-check`, `/ad:capacity-plan`
+온램프: 버그 → `diagnosing-bugs`(모델 호출) 또는 `/investigate` / 프로토타입 필요 → `prototype` / 대형 안개 과제 → `/wayfinder` / 데이터 추출 → `/ad:data-request` / 월말 → `/ad:sprint-close-check`, `/ad:capacity-plan`
 
 규모별: 1시간 이내(오타·설정) 바로 처리 / 반나절(버그) 준비→구현→리뷰 / 1일 이상 전체 플로우.
 
@@ -48,4 +42,5 @@
 
 - 단계 분리(개발/검증/배포)는 조직 현실 기반 수평 분할 — 수직 슬라이스는 개발 Task 내부에만
 - spec은 YouTrack Feature 본문(5W1H). 별도 spec 파일을 만들지 않는다
-- gstack 스킬은 `policies/gstack-override-policy.md`가 우선
+- gstack 스킬은 `policies/gstack-override-policy.md`, mattpocock 스킬은 `policies/overrides/mattpocock.md`가 우선
+- mattpocock 스킬의 이슈 트래커·도메인 문서 설정: `$TEAM2_HARNESS_PATH/docs/agents/` (issue-tracker.md, domain.md). repo 루트 CONTEXT.md 를 만들지 않는다
