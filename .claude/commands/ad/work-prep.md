@@ -24,10 +24,10 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 
 | 변수 | 용도 |
 |------|------|
-| `$YOUTRACK_TOKEN` | YouTrack REST API 인증 |
-| `$YOUTRACK_BASE_URL` | YouTrack 베이스 URL (기본: `https://aladincommunication.youtrack.cloud`) |
 | `$TEAM2_HARNESS_PATH` | 팀 하네스 루트 (기본: `/Users/jm/Documents/workspace/team2`) |
 | `$LOCAL_WIKI_PATH` | Obsidian vault 루트 (기본: `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`) |
+
+> YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ## 참조 문서 (Source of Truth)
 
@@ -66,14 +66,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 
 ### 2. YouTrack 조회 (티켓 모드에서만)
 
-```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
-AUTH="Authorization: Bearer $YOUTRACK_TOKEN"
-
-# 본문 + 커스텀 필드 + 첨부 + 댓글
-curl -s -H "$AUTH" \
-  "$BASE/api/issues/DEV2-XXXX?fields=idReadable,summary,description,reporter(login,fullName),customFields(name,value(name,login,fullName,localizedName)),tags(name),attachments(name,url),comments(text,author(login,fullName),created)"
-```
+> YouTrack 호출은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)의 이슈 상세를 따른다.
 
 조회 실패(404/401) 시 사용자에게 알린다. **상태/필드/댓글을 변경하지 않는다** — 읽기 전용.
 
@@ -134,11 +127,9 @@ curl -s -H "$AUTH" \
 
 ### 6. 관련 KB 검색
 
-```bash
-# 제목/요약 키워드 2~3개 추출 후 OR 검색
-curl -s -H "$AUTH" \
-  "$BASE/api/articles?\$top=10&fields=id,idReadable,summary,parentArticle(summary)&query=project:DEV2 {키워드}"
-```
+제목/요약 키워드 2~3개를 추출해 OR 검색한다 (`query=project:DEV2 {키워드}`).
+
+> YouTrack 호출은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)의 KB 검색을 따른다.
 
 매칭이 있으면 위키 노트 `기술 근거 > 관련 KB`에 idReadable + 제목으로 적는다. 매칭이 없으면 그 줄을 비워둔다.
 

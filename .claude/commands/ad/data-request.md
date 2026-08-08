@@ -38,8 +38,8 @@ YouTrack 데이터 추출 요청의 SQL과 산출물을 [`AladinCommunication/da
 | 변수 | 기본값 | 용도 |
 |---|---|---|
 | `$DATA_REQUESTS_DEV2_PATH` | `~/Documents/workspace/data-requests-dev2` | 레포 로컬 체크아웃 경로 |
-| `$YOUTRACK_TOKEN` | — | 티켓 메타 조회용 (선택) |
-| `$YOUTRACK_BASE_URL` | `https://aladincommunication.youtrack.cloud` | YouTrack 베이스 URL |
+
+> YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다 (티켓 메타 조회용, 선택).
 
 ## 실행 지침
 
@@ -59,11 +59,7 @@ YouTrack 데이터 추출 요청의 SQL과 산출물을 [`AladinCommunication/da
 
 티켓 메타가 필요하면 YouTrack API로 조회한다.
 
-```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
-  "$BASE/api/issues/DEV2-####?fields=idReadable,summary,description,customFields(name,value(name,login))"
-```
+> YouTrack 호출은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)의 이슈 상세를 따른다.
 
 ### 2단계: 레포 준비
 

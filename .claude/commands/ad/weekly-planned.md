@@ -94,10 +94,7 @@ Task 라인(Feature 바로 아래, `:` 기호 prefix):
 
 ## 환경변수
 
-| 변수 | 용도 |
-|------|------|
-| `$YOUTRACK_TOKEN` | YouTrack API 인증 토큰 |
-| `$YOUTRACK_BASE_URL` | YouTrack 베이스 URL (기본: `https://aladincommunication.youtrack.cloud`) |
+> YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ## 실행 지침
 
@@ -115,8 +112,7 @@ Task 라인(Feature 바로 아래, `:` 기호 prefix):
 쿼리 식: `tag: {tag} Assignee: {ytId}`
 
 ```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
-AUTH="Authorization: Bearer $YOUTRACK_TOKEN"
+# BASE·AUTH 셋업: youtrack/api-guide.md
 
 # 담당자별 티켓 검색 (페이지당 20개)
 curl -s -H "$AUTH" \
@@ -138,6 +134,7 @@ curl -s -H "$AUTH" \
 - 태그 미보유 부모 Feature/Epic은 트리 유지를 위해 "참조 부모"로 표기
 
 ```bash
+# BASE·AUTH 셋업: youtrack/api-guide.md
 curl -s -H "$AUTH" \
   "$BASE/api/issues/{idReadable}?fields=idReadable,summary,customFields(name,value(name,login)),parentIssue(idReadable,summary,customFields(name,value(name)))"
 ```

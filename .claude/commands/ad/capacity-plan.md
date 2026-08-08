@@ -122,25 +122,25 @@ AASM 환산 = AASM SP × aasm_weight (기본 0.3)
 ## YouTrack 쿼리 (BD PLAN 스냅샷)
 
 ```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
+# BASE·AUTH 셋업: youtrack/api-guide.md
 
 # 전월 BD PLAN 스냅샷 (예: 5월 = 2605-planned, dev 전체)
 # YouTrack 쿼리는 --data-urlencode 사용 필수 (공백 포함 query)
-curl -s -G -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -G -H "$AUTH" \
   --data-urlencode "query=tag: 2605-planned" \
   --data-urlencode "fields=idReadable,summary,customFields(name,value(name,presentation))" \
   --data-urlencode '$top=500' \
   "$BASE/api/issues"
 
 # 개인 과거 완료 velocity (예: 2026-04 jmkim)
-curl -s -G -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -G -H "$AUTH" \
   --data-urlencode "query=project: DEV2 Assignee: jmkim resolved date: 2026-04-01 .. 2026-04-30" \
   --data-urlencode "fields=idReadable,customFields(name,value(name,presentation))" \
   --data-urlencode '$top=300' \
   "$BASE/api/issues"
 
 # 대상 월 계획 SP (예: 6월 = 2606-planned, 본인)
-curl -s -G -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -G -H "$AUTH" \
   --data-urlencode "query=tag: 2606-planned Assignee: jmkim" \
   --data-urlencode "fields=idReadable,summary,customFields(name,value(name,presentation))" \
   --data-urlencode '$top=200' \
@@ -155,10 +155,7 @@ curl -s -G -H "Authorization: Bearer $YOUTRACK_TOKEN" \
 
 ## 환경변수
 
-| 변수 | 용도 |
-|------|------|
-| `$YOUTRACK_TOKEN` | YouTrack API 인증 토큰 |
-| `$YOUTRACK_BASE_URL` | YouTrack 베이스 URL (기본: `https://aladincommunication.youtrack.cloud`) |
+> YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ## 실행 지침
 

@@ -102,47 +102,42 @@ SoT: [docs/sprint/weekly-report-guide.md](../../../docs/sprint/weekly-report-gui
 
 ## 환경변수
 
-| 변수 | 용도 |
-|------|------|
-| `$YOUTRACK_TOKEN` | YouTrack API 인증 토큰 |
-| `$YOUTRACK_BASE_URL` | YouTrack 베이스 URL (기본: `https://aladincommunication.youtrack.cloud`) |
+> YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ## API 참조
 
 ```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
+# BASE·AUTH 셋업: youtrack/api-guide.md
 
 # 1. 분기별 부모 문서 조회 (주간업무 하위)
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -H "$AUTH" \
   "$BASE/api/articles/DEV2-A-692?fields=childArticles(idReadable,summary)"
 
-# 2. 개인 보고서 조회
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
-  "$BASE/api/articles/{articleId}?fields=id,idReadable,summary,content,updated"
+# 2. 개인 보고서 조회 → KB 상세 (youtrack/api-guide.md)
 
 # 3. 티켓 상태·예정일 코멘트 조회 (동기화용)
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -H "$AUTH" \
   "$BASE/api/issues/{issueId}?fields=idReadable,summary,customFields(name,value(name)),comments(text,created,updated)"
 
 # 4. 담당자별 티켓 검색 (진행중 항목 탐색)
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -H "$AUTH" \
   "$BASE/api/issues?query=project:DEV2+assignee:{ytId}+state:In+Progress&fields=idReadable,summary,customFields(name,value(name))&\$top=50"
 
 # 5. KB 문서 업데이트
-curl -s -X POST -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -X POST -H "$AUTH" \
   -H "Content-Type: application/json" \
   -d '{"content": "..."}' \
   "$BASE/api/articles/{articleId}"
 
 # 6. 착수일 fallback — State가 In Progress로 전환된 시각 (가이드 §4.5)
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -H "$AUTH" \
   "$BASE/api/issues/{issueId}/activities?categories=CustomFieldCategory&fields=timestamp,field(name),added(name)"
 # field.name == State, added에 In Progress 포함된 최초 항목의 timestamp 사용. 없으면 created.
 
 # 7. 주간 핵심목표 — 주차 문서 탐색 후 본문 조회 (가이드 §4-B.1.1)
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -H "$AUTH" \
   "$BASE/api/articles/DEV2-A-1351?fields=childArticles(idReadable,summary,updated)"
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" \
+curl -s -H "$AUTH" \
   "$BASE/api/articles/{weekArticleId}?fields=idReadable,summary,content,updated"
 ```
 

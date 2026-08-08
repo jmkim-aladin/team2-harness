@@ -59,20 +59,20 @@ Step 순서는 기본 접근이다 — 상황에 따라 순서 조정·병렬 �
 
 ### Step 2: YouTrack KB 동기화
 
-KB 원본과 하네스 파일의 최신 여부를 비교한다.
+KB 원본과 하네스 파일의 최신 여부를 비교한다. YouTrack 호출은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)의 KB 상세를 따르고, 아래는 이 스킬이 비교하는 문서 ID 목록이다.
 
 ```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
+# BASE·AUTH 셋업: youtrack/api-guide.md
 
 # 스프린트 관련
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/DEV2-A-892?fields=updated,summary,content"  # SP 가이드
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/DEV2-A-818?fields=updated,summary,content"  # 티켓 가이드
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/DEV2-A-829?fields=updated,summary,content"  # 계획 변경
+curl -s -H "$AUTH" "$BASE/api/articles/DEV2-A-892?fields=updated,summary,content"  # SP 가이드
+curl -s -H "$AUTH" "$BASE/api/articles/DEV2-A-818?fields=updated,summary,content"  # 티켓 가이드
+curl -s -H "$AUTH" "$BASE/api/articles/DEV2-A-829?fields=updated,summary,content"  # 계획 변경
 
 # OKR 관련
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-2175?fields=updated,summary,content" # 연간 OKR
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-2470?fields=updated,summary,content" # 1분기
-curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content" # 2분기
+curl -s -H "$AUTH" "$BASE/api/articles/REF-A-2175?fields=updated,summary,content" # 연간 OKR
+curl -s -H "$AUTH" "$BASE/api/articles/REF-A-2470?fields=updated,summary,content" # 1분기
+curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content" # 2분기
 ```
 
 **전사 KB ↔ 하네스 매핑** (DEV2 외 참조 문서)

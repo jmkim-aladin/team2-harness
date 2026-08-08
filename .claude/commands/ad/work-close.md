@@ -21,16 +21,13 @@ Feature/Task를 팀 규칙에 맞게 YouTrack에서 종료한다: 상태 정렬 
 
 ## 환경변수
 
-| 변수 | 용도 |
-|------|------|
-| `$YOUTRACK_TOKEN` | YouTrack API 인증 토큰 |
-| `$YOUTRACK_BASE_URL` | 기본 `https://aladincommunication.youtrack.cloud` |
+> YouTrack 환경변수·인증 셋업은 [youtrack/api-guide.md](../../../youtrack/api-guide.md)를 따른다.
 
 ## 실행 지침
 
 ### 0. 토큰 owner 검증 (필수)
 
-`GET /api/users/me?fields=login,fullName,email`로 토큰이 본인 계정인지 확인한다. 코멘트·work item author가 토큰 owner로 기록되므로, 불일치하면 **실행을 중단**하고 본인 토큰 교체를 요청한다. (근거: `ad:ticket` 0단계와 동일 — reporter/author 명의 어그러짐)
+[youtrack/api-guide.md](../../../youtrack/api-guide.md) §토큰 owner 규칙의 `users/me` 호출로 토큰이 본인 계정인지 확인한다. 코멘트·work item author가 토큰 owner로 기록되므로, 불일치하면 **실행을 중단**하고 본인 토큰 교체를 요청한다. (근거: `ad:ticket` 0단계와 동일 — reporter/author 명의 어그러짐)
 
 완료 기준: 토큰 owner 본인 확인, 또는 중단.
 
@@ -39,8 +36,7 @@ Feature/Task를 팀 규칙에 맞게 YouTrack에서 종료한다: 상태 정렬 
 대상 ID 각각:
 
 ```bash
-BASE="${YOUTRACK_BASE_URL:-https://aladincommunication.youtrack.cloud}"
-AUTH="Authorization: Bearer $YOUTRACK_TOKEN"
+# BASE·AUTH 셋업: youtrack/api-guide.md
 
 curl -s -H "$AUTH" \
   "$BASE/api/issues/{idReadable}?fields=idReadable,summary,description,resolved,reporter(login),customFields(name,value(name,login)),links(direction,linkType(name),issues(idReadable,summary,resolved,customFields(name,value(name)))),comments(text)"
@@ -151,6 +147,8 @@ Feature 자체에는 코멘트·work item을 넣지 않는다 — 소요시간·
 ## API 참조
 
 ```bash
+# BASE·AUTH 셋업: youtrack/api-guide.md
+
 # 상태 전환 (In Progress / Fixed)
 curl -s -X POST -H "$AUTH" -H "Content-Type: application/json" \
   -d '{"customFields":[{"name":"State","$type":"StateIssueCustomField","value":{"name":"In Progress"}}]}' \
