@@ -1,6 +1,6 @@
 # 스킬 스택 정리 + 워크플로우 도입 계획
 
-> 상태: Phase 4-0b·4-1·4-8 적용 (2026-08-08, 브랜치 `team2/skill-stack-cleanup`, 미커밋). 잔여: 4-0 규율 정착 관찰, 4-2·4-3·4-4·4-5·4-6·4-7.
+> 상태: Phase 4-0b·4-1·4-8 적용 + mattpocock 채택(4-4~4-7 대체, 2026-08-08 — vendor 15종·overrides·docs/agents) (2026-08-08, 브랜치 `team2/skill-stack-cleanup`, 미커밋). 잔여: 4-0 규율 정착 관찰, 4-2·4-3·4-4·4-5·4-6·4-7.
 > 적용 결과: 상주 컨텍스트 8,858 → 6,011 토큰 (−32%), GSD 훅 9개 제거(Edit당 ~280ms), 스킬 79 → 21종.
 > 감사 회차 기록: [docs/skill-audit-baseline.md](./skill-audit-baseline.md) 3회차.
 > 선행: [harness-instruction-refactor-plan.md](./harness-instruction-refactor-plan.md) Phase 1~3 (2026-08-06 적용). 본 문서는 그 Phase 4에 해당한다.

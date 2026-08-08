@@ -1,7 +1,6 @@
 {
   "_doc": "하네스 환경 선언 — ~/.claude, ~/.codex 의 관리 영역 SoT. tools/setup_harness.py 가 이 선언으로 수렴시킨다. 층 모델·흡수 규율은 docs/skill-stack-and-workflow-plan.md, 방향은 policies/harness-north-star.md.",
   "version": 1,
-
   "env": {
     "YOUTRACK_BASE_URL": "https://aladincommunication.youtrack.cloud",
     "LOCAL_WIKI_PATH": {
@@ -9,18 +8,31 @@
       "windows": "C:\\Users\\jmkim\\Documents\\workspace\\wiki"
     }
   },
-
   "team_links": {
     "_doc": "팀 소유(repo가 SoT) → 심볼릭 링크. git pull = 업데이트.",
-    "claude_commands": { "src": ".claude/commands/ad", "dest": "~/.claude/commands/ad" },
-    "codex_skills_glob": { "src": ".codex/skills/*", "dest_dir": "~/.codex/skills" },
+    "claude_commands": {
+      "src": ".claude/commands/ad",
+      "dest": "~/.claude/commands/ad"
+    },
+    "codex_skills_glob": {
+      "src": ".codex/skills/*",
+      "dest_dir": "~/.codex/skills"
+    },
     "claude_skills": [
-      { "src": ".codex/skills/dev2-team-harness-ko", "dest": "~/.claude/skills/dev2-team-harness-ko" },
-      { "src": ".codex/skills/dev2-ad-commands-ko", "dest": "~/.claude/skills/dev2-ad-commands-ko" },
-      { "src": ".codex/skills/youtrack-ticket-5w1h-ko", "dest": "~/.claude/skills/youtrack-ticket-5w1h-ko" }
+      {
+        "src": ".codex/skills/dev2-team-harness-ko",
+        "dest": "~/.claude/skills/dev2-team-harness-ko"
+      },
+      {
+        "src": ".codex/skills/dev2-ad-commands-ko",
+        "dest": "~/.claude/skills/dev2-ad-commands-ko"
+      },
+      {
+        "src": ".codex/skills/youtrack-ticket-5w1h-ko",
+        "dest": "~/.claude/skills/youtrack-ticket-5w1h-ko"
+      }
     ]
   },
-
   "memory": {
     "_doc": "팀 공통 메모리를 개인 CLAUDE.md 에 @import 로 주입. 개인 설정은 건드리지 않는다.",
     "src": "memory/claude-base.md",
@@ -28,67 +40,94 @@
     "import_line": "@team2-base.md",
     "import_into": "~/.claude/CLAUDE.md"
   },
-
   "external_skills": {
     "_doc": "외부 스택 존치 선언. keep 밖 항목은 --check 에서 경고, --reset 에서 격리. 판정 근거: docs/skill-audit-baseline.md 3회차.",
     "claude_keep": [
-      "_gstack-command", "browse", "codex", "context-restore", "context-save",
-      "document-generate", "gstack", "gstack-upgrade", "investigate",
-      "plan-ceo-review", "plan-eng-review", "qa", "review",
-      "setup-gbrain", "ship", "sync-gbrain"
+      "_gstack-command",
+      "browse",
+      "codex",
+      "context-restore",
+      "context-save",
+      "document-generate",
+      "gstack",
+      "gstack-upgrade",
+      "investigate",
+      "plan-ceo-review",
+      "plan-eng-review",
+      "qa",
+      "review",
+      "setup-gbrain",
+      "ship",
+      "sync-gbrain"
     ],
-    "claude_unmanaged_links": ["computer-use", "orchestration"],
+    "claude_unmanaged_links": [
+      "computer-use",
+      "orchestration"
+    ],
     "_claude_unmanaged_doc": "orca 가 ~/.agents/skills 로 관리하는 링크 — 건드리지 않는다",
     "codex_keep_same_as_claude": true,
-    "codex_personal_prefixes": ["caveman", "cavecrew"],
-    "codex_pending_until_mattpocock": [
-      "brainstorming", "dispatching-parallel-agents", "executing-plans",
-      "systematic-debugging", "test-driven-development", "superpowers",
-      "finishing-a-development-branch", "receiving-code-review",
-      "requesting-code-review", "subagent-driven-development",
-      "using-git-worktrees", "using-superpowers",
-      "verification-before-completion", "writing-plans", "writing-skills"
+    "codex_personal_prefixes": [
+      "caveman",
+      "cavecrew"
     ],
     "sunset": "2026-11-08"
   },
-
   "plugins": {
     "_doc": "expected 와 다르면 경고만 — 플러그인 on/off 는 사람이 한다. caveman·claude-hud 는 개인 취향(L5).",
     "expected": {
-      "superpowers@claude-plugins-official": true,
+      "superpowers@claude-plugins-official": false,
       "caveman@caveman": true,
       "claude-hud@claude-hud": true,
       "andrej-karpathy-skills@karpathy-skills": false
     }
   },
-
-  "hooks_allow": ["rtk", "orca", "herdr", "caveman"],
+  "hooks_allow": [
+    "rtk",
+    "orca",
+    "herdr",
+    "caveman"
+  ],
   "_hooks_doc": "settings.json 훅 command 에 이 부분 문자열이 없으면 미등록 훅 — 경고, --reset 시 제거. GSD 훅 9개가 3주간 미검출된 재발 방지 (2026-08-08).",
-
-  "planned": {
-    "mattpocock-skills": {
-      "status": "planned",
-      "source": "npx skills@latest add mattpocock/skills",
-      "pin": "v1.2.3",
-      "layer": ["정렬", "설계", "구현", "디버깅"],
-      "replaces": "superpowers (brainstorming·systematic-debugging·executing-plans)",
-      "install": [
-        "grilling", "grill-with-docs", "grill-me", "implement", "tdd",
-        "prototype", "research", "wayfinder", "codebase-design",
-        "diagnosing-bugs", "domain-modeling", "to-questionnaire",
-        "wizard", "resolving-merge-conflicts", "handoff"
+  "removed": {
+    "GSD": {
+      "date": "2026-08-08",
+      "reason": "90일 호출 0 + 훅 9개 상시 발화. .planning/ 산출물은 repo 보존, 재개 시 재설치"
+    },
+    "gstack-unused-48": {
+      "date": "2026-08-08",
+      "reason": "90일 실사용 0 — 목록은 docs/skill-audit-baseline.md 3회차"
+    },
+    "superpowers": {
+      "date": "2026-08-08",
+      "reason": "mattpocock 이 대체 (brainstorming→grill-with-docs, systematic-debugging→diagnosing-bugs, executing-plans·tdd→implement+tdd). SessionStart 강제 주입 762tok 도 함께 소멸"
+    }
+  },
+  "vendored": {
+    "_doc": "repo에 고정(vendor)된 외부 스킬 — setup_harness.py 가 ~/.claude/skills 와 ~/.codex/skills 양쪽에 링크한다. upstream 대비 diff 는 policies/overrides/mattpocock.md 등록부가 SoT.",
+    "mattpocock": {
+      "src_glob": "vendor/mattpocock/*",
+      "upstream": "https://github.com/mattpocock/skills",
+      "pin": "v1.2.3 (6acc160e)",
+      "license": "MIT",
+      "layer": [
+        "정렬",
+        "설계",
+        "구현",
+        "디버깅"
       ],
+      "replaces": "superpowers (brainstorming·systematic-debugging·executing-plans)",
       "exclude": [
-        "code-review", "to-spec", "to-tickets", "setup-matt-pocock-skills",
-        "triage", "ask-matt", "writing-for-agents", "improve-codebase-architecture"
+        "code-review",
+        "to-spec",
+        "to-tickets",
+        "setup-matt-pocock-skills",
+        "triage",
+        "ask-matt",
+        "writing-for-agents",
+        "improve-codebase-architecture"
       ],
       "exclude_reason": "팀 ad:* 와 중복 또는 팀 규칙 우회 위험 — docs/skill-stack-and-workflow-plan.md §3",
       "sunset": "2026-11-08"
     }
-  },
-
-  "removed": {
-    "GSD": { "date": "2026-08-08", "reason": "90일 호출 0 + 훅 9개 상시 발화. .planning/ 산출물은 repo 보존, 재개 시 재설치" },
-    "gstack-unused-48": { "date": "2026-08-08", "reason": "90일 실사용 0 — 목록은 docs/skill-audit-baseline.md 3회차" }
   }
 }

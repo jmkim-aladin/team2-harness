@@ -243,10 +243,10 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 
 | 단계 | 명령 | 하는 일 |
 |---|---|---|
-| 정렬 | (신설 예정 `/ad:grill`) — 그때까지 `superpowers:brainstorming` | 설계 트리를 소진할 때까지 인터뷰. 프론티어가 빌 때까지 |
+| 정렬 | `/grill-with-docs` | 설계 트리를 소진할 때까지 frontier 라운드 인터뷰 + 용어집·결정 기록 |
 | 스펙+분할 | `/ad:ticket` | 5W1H Feature 발행 → Task 분할 |
 | 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
-| 구현 | (신설 예정 `/ad:implement`) — 그때까지 직접 + `superpowers:test-driven-development` | 사전 합의된 seam에서 red→green |
+| 구현 | `/implement` (내부 `tdd`) | 사전 합의된 seam에서 red→green |
 | 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 |
 | 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
 
@@ -254,13 +254,24 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 
 | 상황 | 명령 |
 |---|---|
-| 버그·장애 | `/investigate` 또는 `superpowers:systematic-debugging` |
+| 버그·장애 | `diagnosing-bugs`(모델 호출) 또는 `/investigate` |
 | 운영 데이터 추출 필요 | `/ad:data-request` |
 | 월말 주기 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-planned` |
 | 주간 보고 | `/ad:weekly-report` |
 | 저장소 구조 분석 | `/ad:architecture-analysis` |
 | 하네스 점검 | `/ad:harness-optimize` |
 | 다른 에이전트와 협업 | `/ad:orchestration` |
+
+**설계·탐구 보조** (mattpocock vendored — [overrides/mattpocock.md](../policies/overrides/mattpocock.md))
+
+| 상황 | 명령 |
+|---|---|
+| 설계 질문을 코드로 답해야 | `prototype` |
+| 문서·API 조사 위임 | `research` |
+| 세션보다 큰 안개 과제 | `/wayfinder` |
+| 다른 조직에 질문지 | `/to-questionnaire` |
+| 사람만 할 수 있는 절차 | `wizard` |
+| 세션 이동·인수인계 | `/handoff` |
 
 **단계 경계**
 

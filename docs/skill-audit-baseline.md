@@ -183,3 +183,13 @@
 - [x] **Codex 쪽 다이어트** — `~/.codex/skills` 선언 밖 61종 격리 (GSD 18, gstack 미사용분, 깨진 ad-* 링크 2). Claude 쪽만 정리됐던 비대칭 해소
 - [x] **개인/팀 메모리 분리** — 팀 규율을 repo `memory/claude-base.md`로 이관, `~/.claude/team2-base.md` 링크 + `@team2-base.md` import. 개인 CLAUDE.md에는 개인 것만 남음 [북극성 4]
 - 이관: 팀 스킬 체계 재편(작은 불변 프리미티브로 쪼개고 결합) — manifest 위에서 진행. `scripts/setup.sh`·`setup.ps1` 제거는 Windows 실기 검증 후
+
+### 3회차 추가 (2026-08-08 후속 2) — mattpocock 채택
+
+- [x] **vendor 설치 15종** — `vendor/mattpocock/` (v1.2.3, `6acc160e`, MIT). npx 대신 repo 고정 — 새 머신 재현·PR 리뷰·버전 pin [북극성 1·2·6]
+- [x] **제외 8종** — 팀 우위 또는 규칙 우회 위험. 표: [policies/overrides/mattpocock.md](../policies/overrides/mattpocock.md)
+- [x] **superpowers 제거 확정** — grill-with-docs·diagnosing-bugs·implement+tdd 가 대체. 플러그인 off + Codex 사본 15종 격리 대상
+- [x] **확장점 작성** — `docs/agents/issue-tracker.md`(YouTrack + wayfinding 매핑), `docs/agents/domain.md`(vault glossary·decisions — repo CONTEXT.md 생성 금지)
+- [x] **포인터 편집 3건** — implement·domain-modeling·diagnosing-bugs. 등록부: overrides/mattpocock.md §diff
+- 계획 변경: Phase 4-5(`/ad:grill`)·4-7(`/ad:implement`) 신설 → **grill-with-docs·implement 채택으로 대체**. Phase 4-4 용어집은 domain-modeling + domain.md 오버라이드가 담당
+- 검증 이관: 실 티켓 1건으로 grill→ticket→work-prep→implement→ad:code-review 전 구간 주행 (다음 실작업에서)

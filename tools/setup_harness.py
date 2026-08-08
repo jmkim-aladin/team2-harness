@@ -131,6 +131,19 @@ def converge_links(m, apply):
         make_link(src, os.path.join(tl["codex_skills_glob"]["dest_dir"], os.path.basename(src)), apply)
 
 
+def converge_vendored(m, apply):
+    """vendor 스킬을 ~/.claude/skills 와 ~/.codex/skills 양쪽에 링크."""
+    for name, e in (m.get("vendored") or {}).items():
+        if not isinstance(e, dict):
+            continue
+        for src in sorted(glob.glob(os.path.join(REPO, e["src_glob"]))):
+            if not os.path.isdir(src):
+                continue
+            base = os.path.basename(src)
+            make_link(src, os.path.join(CLAUDE, "skills", base), apply)
+            make_link(src, os.path.join(CODEX, "skills", base), apply)
+
+
 def converge_memory(m, apply):
     mem = m["memory"]
     make_link(os.path.join(REPO, mem["src"]), mem["dest"], apply)
@@ -153,7 +166,12 @@ def converge_memory(m, apply):
 def audit_skills(m, mode, qdir):
     ext = m["external_skills"]
     team_names = {os.path.basename(e["dest"]) for e in m["team_links"]["claude_skills"]}
-    declared = set(ext["claude_keep"]) | set(ext["claude_unmanaged_links"]) | team_names
+    vendored_names = set()
+    for e in (m.get("vendored") or {}).values():
+        if not isinstance(e, dict):
+            continue
+        vendored_names |= {os.path.basename(x) for x in glob.glob(os.path.join(REPO, e["src_glob"])) if os.path.isdir(x)}
+    declared = set(ext["claude_keep"]) | set(ext["claude_unmanaged_links"]) | team_names | vendored_names
     sdir = os.path.join(CLAUDE, "skills")
     if os.path.isdir(sdir):
         for d in sorted(os.listdir(sdir)):
@@ -173,7 +191,7 @@ def audit_skills(m, mode, qdir):
 
     # codex 쪽
     if ext.get("codex_keep_same_as_claude"):
-        codex_declared = set(ext["claude_keep"])
+        codex_declared = set(ext["claude_keep"]) | vendored_names
         codex_declared |= {os.path.basename(p) for p in glob.glob(os.path.join(REPO, m["team_links"]["codex_skills_glob"]["src"]))}
         personal = ext.get("codex_personal_prefixes", [])
         pending = set(ext.get("codex_pending_until_mattpocock", []))
@@ -258,6 +276,7 @@ def main():
     m = load_manifest()
     converge_env(m, apply)
     converge_links(m, apply)
+    converge_vendored(m, apply)
     converge_memory(m, apply)
     audit_skills(m, mode, qdir)
     audit_hooks(m, mode)
