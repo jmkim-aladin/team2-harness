@@ -43,18 +43,18 @@ repos:
   blog-web: "https://github.com/AladinCommunication/blog-web"
 
 # DB 스크립트는 shopping 서비스와 동일 레포 공유 (webcatalog 스키마)
-# blog/bookple 전용 별도 db-script 레포는 없음 — shopping-db-script가 SoT
+# blog/bookple 전용 별도 db-script 레포는 없음 — shop-db-script가 SoT
 data:
   db_type: mssql
   schemas:
     - name: webcatalog
       purpose: "블로그/북플/쇼핑 공통 스키마 (Customer, Bookple_*, Paper, WebItem 등 혼재)"
-      source_path_repo: "/Users/jm/Documents/workspace/shopping/shopping-db-script"
+      source_path_repo: "/Users/jm/Documents/workspace/shopping/shop-db-script"
       source_path_in_repo: "databases/webcatalog"
   shared_db: true        # shopping/max/tobe 등 다른 서비스와 webcatalog 공유
   direct_sp_write: true  # SP 기반 (레거시 .NET FW Web Site)
   notes: |
-    SP/Function/Table 스크립트는 shopping-db-script 레포 안 webcatalog 스키마 폴더에 있다.
+    SP/Function/Table 스크립트는 shop-db-script 레포 안 webcatalog 스키마 폴더에 있다.
     단, 블로그/북플 도메인 SP 중 일부(예: B2_FavoriteMyDictionary_Add)는 아직 export되지 않은
     것이 있으며 운영 DB가 source of truth — 수정 전 export 또는 운영 DB 확인이 필요하다.
     follow 관계 핵심 테이블: webcatalog.dbo.Bookple_FriendRelation (Custkey, refCustkey, Relativity).
