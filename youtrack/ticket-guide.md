@@ -1,17 +1,7 @@
 # YouTrack 티켓 가이드
 
 > 전사 YouTrack 상태 플로우 기준 문서이다.
-> DEV2팀 스프린트 운영 규칙은 [docs/sprint/](../docs/sprint/) 를 참조한다.
-
-## DEV2팀 스프린트 운영 문서
-
-| 문서 | 내용 |
-|------|------|
-| [티켓 작성 가이드](../docs/sprint/ticket-guide.md) | 5W1H 작성법, 스프린트 상태, 티켓 크기 기준 |
-| [스토리 포인트 가이드](../docs/sprint/story-point-guide.md) | 직군별 SP 산정 기준 (1~13) |
-| [스프린트 계획 운영 개요](../docs/sprint/sprint-planning-overview.md) | 맨데이 배분, 월간 타임라인 |
-| [Velocity-OKR 스프린트 운영 정책](../docs/sprint/velocity-okr-sprint-policy.md) | 80% 수용량 설계, 계획 이행률, OKR 달성 판정 |
-| [업무 계획 변경 절차](../docs/sprint/plan-change-process.md) | 긴급 요청·이월 처리 프로세스 |
+> DEV2팀 스프린트 운영 규칙(티켓 작성·SP·맨데이 배분·수용량·계획 변경)은 [docs/sprint/](../docs/sprint/)가 SoT다.
 
 ---
 
@@ -112,8 +102,7 @@
 - **예측 필드** 작성 필수
 
 **이슈 분할 규칙:**
-- 예측 2일 초과 시 → 자식 이슈로 분산
-- 목표: 1일 이내 완료 가능한 단위로 분할
+- 예측 2일 초과 시 → 자식 이슈로 분산 (전사 참고 기준 — 팀은 `Task ≤ 1일`이 우선: [docs/sprint/ticket-guide.md](../docs/sprint/ticket-guide.md) §2)
 
 #### 🔄 Reopened
 - 해결된 이슈가 재발생하거나 수정 불충분 시 사용

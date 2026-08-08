@@ -2,10 +2,11 @@
 type: ticket
 title: {{ticket_id}} {{title}}
 canonical_id: ticket:{{ticket_id_lower}}
-status: canonical
+status: draft
 updated_at: {{date}}
 ticket_id: {{ticket_id}}
 ticket_status: in-progress
+decision_status: none
 assignee: {{user}}
 service: "[[{{service_id}}]]"
 sprint: {{sprint}}
@@ -20,8 +21,9 @@ related_projects: []
 relation_status: confirmed
 relation_sources:
   - manual
-okr_kr: ""
 ---
+
+> SoT: [docs/sprint/work-prep-note-template.md](../../docs/sprint/work-prep-note-template.md) — frontmatter·본문 구조는 그쪽을 따른다. 이 파일은 new-note용 최소 스켈레톤.
 
 <!-- llm-hint -->
 DEV2 티켓 작업 노트. YouTrack이 공식 상태 SoT, vault는 진행·분석·결정 누적용.
@@ -86,15 +88,7 @@ status: auto-prep | in-progress | done | backlog (디렉터리와 일치).
 
 ## 도메인 지식 promote
 
-작업 중 확정된 도메인 지식·결정·분석은 본문에 마커로 묶어 두면 `tools/promote_notes.py`가 별도 노트로 분리 + wikilink로 치환:
-
-```
-<!-- promote:analysis/{{service_id}}/{slug} title="분석 제목" -->
-{본문 markdown}
-<!-- /promote -->
-```
-
-지원 type: domain / analysis / decision / proposal / glossary.
+마커 문법과 지원 type은 [tools/README.md](../../tools/README.md) §promote_notes.py 참조.
 
 ## Actions
 

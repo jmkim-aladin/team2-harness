@@ -14,6 +14,8 @@ relation_sources:
   - manual
 ---
 
+> 예약 구조 — vault에 아직 미채택 (2026-08-08 확인).
+
 <!-- llm-hint -->
 서비스별 도메인 진입점. 비즈니스 규칙·분기 기준·함정 정리. 코드 source는 서비스 repo, vault는 해석 layer.
 파일 구성: business-rules.md / traps.md / relations.md / notes/{시점성}.md

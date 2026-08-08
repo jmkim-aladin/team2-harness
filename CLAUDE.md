@@ -5,20 +5,20 @@
 
 ## 구조
 
-- `policies/` — 팀 정책 (엔지니어링, 브랜치, 코드리뷰, 배포, AI, 현대화, 보안, 장애대응, 팀원, KB, CLAUDE.md, gstack 오버라이드, mermaid, AWS Secrets, 로컬 자격증명/Keychain, Datadog API, DB 이관/CDC, 내부통신 도메인, 위키 문서 언어/제목, 데이터 추출 요청, 스킬 작성, 지시 강도·우선순위, 하네스 거버넌스)
-- `catalog/` — 서비스 프로파일 (max, tobe, naru, bazaar, aasm, storefront, caravan, pod, shopping, blog)
+- `policies/` — 팀 정책. 디렉토리가 SoT — `ls policies/`로 조회
+- `catalog/` — 서비스 프로파일. 디렉토리가 SoT — `ls catalog/`로 조회
 - `catalog/common-services/registry.yaml` — 알라딘 인증, 뉴빌링 등 공통 서비스 영향 확인 registry
 - `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
-- `.claude/commands/ad/` — 팀 스킬 (ticket, work-prep, work-close, work-board, code-review, architecture-analysis, team2-kb-read, okr, weekly-report, weekly-planned, harness-optimize, data-request, sprint-close-check, service-activity, capacity-plan, granola-sync, new-note, tldr, explain, orchestration)
+- `.claude/commands/ad/` — 팀 스킬. 디렉토리가 SoT — `ls .claude/commands/ad/`로 조회
 - `scripts/setup.sh` — 원커맨드 셋업
 - `docs/` — 가이드 문서
-- `docs/sprint/` — 스프린트 운영 (워크플로우 실행, 티켓 가이드, SP 가이드, 계획 변경, Velocity, 마감 프로세스, 주간업무 보고, 주간 핵심 목표)
+- `docs/sprint/` — 스프린트 운영. 디렉토리가 SoT — `ls docs/sprint/`로 조회
 
 ## 핵심 규칙
 
 - 하네스 개선의 방향 판정: [policies/harness-north-star.md](./policies/harness-north-star.md) — 검증 루프 > 지시, 문제 단위 위임, smart zone, 환경=진실, 게이트 기계화, 아티팩트 기억
 - 지시 강도(invariant/policy/heuristic/example)·충돌 시 우선순위·판단 경계: [policies/instruction-precedence-policy.md](./policies/instruction-precedence-policy.md)
-- 세션 컨텍스트는 **smart zone**(약 150k 토큰) 안에 둔다: 각 구현 앞에서 `/clear` / 파일은 Read로 읽고 `cat`·`sed`로 출력하지 않는다 / 셸 cwd는 호출마다 초기화되므로 절대 경로로 명령한다 / 넓은 조사는 서브에이전트로 보내고 결론만 회수한다. 근거: 2026-08-08 실측 호출당 평균 컨텍스트 470k (zone의 3배)
+- 세션 컨텍스트 규율: [memory/claude-base.md](./memory/claude-base.md) §세션 컨텍스트 규율
 - 브랜치: `feature/{이슈ID}` | 커밋: `[{이슈ID}] 작업 내용`
 - 예외: 개발2팀 하네스(`team2`) 자체 변경은 티켓 없이 `team2/{작업-slug}` 브랜치와 `[TEAM2] 작업 내용` 커밋을 사용할 수 있다
 - 모든 작업은 YouTrack 티켓(5W1H)에서 시작. 단, 개발2팀 하네스 자체 변경은 [브랜치 전략](./policies/branching-strategy.md)의 하네스 예외를 따른다
@@ -52,9 +52,9 @@
 
 ## 외부 스킬
 
-gstack 스킬(`/ship`, `/review`, `/qa`, `/investigate`, `/plan-eng-review`, `/plan-ceo-review`, `/codex`, `/browse`, `/context-save`, `/context-restore`, `/document-generate`) 사용 시 [policies/gstack-override-policy.md](./policies/gstack-override-policy.md) 참조 — 팀 Git 컨벤션·배포 정책이 gstack 기본값보다 우선한다.
+gstack 스킬 사용 시 [policies/gstack-override-policy.md](./policies/gstack-override-policy.md) 참조 — 팀 Git 컨벤션·배포 정책이 gstack 기본값보다 우선한다. 실사용 유지분은 [docs/gstack-usage-guide.md](./docs/gstack-usage-guide.md).
 
-superpowers는 `brainstorming`·`systematic-debugging`·`executing-plans` 3종만 사용한다. 나머지 외부 스킬(GSD 18종, ios-*, design-*, health, retro, office-hours 등)은 2026-08-08 실사용 실측으로 비활성 판정 — 근거는 [docs/skill-stack-and-workflow-plan.md](./docs/skill-stack-and-workflow-plan.md) §4.
+superpowers는 제거됐다(2026-08-08) — mattpocock이 대체: `brainstorming`→`/ad:grill`, `systematic-debugging`→`diagnosing-bugs`, `executing-plans`·`tdd`→`/ad:implement`+`tdd`. 판정: [policies/overrides/mattpocock.md](./policies/overrides/mattpocock.md).
 
 ## 문서 규칙
 
@@ -67,7 +67,7 @@ superpowers는 `brainstorming`·`systematic-debugging`·`executing-plans` 3종�
 
 `/ad:*`는 **모델 호출**이다 — 요청이 스킬에 맞으면 다른 도구보다 먼저 호출한다. 판단 근거는 각 스킬의 `description`이며, CLAUDE.md에 라우팅 목록을 따로 두지 않는다. 같은 일을 두 곳에서 하면 한쪽이 반드시 낡는다.
 
-**사용자 호출 전용 4종** — `/ad:code-review`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`. 게시·dispatch 같은 사이드이펙트가 있어 사람이 시점을 정한다.
+**사용자 호출 전용 5종** — `/ad:code-review`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`, `/ad:implement`. 게시·dispatch 같은 사이드이펙트가 있어 사람이 시점을 정한다.
 
 어떤 스킬을 언제 부르는지의 지도는 [docs/harness-guide.md](./docs/harness-guide.md) §작업 플로우. 트리거 설계 기준은 [policies/skill-authoring-principles.md](./policies/skill-authoring-principles.md) §1.
 
@@ -75,37 +75,6 @@ superpowers는 `brainstorming`·`systematic-debugging`·`executing-plans` 3종�
 
 - 새 문서 작성, 어디에 둘지 결정 → [policies/knowledge-base-policy.md](./policies/knowledge-base-policy.md) 결정 트리 즉시 적용 (사용자에게 매번 묻지 않음)
 
-## GBrain Configuration (configured by /setup-gbrain)
+## GBrain
 
-- Mode: remote-http shared team2 brain
-- Local agent MCP URL: `http://127.0.0.1:3131/mcp`
-- Hermes MCP URL: `http://gbrain-team2:3131/mcp`
-- Server: Docker service `gbrain-team2` in `/Users/jm/.hermes-team2/docker-compose.yml`
-- Engine: pglite at `/Users/jm/.hermes-team2/.gbrain/brain.pglite` (container path: `/opt/data/.gbrain/brain.pglite`)
-- Setup date: 2026-06-17
-- MCP registered: Hermes `cli`/`discord`, Codex global, Claude Code user scope
-- Token storage: `/Users/jm/.hermes-team2/.env` and local agent config only. Do not commit tokens.
-- Indexed sources: `team2-harness`, `team2-vault`; code files are indexed under `team2-harness`.
-- Default source scope: Docker runtime sets `GBRAIN_SOURCE=team2-vault`; use explicit source selection for `team2-harness` when needed.
-- Embeddings: enabled with ZeroEntropy `zembed-1`; run shared maintenance from the Docker service, not the Mac-local `~/.gbrain` PGLite.
-- Hermes runtime: cron runs `tools/run_team2_knowledge_cycle.py`; Granola meeting sync runs every 10m through `tools/run_granola_sync_cycle.py`; nightly agent jobs use GBrain MCP for domain hardening drafts. Hermes may write vault draft/projection files but must not mutate YouTrack/KB/DB/prod or promote canonical state without approval.
-- GBrain PGLite maintenance: host LaunchAgent `com.team2.gbrain-maintenance` runs `/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh` at 01:40 KST. This stops `gbrain-team2`, runs `sync --all`, a forced `sync --source team2-vault --full`, `extract --stale`, `embed --stale`, source-level `dream`, writes `/Users/jm/.hermes-team2/gbrain-maintenance-status.json`, then restarts the server. Read status with `/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh --status`; it must not run maintenance.
-
-## GBrain Search Guidance (configured by /sync-gbrain)
-<!-- gstack-gbrain-search-guidance:start -->
-
-GBrain is available through the shared team2 HTTP MCP. The agent should prefer gbrain over Grep when the question is semantic, cross-document, or when the exact identifier is unknown.
-
-Current indexed corpora:
-- DEV2 harness markdown, policies, command documentation, and code files.
-- Local Obsidian team2 vault notes for tickets, analyses, meetings, and domain knowledge.
-
-Prefer gbrain when:
-- "Where is X handled?" or intent-based lookup: use MCP `search` or `query`.
-- "Where is symbol Y defined?" or "Who references Y?": use MCP `code_def` or `code_refs`.
-- "What calls Y?" / "What does Y depend on?": use MCP `code_callers` / `code_callees`.
-- "What did we decide about X?": use MCP `search` or `think`, then verify against source documents.
-
-Grep is still right for exact strings, regex, multiline patterns, and file globs. gbrain results are retrieval candidates, not confirmed source of truth. For shared brain CLI maintenance, run commands inside the Docker service, for example `docker exec gbrain-team2 sh -lc 'HOME=/opt/data /opt/data/.local/bin/gbrain stats'`.
-
-<!-- gstack-gbrain-search-guidance:end -->
+설정·검색 가이드: [docs/gbrain-config.md](./docs/gbrain-config.md)

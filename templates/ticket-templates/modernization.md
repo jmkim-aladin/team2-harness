@@ -1,5 +1,8 @@
 # 현대화 작업 티켓 템플릿
 
+> 5W1H 상세 작성법: [docs/sprint/ticket-guide.md](../../docs/sprint/ticket-guide.md) 3항 참조
+> 현대화 4트랙 정의: [policies/legacy-modernization-policy.md](../../policies/legacy-modernization-policy.md) §현대화 4트랙
+
 ## What (무엇을 현대화)
 {{대상 기능/도메인/모듈}}
 
@@ -7,7 +10,7 @@
 {{변경 빈도, 장애 영향도, 데이터 결합도 기준}}
 
 ## 현대화 트랙
-{{Observe / Wrap / Extract / Freeze 중 선택}}
+{{Observe / Wrap / Extract / Freeze/Retire 중 선택}}
 
 ## 현재 상태
 - 런타임: {{.NET Framework 4.8 / .NET Core 등}}
@@ -25,7 +28,7 @@
 4. {{Phase 4: 정리}}
 
 ## 예상 소요
-{{전체 소요 예상 — 2일 초과 시 하위 이슈로 분할}}
+{{전체 소요 예상 — Task ≤ 1일 / Feature ≤ 1주, 초과 시 분할 (ticket-guide)}}
 
 ---
 

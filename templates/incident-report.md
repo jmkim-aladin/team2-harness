@@ -1,6 +1,6 @@
 # 장애보고서 템플릿
 
-> 날짜/시간은 KST 기준으로 작성한다. DB/SP 변경이 포함되면 별도 승인 필요 항목으로 표시한다.
+> 작성 원칙: [policies/incident-response.md](../policies/incident-response.md) §작성 원칙
 
 ## 1. 작성자 정보
 

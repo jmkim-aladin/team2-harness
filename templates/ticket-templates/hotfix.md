@@ -1,5 +1,7 @@
 # 핫픽스 티켓 템플릿
 
+> 5W1H 상세 작성법: [docs/sprint/ticket-guide.md](../../docs/sprint/ticket-guide.md) 3항 참조
+
 ## 장애 상황
 {{장애 현상 및 영향 범위}}
 

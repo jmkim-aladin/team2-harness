@@ -3,7 +3,7 @@
 ## 정의
 
 - **팀 하네스 (team2 repo)** = "어떻게 일하나" — 팀 업무 가이드·규칙·구조 (정책, 템플릿, 카탈로그, 스킬, KB↔하네스 매핑 인덱스)
-- **Obsidian vault (`~/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/`)** = "무엇을 일하나" — 팀 업무 실행·운영·도메인 지식 (프로젝트 진행, 운영업무, 도메인, 회의록, 일지, 주간보고, Querybook 산출물)
+- **Obsidian vault (`$LOCAL_WIKI_PATH`)** = "무엇을 일하나" — 팀 업무 실행·운영·도메인 지식 (프로젝트 진행, 운영업무, 도메인, 회의록, 일지, 주간보고, Querybook 산출물)
 
 이 정의가 모든 위치 결정의 1차 기준이다.
 
@@ -89,26 +89,11 @@ vault **내부** 결정 트리(어느 디렉터리에 둘지)는 vault 측 [`wik
 
 ## YouTrack KB API 접근
 
-```
-베이스 URL: https://aladincommunication.youtrack.cloud/api/articles
-인증: Authorization: Bearer perm:{토큰}
-콘텐츠: Markdown
-구조: 부모-자식 아티클 트리
-```
+베이스 URL·토큰 조달·공통 호출 패턴(KB 검색·상세 curl 포함)은 [youtrack/api-guide.md](../youtrack/api-guide.md)가 SoT.
 
-| 작업 | 메서드 | 엔드포인트 |
-|------|--------|-----------|
-| 목록 | GET | `/api/articles?fields=id,idReadable,summary,content&$top=100` |
-| 조회 | GET | `/api/articles/{id}?fields=id,idReadable,summary,content,parentArticle(id,summary),childArticles(id,summary)` |
-| 생성 | POST | `/api/articles` + `{project, summary, content}` |
-| 수정 | POST | `/api/articles/{id}` + `{summary, content}` |
-| 하위 문서 | GET | `/api/articles/{id}/childArticles?fields=id,summary` |
+KB 고유 사항: 아티클은 부모-자식 트리, 콘텐츠는 Markdown, `fields` 파라미터 필수(미지정 시 ID만 반환), 페이지네이션은 `$top`/`$skip`(기본 최대 42건).
 
-### 주의사항
-- `fields` 파라미터 필수 — 지정하지 않으면 ID만 반환
-- 페이지네이션: `$top` (최대), `$skip` (오프셋), 기본 최대 42건
-- 콘텐츠는 Markdown 형식
-- 토큰: YouTrack Profile > Account Security > New Token
+생성 `POST /api/articles` + `{project, summary, content}` / 수정 `POST /api/articles/{id}` + `{summary, content}` / 하위 문서 `GET /api/articles/{id}/childArticles` — 생성·수정·삭제·이동은 **사용자 확인 후** 실행한다.
 
 ## 드리프트 감시
 

@@ -37,7 +37,7 @@ KB 자동 반영 X — 사용자가 수동 sync.
 
 ## 이번 주 핵심목표
 
-<!-- KB DEV2-A-1351 하위 주차 문서 원문 그대로. 상태·일정·주석 보강 금지. 담당자별 2개 (2026-08~, docs/sprint/weekly-goal-policy.md) -->
+<!-- KB DEV2-A-1351 하위 주차 문서 원문 그대로. 상태·일정·주석 보강 금지. 담당자별 2개 (2026-08~). SoT: docs/sprint/weekly-report-guide.md §4-B.1.1 -->
 
 **{담당자}**
 

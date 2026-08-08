@@ -47,7 +47,7 @@ security add-generic-password \
 
 ## 조회
 
-표준은 `security find-generic-password` CLI.
+> macOS 내부 구현·직접 조회 예시 — 표준 인터페이스는 §범위의 `python3 tools/cred.py`이고, Windows는 cred.py만 가능하다.
 
 ```bash
 # 비밀번호만 출력 (스크립트 친화)
@@ -84,19 +84,19 @@ unset PW
 
 ## 등록된 dev DB 매핑 (target → host)
 
-각자 머신 기준. 비밀번호는 아래 keychain `service`에서 조회, host는 이 표에서 찾는다. **read-only 강제**는 `.claude/hooks/sqlcmd-readonly.sh`(쓰기 키워드 차단)에 걸려 있다.
+각자 머신 기준. 비밀번호는 아래 keychain `service`에서 조회, host는 이 표에서 찾는다. **read-only 강제**는 `.claude/hooks/sqlcmd-readonly.sh`(쓰기 키워드 차단)에 걸려 있다. `{계정}`은 각자 등록값(DB 사용자명 또는 사번)으로 치환한다.
 
 | keychain service | account | host | 비고 |
 |------------------|---------|------|------|
-| `cool-dev` | `jmkim` | `rds-cluster-cool-dev.cleuiesc8bqi.ap-northeast-2.rds.amazonaws.com` | 공유 MSSQL dev. DB: `WebCatalog`, `ToBe`, `Community`, `WebLog`, `WebMarket` (tobe/max/shopping/blog 공유) |
-| `lego-dev` | `jmkim` | (Lego 링크드 서버 dev — `Lego.WebStat` 등) | 통계/로그 계열. host는 본인 등록값 |
+| `cool-dev` | `{계정}` | `rds-cluster-cool-dev.cleuiesc8bqi.ap-northeast-2.rds.amazonaws.com` | 공유 MSSQL dev. DB: `WebCatalog`, `ToBe`, `Community`, `WebLog`, `WebMarket` (tobe/max/shopping/blog 공유) |
+| `lego-dev` | `{계정}` | (Lego 링크드 서버 dev — `Lego.WebStat` 등) | 통계/로그 계열. host는 본인 등록값 |
 
 클라이언트는 go-`sqlcmd`(`/opt/homebrew/bin/sqlcmd`). tools18 미설치 시 `-C`(서버 인증서 신뢰) 필요.
 
 ```bash
-PW=$(security find-generic-password -s "cool-dev" -a "jmkim" -w)
+PW=$(security find-generic-password -s "cool-dev" -a "{계정}" -w)   # {계정} = 각자 등록값
 SQLCMDPASSWORD="$PW" sqlcmd -S "rds-cluster-cool-dev.cleuiesc8bqi.ap-northeast-2.rds.amazonaws.com" \
-  -U jmkim -C -d WebCatalog -h -1 -W -Q "SELECT TOP 10 ..."
+  -U "{계정}" -C -d WebCatalog -h -1 -W -Q "SELECT TOP 10 ..."
 unset PW
 ```
 
@@ -112,7 +112,7 @@ unset PW
 
 ## AI 도구 사용 시
 
-- DB 계열 MCP 서버(postgres/mssql/mysql 등)는 사용하지 않는다 (글로벌 메모리 정책). 자격증명을 MCP 설정에 박아두는 패턴 금지.
+- DB 계열 MCP 서버(postgres/mssql/mysql 등)는 사용하지 않는다 — `.claude/hooks/block-db-mcp.sh` 훅으로 기계 강제 + [AGENTS.md](../AGENTS.md) 선언. 자격증명을 MCP 설정에 박아두는 패턴 금지.
 - AI 스킬이 자격증명을 조회해야 할 때는 `security find-generic-password ... -w` 한 줄 호출로 캡처해 즉시 소비. 응답·로그·위키 노트에 평문이 남지 않도록 한다.
 - AI에게 키체인 항목을 새로 등록(`add-generic-password`)시키지 않는다 — 본인이 직접 등록.
 

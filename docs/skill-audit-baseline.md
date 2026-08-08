@@ -231,3 +231,13 @@
 - [x] **catalog 11종 + 템플릿에 `verification` 블록** — 명령 49개 전부 repo 파일 실증(evidence 필수, 날조 금지 철칙). verified 7 / partial 2 / 미구축 2(shopping·blog — 러너 부재 명시가 곧 정보)
 - [x] 스킬 효과: implement·diagnosing-bugs·code-review가 서비스 진입 시 red/green 명령을 조회 1회로 획득
 - 조사 중 드리프트 10건 발견 (catalog 버전 낡음, storefront ci/모듈 경로, blog source_path, README 불일치 등) — 정정은 별도 트랙
+
+### 3회차 추가 (2026-08-08 후속 8) — 문서 계층 감사 적용 (repo 전 계층 완료)
+
+- [x] **스킬 밖 77파일 감사(178건) → A+B 승인 적용** — 50파일 수정, −147줄. 캐시·중복이 병의 51%(91건), 강등은 11건뿐 — 이 계층은 강도가 아니라 드리프트가 문제였다 [북극성 3·4]
+- [x] **B그룹 판정 7건** — superpowers 문구 정정(제거 확정으로), 수용량 100% 통일, 동시 Task ≤3, 티켓 노트 SoT=work-prep-note-template, cred.py 표준 확정, weekly-report §4-B 우선, Epic 신규 금지
+- [x] **CLAUDE.md 111→80줄** — 나열 목록 4곳을 디렉토리 SoT로, GBrain 34줄 → `docs/gbrain-config.md` 신설 이동. claude-md-policy 자기적용 회복
+- [x] SoT 등록부: 절번호 3건 정정 + 신규 6행 등록. smart zone 4중복·Co-Authored 5중복 해소
+- [x] 기존 결함 테스트 수리 — AGENTS.md common-service 링크 누락(HEAD에서도 실패하던 것) → 168/168 green
+- 플래그: `/sync-gbrain` 마커가 gbrain-config.md로 이동 — 다음 sync 실행 시 CLAUDE.md 재주입 여부 관찰, 재주입하면 스킬 경로 설정 조정
+- 4회차 이관: weekly-report 레거시 만료(2026-10-01 재확인), 근거 캠페인 잔여, youtrack 전사↔팀 우선순위 소통

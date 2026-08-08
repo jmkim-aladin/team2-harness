@@ -7,7 +7,7 @@
 
 - **런타임**: {{.NET Framework 4.8 / .NET Core x.x 등}}
 - **호스팅**: {{IIS / Windows Service 등}}
-- **현대화 트랙**: {{Observe / Wrap / Extract / Freeze}}
+- **현대화 트랙**: {{Observe / Wrap / Extract / Freeze/Retire}} — 트랙 정의는 팀 하네스 `policies/legacy-modernization-policy.md` §현대화 4트랙
 
 ## 금지 경계
 
@@ -45,8 +45,6 @@ SP를 변경해야 할 경우 아래를 반드시 포함 (단계별 SoT: 팀 하
 - [ ] 영향 테이블 목록 — PR 단계
 - [ ] 입력/출력 계약 (변경 전/후) — PR 단계
 - [ ] 롤백 스크립트·최소 재현 데이터셋·smoke test — 배포 승인 단계
-- [ ] 최소 재현 데이터셋
-- [ ] smoke test 시나리오
 - [ ] 관련 배치/스케줄러 영향 확인
 
 ## 현대화 후보

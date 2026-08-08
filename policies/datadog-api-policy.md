@@ -29,16 +29,16 @@ Application key는 반드시 **scope를 명시해 발급**한다. scope 없이 �
 키 등록은 **본인이 직접** 한다 (AI에게 `add-generic-password`를 시키지 않는다).
 
 ```bash
-security add-generic-password -s "team2-datadog-api-key"  -a "jmkim@aladin.co.kr" -w
-security add-generic-password -s "team2-datadog-app-key"  -a "jmkim@aladin.co.kr" -w
+security add-generic-password -s "team2-datadog-api-key"  -a "{owner 계정}" -w
+security add-generic-password -s "team2-datadog-app-key"  -a "{owner 계정}" -w
 ```
 
 `-w`를 값 없이 두면 프롬프트로 입력받아 셸 history에 남지 않는다. 갱신은 `-U` 추가.
 
-주의: AI 세션의 `!` 명령 패스스루로 실행하면 대화형 프롬프트가 입력을 받지 못해 **빈 값이 저장된다** (에러 없이 통과). 등록은 별도 터미널에서 하고, 아래로 저장 여부를 확인한다.
+주의: AI 세션의 `!` 명령 패스스루로 실행하면 대화형 프롬프트가 입력을 받지 못해 **빈 값이 저장된다** (에러 없이 통과). 등록은 별도 터미널에서 하고, 아래로 저장 여부를 확인한다 (근거: AI `!` 패스스루 빈 값 저장 사례).
 
 ```bash
-K=$(security find-generic-password -s "team2-datadog-api-key" -a "jmkim@aladin.co.kr" -w); echo "${#K}"; unset K
+K=$(security find-generic-password -s "team2-datadog-api-key" -a "{owner 계정}" -w); echo "${#K}"; unset K
 ```
 
 API key는 32자 hex. `0`이면 빈 값이므로 `-U`로 재등록한다.
@@ -46,8 +46,8 @@ API key는 32자 hex. `0`이면 빈 값이므로 `-U`로 재등록한다.
 ## 조회·호출
 
 ```bash
-DD_API_KEY=$(security find-generic-password -s "team2-datadog-api-key" -a "jmkim@aladin.co.kr" -w)
-DD_APP_KEY=$(security find-generic-password -s "team2-datadog-app-key" -a "jmkim@aladin.co.kr" -w)
+DD_API_KEY=$(security find-generic-password -s "team2-datadog-api-key" -a "{owner 계정}" -w)
+DD_APP_KEY=$(security find-generic-password -s "team2-datadog-app-key" -a "{owner 계정}" -w)
 
 curl -sS "https://api.datadoghq.com/api/v1/validate" \
   -H "DD-API-KEY: $DD_API_KEY"

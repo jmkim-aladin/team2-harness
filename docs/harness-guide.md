@@ -371,6 +371,7 @@ PR 생성 (체크리스트 포함)
 | 서비스 책임 이동 | service-manifest.yaml |
 | 장애/위험 포인트 발견 | AGENTS.md 주의사항 |
 | 현대화 진행 상태 변경 | modernization-plan.md |
+| 금지 패턴 추가 | AGENTS.md 금지 사항 |
 
 ## 팀 하네스 유지보수
 

@@ -8,7 +8,7 @@
 2. **데이터 레벨** — dev/staging DB 읽기 쿼리(SELECT/EXPLAIN/스키마 메타)로 스키마, 행 카운트, 대표 패턴, 룰 존재 여부 확인. 읽기 쿼리는 사전 동의 ([local-credentials-policy.md](./local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의").
 3. **사람 컨펌** — 1·2단계로 풀리지 않는 잔여 미확정만 보고자/오너/연관팀에 질의. 묻는 항목과 그 이유를 묶어 한 번에 전달한다.
 
-이 순서를 건너뛰지 않는다.
+이 순서를 건너뛰지 않는다 (근거: 아래 §이유의 왕복 절감 — 컨펌 전 조회 우선).
 
 ## 이유
 
@@ -32,6 +32,6 @@
 
 ## 적용 스킬
 
-`work-prep`, `ticket`, `code-review`, `data-request`, `weekly-planned`, `weekly-report`, `service-activity`, `capacity-plan`, `harness-optimize` — 미확정 사실을 다루는 모든 ad 스킬.
+이 정책을 명시 인용: `work-prep`, `ticket`, `code-review`, `data-request`, `explain`, `tldr`. 그 외 스킬도 검증 순서 자체는 따른다.
 
-각 스킬은 본 정책을 인용하며, 자체 흐름에서 1·2단계를 명시적으로 수행한 뒤 잔여 항목만 컨펌으로 보낸다.
+각 스킬은 자체 흐름에서 1·2단계를 명시적으로 수행한 뒤 잔여 항목만 컨펌으로 보낸다.

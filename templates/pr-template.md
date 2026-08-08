@@ -27,8 +27,4 @@
 - [ ] (DB/SP 변경 시) 롤백 스크립트 준비 확인 — 첨부는 배포 승인 시 (release-policy)
 
 ### 하네스 갱신
-- [ ] 서비스 하네스 갱신 필요 여부 확인
-  - [ ] AGENTS.md (엔드포인트, 금지사항, 주의사항 등)
-  - [ ] RUNBOOK.md (배포/롤백 절차)
-  - [ ] LEGACY_BOUNDARY.md (경계 변경)
-  - [ ] service-manifest.yaml (의존 시스템 변경)
+- [ ] 서비스 하네스 갱신 필요 여부 확인 — SoT: [docs/harness-guide.md](../docs/harness-guide.md) §하네스 갱신 트리거

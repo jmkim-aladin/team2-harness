@@ -28,8 +28,7 @@ IDC DB 운영 안정화와 AWS 전환을 함께 고려하는 경우 [db-migratio
 ## 실행 원칙
 
 ### SP 관련
-- 신규 코드에서 SP 직접 호출 금지
-- SP 호출은 legacy adapter repo/service에서만 허용
+- SP 직접 호출 금지·legacy adapter 경유 규칙은 [engineering-policy.md](./engineering-policy.md) §기술 스택 원칙 > 레거시 서비스가 SoT
 - SP 변경 첨부물은 단계별 SoT를 따른다 — PR 단계: [code-review-policy.md](./code-review-policy.md), 배포 단계: [release-policy.md](./release-policy.md)
 - SP를 없애는 프로젝트가 아니라 **SP가 퍼지는 걸 멈추는 프로젝트**부터 시작
 

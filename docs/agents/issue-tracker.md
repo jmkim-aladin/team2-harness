@@ -3,7 +3,7 @@
 mattpocock 계열 스킬(`wayfinder` 등)이 읽는 이슈 트래커 설정. 이 저장소의 이슈는 YouTrack DEV2 프로젝트에 산다.
 
 - 접근: REST API만 (`$YOUTRACK_TOKEN`, `$YOUTRACK_BASE_URL`). MCP 미사용
-- **이슈 생성·분할은 `/ad:ticket` 절차를 따른다** — 5W1H 본문, Feature ≤ 1주, Task ≤ 1일, SP 상한 3, Assignee 필수, 토큰 owner 검증. 이 규칙들은 [.claude/commands/ad/ticket.md](../../.claude/commands/ad/ticket.md)가 SoT다
+- **이슈 생성·분할은 `/ad:ticket` 절차를 따른다** — 5W1H 본문, Feature ≤ 1주, Task ≤ 1일, SP 상한 3, Assignee 필수, 토큰 owner 검증. 5W1H·SP 규칙의 SoT는 [ticket-guide.md](../sprint/ticket-guide.md)·[story-point-guide.md](../sprint/story-point-guide.md)이고, [`/ad:ticket`](../../.claude/commands/ad/ticket.md)은 그 절차 구현이다
 - 조회: `GET /api/issues/DEV2-XXXX?fields=idReadable,summary,description,customFields(name,value(name,login))`
 - PR을 요청 표면으로 쓰지 않는다 (외부 PR 트리아지 없음)
 

@@ -3,7 +3,7 @@ type: index
 title: 노트 템플릿
 canonical_id: index:templates
 status: canonical
-updated_at: 2026-05-27
+updated_at: 2026-08-08
 ---
 
 # 노트 템플릿
@@ -26,8 +26,10 @@ templates/ 자체는 lint 예외 (스켈레톤 placeholder 포함).
 - [[analysis|analysis]] — 서비스 분석 (coverage/gap/audit/triage)
 - [[decision|decision]] — 서비스 ADR
 - [[proposal|proposal]] — 서비스 개선 후보·신청
-- [[service-index|service-index]] — services/{svc}/{svc}-index.md
+- [[project|project]] — 다중 서비스에 걸친 프로젝트 (related_services 허브)
+- [[service-index|service-index]] — services/{svc}/{svc}.md
 - [[domain-index|domain-index]] — services/{svc}/domains/{domain}/{domain}-index.md
+- [[process-index|process-index]] — processes/{process_type}/ 진입점
 - [[glossary|glossary]] — canonical 도메인 용어
 
 ## 사용
