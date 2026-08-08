@@ -116,8 +116,8 @@ def converge_env(m, apply):
             warn(f"env {k} 누락/불일치")
     if apply:
         write_settings(s, p)
-    if "YOUTRACK_TOKEN" not in env:
-        warn("YOUTRACK_TOKEN 없음 — YouTrack > Profile > Account Security > New Token 발급 후 settings.json env 에 추가")
+    if "YOUTRACK_TOKEN" in env:
+        warn("YOUTRACK_TOKEN 이 settings.json 에 평문으로 있음 — Keychain 이관: python3 tools/cred.py set youtrack-token 후 env 에서 제거 (local-credentials-policy)")
 
 
 def converge_links(m, apply):
