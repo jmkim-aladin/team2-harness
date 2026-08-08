@@ -117,6 +117,19 @@ def codex_start_instruction(profile: CodexLaunchProfile) -> str:
     return f"첫 사용자 표시 응답의 첫 줄에 `{log}`를 한 번 출력한다."
 
 
+def claude_start_instruction(role: str) -> str:
+    """Claude는 native model profile을 쓰므로 launcher가 model/effort를 정하지 않는다.
+
+    Codex의 -m / model_reasoning_effort는 Claude에 전달하면 안 된다. role만 넘기고
+    실제 배정값은 Claude가 스스로 보고하되, 확인 불가 필드는 unknown으로 둔다.
+    """
+    return (
+        "첫 사용자 표시 응답의 첫 줄에 "
+        f"`[model] role={role} model=<실제 model> effort=<실제 effort>` 형식으로 한 번 출력한다. "
+        "확인할 수 없는 값은 추측하지 않고 unknown으로 출력한다."
+    )
+
+
 class ExecutionStep(NamedTuple):
     command: list[str]
     cwd: Path
@@ -642,6 +655,9 @@ def ai_command_text(
             argv.extend(["--ask-for-approval", "never"])
         argv.append(prompt)
     elif engine == "claude":
+        # Codex 전용 옵션(-m, model_reasoning_effort)은 넘기지 않는다. role만 정규화해
+        # 동일 형식의 시작 로그를 요청한다.
+        prompt = f"{claude_start_instruction(codex_launch_profile(codex_role).role)} {prompt}"
         argv = [engine, "--dangerously-skip-permissions", prompt]
     else:
         argv = [engine, prompt]

@@ -73,11 +73,20 @@ class Team2AgentTests(unittest.TestCase):
         self.assertIn('model_reasoning_effort="xhigh"', command)
         self.assertIn("[model] role=reviewer model=gpt-5.6-sol effort=xhigh", command)
 
-    def test_ai_argv_leaves_claude_engine_unchanged(self) -> None:
+    def test_ai_argv_keeps_codex_model_flags_off_claude_but_emits_start_log(self) -> None:
         config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
         command = agent.ai_argv("claude", "hello", config, codex_role="reviewer")[2]
-        self.assertNotIn("--model gpt-5.6-sol", command)
-        self.assertNotIn("[model] role=", command)
+        # Codex 전용 옵션은 Claude에 전달하지 않는다.
+        self.assertNotIn("--model", command)
+        self.assertNotIn("model_reasoning_effort", command)
+        # role은 넘기되 model/effort는 Claude가 스스로 보고한다.
+        self.assertIn("[model] role=reviewer model=<실제 model> effort=<실제 effort>", command)
+        self.assertIn("unknown", command)
+
+    def test_ai_argv_normalizes_unknown_claude_role_to_worker(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        command = agent.ai_argv("claude", "hello", config, codex_role="nonsense")[2]
+        self.assertIn("[model] role=worker", command)
 
     def test_default_config_uses_container_paths_when_mounted(self) -> None:
         mounted = {"/workspace/team2", "/workspace/team2-vault", "/opt/hermes/.venv/bin/hermes"}
@@ -305,7 +314,7 @@ class Team2AgentTests(unittest.TestCase):
                     "right",
                     "--no-focus",
                     "--",
-                    *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config),
+                    *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config, codex_role="orchestrator"),
                 ],
             ],
         )
@@ -1141,7 +1150,7 @@ class Team2AgentTests(unittest.TestCase):
                 "right",
                 "--no-focus",
                 "--",
-                *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config),
+                *agent.ai_argv("claude", agent.orchestrator_prompt(engine_config), engine_config, codex_role="orchestrator"),
             ],
             seen,
         )
@@ -1517,7 +1526,7 @@ class Team2AgentTests(unittest.TestCase):
                 "right",
                 "--no-focus",
                 "--",
-                *agent.ai_argv("claude", agent.ticket_lead_prompt(engine_config, "DEV2-6509", service="max"), engine_config),
+                *agent.ai_argv("claude", agent.ticket_lead_prompt(engine_config, "DEV2-6509", service="max"), engine_config, codex_role="orchestrator"),
             ],
             seen,
         )
@@ -1832,6 +1841,7 @@ class Team2AgentTests(unittest.TestCase):
                     "claude",
                     agent.work_lead_prompt(engine_config, "aasm-resource-url-copy", service="aasm", instruction="경로복사에도 resource URL 템플릿 적용"),
                     engine_config,
+                    codex_role="orchestrator",
                 ),
             ],
             seen,
