@@ -594,3 +594,27 @@ python3 tools/setup_harness.py --reset    # 관리 영역 초과분 격리 후 �
 - `--reset`도 삭제하지 않는다 — `~/.claude/harness-quarantine-<ts>/` 이동, 되돌리기는 `mv`
 - 의존성 stdlib만 (새 머신에서 pip 없이 실행)
 - 계획 스택(`planned`)은 `[계획]`으로 표시만 — 설치는 사람이 결정
+
+## cred.py — 로컬 자격증명 접근 (OS 공통)
+
+macOS Keychain / Windows Credential Manager를 한 인터페이스로. 정책: [policies/local-credentials-policy.md](../policies/local-credentials-policy.md).
+
+```bash
+python3 tools/cred.py get <name>     # 값 stdout (파이프 용도)
+python3 tools/cred.py set <name>     # 프롬프트 입력 — 인자로 값 안 받음 (셸 히스토리 방지)
+python3 tools/cred.py check          # manifest credentials 선언분 존재 검사 (값 미출력)
+```
+
+- macOS: `security` CLI — 의존성 0. Windows: `pip install keyring` 1회
+- 필요한 이름 목록은 `harness.manifest.json` `credentials` (값 절대 아님). `setup_harness.py --check`에 포함됨
+
+## secret_scan.py — 시크릿 유출 스캔
+
+repo + vault를 자격증명 패턴(YouTrack perm-, AKIA, JWT, gh 토큰, 접속문자열 암호, Bearer, private key)으로 스캔. `/ad:harness-optimize 스택` 모드에 포함. 발견 시 exit 1 — **제거 + 해당 자격증명 재발급**이 원칙.
+
+```bash
+python3 tools/secret_scan.py             # 전체
+python3 tools/secret_scan.py --staged    # pre-commit 용
+```
+
+오탐 방지: placeholder(`<...>`·`XXXX`·`$VAR`), 스캔 명령 자기 자신(rg/grep 패턴 인자), `.obsidian` 서드파티 코드는 제외.

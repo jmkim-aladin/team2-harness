@@ -252,6 +252,25 @@ def audit_plugins(m):
             warn(f"plugin {k}: 기대 {v}, 실제 {actual.get(k)} — 사람이 판단 (도구가 안 바꿈)")
 
 
+def check_credentials(m):
+    """manifest 선언 자격증명의 존재만 검사 — 값은 읽지도 출력하지도 않는다."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    try:
+        import cred
+    except ImportError:
+        warn("tools/cred.py 로드 실패 — 자격증명 검사 생략")
+        return
+    for c in m.get("credentials", []):
+        if not isinstance(c, dict):
+            continue
+        name = c["name"]
+        if cred.exists(name):
+            ok(f"credential {name}")
+        else:
+            warn(f"credential {name} 미등록 — python3 tools/cred.py set {name}" +
+                 (f" ({c['hint']})" if c.get("hint") else ""))
+
+
 def check_cli():
     if shutil.which("gh"):
         auth = subprocess.run(["gh", "auth", "status"], capture_output=True)
@@ -284,6 +303,7 @@ def main():
     audit_skills(m, mode, qdir)
     audit_hooks(m, mode)
     audit_plugins(m)
+    check_credentials(m)
     check_cli()
 
     print(f"===== setup_harness [{mode}] ({OS_KEY}) =====")

@@ -207,3 +207,11 @@
 - [x] **스킬 13종 치환** — 서브에이전트(opus) 위임, 메인에서 diff·잔존 0건·frontmatter 불변·참조 13/13 검증. 순감 71줄 (ticket.md 단독 -42)
 - 남긴 것: 스킬 고유 쿼리(work item, KB 문서 ID 매핑, 태그 검색 등)는 보존 — 애매하면 보존 원칙
 - 다음 후보: `docs/sprint/ticket-guide.md` 35KB 절 단위 참조 (Phase 4-3 잔여)
+
+### 3회차 추가 (2026-08-08 후속 5) — 자격증명 관리 계층
+
+- [x] **`tools/cred.py`** — OS 금고 공통 인터페이스 (mac Keychain=security CLI 의존성 0 / win Credential Manager=keyring). set은 프롬프트만 — 셸 히스토리 방지 [북극성 5]
+- [x] **manifest `credentials`** — 필요한 이름만 선언(값 아님), `setup_harness.py --check`가 누락 검출 + 등록 안내
+- [x] **`tools/secret_scan.py`** — repo+vault 패턴 스캔, 스택 모드 배선. 첫 실행: 실유출 0 (오탐 14건은 스캔 명령 자신·서드파티 코드 — 필터 보정)
+- [x] **평문 이관** — `~/.claude/settings.json` env의 YOUTRACK_TOKEN을 Keychain으로 (발견된 정책 위반 해소). api-guide 셋업은 env→cred.py 폴백 체인
+- [x] 정책 갱신 — local-credentials-policy에 Windows 절·공통 인터페이스·유출 시 재발급 원칙

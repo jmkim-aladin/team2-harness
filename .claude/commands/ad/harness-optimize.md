@@ -136,7 +136,7 @@ curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content
 
 기준·판정 근거: [docs/skill-stack-and-workflow-plan.md](../../../docs/skill-stack-and-workflow-plan.md)
 
-1. **실측**: `python3 tools/harness_context_audit.py --days 90`
+1. **실측**: `python3 tools/harness_context_audit.py --days 90` + `python3 tools/secret_scan.py` (시크릿 유출 스캔 — 발견 시 다른 모든 항목보다 우선 처리: 제거 + 해당 자격증명 재발급)
    - 상주 컨텍스트 예산 / 훅 목록 / 세션 지표 / 툴 분포·지연 / 반복 Read / 설치 스킬 실사용을 한 번에 출력한다
    - 임계값 초과는 `[경고]`로 표시된다. 임계값은 도구의 `LIMITS`에 있고, 조정하려면 근거를 함께 남긴다
 
