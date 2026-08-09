@@ -23,6 +23,8 @@
 | 스킬 | 설명 | 인증 | 상태 |
 |------|------|------|------|
 | `ad:ticket` | YouTrack 티켓 생성 (5W1H) | YouTrack | 구현됨 |
+| `ad:plan` | grill 결과를 vault 다세션 계획·진행 원장으로 합성 | - | 구현됨 |
+| `ad:plan-run` | vault 계획의 internal milestone 하나를 실행하고 진행·근거 기록 | - | 구현됨 |
 | `ad:work-prep` | 티켓번호/자유글 → 로컬 위키 노트 + daily 아젠다 + 브랜치 제안 | YouTrack | 구현됨 |
 | `ad:code-review` | GitHub PR 코드 리뷰 (이해 패스 → 팀 체크리스트 판정 → 교차 모델 검증 → 승인 조건 게이트) | gh CLI, 교차 모델 CLI (codex 또는 claude) | 구현됨 |
 | `ad:tldr` | 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성 | - | 구현됨 |

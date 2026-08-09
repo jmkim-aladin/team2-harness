@@ -67,7 +67,7 @@ superpowers는 제거됐다(2026-08-08) — mattpocock이 대체: `brainstorming
 
 `/ad:*`는 **모델 호출**이다 — 요청이 스킬에 맞으면 다른 도구보다 먼저 호출한다. 판단 근거는 각 스킬의 `description`이며, CLAUDE.md에 라우팅 목록을 따로 두지 않는다. 같은 일을 두 곳에서 하면 한쪽이 반드시 낡는다.
 
-**사용자 호출 전용 5종** — `/ad:code-review`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`, `/ad:implement`. 게시·dispatch 같은 사이드이펙트가 있어 사람이 시점을 정한다.
+**사용자 호출 전용 6종** — `/ad:code-review`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`, `/ad:implement`, `/ad:plan-run`. 게시·dispatch·구현 같은 사이드이펙트가 있어 사람이 시점을 정한다.
 
 어떤 스킬을 언제 부르는지의 지도는 [docs/harness-guide.md](./docs/harness-guide.md) §작업 플로우. 트리거 설계 기준은 [policies/skill-authoring-principles.md](./policies/skill-authoring-principles.md) §1.
 

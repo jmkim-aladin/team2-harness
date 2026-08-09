@@ -42,8 +42,7 @@ class ArchitectureAnalysisSkillTest(unittest.TestCase):
     def test_team2_routing_mentions_new_command(self):
         routing_files = (
             ROOT / ".codex/skills/dev2-ad-commands-ko/SKILL.md",
-            ROOT / "AGENTS.md",
-            ROOT / "CLAUDE.md",
+            ROOT / "docs/harness-guide.md",
             ROOT / "scripts/setup.sh",
         )
         for path in routing_files:
