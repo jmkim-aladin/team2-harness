@@ -1,0 +1,6 @@
+interface:
+  display_name: "DEV2 계획 실행"
+  short_description: "vault 계획의 내부 milestone을 실행하고 진행 상태 기록"
+  default_prompt: "Use $ad-plan-run to execute the next internal milestone from the current vault plan."
+policy:
+  allow_implicit_invocation: false
