@@ -27,7 +27,7 @@ credentials:
     keychain_service: team2-datadog-app-key
     keychain_account: "{본인 이메일}"
     header: DD-APPLICATION-KEY
-    status: "미발급"
+    status: "발급 완료 (2026-08-09 대시보드 조회·수정 호출로 확인)"
     scope_note: "발급자 개인 권한에 종속. 대시보드 조회·생성·수정, 메트릭/로그 조회에 필수."
     scopes:
       read:
@@ -40,6 +40,7 @@ credentials:
       write:
         - dashboards_write
     scopes_note: "scope 이름은 Datadog UI(Personal Settings > Application Keys)에서 최종 확인. dashboards_write는 삭제 권한을 포함하므로 DELETE 호출 금지를 policies/datadog-api-policy.md에서 규칙으로 강제한다. monitors_write는 부여하지 않는다."
+    verified_2026_08_09: "dashboards_read/write, timeseries_query, apm_read 동작 확인. 키 관리 API(/api/v2/api_keys, /api/v2/current_user/application_keys)는 403 — 미부여가 의도대로다."
 
 related:
   - path: policies/datadog-api-policy.md
