@@ -64,10 +64,20 @@ def write_settings(s, p):
         json.dump(s, f, indent=2, ensure_ascii=False)
 
 
+def _read_link(path):
+    """심볼릭 링크와 junction 모두 해석 (os.path.islink 는 junction 에 False)."""
+    try:
+        return os.readlink(path)
+    except OSError:
+        return None
+
+
 def make_link(src, dest, apply):
-    """심볼릭 링크 보장. Windows 는 디렉토리면 junction 폴백."""
-    src, dest = os.path.abspath(src), expand(dest)
-    if os.path.islink(dest):
+    """링크 보장. Windows: 디렉토리는 junction(권한 불요) 우선, 파일은 symlink → 복사 폴백."""
+    src = os.path.abspath(src)
+    dest = os.path.normpath(expand(dest))
+    target = _read_link(dest)
+    if target is not None:
         if os.path.realpath(dest) == os.path.realpath(src):
             ok(f"링크 {dest}")
             return
@@ -77,21 +87,43 @@ def make_link(src, dest, apply):
             warn(f"링크 대상 불일치 {dest} → 수렴 필요")
             return
     elif os.path.exists(dest):
+        # Windows 복사 모드: 링크 권한이 없어 복사로 운영 중인 파일 — 내용 비교 후 갱신
+        if IS_WIN and os.path.isfile(dest) and os.path.isfile(src):
+            with open(src, "rb") as a, open(dest, "rb") as b:
+                same = a.read() == b.read()
+            if same:
+                ok(f"복사 모드 최신 {dest}")
+            elif apply:
+                shutil.copy2(src, dest)
+                fixed(f"복사 모드 갱신 {dest} ← {src}")
+            else:
+                warn(f"복사 모드 구버전 {dest} → 수렴 필요")
+            return
         warn(f"{dest} 가 링크가 아닌 실체 — 수동 확인 필요 (건드리지 않음)")
         return
     if not apply:
         warn(f"링크 없음 {dest} → 수렴 필요")
         return
     os.makedirs(os.path.dirname(dest), exist_ok=True)
+
+    if IS_WIN and os.path.isdir(src):
+        # junction: 관리자·개발자 모드 불요. _winapi 가 경로 파싱 문제도 없음
+        try:
+            import _winapi
+            _winapi.CreateJunction(src, dest)
+            fixed(f"junction 생성 {dest} → {src}")
+            return
+        except OSError as e:
+            warn(f"junction 실패({e}) — symlink 시도")
     try:
         os.symlink(src, dest)
         fixed(f"링크 생성 {dest} → {src}")
-    except OSError:
-        if IS_WIN and os.path.isdir(src):
-            subprocess.run(["cmd", "/c", "mklink", "/J", dest, src], check=True, capture_output=True)
-            fixed(f"junction 생성 {dest} → {src}")
-        else:
-            raise
+    except OSError as e:
+        if IS_WIN and os.path.isfile(src):
+            shutil.copy2(src, dest)
+            warn(f"파일 링크 권한 없음 → 복사 모드 {dest} (개발자 모드를 켜면 링크로 전환. setup 재실행마다 자동 갱신)")
+            return
+        raise SystemExit(f"링크 생성 실패: {dest} → {src}\n  원인: {e}\n  조치: Windows 설정 > 개발자용 > 개발자 모드 켜기 후 재실행")
 
 
 def quarantine(path, qdir):
