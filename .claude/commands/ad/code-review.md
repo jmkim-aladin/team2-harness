@@ -237,9 +237,11 @@ codex exec -s read-only -C "{로컬 클론}" "$(cat "$PROMPT_FILE")" \
   -c 'model_reasoning_effort="high"' < /dev/null
 
 # Claude Code 호스트 → Codex (diff-only 모드)
-#   $ISO = 새로 만든 빈 스크래치 디렉토리. diff와 프롬프트만 넣는다
+#   $ISO  = 새로 만든 빈 스크래치 디렉토리. diff와 프롬프트만 넣는다
+#   $CH   = 임시 CODEX_HOME. 인증만 복사한다 (아래 절 참조)
 #   출력은 $ISO 밖으로 받는다 (아래 절 참조)
-codex exec -s read-only --skip-git-repo-check -C "$ISO" "$(cat "$ISO/prompt.txt")" \
+mkdir -p "$CH" && cp ~/.codex/auth.json "$CH/"
+CODEX_HOME="$CH" codex exec -s read-only --skip-git-repo-check -C "$ISO" "$(cat "$ISO/prompt.txt")" \
   -c 'model_reasoning_effort="high"' < /dev/null > "$SCRATCH/cross-out.txt" 2>&1
 
 # Codex 호스트 → Claude Code
@@ -248,6 +250,12 @@ codex exec -s read-only --skip-git-repo-check -C "$ISO" "$(cat "$ISO/prompt.txt"
 ```
 
 **diff-only 모드를 하네스 cwd에서 돌리지 않는다.** `-C`를 빼면 codex의 작업 디렉토리가 team2 하네스가 되고, 교차 모델이 PR diff 대신 하네스 레포 전체를 탐색한다 (실측 2026-08-10: 176초 시점 출력 193KB, 완료 없이 타임아웃). 빈 스크래치 디렉토리를 만들어 diff·프롬프트만 넣고 `-C`로 지목한다. git 레포가 아니므로 `--skip-git-repo-check`를 함께 준다.
+
+**`-C` 는 워킹 디렉토리만 바꾼다 — 격리 모드는 `CODEX_HOME` 도 격리한다.** codex 는 `-C` 와 무관하게 `CODEX_HOME`(기본 `~/.codex`)의 전역 `AGENTS.md` 와 `config.toml` 을 그대로 로드한다. 그 안에 `shell_environment_policy.set` 의 `TEAM2_HARNESS_PATH`·`LOCAL_WIKI_PATH`·`YOUTRACK_BASE_URL`, `[plugins."team2-ad@personal"]`, `[projects."…/team2"]` 훅이 들어 있으면 **빈 격리 디렉토리에서 돌려도 하네스가 따라 들어간다** (실측 2026-08-11 PR #9: 격리 실행 출력에 전역 `AGENTS.md` 문면과 `hook: PreToolUse`/`Stop` 이 그대로 찍혔다).
+
+그러면 6번의 "팀 정책·카탈로그·티켓·하네스 경로는 넣지 않는다" 가 프롬프트 밖에서 뚫린다. 교차 모델이 팀 문맥을 갖게 되어 대조 가치가 떨어지고, 하네스 내부 구조가 외부 벤더로 나간다. 빈 `CODEX_HOME` 을 만들고 **`auth.json` 만 복사한다** — 인증도 `CODEX_HOME` 에 있어서 통째로 비우면 로그인 실패로 끝난다. 리뷰가 끝나면 임시 `CODEX_HOME` 을 지운다.
+
+문맥 모드에서는 `CODEX_HOME` 을 격리하지 않는다 — 대상 레포를 읽는 것이 목적이고, 전역 설정이 그 접근을 막을 수 있다.
 
 **출력 파일을 `$ISO` 안에 두지 않는다.** `-C "$ISO"`는 교차 모델의 워킹 디렉토리이므로, 출력을 그 안으로 리다이렉트하면 모델이 **자기 출력 파일을 자기 소스로 다시 읽는다** (실측 2026-08-11 PR #9: codex의 `rg -n '...' .` 결과가 `./codex-out.txt:30:` 히트로 채워지고, 프롬프트 문장과 diff 원문이 리포지터리 코드인 것처럼 되돌아왔다). 출력은 스크래치 상위 디렉토리로 받는다.
 
