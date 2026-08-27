@@ -78,7 +78,7 @@ type 결정 후 `wiki/guides/frontmatter-spec.md` 기준 필수 필드 자동 �
 6. **dry-run 미리보기** — 사용자에게 `vault/wiki/processes/.../foo.md` 경로·frontmatter·본문 스켈레톤 보여줌
 7. **사용자 confirm** → `Write` 도구로 생성
 8. **lint check** — 즉시 `python3 "$TEAM2_HARNESS_PATH/tools/lint_vault.py" --vault "$LOCAL_WIKI_PATH" --files {new}` 호출, exit 0 확인
-9. **안내** — Obsidian에서 열고 본문 작성하라고 surface, `git add` + commit 시 pre-commit 한 번 더 검증됨
+9. **안내** — 생성한 파일 경로와 lint 결과만 surface한다. 앱이나 URI handler를 자동 실행하지 않는다. `git add` + commit 시 pre-commit에서 한 번 더 검증된다.
 
 ## 환경
 
@@ -105,21 +105,11 @@ vault `wiki/guides/frontmatter-spec.md` (SoT)의 ticket 스키마를 따른다 �
 
 미치환 placeholder는 그대로 두고 사용자가 Obsidian에서 채움.
 
-## Obsidian 자동 오픈
-
-vault에 파일 작성 + lint pass 후 자동으로 Obsidian에서 해당 파일 오픈:
-
-```bash
-$TEAM2_HARNESS_PATH/tools/obsidian_open.sh "{rel-path}"
-```
-
-내부적으로 `open "obsidian://open?vault=team2&file=..."` URI handler 호출. 사용자가 Obsidian app에서 즉시 본문 편집 가능.
-
 ## 사용자 확인 게이트
 
 - 파일 생성 전 dry-run preview (dst·frontmatter·본문 헤더만)
 - 모호한 type → 옵션 제시 + AskUserQuestion
 - 기존 파일 충돌 → 덮어쓰기 vs 다른 이름 묻기
-- 작성 후 Obsidian 자동 오픈 (사용자 선호 시 --no-open 옵션으로 끔)
+- 작성 후 파일 경로와 lint 결과만 안내한다. Obsidian은 자동으로 열지 않는다.
 
 ARGUMENTS: $ARGUMENTS

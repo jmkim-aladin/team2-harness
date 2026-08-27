@@ -17,6 +17,7 @@ import argparse
 import re
 import subprocess
 import sys
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -63,6 +64,14 @@ RELATED_SECTIONS = [
     ("proposal", "관련 제안"),
     ("project", "관련 프로젝트"),
 ]
+
+
+def vault_markdown_paths(vault: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in vault.rglob("*.md")
+        if not any(part.startswith(".") for part in path.relative_to(vault).parts)
+    )
 
 
 def today() -> str:
@@ -143,13 +152,37 @@ def note_links_service(fm: dict[str, list[str] | str], svc: str) -> bool:
     return False
 
 
-def render_note_link(path: Path, title: str) -> str:
-    return f"[[{path.stem}|{title}]]"
+def render_note_link(
+    vault: Path,
+    path: Path,
+    title: str,
+    *,
+    qualified: bool = False,
+) -> str:
+    target = path.relative_to(vault).with_suffix("").as_posix() if qualified else path.stem
+    return f"[[{target}|{title}]]"
+
+
+def render_index_link(
+    vault: Path,
+    path: Path,
+    stem_counts: Counter[str],
+    title: str | None = None,
+) -> str:
+    target = (
+        path.relative_to(vault).with_suffix("").as_posix()
+        if stem_counts[path.stem] > 1
+        else path.stem
+    )
+    suffix = f"|{title}" if title else ""
+    return f"[[{target}{suffix}]]"
 
 
 def render_service_related_notes_block(vault: Path, svc: str) -> str:
     groups: dict[str, list[str]] = {key: [] for key, _ in RELATED_SECTIONS}
-    for path in sorted((vault / "wiki").rglob("*.md")):
+    note_paths = sorted((vault / "wiki").rglob("*.md"))
+    stem_counts = Counter(path.stem for path in vault_markdown_paths(vault))
+    for path in note_paths:
         if path.name.endswith("-index.md") or path.name == "_index.md":
             continue
         try:
@@ -162,7 +195,14 @@ def render_service_related_notes_block(vault: Path, svc: str) -> str:
             continue
         if not note_links_service(fm, svc):
             continue
-        groups[note_type].append(render_note_link(path, note_title(path, fm)))
+        groups[note_type].append(
+            render_note_link(
+                vault,
+                path,
+                note_title(path, fm),
+                qualified=stem_counts[path.stem] > 1,
+            )
+        )
 
     lines = [f"<!-- generated:related-notes source=vault-relations/{svc} updated={today()} -->"]
     for note_type, heading in RELATED_SECTIONS:
@@ -193,6 +233,7 @@ def list_subdir_indexes(dir: Path) -> list[tuple[str, Path]]:
 
 def render_service_index_block(vault: Path, svc: str) -> str:
     svc_dir = vault / "wiki/services" / svc
+    stem_counts = Counter(path.stem for path in vault_markdown_paths(vault))
     sections = []
     for cat in SERVICE_SUB_CATEGORIES:
         cat_dir = svc_dir / cat
@@ -203,10 +244,10 @@ def render_service_index_block(vault: Path, svc: str) -> str:
             lines.append("- (없음)")
         else:
             for f in files:
-                lines.append(f"- [[{f.stem}]]")
+                lines.append(f"- {render_index_link(vault, f, stem_counts)}")
             for name, idx in sub_idx:
                 if idx is not None:
-                    lines.append(f"- [[{idx.stem}|{name}]]")
+                    lines.append(f"- {render_index_link(vault, idx, stem_counts, name)}")
                 else:
                     lines.append(f"- {name}/ (인덱스 없음)")
         sections.append("\n".join(lines))
@@ -221,6 +262,7 @@ def render_service_index_block(vault: Path, svc: str) -> str:
 
 def render_process_index_block(vault: Path, process_type: str) -> str:
     proc_dir = vault / "wiki/processes" / process_type
+    stem_counts = Counter(path.stem for path in vault_markdown_paths(vault))
     sort_desc = process_type in DATE_SORT_TYPES
     files = list_md_files(proc_dir, sort_by_date_desc=sort_desc)
     sub_idx = list_subdir_indexes(proc_dir)
@@ -229,10 +271,10 @@ def render_process_index_block(vault: Path, process_type: str) -> str:
         lines.append("- (없음)")
     else:
         for f in files:
-            lines.append(f"- [[{f.stem}]]")
+            lines.append(f"- {render_index_link(vault, f, stem_counts)}")
         for name, idx in sub_idx:
             if idx is not None:
-                lines.append(f"- [[{idx.stem}|{name}]]")
+                lines.append(f"- {render_index_link(vault, idx, stem_counts, name)}")
             else:
                 lines.append(f"- {name}/ (인덱스 없음)")
     body = "\n".join(lines)
@@ -247,6 +289,7 @@ def render_process_index_block(vault: Path, process_type: str) -> str:
 def render_hub_index_block(vault: Path, hub: str) -> str:
     """services/ 또는 processes/ hub."""
     hub_dir = vault / "wiki" / hub
+    stem_counts = Counter(path.stem for path in vault_markdown_paths(vault))
     sub_idx = list_subdir_indexes(hub_dir)
     lines = []
     if not sub_idx:
@@ -254,7 +297,7 @@ def render_hub_index_block(vault: Path, hub: str) -> str:
     else:
         for name, idx in sub_idx:
             if idx is not None:
-                lines.append(f"- [[{idx.stem}|{name}]]")
+                lines.append(f"- {render_index_link(vault, idx, stem_counts, name)}")
             else:
                 lines.append(f"- {name}/ (인덱스 없음)")
     body = "\n".join(lines)

@@ -6,6 +6,93 @@ name: 투비컨티뉴드 (tobe)
 type: legacy
 description: "디지털 콘텐츠 크리에이터 플랫폼 — 노트/블로그/디지털 작품 발행, 멤버십, 정산 관리"
 
+core_features:
+  source:
+    authority: "YouTrack KB"
+    article_id: "REF-A-3528"
+    title: "투비컨티뉴드 핵심 기능"
+    url: "https://aladincommunication.youtrack.cloud/articles/REF-A-3528"
+    updated_at: "2026-05-28 15:37:25 +09:00"
+    synced_at: "2026-08-27"
+  definition:
+    target: "콘텐츠 열람, 결제, 작가 정산 등 플랫폼의 기본 루프에 반드시 필요한 기능"
+    assessment_axes:
+      strategic_importance: "서비스·비즈니스 관점에서 기능이 필요한 이유"
+      system_risk: "기술·운영 관점에서 기능을 신중하게 다뤄야 하는 정도"
+    strategic_criteria:
+      - name: "가치 전달"
+        description: "독자·작가(CP)·운영자의 핵심 행동을 직접 지원"
+      - name: "신뢰·규제"
+        description: "규제 준수나 사용자 신뢰와 직결되며, 누락 시 법적 문제나 이탈 발생"
+      - name: "전략"
+        description: "작가 친화적 정산 구조·특정 장르 특화 UX처럼 투비만의 포지셔닝을 형성"
+    system_risk_criteria:
+      - name: "흐름 차단"
+        description: "장애 시 콘텐츠 접근 제어 등 다음 단계 진행 불가"
+      - name: "신뢰 훼손"
+        description: "잘못된 정산 금액 표시 등으로 사용자·파트너 신뢰 훼손"
+      - name: "데이터 오염"
+        description: "정산 수수료 자동 공제 오류처럼 파급 범위가 넓고 복구가 어려운 데이터 생성"
+      - name: "가역성 없음"
+        description: "정산금 지급처럼 실행 후 취소·수정이 불가능하거나 복잡"
+      - name: "대상 제한"
+        description: "성인 인증·탈퇴 회원 멤버십처럼 허용·차단 판단 오류 시 법적·정책적 위험 발생"
+  items:
+    - category: "결제/수익화"
+      name: "포인트·유료 콘텐츠 결제"
+      scope:
+        - "포인트 충전·차감"
+        - "결제 상태 처리·환불·복구"
+        - "유료 콘텐츠 구매"
+        - "유료 응원 결제"
+      strategic_importance: "최상"
+      system_importance: "최상"
+      impact: "수익 흐름의 시작과 끝"
+    - category: "멤버십"
+      name: "멤버십 가입·결제·상태 관리"
+      scope:
+        - "가입·결제"
+        - "구독 여부 판단"
+        - "상태 관리"
+      strategic_importance: "최상"
+      system_importance: "최상"
+      impact: "독립 결제 흐름이며 상태 불일치가 접근 권한 오류에 직결"
+    - category: "성인 인증/정책"
+      name: "성인 콘텐츠 접근·전시 제어"
+      scope:
+        - "성인 콘텐츠 접근·전시"
+        - "노출 제어 설정"
+      strategic_importance: "최상"
+      system_importance: "최상"
+      impact: "판단 오류가 법적 위험과 서비스 신뢰도에 직접 영향"
+    - category: "콘텐츠 접근 권한"
+      name: "콘텐츠 접근 권한 판단"
+      scope:
+        - "구매 여부 판단"
+        - "구독 여부 판단"
+        - "미리보기 범위 처리"
+      strategic_importance: "상"
+      system_importance: "최상"
+      impact: "시스템 정합성이 콘텐츠 가치 전달 조건에 직접 영향"
+    - category: "정산"
+      name: "작가 정산"
+      scope:
+        - "수수료 자동 공제"
+        - "정산 금액 확인"
+        - "정산 포함·제외 처리"
+        - "정산 자료 관리"
+      strategic_importance: "상"
+      system_importance: "최상"
+      impact: "지급 후 되돌리기 어렵고 데이터 오염 위험이 집중"
+    - category: "창작/발행"
+      name: "콘텐츠 발행"
+      scope:
+        - "가격·기간 등 발행 설정 반영"
+        - "성인 콘텐츠 발행"
+      strategic_importance: "중"
+      system_importance: "상"
+      impact: "콘텐츠 공급 기반이지만 수익과의 직접 연결은 상대적으로 약함"
+
 owners:
   primary: "jmkim@aladin.co.kr" # 김정민
   backup: "heum2@aladin.co.kr" # 조은흠
