@@ -95,7 +95,7 @@ frontmatter: `type: explain`, `title`, `mode`, `reader`, `subject`, `base`, `upd
 기본: mermaid 2~4개, 섹션당 최대 1개. [policies/mermaid-convention.md](../../../policies/mermaid-convention.md)를 따른다.
 
 - 종류를 재사용한다 — 흐름은 `flowchart TD`, 구성은 `graph TB`, 호출은 `sequenceDiagram`으로 고정하고 문서 안에서 섞지 않는다
-- **ASCII 다이어그램 금지.** mermaid 또는 표를 쓴다
+- **ASCII 다이어그램 금지.** mermaid 또는 표를 쓴다. HTML 렌더를 전제한 규칙이므로 [`/ad:code-review`](./code-review.md) 3단계 이해 패스(터미널 미리보기)에는 적용되지 않는다 — 거기서는 mermaid가 그려지지 않아 ASCII를 쓴다
 - **다이어그램이 보여준 분기를 표나 목록으로 다시 쓰지 않는다.** 한 사실의 정답 위치는 한 곳뿐이다
 
 ## 문체와 금지

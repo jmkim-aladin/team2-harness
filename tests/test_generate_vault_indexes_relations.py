@@ -75,6 +75,105 @@ class GenerateVaultIndexRelationsTests(unittest.TestCase):
             self.assertIn("## 관련 OKR", block)
             self.assertIn("[[2026-q2-kimjeongmin|Q2 OKR]]", block)
 
+    def test_duplicate_note_stems_use_vault_relative_targets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp)
+            first = vault / "wiki/services/blog/analysis/query-cache-sp-candidates.md"
+            second = vault / "wiki/services/shopping/analysis/query-cache-sp-candidates.md"
+            for path, service in [(first, "blog"), (second, "shopping")]:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    "---\n"
+                    "type: analysis\n"
+                    f"title: {service} 후보\n"
+                    f"service_id: {service}\n"
+                    "---\n",
+                    encoding="utf-8",
+                )
+
+            block = indexes.render_service_related_notes_block(vault, "blog")
+
+            self.assertIn(
+                "[[wiki/services/blog/analysis/query-cache-sp-candidates|blog 후보]]",
+                block,
+            )
+            self.assertNotIn("[[query-cache-sp-candidates|blog 후보]]", block)
+
+            index_block = indexes.render_service_index_block(vault, "blog")
+            self.assertIn(
+                "[[wiki/services/blog/analysis/query-cache-sp-candidates]]",
+                index_block,
+            )
+            self.assertNotIn("- [[query-cache-sp-candidates]]", index_block)
+
+    def test_root_note_collision_qualifies_generated_service_link(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp)
+            service_note = vault / "wiki/services/blog/analysis/runbook.md"
+            root_note = vault / "templates/runbook.md"
+            service_note.parent.mkdir(parents=True, exist_ok=True)
+            root_note.parent.mkdir(parents=True, exist_ok=True)
+            service_note.write_text(
+                "---\ntype: analysis\ntitle: Blog runbook\nservice_id: blog\n---\n",
+                encoding="utf-8",
+            )
+            root_note.write_text("# Template runbook\n", encoding="utf-8")
+
+            index_block = indexes.render_service_index_block(vault, "blog")
+
+            self.assertIn("[[wiki/services/blog/analysis/runbook]]", index_block)
+            self.assertNotIn("- [[runbook]]", index_block)
+
+    def test_root_note_collision_qualifies_generated_process_link(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp)
+            process_note = vault / "wiki/processes/tickets/dev2-5855.md"
+            root_note = vault / "dev2-5855.md"
+            process_note.parent.mkdir(parents=True, exist_ok=True)
+            process_note.write_text("# Ticket\n", encoding="utf-8")
+            root_note.write_text("# Legacy ticket\n", encoding="utf-8")
+
+            index_block = indexes.render_process_index_block(vault, "tickets")
+
+            self.assertIn("[[wiki/processes/tickets/dev2-5855]]", index_block)
+            self.assertNotIn("- [[dev2-5855]]", index_block)
+
+    def test_root_note_collision_qualifies_generated_hub_link(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp)
+            service_index = vault / "wiki/services/blog/blog.md"
+            root_note = vault / "templates/blog.md"
+            service_index.parent.mkdir(parents=True, exist_ok=True)
+            root_note.parent.mkdir(parents=True, exist_ok=True)
+            service_index.write_text("# Blog\n", encoding="utf-8")
+            root_note.write_text("# Blog template\n", encoding="utf-8")
+
+            index_block = indexes.render_hub_index_block(vault, "services")
+
+            self.assertIn("[[wiki/services/blog/blog|blog]]", index_block)
+            self.assertNotIn("- [[blog|blog]]", index_block)
+
+    def test_non_wiki_relation_note_is_not_projected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp)
+            wiki_note = vault / "wiki/services/blog/analysis/real-note.md"
+            template_note = vault / "templates/template-ticket.md"
+            wiki_note.parent.mkdir(parents=True, exist_ok=True)
+            template_note.parent.mkdir(parents=True, exist_ok=True)
+            wiki_note.write_text(
+                "---\ntype: analysis\ntitle: Real note\nservice_id: blog\n---\n",
+                encoding="utf-8",
+            )
+            template_note.write_text(
+                "---\ntype: ticket\ntitle: Template ticket\nservice_id: blog\n---\n",
+                encoding="utf-8",
+            )
+
+            block = indexes.render_service_related_notes_block(vault, "blog")
+
+            self.assertIn("[[real-note|Real note]]", block)
+            self.assertNotIn("Template ticket", block)
+
 
 if __name__ == "__main__":
     unittest.main()
