@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>월별 멤버십 쿠폰 dev 반영·운영 검수 체크리스트</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <section class="hero">
+    <div class="eyebrow">Printable reference · DEV2-8628</div>
+    <h1>월별 멤버십 쿠폰<br>반영·운영 검수 체크리스트</h1>
+    <p class="lede">안전장치 SP 2개만 반영하고 기존 월별 객체 3개까지 실제 쿠폰 생성 없이 확인하는 순서다.</p>
+  </section>
+
+  <h2>판정 원칙</h2>
+  <div class="grid three">
+    <article class="card"><strong>DDL 성공</strong><p>객체 정의 저장 성공. 실행 데이터 유효성은 별도 확인.</p></article>
+    <article class="card"><strong>52105 + 0→0</strong><p>마스터 누락을 발급 전에 잡은 안전장치 성공.</p></article>
+    <article class="card"><strong>최종 PASS 6개</strong><p>프리플라이트·무변경·연관 객체·마스터 모두 정상.</p></article>
+  </div>
+
+  <h2>1. 티켓 → 코드 대조</h2>
+  <table class="decision-table">
+    <thead><tr><th>티켓 값</th><th>확인 위치</th><th>9월 기대값</th></tr></thead>
+    <tbody>
+      <tr><td>일반 멤버십</td><td><code>Coupon_NewMake_MembershipMontly</code><br><code>fn_Coupon_IsException</code></td><td><code>54643~54652</code>의 지정 10종</td></tr>
+      <tr><td>모바일 전용</td><td><code>fn_Coupon_IsException</code></td><td><code>54643</code></td></tr>
+      <tr><td>커피 겸용</td><td><code>MemberShip_CoffeeCoupon</code><br><code>fn_Coupon_IsException</code></td><td><code>202609 → 54653</code></td></tr>
+      <tr><td>등급 변경 Event</td><td><code>EventOrdersMembership_GradeUp</code></td><td><code>313942</code></td></tr>
+      <tr><td>마스터</td><td><code>CouponNType</code>, <code>Event</code></td><td><code>313942</code>, <code>313944</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. 반영 전 체크</h2>
+  <ul class="checklist" data-checklist="pre-deploy">
+    <li><label><input type="checkbox"> <span><code>git status --short --branch</code>로 브랜치와 사용자 변경 확인</span></label></li>
+    <li><label><input type="checkbox"> <span>티켓의 NType 10종·커피 NType·EventId를 소스와 대조</span></label></li>
+    <li><label><input type="checkbox"> <span>대상 DB의 <code>CouponNType</code>·<code>Event</code> 존재/활성/기간 조회</span></label></li>
+    <li><label><input type="checkbox"> <span>기존 객체 정의를 임시 롤백 파일로 저장</span></label></li>
+    <li><label><input type="checkbox"> <span>대상 파일이 <code>CREATE OR ALTER</code>인지 확인</span></label></li>
+    <li><label><input type="checkbox"> <span>전체 <code>deploy.sh</code> 대신 안전장치 SP 2개 파일만 선택</span></label></li>
+    <li><label><input type="checkbox"> <span>기존 월별 객체 3개는 재배포하지 않고 통합 검수 대상으로 분류</span></label></li>
+  </ul>
+
+  <h2>3. 운영 선택 반영 순서</h2>
+  <ol>
+    <li><code>Coupon_NewMake_MembershipMontly.sql</code></li>
+    <li><code>Coupon_NewMake_MembershipMontly_Preflight.sql</code></li>
+  </ol>
+  <p>각 파일은 <code>CREATE OR ALTER</code>를 확인하고 <code>sqlcmd -b -i &lt;파일&gt;</code>로 한 개씩 반영한다. 전체 명령과 롤백 정의 저장 방법은 <a href="../lessons/0001-membership-coupon-dev-preflight.html">실습 교안</a>의 “운영 안전장치 2개 선택 반영”에 있다.</p>
+
+  <h2>4. 통합 운영 검수</h2>
+  <p><a href="../../shopping/shop-db-script/scripts/verify-membership-coupon-month.sql">통합 검수 SQL</a>을 작업자 PC에서 <code>sqlcmd -b -v ... -i</code>로 실행한다. 이 파일은 DB 배포 객체가 아니다.</p>
+  <ul class="checklist" data-checklist="integrated-verification">
+    <li><label><input type="checkbox"> <span><code>preflight PASS</code> — 일반 NType 10종·만료일·월 문구</span></label></li>
+    <li><label><input type="checkbox"> <span><code>no-write PASS</code> — 쿠폰 건수 전후 동일</span></label></li>
+    <li><label><input type="checkbox"> <span><code>exception-function PASS</code> — 일반·모바일·커피 예외</span></label></li>
+    <li><label><input type="checkbox"> <span><code>master-data PASS</code> — CouponNType·Event 연결</span></label></li>
+    <li><label><input type="checkbox"> <span><code>coffee-mapping PASS</code> — 대상 월 커피 NType</span></label></li>
+    <li><label><input type="checkbox"> <span><code>grade-up-event PASS</code> — 등급변경 Event 발급 목록</span></label></li>
+    <li><label><input type="checkbox"> <span>명령 종료 코드 <code>0</code> 확인</span></label></li>
+  </ul>
+
+  <div class="callout warn">
+    <strong>실제 발급 금지</strong>
+    <code>@Proc=1,@TestCase=0</code>은 쿠폰번호 생성과 Coupon INSERT 경로다. 통합 검수 직후 실행하지 않고 승인된 정규 배치 일정까지 기다린다.
+  </div>
+
+  <h2>5. 테스트와 기대 결과</h2>
+  <table class="decision-table">
+    <thead><tr><th>테스트</th><th>기대 결과</th><th>판정</th></tr></thead>
+    <tbody>
+      <tr><td>예외 함수 14건</td><td>Expected와 Actual 전부 동일</td><td>예외 설정 통과</td></tr>
+      <tr><td><code>@Proc=0,@TestCase=0</code></td><td>쿠폰 건수 변화 없음</td><td>쓰기 게이트 통과</td></tr>
+      <tr><td><code>@TestCase=9</code></td><td><code>52100</code></td><td>잘못된 모드 차단</td></tr>
+      <tr><td>프리플라이트 입력 오류</td><td><code>52200~52203</code></td><td>입력 계약 통과</td></tr>
+      <tr><td>마스터 없음</td><td><code>52105</code>, 쿠폰 <code>0→0</code></td><td>의도된 안전 차단</td></tr>
+      <tr><td>마스터 정상</td><td>NType 10행, 9월 말일, 9월 문구</td><td>정상 통과</td></tr>
+      <tr><td>통합 운영 검수</td><td>종료 코드 0, 최종 PASS 6개</td><td>배치 준비 완료</td></tr>
+    </tbody>
+  </table>
+
+  <h2>오류 번호 빠른 해석</h2>
+  <table class="decision-table">
+    <thead><tr><th>번호</th><th>의미</th><th>다음 확인</th></tr></thead>
+    <tbody>
+      <tr><td>52100</td><td>배치 실행 모드 오류</td><td>SSIS/호출 파라미터</td></tr>
+      <tr><td>52101</td><td>필수 발급 설정 NULL</td><td>월별 SELECT 상수</td></tr>
+      <tr><td>52102</td><td>발급 후보 없음</td><td>Customer 등급·테스터</td></tr>
+      <tr><td>52103</td><td>동일 NType 설정 충돌</td><td>중복 월별 블록</td></tr>
+      <tr><td>52104</td><td>쿠폰명 월과 만료 월 불일치</td><td>Bigo·ExpireDate</td></tr>
+      <tr><td>52105</td><td>CouponNType/Event 오류</td><td>활성·기간·만료일·Event 연결</td></tr>
+      <tr><td>52106</td><td>고객별 후보 중복</td><td>등급 조건 중첩</td></tr>
+      <tr><td>52204</td><td>기대/실제 NType 차이</td><td>티켓 목록·월별 코드</td></tr>
+      <tr><td>52205</td><td>대상 월 말일 불일치</td><td>ExpireDate</td></tr>
+      <tr><td>52206</td><td>월 문구 불일치</td><td>Bigo</td></tr>
+      <tr><td>52300~52307</td><td>검수 입력·필수 객체 오류</td><td>실행 인자·배포 객체</td></tr>
+      <tr><td>52308</td><td>검수 중 쿠폰 건수 변경</td><td>즉시 중단·변경 내역 확인</td></tr>
+      <tr><td>52309~52311</td><td>예외 함수 불일치</td><td>일반·모바일·커피 목록</td></tr>
+      <tr><td>52312~52313</td><td>마스터/Event 불일치</td><td>일반·커피 Event 연결</td></tr>
+      <tr><td>52314~52316</td><td>운영 객체 정의 불일치</td><td>커피 매핑·등급변경 Event</td></tr>
+    </tbody>
+  </table>
+
+  <h2>중단 기준</h2>
+  <div class="grid">
+    <div class="callout danger"><strong>즉시 중단</strong>예상하지 않은 오류 번호, 쿠폰 건수 증가, 대상 외 객체 변경, 미승인 운영 접속.</div>
+    <div class="callout success"><strong>계속 진행</strong>dev 기대 오류와 데이터 무변경 또는 운영 종료 코드 0과 최종 PASS 6개 확인.</div>
+  </div>
+
+  <footer class="footer">
+    <p><a href="../lessons/0001-membership-coupon-dev-preflight.html">실습 교안으로 돌아가기</a></p>
+    <p>근거: <a href="https://learn.microsoft.com/en-us/sql/t-sql/statements/create-procedure-transact-sql?view=sql-server-ver17">CREATE PROCEDURE</a> · <a href="https://learn.microsoft.com/en-us/sql/t-sql/language-elements/throw-transact-sql?view=sql-server-ver17">THROW</a> · <a href="https://learn.microsoft.com/en-us/sql/tools/sqlcmd/sqlcmd-utility?view=sql-server-ver16">sqlcmd</a></p>
+  </footer>
+</main>
+<script src="../assets/lesson.js"></script>
+</body>
+</html>
