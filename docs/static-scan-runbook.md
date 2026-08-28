@@ -56,6 +56,92 @@ Docker로 우회는 불가하다. Windows 컨테이너는 macOS에 Windows 커�
 - SonarQube 사용자 토큰 (`scan` + `provisioning` 글로벌 권한). `provisioning`이 있으면 신규 프로젝트가 스캔 시 자동 생성된다.
 - 스캔 대상 repo가 로컬에 clone돼 있어야 한다. 러너는 `git worktree`로 기준 브랜치를 별도 체크아웃하므로 **현재 체크아웃 브랜치나 uncommitted 변경은 건드리지 않는다.**
 
+#### Fortify SSC FPR 업로드 토큰
+
+- SSC URL: 로컬 `FORTIFY_SSC_URL` 환경변수로 관리하며 내부 주소를 공개 저장소에 기록하지 않는다
+- 서버 API 버전: `25.4.0.0137`
+- 토큰 종류: 최소 권한인 `AnalysisUploadToken`
+- Keychain/Credential Manager 이름: `fortify-ssc-analysis-upload-token`
+
+Firefox에서 SSC에 로그인한 뒤 `Administration > Users > Token Management > NEW`로 이동해
+`AnalysisUploadToken`을 생성하고, 한 번만 표시되는 **encoded token**을 복사한다. 토큰 값은 채팅,
+위키, 티켓, `.env`, `settings.json`, 셸 인자에 넣지 않는다.
+
+하네스 루트의 실제 터미널에서 다음 명령을 실행해 마스킹 프롬프트에 토큰 값을 붙여넣는다.
+`tools/cred.py set`은 값을 명령줄 인자로 받지 않으므로 셸 히스토리에 남기지 않는다.
+
+```bash
+python3 tools/cred.py set fortify-ssc-analysis-upload-token
+python3 tools/cred.py check fortify-ssc-analysis-upload-token
+```
+
+두 번째 명령은 존재 여부만 확인하며 값을 출력하지 않는다. 자동화에서는 필요한 순간에만 값을
+캡처하고 사용 직후 해제한다.
+
+```bash
+SSC_TOKEN="$(python3 tools/cred.py get fortify-ssc-analysis-upload-token)"
+curl --config - <<EOF
+fail-with-body
+proto = "=https"
+header = "Authorization: FortifyToken $SSC_TOKEN"
+url = "$FORTIFY_SSC_URL/api/v1/projectVersions?limit=1"
+EOF
+unset SSC_TOKEN
+```
+
+인증 헤더를 `curl -H` 인자로 직접 넘기지 않는다. 위 패턴은 토큰을 프로세스 인자(`ps`)에
+노출하지 않고 표준 입력으로만 전달한다. 셸 xtrace(`set -x`)가 켜져 있으면 먼저 끈다.
+
+FPR은 대상 Application Version ID를 확인한 뒤
+`POST /ssc/api/v1/projectVersions/{versionId}/artifacts`에 `multipart/form-data`의 `file` 필드로
+등록한다. 토큰과 업로드 절차의 SoT는 SSC 서버의 `/html/docs/overview`와
+`/html/docs/api-reference`다.
+
+##### 월별 FPR 일괄 등록
+
+`scripts/upload-fortify-fprs.py`는 디렉터리의 `*.fpr`을 SSC 애플리케이션에 매핑하고 다음을 수행한다.
+
+1. 대상 Application Version(예: `26.08`)이 이미 있으면 **버전 생성과 FPR 업로드를 모두 건너뛴다**.
+2. 없으면 가장 최근 버전의 속성·분석 처리 규칙·버그 트래커 설정·커스텀 태그를 복사해 새 버전을 커밋한다.
+3. 새 버전에만 FPR을 업로드하고 `PROCESS_COMPLETE` 또는 `REQUIRE_AUTH`까지 상태를 확인한다.
+4. `REQUIRE_AUTH`는 업로드 실패가 아니라 SSC 처리 규칙에 따른 승인 대기다. 스크립트가 자동 승인하지 않는다.
+
+파일명은 대소문자·하이픈과 `-server`/`-web` 접미사를 정규화해 매칭한다. 팀 고유 예외는
+`partner-integration-batch.fpr -> B2B Batch` 하나이며, 명백한 근접 오타(`Bazzar`/`Bazaar`)만
+후보 점수와 단일성 검사를 통과할 때 보정한다. 모호한 매칭은 업로드하지 않고 실패한다.
+
+새 버전 생성에는 광범위하지만 24시간 이내 단기 작업용인 `UnifiedLoginToken`이 필요하다.
+SSC UI에서 만료를 짧게 지정해 **encoded token**을 만들고 다음 이름으로 로컬 금고에 저장한다.
+이 토큰은 일시적이므로 `harness.manifest.json`의 상시 필수 자격증명에는 넣지 않는다.
+
+```bash
+python3 tools/cred.py set fortify-ssc-unified-login-token
+```
+
+매월 `YYYYMM`만 명시한다. 기본 FPR 루트는 `~/Documents/Work/fortify`이며, 예를 들어
+`--month 202609`는 디렉터리 `~/Documents/Work/fortify/202609`와 SSC 버전 `26.09`로 변환된다.
+항상 dry-run으로 매핑과 SKIP/CREATE 대상을 먼저 확인한 뒤 같은 명령에 `--apply`를 붙인다.
+
+```bash
+export FORTIFY_SSC_URL='https://<ssc-host>/ssc'
+python3 scripts/upload-fortify-fprs.py --month 202609
+python3 scripts/upload-fortify-fprs.py --month 202609 --apply
+```
+
+SSC가 아직 HTTP만 제공한다면 토큰 탈취 위험이 있으므로 HTTPS 전환을 우선 요청한다. 불가피하게
+격리된 신뢰 경로에서 실행할 때만 매 호출에 `--allow-insecure-http`를 붙여 예외를 명시한다.
+
+기본 루트가 아닌 곳에서 실행할 때는 `--root`를 사용한다. 비정기 버전은 기존의 명시적 인자를 쓴다.
+
+```bash
+python3 scripts/upload-fortify-fprs.py \
+  --directory ~/Documents/Work/fortify/202608 \
+  --version 26.08
+```
+
+완료 후 `UnifiedLoginToken`은 SSC Token Management에서 revoke하고 로컬 Keychain에서도 제거한다.
+`AnalysisUploadToken`은 다음 월 등록에 재사용할 수 있지만, 팀원 간 공유하지 않는다.
+
 ### macOS
 
 ```bash

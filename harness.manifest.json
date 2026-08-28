@@ -142,6 +142,10 @@
       "hint": "YouTrack > Profile > Account Security > New Token"
     },
     {
+      "name": "fortify-ssc-analysis-upload-token",
+      "hint": "Fortify SSC > Administration > Users > Token Management > NEW > AnalysisUploadToken의 encoded token"
+    },
+    {
       "name": "cool-dev",
       "hint": "공유 MSSQL dev 읽기 계정 — 매핑: policies/local-credentials-policy.md"
     },

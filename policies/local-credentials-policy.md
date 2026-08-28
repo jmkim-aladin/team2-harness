@@ -28,6 +28,7 @@ sm-{서비스}-{모듈}-{환경}-{리소스}        # AWS SM과 동일 이름 �
 | `sm-naru-sso-dev-database-write` | naru sso dev DB |
 | `team2-youtrack-token` | YouTrack PAT (서비스 무관 도구) |
 | `team2-github-token` | GitHub PAT |
+| `fortify-ssc-analysis-upload-token` | Fortify SSC FPR 등록용 `AnalysisUploadToken`의 encoded token — [정적 점검 런북](../docs/static-scan-runbook.md) |
 | `team2-datadog-api-key` / `team2-datadog-app-key` | Datadog API/Application key — [datadog-api-policy.md](./datadog-api-policy.md) |
 
 `account` 필드는 DB 사용자명 또는 본인 사번/이메일을 사용한다 (`jmkim@aladin.co.kr` 등).
