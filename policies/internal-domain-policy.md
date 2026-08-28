@@ -88,6 +88,8 @@ path segment 이름은 **앱 축 이름과 같게** 쓴다. 내부 서브도메�
 | A7 | **쿠키 기반 인증을 쓰지 않는다.** 토큰(Authorization 헤더)을 쓴다. 불가피하면 쿠키 `Path`를 앱 path segment로 고정한다 |
 | A8 | OpenAPI/Swagger UI를 노출하는 앱은 A6·A9를 반드시 함께 적용한다 |
 | A9 | A6~A8을 지킬 수 없으면 인프라팀에 `X-Forwarded-Prefix` 전달을 요청하고 `server.forward-headers-strategy: framework`를 설정한다. 앱이 prefix를 하드코딩하지 않는다 |
+| A10 | business inbound의 Internal ALB listener/Ingress와 API Gateway mapping은 `/actuator/**`, `/livez`, `/readyz`를 사용자 요청에 노출하지 않는다. ALB target health, Kubernetes probe, Agent scrape가 Pod target에 직접 접근한다 |
+| A11 | 신규 앱은 actuator에서 `health,prometheus`만 노출하고 health detail은 숨긴다. `/actuator/prometheus`는 Datadog Agent의 Pod 직접 scrape에만 사용한다 |
 
 A6~A8이 필요한 이유는 **strip이 앱에게서 외부 경로 정보를 지운다**는 점이다. 앱은 자기가 `/{app}` 아래 있는 줄 모르므로:
 
@@ -96,6 +98,8 @@ A6~A8이 필요한 이유는 **strip이 앱에게서 외부 경로 정보를 지
 - Swagger UI가 만드는 server URL과 리소스 경로도 strip 기준이라 외부에서 깨진다.
 
 MaxServer 현재 상태는 A6~A8을 모두 만족한다(2026-08-05 실측): base-path·`forward-headers` 설정 없음, `ServerResponse.created(uri)` 미사용(POST는 `status(201)` + body), 쿠키·세션 미사용(JWT Bearer / oauth2 resource server), springdoc 미도입. 따라서 **코드 변경 없이 API Gateway strip 방식에 안전하다.** 2026-07-30에 prod `api.max.aladin.co.kr/batch/actuator/health` 정상 응답으로 실증됐다.
+
+위 `max-batch` actuator URL은 당시 path strip 동작을 확인한 기존 앱 증적이지 신규 앱의 management endpoint 노출 기준이 아니다. 신규 앱은 A10~A11을 적용하며, 기존 앱은 Ingress/API Gateway route를 변경하는 별도 배포에서 전환한다.
 
 A1 근거:
 
@@ -134,6 +138,8 @@ A1 예외 조건 (둘 다 충족할 때만):
 - 실제 위험은 초기 등록이 한 번도 성공하지 못하는 배포다. deployment verification과 rollback으로 다룬다.
 - health check port를 생략하면 기본값이 traffic port다. actuator를 별도 포트로 분리한 앱에서 이를 생략하면 **업무 포트의 404가 healthy로 처리된다.** A5가 management port 분리를 기본값으로 두지 않는 이유다.
 - Pod IP 직접 스크레이프는 ALB·DNS·host rule 오설정을 검증하지 못한다. 보완 모니터는 최종 hostname을 경유해야 한다.
+- ALB target health는 listener의 사용자 route와 별도로 target에 직접 요청하므로, business route에서 `/readyz`를 차단해도 health check는 유지된다.
+- Kubernetes probe와 Datadog Agent scrape는 Pod target에 직접 접근한다. management 경로를 business Ingress/API Gateway에 공개할 이유가 없다.
 
 ## 5. 경계 정의
 
@@ -166,6 +172,7 @@ A1 예외 조건 (둘 다 충족할 때만):
 - [ ] ALB listener host rule + priority
 - [ ] target group + health check path · port · matcher
 - [ ] K8s Service / Ingress port · annotation (`target-type`이 `ip`면 Service port가 Pod targetPort로, `instance`면 NodePort로 해석)
+- [ ] business listener/Ingress에서 `/actuator/**`, `/livez`, `/readyz` 사용자 route 차단
 - [ ] SG / NetworkPolicy / 방화벽 룰 (ALB↔target 새 포트 포함)
 - [ ] caller 측 base URL
 - [ ] end-to-end 모니터
@@ -173,6 +180,7 @@ A1 예외 조건 (둘 다 충족할 때만):
 **외부 (API Gateway)**
 
 - [ ] base path mapping `{app}` 추가 (strip 확인)
+- [ ] API Gateway mapping에서 `/actuator/**`, `/livez`, `/readyz` route 차단
 - [ ] authorizer · throttle · usage plan
 - [ ] VPC Link → target 경로
 - [ ] 방화벽 룰 (src/dst 갱신)
@@ -192,6 +200,7 @@ A1 예외 조건 (둘 다 충족할 때만):
 | 기존 앱 이관 기준 (신규만 적용 vs 일괄) | 내부·외부 혼재가 영구화되고 방화벽 룰 분류가 불가 |
 | path segment 네이밍 (앱 이름 vs 순번 코드) | 로그·추적에서 내부 서브도메인과 앱 식별자가 어긋남 |
 | 앱별 authorizer·throttle 기준 | 퍼블릭 통합 도메인에서 앱 간 격리가 없는 상태로 방치 |
+| management path의 Ingress·API Gateway 차단 실측 | actuator·probe·metric이 business inbound에 노출됨 |
 | ALB URL rewrite transform 재검토 | 앱 무변경 대안(공용 도메인 + ALB path strip)이 사장됨. controller 버전·IaC 지원 확인 필요 |
 
 ## 관련
