@@ -21,6 +21,7 @@
 #   토큰 값은 Keychain에서만 읽는다. 그러나 스캐너 3종 모두 토큰을 프로세스 argv 또는
 #   환경으로 받으므로 같은 UID의 `ps -ww` / `ps eww`에서 관찰될 수 있다.
 #     - sonar-scanner CLI : SONAR_TOKEN 환경변수 사용 (argv 노출 회피)
+#     - Gradle Sonar      : init script가 SONAR_TOKEN을 JVM property로 연결 (argv 노출 회피)
 #     - curl             : --config 로 stdin 전달 (argv 노출 회피)
 #     - SonarScanner .NET: /d:sonar.token argv 필수. 환경변수 미지원 → argv 노출 잔존
 #   즉 이 스크립트는 단일 사용자 머신 또는 전용 러너를 전제로 한다. 공용 호스트에서는
@@ -57,8 +58,11 @@ set -euo pipefail
 
 # ── 설정 ────────────────────────────────────────────────────────────────────
 
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+readonly SCRIPT_DIR
 readonly SONAR_HOST="https://sonarqube.sec.aladin.co.kr"
 readonly SONAR_TOKEN_KEYCHAIN_SERVICE="sonarqube-jmkim-token"
+readonly SONAR_GRADLE_INIT="$SCRIPT_DIR/sonar-token.init.gradle"
 readonly FORTIFY_HOME="${FORTIFY_HOME:-$HOME/Applications/Fortify/SAST_26.2.0}"
 readonly WORKSPACE_ROOT="${WORKSPACE_ROOT:-$HOME/Documents/workspace}"
 readonly DOTNET_SONAR_SCANNER="${DOTNET_SONAR_SCANNER:-$HOME/.dotnet/tools/dotnet-sonarscanner}"
@@ -93,7 +97,7 @@ readonly CE_POLL_INTERVAL_SEC=5
 #   R_PATH         WORKSPACE_ROOT 기준 상대 경로
 #   R_REF          기준 ref
 #   R_SONARKEY     서버의 기존 projectKey (없으면 자동 생성됨)
-#   R_SMODE        cli | dotnet | cli-nocs | skip-msbuild
+#   R_SMODE        cli | gradle | dotnet | cli-nocs | skip-msbuild
 #   R_FMODE        yes | nocs | skip-dotnet
 #   R_GLOBS        Fortify translate 대상 글로브 (스택별, 공백 구분)
 #   R_BUILD_TARGET dotnet 모드에서 빌드할 sln/csproj 상대 경로
@@ -108,8 +112,8 @@ readonly CE_POLL_INTERVAL_SEC=5
 # ALL_KEYS 는 `all` 이 실제로 도는 점검 대상이다.
 # max-db-script·tobe-db-script 는 점검 대상에서 제외 (2026-07-30 결정). 정의는 남겨 둬
 # 개별 키 지정으로는 여전히 실행 가능하고, 대상 복원 시 ALL_KEYS 에 다시 넣으면 된다.
-readonly REGISTRY_ORDER="aasm naru-server max-server max-front maxcms-front maxcms-api max-db-script tobe-db-script max-api tobe"
-readonly ALL_KEYS="aasm naru-server max-server max-front maxcms-front maxcms-api max-api tobe"
+readonly REGISTRY_ORDER="aasm partner-integration-batch naru-server max-server max-front maxcms-front maxcms-api max-db-script tobe-db-script max-api tobe"
+readonly ALL_KEYS="aasm partner-integration-batch naru-server max-server max-front maxcms-front maxcms-api max-api tobe"
 
 # 스택별 글로브. 소스 + 설정 파일(configuration 분석기 대상)을 함께 넘긴다.
 readonly GLOBS_TS='**/*.ts **/*.tsx **/*.js **/*.jsx **/*.json **/*.yml **/*.yaml'
@@ -128,6 +132,11 @@ load_repo() {
       # package-lock.json·tests·docker 픽스처가 Critical로 잡혀 게이트를 막는다 (실측 11/15건).
       R_SRCDIRS="app components lib"
       R_NOTE="Next.js/TS. sonar-project.properties 보유(템플릿 원본). main이 deploy/prod보다 42커밋 뒤" ;;
+    partner-integration-batch)
+      R_PATH="b2b/partner-integration-batch"; R_REF="origin/main"; R_SONARKEY="partner-integration-batch"
+      R_SMODE="gradle"; R_FMODE="yes"; R_GLOBS="$GLOBS_KOTLIN"
+      R_SRCDIRS="src/main"
+      R_NOTE="Kotlin/Spring. repo 내 Gradle Sonar+JaCoCo 설정으로 테스트·커버리지 함께 제출" ;;
     naru-server)
       R_PATH="naru/NaruServer"; R_REF="origin/main"; R_SONARKEY="NaruServer"
       R_SMODE="cli"; R_FMODE="yes"; R_GLOBS="$GLOBS_KOTLIN"
@@ -176,6 +185,7 @@ load_repo() {
 service_repos() {
   case "$1" in
     aasm) echo "aasm" ;;
+    b2b)  echo "partner-integration-batch" ;;
     naru) echo "naru-server" ;;
     max)  echo "max-server max-front maxcms-front maxcms-api max-api" ;;
     tobe) echo "tobe" ;;
@@ -232,7 +242,7 @@ for t in $TARGETS; do
       if svc=$(service_repos "${t#svc:}" 2>/dev/null); then
         REQUESTED="$REQUESTED $svc"
       else
-        die "알 수 없는 서비스: ${t#svc:} (aasm naru max tobe)"
+        die "알 수 없는 서비스: ${t#svc:} (aasm b2b naru max tobe)"
       fi ;;
     *)
       # repo 키를 서비스명보다 먼저 본다. 더 구체적인 쪽이 이겨야 한다.
@@ -242,7 +252,7 @@ for t in $TARGETS; do
       elif svc=$(service_repos "$t" 2>/dev/null); then
         REQUESTED="$REQUESTED $svc"
       else
-        die "알 수 없는 대상: $t (서비스: svc:aasm svc:naru svc:max svc:tobe / repo 키는 --help 참조)"
+        die "알 수 없는 대상: $t (서비스: svc:aasm svc:b2b svc:naru svc:max svc:tobe / repo 키는 --help 참조)"
       fi ;;
   esac
 done
@@ -304,6 +314,7 @@ trap 'exit 143' TERM HUP
 
 SONAR_TOKEN=""
 NEED_DOTNET=false
+NEED_CLI=false
 
 preflight() {
   local need_sonar=true need_fortify=true k
@@ -315,10 +326,13 @@ preflight() {
   for k in $SELECTED; do
     load_repo "$k"
     [ "$R_SMODE" = "dotnet" ] && NEED_DOTNET=true
+    case "$R_SMODE" in cli|cli-nocs) NEED_CLI=true ;; esac
   done
 
   if $need_sonar; then
-    command -v sonar-scanner >/dev/null || die "sonar-scanner 없음 (brew install sonar-scanner)"
+    if $NEED_CLI; then
+      command -v sonar-scanner >/dev/null || die "sonar-scanner 없음 (brew install sonar-scanner)"
+    fi
     SONAR_TOKEN=$(security find-generic-password -s "$SONAR_TOKEN_KEYCHAIN_SERVICE" -w 2>/dev/null || true)
     [ -n "$SONAR_TOKEN" ] || die "Keychain 항목 '$SONAR_TOKEN_KEYCHAIN_SERVICE' 없음 또는 빈 값"
 
@@ -503,6 +517,24 @@ run_sonar() {
       ( cd "$src" && SONAR_TOKEN="$SONAR_TOKEN" SONAR_HOST_URL="$SONAR_HOST" \
           sonar-scanner "${args[@]}" ) >>"$logfile" 2>&1 || rc=$?
       ;;
+    gradle)
+      if [ ! -x "$src/gradlew" ]; then
+        SONAR_RESULT="FAIL"; SONAR_NOTE="Gradle wrapper 실행 파일 없음: $src/gradlew"
+        return 0
+      fi
+      if [ ! -f "$SONAR_GRADLE_INIT" ]; then
+        SONAR_RESULT="FAIL"; SONAR_NOTE="Gradle Sonar init script 없음: $SONAR_GRADLE_INIT"
+        return 0
+      fi
+      # repo의 sonar task가 테스트·JaCoCo XML 생성을 의존하도록 구성돼 있다.
+      # 공통 CLI로 덮으면 커버리지가 0%가 되므로 Gradle 플러그인 경로를 보존한다.
+      # Gradle 플러그인 7.2의 sonarResolver는 환경 토큰을 자동 연결하지 않아 401을
+      # 반환한다(2026-08-28 실측). init script가 환경값을 JVM property로 연결한다.
+      ( cd "$src" && SONAR_TOKEN="$SONAR_TOKEN" SONAR_HOST_URL="$SONAR_HOST" \
+          ./gradlew --no-daemon --init-script "$SONAR_GRADLE_INIT" sonar \
+            "-Dsonar.projectVersion=$version" \
+            "-Dsonar.scm.provider=git" ) >>"$logfile" 2>&1 || rc=$?
+      ;;
     dotnet)
       local target="$build_target"
       [ -n "$target" ] || target="."
@@ -556,7 +588,7 @@ fetch_sonar_measures() {
 # translate가 실제로 넘기는 대상과 같은 제외 규칙을 적용해야 한다.
 # 분모가 다르면 커버리지 게이트가 거짓 PARTIAL을 낸다
 # (실측: tobe에서 min.js 104건이 분모에만 남아 84%로 오판됐다).
-readonly EXPECTED_EXCLUDE_RE='(^|/)(node_modules|\.next|dist|build|bin|obj|coverage|vendor)/|\.min\.(js|css)$|(^|/)docs/|\.md$|/src/test/|/src/testFixtures/|(^|/)(e2e|cypress|playwright)/|(^|/)\.devops/tests/|\.(test|spec)\.[jt]sx?$|\.test\.mjs$|(Test|Tests)\.cs$'
+readonly EXPECTED_EXCLUDE_RE='(^|/)(node_modules|\.next|dist|build|bin|obj|coverage|vendor)/|\.min\.(js|css)$|(^|/)docs/|\.md$|(^|/)src/test/|(^|/)src/testFixtures/|(^|/)(e2e|cypress|playwright)/|(^|/)\.devops/tests/|\.(test|spec)\.[jt]sx?$|\.test\.mjs$|(Test|Tests)\.cs$'
 
 expected_file_count() {
   local src="$1" globs="$2" mode="$3" srcdirs="${4:-}" total=0 g ext n re d pathspec

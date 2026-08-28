@@ -10,7 +10,7 @@
     - SonarQube: C# 분석은 Roslyn 기반 MSBuild 스캐너가 필요하고 .NET Framework 4.8은
       macOS에서 빌드되지 않는다
     - Fortify: ".NET translation is only supported on Windows and Linux." 를 반환한다
-  Windows에서는 두 제약이 모두 사라져 10 repo 전체를 커버한다.
+  Windows에서는 두 제약이 모두 사라져 11 repo 전체를 커버한다.
 
   실측 근거 (2026-07-29, macOS):
     max-api  서버 언어 분포 = xml=2651   → C# 400파일이 한 번도 분석된 적 없음
@@ -78,6 +78,7 @@ $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 
 $SonarHost = 'https://sonarqube.sec.aladin.co.kr'
 $TokenFile = Join-Path $env:LOCALAPPDATA 'team2\sonarqube-token.dpapi'
+$SonarGradleInit = Join-Path $PSScriptRoot 'sonar-token.init.gradle'
 $FortifyHome = if ($env:FORTIFY_HOME) { $env:FORTIFY_HOME } else { 'C:\Program Files\Fortify\Fortify_SCA_26.2.0' }
 $FortifyHeapDefault = if ($env:FORTIFY_HEAP) { $env:FORTIFY_HEAP } else { '4G' }
 
@@ -157,8 +158,9 @@ function Invoke-SonarApi {
 # macOS판과 동일한 대상·순서를 유지한다. Windows에서는 .NET 제약이 없으므로
 # SonarMode/FortifyMode가 SKIP 대신 실제 스캐너로 지정된다.
 #
-#   SonarMode    cli | dotnet | msbuild
+#   SonarMode    cli | gradle | dotnet | msbuild
 #     cli        sonar-scanner CLI (TS/JS, Kotlin, T-SQL)
+#     gradle     repo의 Gradle Sonar task (테스트·JaCoCo 연동 보존)
 #     dotnet     dotnet-sonarscanner (.NET 8 이상, SDK-style)
 #     msbuild    SonarScanner.MSBuild.exe + msbuild.exe (.NET Framework legacy csproj)
 #   FortifyMode  yes | msbuild
@@ -183,6 +185,12 @@ $Registry = [ordered]@{
     # package-lock.json·tests·docker 픽스처가 Critical로 잡혀 게이트를 막는다 (실측 11/15건).
     SrcDirs = @('app','components','lib')
     Note = 'Next.js/TS. main이 deploy/prod보다 42커밋 뒤'
+  }
+  'partner-integration-batch' = @{
+    Path = 'b2b\partner-integration-batch'; Ref = 'origin/main'; SonarKey = 'partner-integration-batch'
+    SonarMode = 'gradle'; FortifyMode = 'yes'; Globs = $GlobsKotlin
+    SrcDirs = @('src/main')
+    Note = 'Kotlin/Spring. repo 내 Gradle Sonar+JaCoCo 설정으로 테스트·커버리지 함께 제출'
   }
   'naru-server' = @{
     Path = 'naru\NaruServer'; Ref = 'origin/main'; SonarKey = 'NaruServer'
@@ -237,7 +245,7 @@ $Registry = [ordered]@{
     Note = '.NET FW 4.8 legacy. macOS에서 SAST 전무였던 C# 400파일 — Windows 전용 커버리지'
   }
   'tobe' = @{
-    # 기준 브랜치 예외 (사용자 결정 2026-07-29) — 10 repo 중 유일한 예외다.
+    # 기준 브랜치 예외 (사용자 결정 2026-07-29) — 11 repo 중 유일한 예외다.
     # origin/main(2026-01-16)은 실제로 컴파일되지 않는다:
     #   Aladin.Tobe.Bll\Search\SearchEngine.cs(582,32) error CS0103 'isInternal'.
     # develop 대비 565커밋 뒤이고 develop에서는 해당 참조가 사라져 빌드 클린이다.
@@ -262,6 +270,7 @@ $Registry = [ordered]@{
 
 $ServiceMap = @{
   'aasm' = @('aasm')
+  'b2b'  = @('partner-integration-batch')
   'naru' = @('naru-server')
   'max'  = @('max-server','max-front','maxcms-front','maxcms-api','max-api')
   'tobe' = @('tobe')
@@ -284,7 +293,7 @@ foreach ($t in $Target) {
     $Registry.Keys | Where-Object { $excludedFromAll -notcontains $_ } | ForEach-Object { $requested.Add($_) }
   } elseif ($t -like 'svc:*') {
     $svc = $t.Substring(4)
-    if (-not $ServiceMap.ContainsKey($svc)) { Die "알 수 없는 서비스: $svc (aasm naru max tobe)" }
+    if (-not $ServiceMap.ContainsKey($svc)) { Die "알 수 없는 서비스: $svc (aasm b2b naru max tobe)" }
     $ServiceMap[$svc] | ForEach-Object { $requested.Add($_) }
   } elseif ($Registry.Contains($t)) {
     # repo 키가 서비스명보다 우선한다. 더 구체적인 쪽이 이겨야 한다.
@@ -292,7 +301,7 @@ foreach ($t in $Target) {
   } elseif ($ServiceMap.ContainsKey($t)) {
     $ServiceMap[$t] | ForEach-Object { $requested.Add($_) }
   } else {
-    Die "알 수 없는 대상: $t (서비스는 svc:aasm svc:naru svc:max svc:tobe)"
+    Die "알 수 없는 대상: $t (서비스는 svc:aasm svc:b2b svc:naru svc:max svc:tobe)"
   }
 }
 # 레지스트리 순서 유지 + 중복 제거
@@ -626,6 +635,27 @@ function Invoke-SonarScan {
           Remove-Item Env:\SONAR_HOST_URL -ErrorAction SilentlyContinue
         }
       }
+      'gradle' {
+        if (-not (Test-Path '.\gradlew.bat')) {
+          return @{ Result = 'FAIL'; Note = 'Gradle wrapper 없음: gradlew.bat' }
+        }
+        if (-not (Test-Path $SonarGradleInit)) {
+          return @{ Result = 'FAIL'; Note = "Gradle Sonar init script 없음: $SonarGradleInit" }
+        }
+        # repo의 sonar task가 테스트·JaCoCo XML 생성을 의존하도록 구성돼 있다.
+        # 공통 CLI로 덮으면 커버리지가 0%가 되므로 Gradle 플러그인 경로를 보존한다.
+        # Gradle 플러그인 7.2의 sonarResolver는 환경 토큰을 자동 연결하지 않아 401을
+        # 반환한다(2026-08-28 실측). init script가 환경값을 JVM property로 연결한다.
+        $env:SONAR_TOKEN = $script:SonarToken
+        $env:SONAR_HOST_URL = $SonarHost
+        try {
+          & .\gradlew.bat --no-daemon --init-script $SonarGradleInit sonar "-Dsonar.projectVersion=$version" '-Dsonar.scm.provider=git' *>> $LogFile
+          $rc = $LASTEXITCODE
+        } finally {
+          Remove-Item Env:\SONAR_TOKEN -ErrorAction SilentlyContinue
+          Remove-Item Env:\SONAR_HOST_URL -ErrorAction SilentlyContinue
+        }
+      }
       'dotnet' {
         $target = $Cfg.BuildTarget
         if ($target -and -not (Test-Path $target)) {
@@ -674,7 +704,7 @@ function Invoke-SonarScan {
 # translate가 실제로 넘기는 대상과 같은 제외 규칙을 적용해야 한다.
 # 분모가 다르면 커버리지 게이트가 거짓 PARTIAL을 낸다
 # (macOS 실측: tobe에서 min.js 104건이 분모에만 남아 84%로 오판됐다).
-$ExpectedExcludeRe = '(^|/)(node_modules|\.next|dist|build|bin|obj|coverage|vendor)/|\.min\.(js|css)$|(^|/)docs/|\.md$|/src/test/|/src/testFixtures/|(^|/)(e2e|cypress|playwright)/|(^|/)\.devops/tests/|\.(test|spec)\.[jt]sx?$|\.test\.mjs$|(Test|Tests)\.cs$'
+$ExpectedExcludeRe = '(^|/)(node_modules|\.next|dist|build|bin|obj|coverage|vendor)/|\.min\.(js|css)$|(^|/)docs/|\.md$|(^|/)src/test/|(^|/)src/testFixtures/|(^|/)(e2e|cypress|playwright)/|(^|/)\.devops/tests/|\.(test|spec)\.[jt]sx?$|\.test\.mjs$|(Test|Tests)\.cs$'
 
 function Get-ExpectedFileCount {
   param($Src, $Globs, $SrcDirs)

@@ -25,6 +25,7 @@ Docker로 우회는 불가하다. Windows 컨테이너는 macOS에 Windows 커�
 | repo | 스택 | macOS | Windows |
 |---|---|---|---|
 | `aasm` | Next.js / TS | Sonar + Fortify | 동일 |
+| `partner-integration-batch` | Kotlin / Spring | Sonar + Fortify | 동일 |
 | `naru-server` | Kotlin / Spring | Sonar + Fortify | 동일 |
 | `max-server` | Kotlin (전환용) | Sonar + Fortify | 동일 |
 | `max-front` | Next.js / TS | Sonar + Fortify | 동일 |
@@ -127,6 +128,7 @@ $env:TEAM2_WORKSPACE_PATH = 'D:\workspace'
 ./scripts/run-static-scan.sh --dry-run all      # 실행 계획만
 ./scripts/run-static-scan.sh all
 ./scripts/run-static-scan.sh aasm max-front     # 특정 repo
+./scripts/run-static-scan.sh partner-integration-batch # B2B 배치 월례 점검
 ./scripts/run-static-scan.sh svc:max            # max 서비스 전체
 ./scripts/run-static-scan.sh --sonar-only all
 ./scripts/run-static-scan.sh --fortify-only tobe
@@ -137,6 +139,7 @@ $env:TEAM2_WORKSPACE_PATH = 'D:\workspace'
 .\scripts\run-static-scan.ps1 -Target all -DryRun
 .\scripts\run-static-scan.ps1 -Target all
 .\scripts\run-static-scan.ps1 -Target aasm,max-front
+.\scripts\run-static-scan.ps1 -Target partner-integration-batch
 .\scripts\run-static-scan.ps1 -Target svc:max
 .\scripts\run-static-scan.ps1 -Target all -SonarOnly
 ```
@@ -161,7 +164,11 @@ Start-Process powershell -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass
 
 **기준 브랜치**: `origin/main`이 있으면 main, 없으면 `origin/master`. develop은 쓰지 않는다 (팀 결정 2026-07-29).
 
-**예외 1건 — `tobe`는 `origin/develop`** (사용자 결정 2026-07-29). `tobe`의 `origin/main`(2026-01-16)은 **실제로 컴파일되지 않는다**: `Aladin.Tobe.Bll\Search\SearchEngine.cs(582,32) error CS0103: 'isInternal'`. develop 대비 565커밋 뒤이고 develop에서는 해당 참조가 없어 빌드가 통과한다. C# 분석은 빌드 성공이 전제이므로 main으로는 596파일을 Roslyn·Fortify 어느 쪽으로도 분석할 수 없다. 나머지 9 repo는 규칙 그대로다.
+`partner-integration-batch`는 repo의 Gradle `sonar` task가 테스트와 JaCoCo XML 생성을 함께 실행한다. 기존 SonarQube 커버리지 이력을 보존하려면 공통 CLI가 아니라 `gradle` 모드를 사용해야 한다. 기준은 GitHub 기본 브랜치인 `origin/main`이며, 로컬 checkout을 전환하지 않고 러너의 fetch + 임시 worktree 경로를 사용한다.
+
+Gradle Sonar plugin 7.2의 `sonarResolver`는 `SONAR_TOKEN` 환경변수만으로 인증되지 않는다(401 실측). 러너는 `scripts/sonar-token.init.gradle`을 통해 환경 토큰을 JVM property에 연결한다. init script에는 토큰 값이 없고, 토큰을 argv·repo 파일에 남기지 않는다.
+
+**예외 1건 — `tobe`는 `origin/develop`** (사용자 결정 2026-07-29). `tobe`의 `origin/main`(2026-01-16)은 **실제로 컴파일되지 않는다**: `Aladin.Tobe.Bll\Search\SearchEngine.cs(582,32) error CS0103: 'isInternal'`. develop 대비 565커밋 뒤이고 develop에서는 해당 참조가 없어 빌드가 통과한다. C# 분석은 빌드 성공이 전제이므로 main으로는 596파일을 Roslyn·Fortify 어느 쪽으로도 분석할 수 없다. 나머지 10 repo는 규칙 그대로다.
 
 `max-api`는 예외가 아니다. 처음 main 빌드가 깨진 원인은 브랜치가 아니라 `Configuration`이었고(`Web.Debug.config` 부재), `/p:Configuration=Release`로 `origin/main` 빌드가 통과한다.
 

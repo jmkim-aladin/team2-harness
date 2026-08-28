@@ -1,0 +1,5 @@
+def sonarToken = System.getenv('SONAR_TOKEN')
+
+if (sonarToken) {
+    System.setProperty('sonar.token', sonarToken)
+}
