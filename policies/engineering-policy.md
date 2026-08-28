@@ -40,6 +40,8 @@
 - 신규 .NET 서비스 생성 금지 (예외는 팀장 승인 필요)
 - DB 마이그레이션 방식 표준화
 - 공통 에러 응답, 인증 필터, trace/correlation 처리 공통화
+- API·admin·batch가 같은 repository에 있더라도 artifact·config·secret·deploy·rollback은 애플리케이션별로 분리하고, 실제 사용하는 capability·DB만 선택해 조립한다
+- Kotlin/Spring 멀티프로젝트의 Clean/Hexagonal 경계, runtime·persistence·migration·security·observability 선택과 검증 기준은 [Kotlin/Spring 멀티프로젝트 애플리케이션 표준](../docs/kotlin-spring-multi-project-application-standard.md)을 따른다
 
 ### 레거시 서비스
 - SP(Stored Procedure)는 레거시 비즈니스 런타임으로 취급
