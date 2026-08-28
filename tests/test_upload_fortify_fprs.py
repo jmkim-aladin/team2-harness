@@ -28,8 +28,12 @@ class UploadFortifyFprsTests(unittest.TestCase):
         )
 
     def test_validate_base_url_rejects_embedded_credentials(self) -> None:
+        embedded_credentials = (
+            "https://" + ":".join(("user", "credential-placeholder"))
+            + "@ssc.example/ssc"
+        )
         with self.assertRaisesRegex(ValueError, "사용자명이나 비밀번호"):
-            fortify.validate_base_url("https://user:secret@ssc.example/ssc", False)
+            fortify.validate_base_url(embedded_credentials, False)
 
     def test_validate_base_url_rejects_invalid_scheme_or_host(self) -> None:
         for value in ("ftp://ssc.example/ssc", "https:///ssc"):
@@ -65,6 +69,33 @@ class UploadFortifyFprsTests(unittest.TestCase):
         ):
             fortify.args()
 
+    def test_month_argument_uses_configured_default_url(self) -> None:
+        argv = [str(MODULE_PATH), "--month", "202609"]
+        with (
+            patch.object(fortify.sys, "argv", argv),
+            patch.object(fortify, "DEFAULT_BASE_URL", "https://ssc.example/ssc"),
+        ):
+            options = fortify.args()
+
+        self.assertEqual(options.base_url, "https://ssc.example/ssc")
+
+    def test_month_argument_rejects_explicit_directory_conflict(self) -> None:
+        argv = [
+            str(MODULE_PATH),
+            "--month",
+            "202609",
+            "--directory",
+            "/tmp/fprs",
+            "--base-url",
+            "https://ssc.example/ssc",
+        ]
+        with (
+            patch.object(fortify.sys, "argv", argv),
+            redirect_stderr(io.StringIO()),
+            self.assertRaises(SystemExit),
+        ):
+            fortify.args()
+
     def test_application_matching_covers_alias_suffix_and_typo(self) -> None:
         applications = ["B2B Batch", "Blog", "Bazaar-Admin-Front", "Naru"]
 
@@ -78,6 +109,10 @@ class UploadFortifyFprsTests(unittest.TestCase):
             "Bazaar-Admin-Front",
         )
         self.assertEqual(fortify.match_application("naru-server", applications), "Naru")
+
+    def test_explicit_alias_requires_application_to_exist(self) -> None:
+        with self.assertRaisesRegex(fortify.SscError, "명시 매핑 대상"):
+            fortify.match_application("partner-integration-batch", ["Blog"])
 
     def test_ambiguous_application_match_fails_closed(self) -> None:
         with self.assertRaisesRegex(fortify.SscError, "매핑 불가"):
@@ -120,6 +155,10 @@ class UploadFortifyFprsTests(unittest.TestCase):
         with self.assertRaisesRegex(fortify.SscError, "복사 기준 버전"):
             fortify.source_version_for("Blog", [], "26.08")
 
+    def test_parse_date_handles_missing_and_utc_values(self) -> None:
+        self.assertEqual(fortify.parse_date(None), fortify.datetime.min)
+        self.assertEqual(fortify.parse_date("2026-08-01T12:30:00Z").year, 2026)
+
     def test_existing_target_skips_only_committed_version(self) -> None:
         committed = {
             "id": 7,
@@ -147,6 +186,9 @@ class UploadFortifyFprsTests(unittest.TestCase):
         ]
         with self.assertRaisesRegex(fortify.SscError, "여러 개"):
             fortify.existing_target("Blog", versions, "26.08")
+
+    def test_existing_target_returns_none_when_version_is_missing(self) -> None:
+        self.assertIsNone(fortify.existing_target("Blog", [], "26.08"))
 
     def test_writable_attributes_keeps_only_api_write_shape(self) -> None:
         raw = [
@@ -191,6 +233,16 @@ class UploadFortifyFprsTests(unittest.TestCase):
 
         self.assertEqual(status, "ERROR_PROCESSING")
 
+    def test_poll_artifact_reports_timeout_before_first_poll(self) -> None:
+        class Client:
+            def get(self, path: str) -> dict:
+                raise AssertionError("deadline 경과 후에는 조회하지 않아야 함")
+
+        with patch.object(fortify.time, "monotonic", side_effect=(0.0, 2.0)):
+            status = fortify.poll_artifact(Client(), 42, 1, 0)
+
+        self.assertEqual(status, "TIMEOUT(UNKNOWN)")
+
     def test_upload_builds_multipart_request_with_upload_token(self) -> None:
         client = fortify.SscClient("https://ssc.example/ssc", None, "upload-token")
         with tempfile.TemporaryDirectory() as tmp:
@@ -218,6 +270,74 @@ class UploadFortifyFprsTests(unittest.TestCase):
             fortify.SscError, "빈 자격증명"
         ):
             fortify.credential("fortify-test-token")
+
+    def test_credential_reports_helper_failure(self) -> None:
+        failed = subprocess.CompletedProcess(
+            args=[], returncode=1, stdout="", stderr="Keychain item missing\n"
+        )
+        with patch.object(fortify.subprocess, "run", return_value=failed), self.assertRaisesRegex(
+            fortify.SscError, "Keychain item missing"
+        ):
+            fortify.credential("fortify-test-token")
+
+    def test_client_requires_admin_token_for_admin_calls(self) -> None:
+        client = fortify.SscClient("https://ssc.example/ssc", None, "upload-token")
+        with self.assertRaisesRegex(
+            fortify.SscError, "fortify-ssc-unified-login-token"
+        ):
+            client.require_admin_token()
+
+    def test_create_version_copies_configuration_and_commits(self) -> None:
+        attributes = [
+            {
+                "attributeDefinitionId": 3,
+                "value": "High",
+                "values": [{"guid": "one"}],
+            }
+        ]
+
+        class Client:
+            def __init__(self) -> None:
+                self.posts = []
+                self.puts = []
+
+            def get(self, path: str) -> dict:
+                responses = {
+                    "/projectVersions/4": {
+                        "data": {
+                            "description": "source",
+                            "issueTemplateId": "template",
+                            "masterAttrGuid": "master",
+                        }
+                    },
+                    "/projectVersions/4/attributes": {"data": attributes},
+                    "/projectVersions/9": {
+                        "data": {"id": 9, "name": "26.08", "committed": True}
+                    },
+                    "/projectVersions/9/attributes": {"data": attributes},
+                }
+                return responses[path]
+
+            def post(self, path: str, payload: object, **kwargs: object) -> dict:
+                self.posts.append((path, payload, kwargs))
+                if path == "/projects/2/versions":
+                    return {"data": {"id": 9}}
+                return {"data": {}}
+
+            def put(self, path: str, payload: object) -> dict:
+                self.puts.append((path, payload))
+                return {"data": {}}
+
+        source = {"id": 4, "project": {"id": 2}}
+        client = Client()
+        with redirect_stdout(io.StringIO()):
+            version_id = fortify.create_version(client, "Blog", "26.08", source)
+
+        self.assertEqual(version_id, 9)
+        self.assertEqual(client.posts[0][0], "/projects/2/versions")
+        self.assertEqual(client.posts[0][2]["expected"], (201,))
+        self.assertEqual(client.posts[1][0], "/projectVersions/action/copyFromPartial")
+        self.assertIn(("/projectVersions/9?hideProgress=true", {"committed": True}), client.puts)
 
 
 if __name__ == "__main__":
