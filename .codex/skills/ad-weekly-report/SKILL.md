@@ -13,7 +13,7 @@ description: "Use when the user invokes $ad-weekly-report, ad weekly report, /ad
 2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/weekly-report.md`를 먼저 읽고 그 절차를 따른다.
 3. command 파일이 참조하는 스프린트, 주간업무, YouTrack, 로컬 위키 컨텍스트만 추가로 확인한다.
 4. YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.
-5. 보고서 작성은 자동으로 할 수 있으나 YouTrack/KB/위키 변경은 사용자 승인 후 실행한다.
+5. 보고서 작성은 자동으로 할 수 있으나 YouTrack 티켓/지식베이스(KB)/로컬 위키 변경은 사용자 승인 후 실행한다.
 
 ## 운영 기준
 

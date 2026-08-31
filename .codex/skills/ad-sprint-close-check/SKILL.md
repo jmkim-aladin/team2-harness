@@ -13,4 +13,4 @@ description: "Use when the user invokes $ad-sprint-close-check, ad sprint close 
 2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/sprint-close-check.md`를 먼저 읽고 그 절차를 따른다.
 3. command 파일이 참조하는 스프린트 산출물과 정책만 추가로 확인한다.
 4. YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.
-5. 상태 변경, KB/위키 변경, git 작업은 사용자 승인 후 실행한다.
+5. 상태 변경, 지식베이스(KB)/로컬 위키 변경, git 작업은 사용자 승인 후 실행한다.

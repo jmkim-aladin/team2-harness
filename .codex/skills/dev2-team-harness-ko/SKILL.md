@@ -20,6 +20,12 @@ description: "Use when a request needs DEV2/team2 harness context: policies, ser
 - 정책: `policies/engineering-policy.md`, `branching-strategy.md`, `code-review-policy.md`, `release-policy.md`, `ai-usage-policy.md`, `security-policy.md`, `incident-policy.md`, `team-members.md`, `knowledge-base-policy.md`, `wiki-document-language-and-title-policy.md`, `business-stakeholder-communication-policy.md`, `data-request-policy.md`
 - 서비스/스프린트/분석: `catalog/{service}.yaml`, `docs/sprint/*.md`, `docs/analysis-guides.md`
 
+## 용어
+
+- "위키"는 `$LOCAL_WIKI_PATH`의 로컬 Obsidian vault만 뜻한다.
+- YouTrack Articles는 "지식베이스(KB)" 또는 "기술자료"라고 부른다. `DEV2-A-*`, `REF-A-*`를 위키라고 부르지 않는다.
+- "위키에 저장/올려줘" 요청은 로컬 위키 파일 작성으로 처리한다. 지식베이스 변경은 사용자가 KB·지식베이스·기술자료를 명시하고 승인한 경우에만 수행한다.
+
 ## 사업부 커뮤니케이션
 
 - 사업부, 기획, 운영, CS 등 비개발 이해관계자에게 전달할 댓글/선택지/보고 초안은 `policies/business-stakeholder-communication-policy.md`를 먼저 적용한다.

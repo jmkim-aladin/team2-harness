@@ -68,6 +68,8 @@ Hermes에 연결된 기존 Discord bot을 control surface로 쓰는 역할 프�
 
 운영 지식 위키의 Obsidian vault 경로는 `$LOCAL_WIKI_PATH` (기본 `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2`)로 둔다.
 
+용어상 "위키"는 이 로컬 Obsidian vault만 뜻한다. YouTrack Articles는 "지식베이스(KB)" 또는 "기술자료"라고 부르며, "위키에 저장" 요청은 로컬 위키 파일 작성으로 처리한다.
+
 AI 도구는 하네스 문서를 갱신하거나 티켓 초안을 작성할 수 있지만, YouTrack 티켓/Task 생성, 티켓 상태/필드 변경, YouTrack KB 생성/수정/삭제/이동, 커밋/푸시/머지 전에는 반드시 사용자에게 확인한다.
 
 가이드/정책/스킬은 팀 하네스에 저장하고, 서비스 분석 결과와 Querybook은 로컬 Obsidian 운영 지식 위키에 저장한다. Ralph Loop로 도메인 지식을 고도화할 때는 [ralph-loop-domain-knowledge-guide.md](./ralph-loop-domain-knowledge-guide.md)를 따른다.

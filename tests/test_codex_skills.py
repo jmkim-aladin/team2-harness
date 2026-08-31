@@ -13,6 +13,22 @@ def word_count(text: str) -> int:
 
 
 class CodexSkillTests(unittest.TestCase):
+    def test_wiki_and_knowledge_base_terminology_is_explicit(self) -> None:
+        policy = (ROOT / "policies/knowledge-base-policy.md").read_text()
+        agents = (ROOT / "AGENTS.md").read_text()
+        claude = (ROOT / "CLAUDE.md").read_text()
+        harness_skill = (ROOT / ".codex/skills/dev2-team-harness-ko/SKILL.md").read_text()
+        ralph_guide = (ROOT / "docs/ralph-loop-domain-knowledge-guide.md").read_text()
+
+        for text in (policy, agents, claude, harness_skill):
+            self.assertTrue('"위키"는' in text or "**위키**는" in text)
+            self.assertIn("로컬 Obsidian", text)
+            self.assertIn("기술자료", text)
+
+        self.assertIn('"위키에 저장/올려줘"', policy)
+        self.assertIn("로컬 위키 파일 작성으로 해석", policy)
+        self.assertNotIn("YouTrack KB인지 Obsidian인지 모호", ralph_guide)
+
     def test_frequently_loaded_dev2_skills_stay_compact(self) -> None:
         limits = {
             ".codex/skills/dev2-team-harness-ko/SKILL.md": 300,

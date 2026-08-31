@@ -234,6 +234,6 @@ Graphify sidecar를 참고해서 {서비스}의 분석 우선순위를 잡아줘
 | “완벽하게 분석해줘” | 완료 기준이 없음 | “P0 도메인 canonical 후보 기준으로 분석해줘” |
 | “문서 고도화해줘” | 산출물 구조가 불명확 | “Summary/Confirmed/Inferred/Querybook/Needs Review 구조로 작성해줘” |
 | “전체 다 봐줘” | 비용과 범위 폭발 | “inventory는 전체, deep analysis는 P0 3개 도메인부터” |
-| “위키에 올려줘” | YouTrack KB인지 Obsidian인지 모호 | “로컬 Obsidian 운영 지식 위키에만 반영해줘” |
+| “위키에 올려줘” | 용어상 로컬 Obsidian 반영 요청 | 그대로 로컬 위키에 반영. YouTrack 변경이 필요하면 “지식베이스(KB) 또는 기술자료에 반영해줘”라고 별도 명시 |
 | “이슈도 정리해줘” | YouTrack write 가능성 발생 | “YouTrack write는 승인 전 금지하고 Action Register에 후보만 남겨줘” |
 | “Graphify 결과를 위키에 합쳐줘” | 후보 edge가 canonical 사실처럼 보일 수 있음 | “Graphify sidecar 결과를 discovery/proposal 후보로만 반영해줘” |

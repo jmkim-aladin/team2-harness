@@ -1,10 +1,10 @@
 ---
-description: YouTrack KB 문서 조회
+description: YouTrack 지식베이스(KB·기술자료) 문서 조회
 ---
 
-# YouTrack KB 문서 조회
+# YouTrack 지식베이스(KB·기술자료) 문서 조회
 
-YouTrack Knowledge Base에서 DEV2 프로젝트 문서를 조회한다.
+YouTrack Knowledge Base에서 DEV2 프로젝트의 지식베이스 문서(사내 용어: 기술자료)를 조회한다. "위키"는 로컬 Obsidian만 뜻하므로 이 문서들을 위키라고 부르지 않는다.
 
 ## 사용법
 

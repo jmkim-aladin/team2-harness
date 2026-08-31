@@ -13,6 +13,7 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 
 - 가이드·정책·스킬·서비스 카탈로그·스프린트 산출물: 팀 하네스 (`$TEAM2_HARNESS_PATH`)
 - 도메인 분석, Graphify 산출물, Querybook, daily/meetings/tickets 노트: 로컬 Obsidian vault (`$LOCAL_WIKI_PATH`)
+- 용어: "위키"는 로컬 Obsidian vault만 뜻한다. YouTrack Articles는 "지식베이스(KB)" 또는 "기술자료"라고 부르며, "위키에 저장"은 로컬 위키 저장으로 해석한다
 - 토큰 조달: [youtrack/api-guide.md](./youtrack/api-guide.md) §환경변수·§셋업(cred.py 체인)을 따른다
 
 ## 스킬 호출
