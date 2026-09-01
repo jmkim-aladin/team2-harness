@@ -139,7 +139,7 @@ interface TransactionPort {
 
 ## schema migration과 배포
 
-하나의 versioned SQL source와 checksum을 환경별 다른 실행 주체가 사용한다. **(MUST)**
+하나의 versioned SQL source와 checksum을 환경별 다른 실행 주체가 사용한다. 운영 서비스 계정에 DDL 권한이 없다면 migration tool/Flyway와 SQL은 runtime artifact에서 분리한다. **(MUST)**
 
 | 환경 | 실행 방식 | runtime 계정 |
 |---|---|---|
@@ -148,6 +148,8 @@ interface TransactionPort {
 | prod | DBA가 배포 전에 동일 bundle 수동 실행·증적 전달 | application은 DML-only |
 
 - production application startup에서 DDL을 실행하지 않는다. schema validation만 한다. **(MUST)**
+- local/dev의 신규 빈 DB는 pending migration이 정상이므로 독립 `validate()`를 적용 전에 실행하지 않는다. `migrate`의 사전 history/checksum 검증(`validateOnMigrate`)을 사용하고 적용 후 다시 validate한다. **(SHOULD)**
+- prod 수동 SQL은 원본 version SQL과 같은 transaction에서 migration history/checksum을 기록하고, 실행 후 같은 source로 validate한다. 수동 history INSERT를 별도 작업으로 남기지 않는다. **(MUST)**
 - dev migration 성공 전 rollout을 시작하지 않고, prod는 DBA의 version·checksum·실행 결과 확인 전 rollout하지 않는다. **(MUST)**
 - rollback은 previous image가 선반영 schema와 호환될 때만 허용한다. destructive change는 expand/contract와 별도 정리 단계로 나눈다. **(MUST)**
 - migration 실패, app rollout 실패, rollback 각각의 owner와 중단 조건을 배포 계약에 기록한다.
@@ -187,18 +189,17 @@ data class AdminIdentity(
 
 ```text
 metric  Micrometer → /actuator/prometheus → Datadog Agent OpenMetrics
-trace   OpenTelemetry API → Datadog Java Agent provider → Datadog APM
+trace   Datadog Java Agent 자동 계측 → Datadog APM
 log     stdout JSON → Datadog Agent log collection
 ```
 
 - 애플리케이션에 Datadog API key를 넣지 않는다. **(MUST)**
-- trace instrumentation은 OTel API를 사용하고 runtime이 `DD_TRACE_OTEL_ENABLED=true`인 Datadog Java Agent를 주입한다. **(SHOULD)**
-- Datadog Java Agent를 provider로 쓸 때 OTel SDK·OTLP exporter·OTel Java Agent를 함께 구성하지 않는다. **(MUST)**
-- domain/application은 OTel·Datadog API를 모르며 custom span은 inbound/outbound adapter에만 둔다. **(MUST)**
+- 우선 Java Agent의 Spring MVC/WebFlux/JDBC/client 자동 계측을 사용한다. 실제 business span 요구가 생기기 전에 custom telemetry filter나 OTel API dependency를 추가하지 않는다. **(SHOULD)**
+- custom span이 필요하면 domain/application은 OTel·Datadog API를 모르며 계측은 inbound/outbound adapter에만 둔다. SDK/exporter/provider는 배포 환경에서 하나만 선택한다. **(MUST)**
 - 기존 observability module이 WebFlux `WebFilter`나 Reactor Hook에 묶여 있으면 MVC app에 그대로 재사용하지 않는다. 두 runtime의 공통 추출은 두 번째 실제 consumer와 동일한 요구가 확인된 뒤 한다.
 - Agent/collector가 없는 local에서도 app이 기동해야 하며 telemetry 전송 실패로 readiness를 내리지 않는다. **(MUST)**
 
-기존 Agent가 없거나 OTLP 수신이 준비된 환경은 같은 애플리케이션 계측 계약을 유지하되 exporter/provider만 별도 결정한다. Datadog Java Agent와 OTel SDK를 동시에 활성화하는 구성은 허용하지 않는다.
+기존 Agent가 없거나 OTLP 수신이 준비된 환경은 같은 개인정보·tag 계약을 유지하되 exporter/provider를 별도 결정한다. Datadog Java Agent와 OTel SDK를 동시에 활성화하는 구성은 허용하지 않는다.
 
 ### tag와 log correlation
 
@@ -227,7 +228,7 @@ audit actor/target reference는 접근 통제된 audit sink에 필요한 최소 
 
 ### Agent 호환성 gate
 
-Datadog Java Agent의 Spring Boot 4/Spring Framework 7 지원은 2026-08-27 현재 [공식 tracker](https://github.com/DataDog/dd-trace-java/issues/11597)에서 계속 검증 중이다. 따라서 다음을 적용한다.
+Datadog Java Agent의 framework 지원 범위는 Agent release마다 바뀌므로 배포 시점의 공식 compatibility와 dev smoke 결과를 기준으로 판단한다.
 
 - Agent version을 image/deploy 계약에 고정한다. **(MUST)**
 - dev에서 MVC, Spring Security, JDBC, coroutine, adapter-owned virtual thread의 trace 연속성과 중복 span 여부를 smoke한다. **(MUST)**
@@ -236,7 +237,6 @@ Datadog Java Agent의 Spring Boot 4/Spring Framework 7 지원은 2026-08-27 현�
 
 참고:
 
-- [Datadog SDK의 OpenTelemetry API 지원](https://docs.datadoghq.com/opentelemetry/instrument/dd_sdks/api_support/)
 - [Datadog APM 데이터 보안](https://docs.datadoghq.com/tracing/configure_data_security/)
 - [Datadog Java tracer 설정](https://docs.datadoghq.com/tracing/trace_collection/library_config/java/)
 
@@ -252,18 +252,19 @@ Datadog Java Agent의 Spring Boot 4/Spring Framework 7 지원은 2026-08-27 현�
 - migration clean/validate와 runtime DDL 금지
 - required DB/schema 장애 시 readiness DOWN·liveness UP
 - 인증 위조·인가 미연결 fail-closed
-- Agent 없는 local 기동, provider 중복 없음
+- Agent 없는 local 기동, telemetry provider 중복 없음
 - raw body·query string·민감 header 미수집
 - health·Prometheus endpoint는 APM trace에 없지만 metric 수집과 probe 실패 진단은 유지
 - 배포 후 metric·trace·log의 `service/env/version`와 trace context 연속성
 - 같은 repository의 기존 application artifact·config·deployment revision 무변경
+- integration test는 `src/integrationTest` JVM Test Suite로 분리하고 product coverage 대상 source set은 `main`으로 제한
 
 ## 배포 책임 계약
 
 | 애플리케이션 팀 | 플랫폼·인프라 팀 | DBA |
 |---|---|---|
 | code, test, config schema, migration bundle | build/deploy runtime, secret/network resource | production DDL 실행 |
-| meter, structured log, OTel API, tag/redaction 계약 | Agent 주입, version 고정, APM/OpenMetrics/log 수집 | version/checksum/실행 증적 |
+| meter, structured log, 계측·tag·redaction 계약 | Agent 주입, version 고정, APM/OpenMetrics/log 수집 | version/checksum/실행 증적 |
 | 호출 주체·노출 범위, route·probe·scrape 계약과 acceptance | GitOps Application·Helm·Ingress·Service, API Gateway/VPC Link와 management path 차단 | - |
 | application acceptance와 rollback 판단 | rollout/rollback mechanism | DB 권한 검토 |
 
@@ -303,11 +304,11 @@ MaxServer `admin-api`는 이 기준의 첫 대형 reference다.
 |---|---|
 | 기존 app 보호 | 운영 중인 `max-batch` artifact·config·rollout 무변경 |
 | runtime | Spring MVC annotated coroutine controller + adapter-owned virtual thread |
-| persistence | MSSQL Spring JDBC legacy adapter + PostgreSQL 18 JPA adapter, 복잡 조회만 QueryDSL |
-| schema | local/test 자동, dev migration job 자동, prod DBA 수동 DDL |
-| security | admin front BFF가 SSO token을 Bearer로 전달하고 backend가 JWT를 검증; 고정 claim 기반 authorization의 claim·내부 ID·HMAC 방식은 주니어 구현 전 설계 리뷰 TODO, 미연결 privileged endpoint fail-closed |
-| observability | 기존 Agent OpenMetrics/APM/log 경로, OTel API, raw body/query string 미수집 |
-| EKS route | `admin-api.internal.max[.{env}].aladin.co.kr` 전용 Internal ALB route와 단일 업무 포트; public API Gateway mapping 없음 |
+| persistence | PostgreSQL 18 JPA account adapter + required COOL.WebCatalog datasource; 실제 SQL/SP adapter는 첫 vertical slice에서 추가, 복잡 조회만 QueryDSL 검토 |
+| schema | runtime과 분리된 tool로 local/test·dev 자동, prod DBA가 동일 bundle의 원자 SQL 수동 실행 |
+| security | admin front가 SSO token을 Bearer로 전달하고 backend가 JWT를 검증; 현재 active 계정 확인만 제공하고 첫 privileged slice에서 application authorization decorator 추가 |
+| observability | 기존 Agent OpenMetrics/APM/log 경로와 자동 계측, raw body/query string 미수집 |
+| EKS route | internal Admin 전용 route와 단일 업무 포트; 실제 Ingress/Service/GitOps 값은 인프라팀 resource에서 확인 |
 | 애플리케이션 경계 | `maxcms-front`·`maxcms-api`와 artifact·route·auth·deploy lifecycle을 공유하지 않는 독립 admin application |
 
 상세 결정과 실행 티켓은 Obsidian vault의 `wiki/projects/legacy-modernization-multi-project-standard/`에서 관리한다.
