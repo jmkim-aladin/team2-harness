@@ -58,6 +58,7 @@ gstack 스킬 사용 시 [policies/gstack-override-policy.md](./policies/gstack-
 - **GitHub**: `gh` CLI로 PR·이슈 조회. Org는 `AladinCommunication`, 개인 계정은 `jmkim-aladin`
 - **DB**: DB 관련 MCP 도구는 사용하지 않는다. dev RDS `sqlcmd`는 read-only 조회만 허용
 - **공통 서비스 영향**: 로그인·결제·정산·구독 등이 걸리면 [policies/common-service-policy.md](./policies/common-service-policy.md) + [catalog/common-services/registry.yaml](./catalog/common-services/registry.yaml) 확인
+- **검색 서비스 명칭**: 공식 표기는 `ALICE(알리스)`. 검색 API·색인·OpenSearch 경계는 [catalog/common-services/alice.yaml](./catalog/common-services/alice.yaml) 확인
 
 ## GBrain 공유 brain
 

@@ -13,7 +13,8 @@ Windows에서도 macOS와 같은 팀 하네스, 위키, 서비스 레포 구성�
 
 | 묶음 | 경로 |
 |------|------|
-| max | `C:\Users\jmkim\Documents\workspace\max\*` |
+| max | `C:\Users\jmkim\Documents\workspace\max\*` (레거시 컴포넌트) |
+| max-new | `C:\Users\jmkim\Documents\workspace\max-new\*` (신규 전환: MaxServer, max-monoplate) |
 | tobe | `C:\Users\jmkim\Documents\workspace\tobe\*` |
 | shopping | `C:\Users\jmkim\Documents\workspace\shopping\*` |
 | ebook | `C:\Users\jmkim\Documents\workspace\ebook\*` |

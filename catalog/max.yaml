@@ -1,5 +1,5 @@
 # 만권당 (Max) 서비스 프로파일
-# 소스: /Users/user/Documents/workspace/max
+# 소스: workspace/max (레거시 컴포넌트), workspace/max-new (신규 전환: MaxServer, max-monoplate)
 
 service_id: max
 name: 만권당 (max)
@@ -180,6 +180,31 @@ components:
       - Zod 3.24
       - "@tanstack/react-query 5.100.11"
 
+  max-monoplate:
+    description: "신규 프론트 모노레포 (pnpm 9 + turbo 2). 실질 개발 브랜치는 dev — main은 67커밋 뒤(2026-02-20 정지)"
+    apps:
+      - name: admin
+        description: "신규 CMS/운영 관리자 프론트. dev 배포됨 (https://max.adm.dev.aladin.co.kr)"
+        routes: "/auth/login, /auth/callback, /auth/logout, /auth/token, (dashboard)"
+        runtime:
+          type: nextjs
+          version: "14.2.35" # apps/admin/package.json dependencies.next
+          language: "TypeScript 5.9.2"
+          hosting: docker # .devops/admin/{dev,prod}/Dockerfile → ECR → ArgoCD sync
+        dependencies:
+          - React 18.3.1 # 루트 pnpm.overrides 로 18 고정
+          - Tailwind CSS 4.1.18
+          - React Hook Form 7.71 + Zod 4.3.6
+          - recharts 3.8 (대시보드 차트)
+          - lucide-react
+        testing: "vitest(unit) + playwright(e2e, component test)"
+        local_dev: "Traefik + mkcert (domain: max-admin-local.aladin.co.kr, next dev :3001). apps/admin/Makefile initialize"
+      - name: storybook
+        description: "공통 UI 카탈로그"
+    shared:
+      modules: [api-client, auth, excel, query, stores]
+      packages: [config, ui]
+
   max-batch:
     description: "배치 작업 (SQL Server Agent)"
     runtime:
@@ -200,8 +225,9 @@ repos:
   maxcms-front: "https://github.com/AladinCommunication/maxcms-front"
   max-db-script: "https://github.com/AladinCommunication/max-db-script"
 
-  # 신규 전환용
+  # 신규 전환용 (로컬 workspace/max-new 하위)
   max-server: "https://github.com/AladinCommunication/MaxServer"
+  max-monoplate: "https://github.com/AladinCommunication/max-monoplate" # 신규 프론트 모노레포 (pnpm + turbo)
 
   # 관련 레포 (shopping/WebCatalog 공유)
   shopping-db-script: "shop-db-script (DBSourceTemplate fork)" # local: /Users/jm/Documents/workspace/shopping/shop-db-script
@@ -382,11 +408,20 @@ verification:
       evidence: "maxcms-api/Aladin.MaxCms/Aladin.MaxCms.sln; 전 프로젝트 *.csproj TargetFramework=net8.0; Aladin.MaxCms.Tests/Aladin.MaxCms.Tests.csproj (xunit 2.8.1 + Microsoft.NET.Test.Sdk 17.10.0); catalog build.maxcms-api.command"
 
     - component: MaxServer # Kotlin 전환 레포. prod max-batch 런타임
-      cwd: /Users/jm/Documents/workspace/max/MaxServer
+      cwd: /Users/jm/Documents/workspace/max-new/MaxServer
       build: "./gradlew build architectureCheck"
       test: "./gradlew test ktlintCheck"
       lint: "./gradlew ktlintCheck"
-      evidence: "max/MaxServer/CLAUDE.md L25(build architectureCheck)·L28(test ktlintCheck); MaxServer/build.gradle.kts plugins(architecture-rules, ktlint, kover); build-logic/convention/src/main/kotlin/kotlin-common.gradle.kts L3(ktlint)"
+      evidence: "max-new/MaxServer/CLAUDE.md L25(build architectureCheck)·L28(test ktlintCheck); MaxServer/build.gradle.kts plugins(architecture-rules, ktlint, kover); build-logic/convention/src/main/kotlin/kotlin-common.gradle.kts L3(ktlint)"
+
+    - component: max-monoplate # 신규 프론트 모노레포. admin 앱은 dev 브랜치에만 있다 — main 체크아웃이면 apps/storybook만 잡힌다
+      cwd: /Users/jm/Documents/workspace/max-new/max-monoplate
+      ref: origin/dev
+      build: "pnpm build"
+      test: "pnpm test"
+      lint: "pnpm lint"
+      typecheck: "pnpm check-types"
+      evidence: "max-new/max-monoplate/package.json scripts.build|lint|check-types|test (전부 turbo run 위임); apps/admin/package.json 동일 4스크립트 + test:e2e|test:ct; pnpm-workspace.yaml(apps·packages·packages/config·modules); packageManager pnpm@9.0.0"
 
     - component: EbookApiServer # 뷰어 접근권한 API (Kotlin/Spring)
       cwd: /Users/jm/Documents/workspace/max/EbookApiServer
@@ -399,6 +434,10 @@ verification:
     max-api/.devops/build.ps1). max-batch는 T-SQL 스케줄 잡이라 코드 레벨 검증 루프가 없다.
     max-front E2E는 .env.test(.env.test.example 복사) + Aladin SSO 인증이 필요하다 (max/CLAUDE.md L54).
     MaxServer :adapters:maxpass-sync-mssql:integrationTest 는 MSSQL 컨테이너가 필요하다 (MaxServer/CLAUDE.md L35).
+    2026-09-03 로컬 workspace 재배치: 신규 전환 멀티프로젝트(MaxServer, max-monoplate)는 workspace/max-new 하위로 이동했다.
+    workspace/max 에는 레거시 컴포넌트(max-api, max-front, maxcms-*, max-db-script, Ebook*)만 남는다.
+    max-monoplate 는 dev 가 실질 개발 브랜치다. main(2026-02-20 정지)에는 apps/admin 이 없어 apps/storybook 만 빌드된다 —
+    작업·검증 전에 origin/dev 체크아웃을 먼저 확인한다. admin 앱은 dev 서버(https://max.adm.dev.aladin.co.kr)에 배포돼 있다.
 
 harness_status: "not-started"
 

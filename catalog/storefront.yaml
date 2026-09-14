@@ -129,10 +129,11 @@ dependencies:
       purpose: "Member 인증 위임"
       evidence: ".claude/context/domain-model.md"
       status: design-only
-    - system: "알리스"
+    - system: "ALICE (알리스)"
       method: TBD
-      purpose: "상품 마스터 연동"
+      purpose: "상품 검색 API·색인 연동"
       evidence: ".claude/context/domain-model.md"
+      profile: "catalog/common-services/alice.yaml"
       status: design-only
     - system: "뉴빌링"
       method: REST

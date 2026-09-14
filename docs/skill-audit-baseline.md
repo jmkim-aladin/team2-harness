@@ -5,6 +5,16 @@
 
 최종 감사일: 2026-08-08 (3회차 — 스택 모드 신설, 외부 스킬·훅 정리)
 
+## 2026-09-14 pstack 적용 후 검증 기록
+
+[전체 검토](pstack-harness-adoption-review.md)와 [B01–B10 초안](pstack-harness-block-adoption-draft.md)을 사용자가 승인해 [10개 블록과 검증 도구를 반영](pstack-harness-implementation.md)했다. 이번 기록은 변경 범위의 검증이며 전체 스킬 재감사·사용 통계 갱신은 아니다. 아래 과거 회차의 1회 삭제 비교 문구는 당시 기록이고, 현재 판정은 [거버넌스 §변경 통제](../policies/harness-governance-policy.md#변경-통제)를 따른다.
+
+- 채택: 관찰 근거, 조건 고정, 완료·인계 증거, 핵심 가정 확인, 의도/동작 분리, 회고 분기, 공통 전제 재검토, 서비스 실행 계약과 실제 CLI 검증.
+- 중복 추가 제외: caller 사용 예·대안 인터페이스 설계, 복수 가설·반증·성능 baseline은 기존 엔진에 있음. 동일 역할의 새 스킬 대신 기존 엔진·팀 오버라이드를 사용한다.
+- 도구화: `evaluate_harness_behavior.py`, `verify_harness_links.py`. 원본 산출물 비교와 실제 CLI의 반복·재개 검증을 구현했다. [검증 결과](pstack-harness-implementation.md#검증).
+- 최종 검수: 전체 230개 회귀 테스트 통과. CLI 모델·설정·180초 한도를 고정한 전후 각 2회에서 사전 기준과 정책 읽기 기록을 확인했다. legacy review alias·직접 handoff·서비스 설치·Task Brief→outbox의 누락 연결도 보완했다. 상세 결과와 전역 설치의 기존 경고는 [적용 기록](pstack-harness-implementation.md)을 따른다.
+- 다음 회차: 실제 요청 분포에서 장기 회귀·품질·비용을 관찰한다. 서비스별 실제 계약은 해당 실행 환경을 확보했을 때 적용한다.
+
 ## 사용 통계 (2026-05-31 ~ 07-16, Claude + Codex 로그 통합)
 
 > Hermes cron 등 로그 밖 자동 실행은 안 잡힘. Codex 열은 `$ad-*` invocation 리터럴 기준.

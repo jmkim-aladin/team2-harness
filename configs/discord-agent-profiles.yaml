@@ -202,6 +202,8 @@ handoff_contracts:
       - required_answer
 
   completion_evidence:
+    # verification 작성 규격은 docs/agents/verification.md.
+    # 실제 agent 전달은 generate_discord_orchestrator_payload.py의 Task Brief가 담당한다.
     required_fields:
       - work_id
       - ticket_id_optional

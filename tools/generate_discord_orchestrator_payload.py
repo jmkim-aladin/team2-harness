@@ -111,6 +111,7 @@ def build_task_brief(card: dict[str, Any], role: str) -> str:
             "- Allowed Actions: read-only analysis, draft evidence, vault note update proposal",
             "- Forbidden Actions: YouTrack/KB/git/DB/prod mutation without user approval",
             "- Expected Output: evidence or Decision Packet draft back to orchestrator",
+            "- Verification Guidance: read `$TEAM2_HARNESS_PATH/docs/agents/verification.md` before completion or handoff",
         ]
     )
 

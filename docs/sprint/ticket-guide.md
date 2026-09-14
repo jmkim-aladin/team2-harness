@@ -170,6 +170,7 @@ Feature 분할은 임의로 하지 않고 **작업 단계(2-2항)와 실행 환�
 
 - 개발3팀 의존 항목(클러스터 생성, 시크릿 매니저 키 생성, 접근 제어 반영)은 **별도 Task로 분리**하고 대기 구간을 본문 When/How에 명시한다. 시너지팀 QA와 같은 외부 의존 원칙이다.
 - 담당자는 요청·확인을 수행하는 개발2팀 본인으로 둔다. 개발3팀 작업을 개발2팀 티켓 담당자로 넣지 않는다.
+- **요청 티켓 자체는 DEV3 프로젝트에 만든다.** 본문은 What/Why/Where/How 4개 섹션이고 DEV2의 5W1H와 형식이 다르다. 시크릿 매니저 설정 요청 양식은 [templates/ticket-templates/infra-secrets-manager-request.md](../../templates/ticket-templates/infra-secrets-manager-request.md)를 쓴다. 인증 정보 평문은 티켓에 남기지 않고 메일 등 사내 보안 전달 수단으로 따로 보낸다.
 
 #### 분리하는 이유
 

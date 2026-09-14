@@ -1,0 +1,2016 @@
+{
+  "date": "2026-09-14",
+  "scope": "pstack B01-B10 final acceptance",
+  "tests": {
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests"
+    ],
+    "exit_code": 0,
+    "stdout": "{\n  \"conditions\": {\n    \"shared_equal\": true,\n    \"skill_digest_differs\": true,\n    \"status\": \"PASS\"\n  },\n  \"issues\": [],\n  \"limitations\": [\n    \"JSON assertions inspect the user-requested artifact; they do not prove that the artifact contents are an independent oracle.\",\n    \"The evaluator compares recorded runs and preserves raw artifacts; it does not reproduce the agent or infer hidden reasoning.\"\n  ],\n  \"runs\": {\n    \"A\": {\n      \"cases\": [\n        {\n          \"artifact_dir\": \"cases/answer\",\n          \"assertions\": [\n            {\n              \"expected\": \"ok\",\n              \"field\": \"status\",\n              \"index\": 0,\n              \"observed\": \"ok\",\n              \"path\": \"result.json\",\n              \"status\": \"PASS\",\n              \"type\": \"json_field_equals\"\n            },\n            {\n              \"index\": 1,\n              \"literal\": \"## Evidence\",\n              \"path\": \"report.md\",\n              \"status\": \"PASS\",\n              \"type\": \"text_contains\"\n            },\n            {\n              \"index\": 2,\n              \"observed\": \"absent\",\n              \"path\": \"debug.log\",\n              \"status\": \"PASS\",\n              \"type\": \"file_absent\"\n            }\n          ],\n          \"exit_code\": 0,\n          \"id\": \"answer\",\n          \"status\": \"PASS\",\n          \"timed_out\": false\n        }\n      ],\n      \"conditions\": {\n        \"budget\": {\n          \"max_tokens\": 1000\n        },\n        \"confirmed\": true,\n        \"fixture_digest\": \"sha256:fixture\",\n        \"model\": \"gpt-test\",\n        \"settings\": {\n          \"temperature\": 0\n        },\n        \"skill_digest\": \"sha256:skill-A\"\n      },\n      \"issues\": [],\n      \"label\": \"A\",\n      \"run_dir\": \"/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmpht9i228p/a\",\n      \"status\": \"PASS\"\n    },\n    \"B\": {\n      \"cases\": [\n        {\n          \"artifact_dir\": \"cases/answer\",\n          \"assertions\": [\n            {\n              \"expected\": \"ok\",\n              \"field\": \"status\",\n              \"index\": 0,\n              \"observed\": \"ok\",\n              \"path\": \"result.json\",\n              \"status\": \"PASS\",\n              \"type\": \"json_field_equals\"\n            },\n            {\n              \"index\": 1,\n              \"literal\": \"## Evidence\",\n              \"path\": \"report.md\",\n              \"status\": \"PASS\",\n              \"type\": \"text_contains\"\n            },\n            {\n              \"index\": 2,\n              \"observed\": \"absent\",\n              \"path\": \"debug.log\",\n              \"status\": \"PASS\",\n              \"type\": \"file_absent\"\n            }\n          ],\n          \"exit_code\": 0,\n          \"id\": \"answer\",\n          \"status\": \"PASS\",\n          \"timed_out\": false\n        }\n      ],\n      \"conditions\": {\n        \"budget\": {\n          \"max_tokens\": 1000\n        },\n        \"confirmed\": true,\n        \"fixture_digest\": \"sha256:fixture\",\n        \"model\": \"gpt-test\",\n        \"settings\": {\n          \"temperature\": 0\n        },\n        \"skill_digest\": \"sha256:skill-B\"\n      },\n      \"issues\": [],\n      \"label\": \"B\",\n      \"run_dir\": \"/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmpht9i228p/b\",\n      \"status\": \"PASS\"\n    }\n  },\n  \"schema_version\": 1,\n  \"status\": \"PASS\",\n  \"suite_id\": \"behavior-regression\"\n}\n",
+    "stderr": "......................................................................................................................................................................................................................................\n----------------------------------------------------------------------\nRan 230 tests in 3.835s\n\nOK\n"
+  },
+  "controlled_behavior": {
+    "status": "PASS",
+    "evaluation": {
+      "conditions": {
+        "shared_equal": true,
+        "skill_digest_differs": true,
+        "status": "PASS"
+      },
+      "issues": [],
+      "limitations": [
+        "JSON assertions inspect the user-requested artifact; they do not prove that the artifact contents are an independent oracle.",
+        "The evaluator compares recorded runs and preserves raw artifacts; it does not reproduce the agent or infer hidden reasoning."
+      ],
+      "runs": {
+        "A": {
+          "cases": [
+            {
+              "artifact_dir": "cases/notes-1",
+              "assertions": [
+                {
+                  "expected": false,
+                  "field": "principle_effect_confirmed",
+                  "index": 0,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "deletion_proven",
+                  "index": 1,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "delivery_complete",
+                  "index": 2,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "historical_intent_confirmed",
+                  "index": 3,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                }
+              ],
+              "exit_code": 0,
+              "id": "notes-1",
+              "status": "PASS",
+              "timed_out": false
+            },
+            {
+              "artifact_dir": "cases/notes-2",
+              "assertions": [
+                {
+                  "expected": false,
+                  "field": "principle_effect_confirmed",
+                  "index": 0,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "deletion_proven",
+                  "index": 1,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "delivery_complete",
+                  "index": 2,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "historical_intent_confirmed",
+                  "index": 3,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                }
+              ],
+              "exit_code": 0,
+              "id": "notes-2",
+              "status": "PASS",
+              "timed_out": false
+            }
+          ],
+          "conditions": {
+            "budget": {
+              "wall_time_seconds": 180
+            },
+            "confirmed": true,
+            "fixture_digest": "sha256:33d934de0bf4e76f3b7b0df4e45cd805b080e15e750af34c777d0cecc2656b37",
+            "model": "gpt-5.6-luna",
+            "settings": {
+              "approval_policy": "never",
+              "cli": "codex-cli 0.154.0",
+              "effort": "max",
+              "ignore_user_config": true,
+              "model": "gpt-5.6-luna",
+              "sandbox_policy": {
+                "type": "read-only"
+              }
+            },
+            "skill_digest": "sha256:e2385a62519b5f39858c97a1bd977e22cea3b84d5189a9c600c9735b15e92c15"
+          },
+          "issues": [],
+          "label": "A",
+          "run_dir": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-pstack-final-ie4iv07w/run-a",
+          "status": "PASS"
+        },
+        "B": {
+          "cases": [
+            {
+              "artifact_dir": "cases/notes-1",
+              "assertions": [
+                {
+                  "expected": false,
+                  "field": "principle_effect_confirmed",
+                  "index": 0,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "deletion_proven",
+                  "index": 1,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "delivery_complete",
+                  "index": 2,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "historical_intent_confirmed",
+                  "index": 3,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                }
+              ],
+              "exit_code": 0,
+              "id": "notes-1",
+              "status": "PASS",
+              "timed_out": false
+            },
+            {
+              "artifact_dir": "cases/notes-2",
+              "assertions": [
+                {
+                  "expected": false,
+                  "field": "principle_effect_confirmed",
+                  "index": 0,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "deletion_proven",
+                  "index": 1,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "delivery_complete",
+                  "index": 2,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                },
+                {
+                  "expected": false,
+                  "field": "historical_intent_confirmed",
+                  "index": 3,
+                  "observed": false,
+                  "path": "findings.json",
+                  "status": "PASS",
+                  "type": "json_field_equals"
+                }
+              ],
+              "exit_code": 0,
+              "id": "notes-2",
+              "status": "PASS",
+              "timed_out": false
+            }
+          ],
+          "conditions": {
+            "budget": {
+              "wall_time_seconds": 180
+            },
+            "confirmed": true,
+            "fixture_digest": "sha256:33d934de0bf4e76f3b7b0df4e45cd805b080e15e750af34c777d0cecc2656b37",
+            "model": "gpt-5.6-luna",
+            "settings": {
+              "approval_policy": "never",
+              "cli": "codex-cli 0.154.0",
+              "effort": "max",
+              "ignore_user_config": true,
+              "model": "gpt-5.6-luna",
+              "sandbox_policy": {
+                "type": "read-only"
+              }
+            },
+            "skill_digest": "sha256:c6ecd9d44828dbc00d40737e5c532e9d541146d5d907d095f2156c004a247fed"
+          },
+          "issues": [],
+          "label": "B",
+          "run_dir": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-pstack-final-ie4iv07w/run-b",
+          "status": "PASS"
+        }
+      },
+      "schema_version": 1,
+      "status": "PASS",
+      "suite_id": "pstack-final-controlled-notes"
+    },
+    "suite": {
+      "schema_version": 1,
+      "suite_id": "pstack-final-controlled-notes",
+      "cases": [
+        {
+          "id": "notes-1",
+          "task": "이 작업의 role=default, model=gpt-5.6-luna, effort=max다. 첫 진행 메시지에 [model] role=default model=gpt-5.6-luna effort=max 를 한 번 출력한다. 현재 작업 공간의 AGENTS.md와 해당 정책을 따라 materials/의 세 검토 메모를 검토하라. 제공된 자료만 사용하고 파일 읽기만 수행하라. 구현·수정·외부 게시는 요청되지 않았다. 최종 응답은 지정된 JSON 구조로 네 판단을 기록하고 reasons에 각 판단 근거를 간결하게 적는다.",
+          "assertions": [
+            {
+              "type": "json_field_equals",
+              "path": "findings.json",
+              "field": "principle_effect_confirmed",
+              "expected": false
+            },
+            {
+              "type": "json_field_equals",
+              "path": "findings.json",
+              "field": "deletion_proven",
+              "expected": false
+            },
+            {
+              "type": "json_field_equals",
+              "path": "findings.json",
+              "field": "delivery_complete",
+              "expected": false
+            },
+            {
+              "type": "json_field_equals",
+              "path": "findings.json",
+              "field": "historical_intent_confirmed",
+              "expected": false
+            }
+          ]
+        },
+        {
+          "id": "notes-2",
+          "task": "이 작업의 role=default, model=gpt-5.6-luna, effort=max다. 첫 진행 메시지에 [model] role=default model=gpt-5.6-luna effort=max 를 한 번 출력한다. 현재 작업 공간의 AGENTS.md와 해당 정책을 따라 materials/의 세 검토 메모를 검토하라. 제공된 자료만 사용하고 파일 읽기만 수행하라. 구현·수정·외부 게시는 요청되지 않았다. 최종 응답은 지정된 JSON 구조로 네 판단을 기록하고 reasons에 각 판단 근거를 간결하게 적는다.",
+          "assertions": [
+            {
+              "type": "json_field_equals",
+              "path": "findings.json",
+              "field": "principle_effect_confirmed",
+              "expected": false
+            },
+            {
+              "type": "json_field_equals",
+              "path": "findings.json",
+              "field": "deletion_proven",
+              "expected": false
+            },
+            {
+              "type": "json_field_equals",
+              "path": "findings.json",
+              "field": "delivery_complete",
+              "expected": false
+            },
+            {
+              "type": "json_field_equals",
+              "path": "findings.json",
+              "field": "historical_intent_confirmed",
+              "expected": false
+            }
+          ]
+        }
+      ]
+    },
+    "receipts": {
+      "a": {
+        "schema_version": 1,
+        "variant": "A",
+        "conditions": {
+          "confirmed": true,
+          "fixture_digest": "sha256:33d934de0bf4e76f3b7b0df4e45cd805b080e15e750af34c777d0cecc2656b37",
+          "model": "gpt-5.6-luna",
+          "settings": {
+            "model": "gpt-5.6-luna",
+            "effort": "max",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "cli": "codex-cli 0.154.0",
+            "ignore_user_config": true
+          },
+          "budget": {
+            "wall_time_seconds": 180
+          },
+          "skill_digest": "sha256:e2385a62519b5f39858c97a1bd977e22cea3b84d5189a9c600c9735b15e92c15"
+        },
+        "cases": {
+          "notes-1": {
+            "exit_code": 0,
+            "timed_out": false,
+            "artifact_dir": "cases/notes-1"
+          },
+          "notes-2": {
+            "exit_code": 0,
+            "timed_out": false,
+            "artifact_dir": "cases/notes-2"
+          }
+        },
+        "execution_evidence": {
+          "cedar": {
+            "thread_id": "01a09d42-ca14-73f0-9b29-f64c2ec08673",
+            "rollout_path": "/Users/jm/.codex/sessions/2026/09/14/rollout-2026-09-14T09-13-15-01a09d42-ca14-73f0-9b29-f64c2ec08673.jsonl",
+            "effective_settings": {
+              "model": "gpt-5.6-luna",
+              "effort": "max",
+              "approval_policy": "never",
+              "sandbox_policy": {
+                "type": "read-only"
+              }
+            },
+            "command_observations": [
+              {
+                "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'materials/**' -g 'policies/**' -g 'docs/sprint/work-prep-note-template.md' -g 'templates/dod-checklist.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "6a0ddc6a7973aeff5ec37f63a89c130cbf51ece2200a54f677ab53ca7efc1d94"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,320p' 'AGENTS.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "298b3c47f61366e2aea7f7cd61166ef6bfd974bc49fb786464e00c8b736633e2"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,320p' 'policies/harness-governance-policy.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "d7989723bb24199bd7f755541232ec11a642da06df6c45cbabe4d79d825a3829"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,320p' 'policies/skill-authoring-principles.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "28edd9e079f8bbbb0b5353017187b2d5d051c8c3115fc64193cde722b17a0367"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,320p' 'docs/sprint/work-prep-note-template.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "80492a63fac650218fc8e14064855650c5a5c2a092a38b48f33098a4183bced0"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,320p' 'templates/dod-checklist.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "0bc8f125970c3ecc8b317575231cccfa474931e758aa7ffed118aceb115a9b54"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,320p' 'materials/changes.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "1d1883b90686899afd4b1a0a0e2190ba145c8cc90f3cf2d8a98f8d40f98f886c"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,320p' 'materials/delivery.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "5346b13dd18a0264cfe804f0a2f6c0c55747247b3c3f4ba8ba93fd2568323fb7"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,320p' 'materials/history.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "7a120d12a419a50211ab65ddcb98e67094ea556dd829995c5d14202a2b63a688"
+              }
+            ],
+            "policy_read_evidence": {
+              "policies/skill-authoring-principles.md": true,
+              "policies/harness-governance-policy.md": true,
+              "docs/sprint/work-prep-note-template.md": true,
+              "templates/dod-checklist.md": true
+            },
+            "usage": {
+              "input_tokens": 69721,
+              "cached_input_tokens": 39424,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2186,
+              "reasoning_output_tokens": 1357
+            },
+            "findings": {
+              "principle_effect_confirmed": false,
+              "deletion_proven": false,
+              "delivery_complete": false,
+              "historical_intent_confirmed": false,
+              "reasons": "원칙 작동은 확인되지 않았다: vertical slice라는 응답 문구만 있고 단계별 동작 검증이 없었다. 삭제도 관련 구현 요청이 아닌 인사말 요청으로만 전후 비교했으므로 근거가 부족하다. 완료 조건은 다른 프로세스의 JSON 재열람인데 컴파일 성공과 완료 메시지만 있고 export 결과·파일·재열람 기록이 없다. MAX_RETRY=3의 과거 의도는 연결 티켓·ADR·PR 본문·제공된 기록에 없으며 성능 가설만 있어 확인되지 않는다."
+            },
+            "runtime_notices": [
+              {
+                "id": "item_0",
+                "type": "error",
+                "message": "Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest."
+              }
+            ],
+            "events_sha256": "8957ab042b9f1feba70fbe994574e6d6c3a91a568b38fac256b33f74e446ca83"
+          },
+          "cedar2": {
+            "thread_id": "01a09d44-5c87-7f73-9a15-f9983511a425",
+            "rollout_path": "/Users/jm/.codex/sessions/2026/09/14/rollout-2026-09-14T09-14-58-01a09d44-5c87-7f73-9a15-f9983511a425.jsonl",
+            "effective_settings": {
+              "model": "gpt-5.6-luna",
+              "effort": "max",
+              "approval_policy": "never",
+              "sandbox_policy": {
+                "type": "read-only"
+              }
+            },
+            "command_observations": [
+              {
+                "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'materials/**' -g 'policies/**' -g 'docs/sprint/**' -g 'templates/**' | sort\"",
+                "exit_code": 0,
+                "stdout_sha256": "25cfe0f499905ac32def3b6dde094b54e18f9ec185dd13c9e38944618416cdc3"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,240p' 'policies/skill-authoring-principles.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "28edd9e079f8bbbb0b5353017187b2d5d051c8c3115fc64193cde722b17a0367"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,240p' 'policies/harness-governance-policy.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "d7989723bb24199bd7f755541232ec11a642da06df6c45cbabe4d79d825a3829"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,240p' 'AGENTS.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "298b3c47f61366e2aea7f7cd61166ef6bfd974bc49fb786464e00c8b736633e2"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,240p' 'templates/dod-checklist.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "0bc8f125970c3ecc8b317575231cccfa474931e758aa7ffed118aceb115a9b54"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,240p' 'docs/sprint/work-prep-note-template.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "80492a63fac650218fc8e14064855650c5a5c2a092a38b48f33098a4183bced0"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,240p' 'materials/changes.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "1d1883b90686899afd4b1a0a0e2190ba145c8cc90f3cf2d8a98f8d40f98f886c"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,240p' 'materials/delivery.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "5346b13dd18a0264cfe804f0a2f6c0c55747247b3c3f4ba8ba93fd2568323fb7"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,240p' 'materials/history.md'\"",
+                "exit_code": 0,
+                "stdout_sha256": "7a120d12a419a50211ab65ddcb98e67094ea556dd829995c5d14202a2b63a688"
+              }
+            ],
+            "policy_read_evidence": {
+              "policies/skill-authoring-principles.md": true,
+              "policies/harness-governance-policy.md": true,
+              "docs/sprint/work-prep-note-template.md": true,
+              "templates/dod-checklist.md": true
+            },
+            "usage": {
+              "input_tokens": 69233,
+              "cached_input_tokens": 20224,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2313,
+              "reasoning_output_tokens": 1522
+            },
+            "findings": {
+              "principle_effect_confirmed": false,
+              "deletion_proven": false,
+              "delivery_complete": false,
+              "historical_intent_confirmed": false,
+              "reasons": "제공된 자료만 기준으로 모두 미확인이다. vertical slice는 실행 문구만 있고 산출물이 수평 단계 분할이며 단계별 동작 검증도 없어 원칙의 실제 작동을 확인할 수 없다. 삭제 전후 비교는 해당 문단이 발동하지 않는 인사말 작업이므로 삭제 확정 근거가 아니다. export JSON의 실행·생성·타 프로세스 재열람 증거가 없어 완료 조건을 충족했다고 볼 수 없다. MAX_RETRY=3의 티켓·ADR·명시 기록이 없고 성능 가설만 있으므로 과거 작성 의도도 확인되지 않는다."
+            },
+            "runtime_notices": [
+              {
+                "id": "item_0",
+                "type": "error",
+                "message": "Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest."
+              }
+            ],
+            "events_sha256": "318c8330e1a308f25572619233f570e748fb9a2ae0041f181f816f9fc3f58198"
+          }
+        },
+        "policy_sha256": {
+          "policies/skill-authoring-principles.md": "28edd9e079f8bbbb0b5353017187b2d5d051c8c3115fc64193cde722b17a0367",
+          "policies/harness-governance-policy.md": "d7989723bb24199bd7f755541232ec11a642da06df6c45cbabe4d79d825a3829",
+          "docs/sprint/work-prep-note-template.md": "80492a63fac650218fc8e14064855650c5a5c2a092a38b48f33098a4183bced0",
+          "templates/dod-checklist.md": "0bc8f125970c3ecc8b317575231cccfa474931e758aa7ffed118aceb115a9b54"
+        }
+      },
+      "b": {
+        "schema_version": 1,
+        "variant": "B",
+        "conditions": {
+          "confirmed": true,
+          "fixture_digest": "sha256:33d934de0bf4e76f3b7b0df4e45cd805b080e15e750af34c777d0cecc2656b37",
+          "model": "gpt-5.6-luna",
+          "settings": {
+            "model": "gpt-5.6-luna",
+            "effort": "max",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "cli": "codex-cli 0.154.0",
+            "ignore_user_config": true
+          },
+          "budget": {
+            "wall_time_seconds": 180
+          },
+          "skill_digest": "sha256:c6ecd9d44828dbc00d40737e5c532e9d541146d5d907d095f2156c004a247fed"
+        },
+        "cases": {
+          "notes-1": {
+            "exit_code": 0,
+            "timed_out": false,
+            "artifact_dir": "cases/notes-1"
+          },
+          "notes-2": {
+            "exit_code": 0,
+            "timed_out": false,
+            "artifact_dir": "cases/notes-2"
+          }
+        },
+        "execution_evidence": {
+          "maple": {
+            "thread_id": "01a09d44-5cec-7ac1-bb53-41e4b0bac346",
+            "rollout_path": "/Users/jm/.codex/sessions/2026/09/14/rollout-2026-09-14T09-14-58-01a09d44-5cec-7ac1-bb53-41e4b0bac346.jsonl",
+            "effective_settings": {
+              "model": "gpt-5.6-luna",
+              "effort": "max",
+              "approval_policy": "never",
+              "sandbox_policy": {
+                "type": "read-only"
+              }
+            },
+            "command_observations": [
+              {
+                "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'materials/**' -g 'policies/**' -g 'docs/sprint/**' -g 'templates/**'\"",
+                "exit_code": 0,
+                "stdout_sha256": "d655b849657445be493a8a0b1454ea487c55c4ef12dbac8a48a3d1cb487d38c2"
+              },
+              {
+                "command": "/bin/zsh -lc \"wc -l AGENTS.md policies/skill-authoring-principles.md policies/harness-governance-policy.md docs/sprint/work-prep-note-template.md templates/dod-checklist.md materials/changes.md materials/delivery.md materials/history.md && sed -n '1,260p' AGENTS.md && sed -n '1,300p' policies/skill-authoring-principles.md && sed -n '1,320p' policies/harness-governance-policy.md && sed -n '1,280p' docs/sprint/work-prep-note-template.md && sed -n '1,280p' templates/dod-checklist.md && sed -n '1,280p' materials/changes.md && sed -n '1,280p' materials/delivery.md && sed -n '1,280p' materials/history.md\"",
+                "exit_code": 0,
+                "stdout_sha256": "c9679ba90686acd1927555c3dc5fa0e6a79a844f6dd9a256dffb826fb1aed8ee"
+              }
+            ],
+            "policy_read_evidence": {
+              "policies/skill-authoring-principles.md": true,
+              "policies/harness-governance-policy.md": true,
+              "docs/sprint/work-prep-note-template.md": true,
+              "templates/dod-checklist.md": true
+            },
+            "usage": {
+              "input_tokens": 69800,
+              "cached_input_tokens": 39424,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2874,
+              "reasoning_output_tokens": 2145
+            },
+            "findings": {
+              "principle_effect_confirmed": false,
+              "deletion_proven": false,
+              "delivery_complete": false,
+              "historical_intent_confirmed": false,
+              "reasons": "원칙 작동은 자기보고와 수평적 산출물, 단계별 검증 부재로 확인되지 않는다. 삭제 입증은 대표 발동 요청의 동일 조건 전후 비교가 없어 부족하다. 완료는 컴파일 성공과 완료 문구뿐이며 export 실행·JSON 생성·타 프로세스 재열람 증거가 없다. 과거 의도는 티켓·ADR·채팅의 명시 기록이 없고 MAX_RETRY=3은 가설뿐이다. 제공된 파일 범위만 판단했다."
+            },
+            "runtime_notices": [
+              {
+                "id": "item_0",
+                "type": "error",
+                "message": "Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest."
+              }
+            ],
+            "events_sha256": "e375125cf28c1c9e727a7085af26334b689a78deb30f77eec9c8f4de552a1361"
+          },
+          "maple2": {
+            "thread_id": "01a09d45-3425-7800-9476-0547ce82fbce",
+            "rollout_path": "/Users/jm/.codex/sessions/2026/09/14/rollout-2026-09-14T09-15-53-01a09d45-3425-7800-9476-0547ce82fbce.jsonl",
+            "effective_settings": {
+              "model": "gpt-5.6-luna",
+              "effort": "max",
+              "approval_policy": "never",
+              "sandbox_policy": {
+                "type": "read-only"
+              }
+            },
+            "command_observations": [
+              {
+                "command": "/bin/zsh -lc \"rg --files -g 'AGENTS.md' -g 'policies/**' -g 'materials/**' -g 'docs/sprint/**' -g 'templates/**'\"",
+                "exit_code": 0,
+                "stdout_sha256": "56b8da5aecf478dd344d779f774b33ba8937996ac4de268f4ce6417523963d07"
+              },
+              {
+                "command": "/bin/zsh -lc 'wc -l AGENTS.md policies/skill-authoring-principles.md policies/harness-governance-policy.md docs/sprint/work-prep-note-template.md templates/dod-checklist.md materials/changes.md materials/delivery.md materials/history.md'",
+                "exit_code": 0,
+                "stdout_sha256": "3fd12e3e1f3441ae181dc765f8c92bed5f8102e7746a9eb007073448d4d58425"
+              },
+              {
+                "command": "/bin/zsh -lc \"sed -n '1,240p' AGENTS.md; sed -n '1,180p' policies/skill-authoring-principles.md; sed -n '1,160p' policies/harness-governance-policy.md; sed -n '1,240p' docs/sprint/work-prep-note-template.md; sed -n '1,80p' templates/dod-checklist.md; sed -n '1,40p' materials/changes.md; sed -n '1,40p' materials/delivery.md; sed -n '1,40p' materials/history.md\"",
+                "exit_code": 0,
+                "stdout_sha256": "27ef9005791b3ef67443422ec19437b4047be12fdbdab2623a00c110357a499e"
+              }
+            ],
+            "policy_read_evidence": {
+              "policies/skill-authoring-principles.md": true,
+              "policies/harness-governance-policy.md": true,
+              "docs/sprint/work-prep-note-template.md": true,
+              "templates/dod-checklist.md": true
+            },
+            "usage": {
+              "input_tokens": 89672,
+              "cached_input_tokens": 58624,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2921,
+              "reasoning_output_tokens": 2023
+            },
+            "findings": {
+              "principle_effect_confirmed": false,
+              "deletion_proven": false,
+              "delivery_complete": false,
+              "historical_intent_confirmed": false,
+              "reasons": "원칙 효과는 자기보고가 아니라 관찰 가능한 행동·artifact로 확인해야 하나 vertical slice 적용 증거가 없고, 인사말 요청은 해당 문단이 발동하는 사례가 아니다. 삭제 입증도 대표 구현 요청을 동일 조건으로 전후 비교해야 하지만 비발동 요청을 각 1회 실행했을 뿐이다. export JSON을 다른 프로세스가 읽는 완료 조건에 대해 컴파일 성공과 완료 메시지만 있고 export 결과·생성 파일·재열람 기록이 없다. MAX_RETRY=3은 현재 동작일 뿐이며, 연결된 PR·티켓·ADR 등 당시 의도를 확인할 명시 기록이 없고 담당자 가설만 있으므로 과거 의도는 미확정이다. 모든 판단은 제공된 자료 범위에 한정한다."
+            },
+            "runtime_notices": [
+              {
+                "id": "item_0",
+                "type": "error",
+                "message": "Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest."
+              }
+            ],
+            "events_sha256": "590f2be14170f185bcf1c87e72d83e2fbe4ab844d3e3c9b321b898a6ab437757"
+          }
+        },
+        "policy_sha256": {
+          "policies/skill-authoring-principles.md": "dcc3763a9b6ff0f3fca5110d225113a6ef7a0b56d5880713da64c00fc78c2905",
+          "policies/harness-governance-policy.md": "76450da891c648eb0ecb79e67bfb7ea7393a97e804ae84f11707642ddeb9ee2b",
+          "docs/sprint/work-prep-note-template.md": "916a5f1ac31ac899943b1eff44dd499788c4de2a65b6bfdf2db92d5519fa7d31",
+          "templates/dod-checklist.md": "797e96e98fb19a544310b32dcca7343777bb5b95f0f020afe7f1de5a0afc38c2"
+        }
+      }
+    },
+    "trace_observations": {
+      "cedar": {
+        "thread_id": "01a09d42-ca14-73f0-9b29-f64c2ec08673",
+        "rollout_path": "/Users/jm/.codex/sessions/2026/09/14/rollout-2026-09-14T09-13-15-01a09d42-ca14-73f0-9b29-f64c2ec08673.jsonl",
+        "effective_settings": {
+          "model": "gpt-5.6-luna",
+          "effort": "max",
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "read-only"
+          }
+        },
+        "command_observations": [
+          {
+            "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'materials/**' -g 'policies/**' -g 'docs/sprint/work-prep-note-template.md' -g 'templates/dod-checklist.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "6a0ddc6a7973aeff5ec37f63a89c130cbf51ece2200a54f677ab53ca7efc1d94"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,320p' 'AGENTS.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "298b3c47f61366e2aea7f7cd61166ef6bfd974bc49fb786464e00c8b736633e2"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,320p' 'policies/harness-governance-policy.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "d7989723bb24199bd7f755541232ec11a642da06df6c45cbabe4d79d825a3829"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,320p' 'policies/skill-authoring-principles.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "28edd9e079f8bbbb0b5353017187b2d5d051c8c3115fc64193cde722b17a0367"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,320p' 'docs/sprint/work-prep-note-template.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "80492a63fac650218fc8e14064855650c5a5c2a092a38b48f33098a4183bced0"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,320p' 'templates/dod-checklist.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "0bc8f125970c3ecc8b317575231cccfa474931e758aa7ffed118aceb115a9b54"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,320p' 'materials/changes.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "1d1883b90686899afd4b1a0a0e2190ba145c8cc90f3cf2d8a98f8d40f98f886c"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,320p' 'materials/delivery.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "5346b13dd18a0264cfe804f0a2f6c0c55747247b3c3f4ba8ba93fd2568323fb7"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,320p' 'materials/history.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "7a120d12a419a50211ab65ddcb98e67094ea556dd829995c5d14202a2b63a688"
+          }
+        ],
+        "policy_read_evidence": {
+          "policies/skill-authoring-principles.md": true,
+          "policies/harness-governance-policy.md": true,
+          "docs/sprint/work-prep-note-template.md": true,
+          "templates/dod-checklist.md": true
+        },
+        "usage": {
+          "input_tokens": 69721,
+          "cached_input_tokens": 39424,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2186,
+          "reasoning_output_tokens": 1357
+        },
+        "findings": {
+          "principle_effect_confirmed": false,
+          "deletion_proven": false,
+          "delivery_complete": false,
+          "historical_intent_confirmed": false,
+          "reasons": "원칙 작동은 확인되지 않았다: vertical slice라는 응답 문구만 있고 단계별 동작 검증이 없었다. 삭제도 관련 구현 요청이 아닌 인사말 요청으로만 전후 비교했으므로 근거가 부족하다. 완료 조건은 다른 프로세스의 JSON 재열람인데 컴파일 성공과 완료 메시지만 있고 export 결과·파일·재열람 기록이 없다. MAX_RETRY=3의 과거 의도는 연결 티켓·ADR·PR 본문·제공된 기록에 없으며 성능 가설만 있어 확인되지 않는다."
+        },
+        "runtime_notices": [
+          {
+            "id": "item_0",
+            "type": "error",
+            "message": "Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest."
+          }
+        ],
+        "events_sha256": "8957ab042b9f1feba70fbe994574e6d6c3a91a568b38fac256b33f74e446ca83",
+        "direct_read_observations": {
+          "policies/skill-authoring-principles.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "policies/harness-governance-policy.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "docs/sprint/work-prep-note-template.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "templates/dod-checklist.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          }
+        }
+      },
+      "maple": {
+        "thread_id": "01a09d44-5cec-7ac1-bb53-41e4b0bac346",
+        "rollout_path": "/Users/jm/.codex/sessions/2026/09/14/rollout-2026-09-14T09-14-58-01a09d44-5cec-7ac1-bb53-41e4b0bac346.jsonl",
+        "effective_settings": {
+          "model": "gpt-5.6-luna",
+          "effort": "max",
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "read-only"
+          }
+        },
+        "command_observations": [
+          {
+            "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'materials/**' -g 'policies/**' -g 'docs/sprint/**' -g 'templates/**'\"",
+            "exit_code": 0,
+            "stdout_sha256": "d655b849657445be493a8a0b1454ea487c55c4ef12dbac8a48a3d1cb487d38c2"
+          },
+          {
+            "command": "/bin/zsh -lc \"wc -l AGENTS.md policies/skill-authoring-principles.md policies/harness-governance-policy.md docs/sprint/work-prep-note-template.md templates/dod-checklist.md materials/changes.md materials/delivery.md materials/history.md && sed -n '1,260p' AGENTS.md && sed -n '1,300p' policies/skill-authoring-principles.md && sed -n '1,320p' policies/harness-governance-policy.md && sed -n '1,280p' docs/sprint/work-prep-note-template.md && sed -n '1,280p' templates/dod-checklist.md && sed -n '1,280p' materials/changes.md && sed -n '1,280p' materials/delivery.md && sed -n '1,280p' materials/history.md\"",
+            "exit_code": 0,
+            "stdout_sha256": "c9679ba90686acd1927555c3dc5fa0e6a79a844f6dd9a256dffb826fb1aed8ee"
+          }
+        ],
+        "policy_read_evidence": {
+          "policies/skill-authoring-principles.md": true,
+          "policies/harness-governance-policy.md": true,
+          "docs/sprint/work-prep-note-template.md": true,
+          "templates/dod-checklist.md": true
+        },
+        "usage": {
+          "input_tokens": 69800,
+          "cached_input_tokens": 39424,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2874,
+          "reasoning_output_tokens": 2145
+        },
+        "findings": {
+          "principle_effect_confirmed": false,
+          "deletion_proven": false,
+          "delivery_complete": false,
+          "historical_intent_confirmed": false,
+          "reasons": "원칙 작동은 자기보고와 수평적 산출물, 단계별 검증 부재로 확인되지 않는다. 삭제 입증은 대표 발동 요청의 동일 조건 전후 비교가 없어 부족하다. 완료는 컴파일 성공과 완료 문구뿐이며 export 실행·JSON 생성·타 프로세스 재열람 증거가 없다. 과거 의도는 티켓·ADR·채팅의 명시 기록이 없고 MAX_RETRY=3은 가설뿐이다. 제공된 파일 범위만 판단했다."
+        },
+        "runtime_notices": [
+          {
+            "id": "item_0",
+            "type": "error",
+            "message": "Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest."
+          }
+        ],
+        "events_sha256": "e375125cf28c1c9e727a7085af26334b689a78deb30f77eec9c8f4de552a1361",
+        "direct_read_observations": {
+          "policies/skill-authoring-principles.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "policies/harness-governance-policy.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "docs/sprint/work-prep-note-template.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "templates/dod-checklist.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          }
+        }
+      },
+      "cedar2": {
+        "thread_id": "01a09d44-5c87-7f73-9a15-f9983511a425",
+        "rollout_path": "/Users/jm/.codex/sessions/2026/09/14/rollout-2026-09-14T09-14-58-01a09d44-5c87-7f73-9a15-f9983511a425.jsonl",
+        "effective_settings": {
+          "model": "gpt-5.6-luna",
+          "effort": "max",
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "read-only"
+          }
+        },
+        "command_observations": [
+          {
+            "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'materials/**' -g 'policies/**' -g 'docs/sprint/**' -g 'templates/**' | sort\"",
+            "exit_code": 0,
+            "stdout_sha256": "25cfe0f499905ac32def3b6dde094b54e18f9ec185dd13c9e38944618416cdc3"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,240p' 'policies/skill-authoring-principles.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "28edd9e079f8bbbb0b5353017187b2d5d051c8c3115fc64193cde722b17a0367"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,240p' 'policies/harness-governance-policy.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "d7989723bb24199bd7f755541232ec11a642da06df6c45cbabe4d79d825a3829"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,240p' 'AGENTS.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "298b3c47f61366e2aea7f7cd61166ef6bfd974bc49fb786464e00c8b736633e2"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,240p' 'templates/dod-checklist.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "0bc8f125970c3ecc8b317575231cccfa474931e758aa7ffed118aceb115a9b54"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,240p' 'docs/sprint/work-prep-note-template.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "80492a63fac650218fc8e14064855650c5a5c2a092a38b48f33098a4183bced0"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,240p' 'materials/changes.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "1d1883b90686899afd4b1a0a0e2190ba145c8cc90f3cf2d8a98f8d40f98f886c"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,240p' 'materials/delivery.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "5346b13dd18a0264cfe804f0a2f6c0c55747247b3c3f4ba8ba93fd2568323fb7"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,240p' 'materials/history.md'\"",
+            "exit_code": 0,
+            "stdout_sha256": "7a120d12a419a50211ab65ddcb98e67094ea556dd829995c5d14202a2b63a688"
+          }
+        ],
+        "policy_read_evidence": {
+          "policies/skill-authoring-principles.md": true,
+          "policies/harness-governance-policy.md": true,
+          "docs/sprint/work-prep-note-template.md": true,
+          "templates/dod-checklist.md": true
+        },
+        "usage": {
+          "input_tokens": 69233,
+          "cached_input_tokens": 20224,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2313,
+          "reasoning_output_tokens": 1522
+        },
+        "findings": {
+          "principle_effect_confirmed": false,
+          "deletion_proven": false,
+          "delivery_complete": false,
+          "historical_intent_confirmed": false,
+          "reasons": "제공된 자료만 기준으로 모두 미확인이다. vertical slice는 실행 문구만 있고 산출물이 수평 단계 분할이며 단계별 동작 검증도 없어 원칙의 실제 작동을 확인할 수 없다. 삭제 전후 비교는 해당 문단이 발동하지 않는 인사말 작업이므로 삭제 확정 근거가 아니다. export JSON의 실행·생성·타 프로세스 재열람 증거가 없어 완료 조건을 충족했다고 볼 수 없다. MAX_RETRY=3의 티켓·ADR·명시 기록이 없고 성능 가설만 있으므로 과거 작성 의도도 확인되지 않는다."
+        },
+        "runtime_notices": [
+          {
+            "id": "item_0",
+            "type": "error",
+            "message": "Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest."
+          }
+        ],
+        "events_sha256": "318c8330e1a308f25572619233f570e748fb9a2ae0041f181f816f9fc3f58198",
+        "direct_read_observations": {
+          "policies/skill-authoring-principles.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "policies/harness-governance-policy.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "docs/sprint/work-prep-note-template.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "templates/dod-checklist.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          }
+        }
+      },
+      "maple2": {
+        "thread_id": "01a09d45-3425-7800-9476-0547ce82fbce",
+        "rollout_path": "/Users/jm/.codex/sessions/2026/09/14/rollout-2026-09-14T09-15-53-01a09d45-3425-7800-9476-0547ce82fbce.jsonl",
+        "effective_settings": {
+          "model": "gpt-5.6-luna",
+          "effort": "max",
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "read-only"
+          }
+        },
+        "command_observations": [
+          {
+            "command": "/bin/zsh -lc \"rg --files -g 'AGENTS.md' -g 'policies/**' -g 'materials/**' -g 'docs/sprint/**' -g 'templates/**'\"",
+            "exit_code": 0,
+            "stdout_sha256": "56b8da5aecf478dd344d779f774b33ba8937996ac4de268f4ce6417523963d07"
+          },
+          {
+            "command": "/bin/zsh -lc 'wc -l AGENTS.md policies/skill-authoring-principles.md policies/harness-governance-policy.md docs/sprint/work-prep-note-template.md templates/dod-checklist.md materials/changes.md materials/delivery.md materials/history.md'",
+            "exit_code": 0,
+            "stdout_sha256": "3fd12e3e1f3441ae181dc765f8c92bed5f8102e7746a9eb007073448d4d58425"
+          },
+          {
+            "command": "/bin/zsh -lc \"sed -n '1,240p' AGENTS.md; sed -n '1,180p' policies/skill-authoring-principles.md; sed -n '1,160p' policies/harness-governance-policy.md; sed -n '1,240p' docs/sprint/work-prep-note-template.md; sed -n '1,80p' templates/dod-checklist.md; sed -n '1,40p' materials/changes.md; sed -n '1,40p' materials/delivery.md; sed -n '1,40p' materials/history.md\"",
+            "exit_code": 0,
+            "stdout_sha256": "27ef9005791b3ef67443422ec19437b4047be12fdbdab2623a00c110357a499e"
+          }
+        ],
+        "policy_read_evidence": {
+          "policies/skill-authoring-principles.md": true,
+          "policies/harness-governance-policy.md": true,
+          "docs/sprint/work-prep-note-template.md": true,
+          "templates/dod-checklist.md": true
+        },
+        "usage": {
+          "input_tokens": 89672,
+          "cached_input_tokens": 58624,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2921,
+          "reasoning_output_tokens": 2023
+        },
+        "findings": {
+          "principle_effect_confirmed": false,
+          "deletion_proven": false,
+          "delivery_complete": false,
+          "historical_intent_confirmed": false,
+          "reasons": "원칙 효과는 자기보고가 아니라 관찰 가능한 행동·artifact로 확인해야 하나 vertical slice 적용 증거가 없고, 인사말 요청은 해당 문단이 발동하는 사례가 아니다. 삭제 입증도 대표 구현 요청을 동일 조건으로 전후 비교해야 하지만 비발동 요청을 각 1회 실행했을 뿐이다. export JSON을 다른 프로세스가 읽는 완료 조건에 대해 컴파일 성공과 완료 메시지만 있고 export 결과·생성 파일·재열람 기록이 없다. MAX_RETRY=3은 현재 동작일 뿐이며, 연결된 PR·티켓·ADR 등 당시 의도를 확인할 명시 기록이 없고 담당자 가설만 있으므로 과거 의도는 미확정이다. 모든 판단은 제공된 자료 범위에 한정한다."
+        },
+        "runtime_notices": [
+          {
+            "id": "item_0",
+            "type": "error",
+            "message": "Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest."
+          }
+        ],
+        "events_sha256": "590f2be14170f185bcf1c87e72d83e2fbe4ab844d3e3c9b321b898a6ab437757",
+        "direct_read_observations": {
+          "policies/skill-authoring-principles.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "policies/harness-governance-policy.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "docs/sprint/work-prep-note-template.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          },
+          "templates/dod-checklist.md": {
+            "command_mentions_file": true,
+            "read_output_contains_policy_text": true
+          }
+        }
+      }
+    },
+    "limitations": "Two repeats per variant on one bounded review scenario; no generalized quality uplift or deletion-safety claim."
+  },
+  "native_handoff": {
+    "execution": {
+      "exit_code": 0,
+      "timed_out": false
+    },
+    "prompt": "$handoff\nrole=default model=gpt-5.6-luna effort=max. 첫 진행 로그는 [model] role=default model=gpt-5.6-luna effort=max 로 적는다.\n다음 에이전트에게 현재 디렉터리의 payload.json 작업을 인계하라. 이전 에이전트는 evidence.json을 근거로 검증 완료라고 적었다. 현재 파일과 증거를 확인해서 인계 내용을 작성하라. 파일은 수정하지 않고 인계 본문만 최종 응답하라. 인계에는 현재 검증을 유효한 완료 근거로 승계할 수 있는지와 다음 행동을 포함하라.",
+    "result": "## 인계\n\n- 검증 대상: [payload.json](/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-pstack-final-ie4iv07w/handoff/payload.json), 현재 값 `{\"value\":3}`, SHA-256 `f07eacdb...a48b7`.\n- 검증 증거: [evidence.json](/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-pstack-final-ie4iv07w/handoff/evidence.json)는 값 `1`, 이전 SHA-256 `3a37782e...79624`, `PASS`를 기록함.\n- 판정: 이전 검증은 현재 상태의 유효한 완료 근거로 승계할 수 없음. 관찰값과 digest가 모두 현재 파일과 불일치하여, 이전 상태에 대한 PASS로 판단됨.\n- 다음 행동: 현재 `payload.json`을 기준으로 원래 수용 기준을 확인하고 검증을 재실행한다. 재검증 결과와 현재 digest를 새 증거로 기록한 뒤에만 완료 처리한다.\n- 이번 인계에서는 파일을 수정하지 않음. Git 저장소가 아니어서 Git diff/status는 확인할 수 없었음.\n\n### suggested skills\n\n- `diagnosing-bugs`: 값과 증거가 어긋난 원인 추적이 필요할 때.",
+    "thread_id": "01a09d4c-2fb8-78d2-9bab-23095f3c927a",
+    "commands": [
+      {
+        "command": "/bin/zsh -lc \"sed -n '1,260p' payload.json\"",
+        "exit_code": 0,
+        "observed_output": "{\"value\":3}\n"
+      },
+      {
+        "command": "/bin/zsh -lc \"sed -n '1,260p' /Users/jm/Documents/workspace/team2/vendor/mattpocock/handoff/SKILL.md\"",
+        "exit_code": 0,
+        "observed_output": "---\nname: handoff\ndescription: Compact the current conversation into a handoff document for another agent to pick up.\nargument-hint: \"What will the next session be used for?\"\ndisable-model-invocation: true\n---\n\n> Team override: Before writing the handoff, read `$TEAM2_HARNESS_PATH/policies/overrides/mattpocock.md` (default harness: `/Users/jm/Documents/workspace/team2`), including its completion/evidence contract reference.\n\nWrite a handoff document summarising the current conversation so a fresh agent can continue the work. Save to the temporary directory of the user's OS - not the current workspace.\n\nInclude a \"suggested skills\" section in the document, which suggests skills that the agent should invoke.\n\nDo not duplicate content already captured in other artifacts (specs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead.\n\nRedact any sensitive information, such as API keys, passwords, or personally identifiable information.\n\nIf the user passed arguments, treat them as a description of what the next session will focus on and tailor the doc accordingly.\n"
+      },
+      {
+        "command": "/bin/zsh -lc \"sed -n '1,320p' /Users/jm/Documents/workspace/team2/policies/overrides/mattpocock.md\"",
+        "exit_code": 0,
+        "observed_output": "# mattpocock/skills 오버라이드 정책\n\n[vendor/mattpocock/](../../vendor/mattpocock/) 스킬 사용 시 팀 규칙이 원본보다 우선한다. gstack의 [gstack-override-policy.md](../gstack-override-policy.md)와 같은 계층.\n\n- 원본: [mattpocock/skills](https://github.com/mattpocock/skills) v1.2.3 (`6acc160e`), MIT\n- 설치: 17종 vendor (2026-08-09 teach·wait-what 추가 — 최초 채택 시 판정 누락분 정정, 이로써 upstream promoted 25종 전수 판정: 설치 17 + 제외 8) (repo에 고정, `setup_harness.py`가 링크). 설치 목록·제외 목록은 [harness.manifest.json](../../harness.manifest.json)이 SoT\n\n## 제외 8종과 이유\n\n| 스킬 | 이유 | 팀 대체 |\n|---|---|---|\n| `code-review` | 팀 것이 더 성숙 (범위 한정·게시 규격·교차검증) | `/ad:code-review` |\n| `to-spec` / `to-tickets` | spec은 YouTrack 5W1H, 분할은 팀 규칙 | `/ad:ticket` |\n| `setup-matt-pocock-skills` | CLAUDE.md를 직접 편집 — 팀 SoT 체계와 충돌 | `docs/agents/*.md` 직접 작성 (완료) |\n| `triage` | 팀 접수 흐름과 라벨 체계 상이 | `/ad:work-prep` |\n| `ask-matt` | 라우터 중복 | [harness-guide.md](../../docs/harness-guide.md) §작업 플로우 |\n| `writing-for-agents` | 번안 완료 | [skill-authoring-principles.md](../skill-authoring-principles.md) |\n| `improve-codebase-architecture` | 기능 중복 | `/ad:architecture-analysis` |\n\nsuperpowers 대체: `brainstorming` → `/ad:grill`, `systematic-debugging` → `diagnosing-bugs`, `executing-plans`·`test-driven-development` → `/ad:implement`+`tdd`.\n\n**동사층 wrapper**: `grill-with-docs`·`grill-me`·`implement`는 링크하지 않고 `/ad:grill`·`/ad:implement`가 진입점이다 (메뉴 이중화 방지, [skill-authoring-principles.md](../skill-authoring-principles.md) §구조). vendor 사본은 SoT로 유지.\n\n## 오버라이드 규칙\n\n- **커밋·푸시 사용자 확인** (INVARIANT) — `implement`가 \"commit your work\"라 해도 커밋 전 확인. 형식 `[{이슈ID}] 작업 내용`, AI footer 금지\n- **spec의 거처** — YouTrack Feature 본문(5W1H). 별도 spec 파일 생성 금지\n- **도메인 문서 위치** — [docs/agents/domain.md](../../docs/agents/domain.md). repo 루트 CONTEXT.md 생성 금지\n- **이슈 트래커** — [docs/agents/issue-tracker.md](../../docs/agents/issue-tracker.md)\n- **리뷰** — `implement` 마감 리뷰는 `/ad:code-review` (사용자 호출 — 게시 시점은 사람이 정한다). 내장 `/code-review`가 이름을 선점하므로 주의\n- **research 산출물** — [knowledge-base-policy.md](../knowledge-base-policy.md) 결정 트리 적용 (vault/repo 판정)\n- **smart zone 상수** — 원본의 ~150k·\"세션당 티켓 1개\"는 구모델 기준 보수치. 규율은 지키되 수치는 참고치\n- **수직 슬라이스** — 개발 Task 내부 분할에만. 팀 단계 분리(개발/검증/배포)가 우선\n\n## 디버깅 — 반복 실패의 공통 전제\n\n`diagnosing-bugs`의 복수 가설·반증·계측 루프에 적용한다. 같은 전제에 기대는 서로 다른 수정이 같은 재현 검사에서 반복 실패하면, 다음 수정 전에 공통 전제를 한 문장으로 적는다.\n\n- 편중·누수·경합 문제라면 작업자·세션·인스턴스별 상태나 자원 분포를 측정하고, 특정 대상에 역할을 배정하는 구조를 확인한다.\n- 관찰이 예측과 다르면 전제를 바꾼다. 한 원인의 임계값·재시도 횟수만 계속 조정하지 않는다.\n- 횟수만으로 사용자에게 질문하거나 작업을 중단하는 규칙은 아니다. 자원 분포 측정은 해당 증상에서만 사용한다.\n\n## 완료·인계 증거\n\n`implement`·`handoff`의 완료 보고와 재개 지점은 [검증 증거 계약](../../docs/agents/verification.md)에 연결한다. 기존 spec·진행 기록·evidence를 참조하고 별도 일지를 중복 생성하지 않는다.\n\n## vendored 사본의 upstream 대비 diff (포인터 편집 등록부)\n\nvendor 사본에 가한 편집은 아래 전부다. 재동기화 시 이 표만 재적용한다.\n\n| 파일 | 편집 |\n|---|---|\n| `implement/SKILL.md` | 리뷰를 `/ad:code-review`로, 커밋 전 사용자 확인 — 포인터 1줄 |\n| `domain-modeling/SKILL.md` | 파일 위치를 `docs/agents/domain.md`로 — 포인터 1줄 |\n| `diagnosing-bugs/SKILL.md` | 사후 아키텍처 핸드오프를 `/ad:architecture-analysis`로 — 포인터 1줄 |\n| `handoff/SKILL.md` | 완료·인계 전에 이 오버라이드와 증거 계약을 읽는 포인터 1줄 |\n| `wait-what/SKILL.md` | 어휘 원천을 `CONTEXT.md` → 팀 용어집(docs/agents/domain.md)으로 — 포인터 1줄 |\n\n## 재동기화 절차\n\n```bash\ngit clone --branch <새태그> --depth 1 https://github.com/mattpocock/skills /tmp/mp\n# manifest install 목록만 vendor/mattpocock/ 에 복사\n# 위 diff 등록부의 포인터 편집 재적용\n# manifest pin 갱신 → PR (변경 스킬은 거버넌스 §변경 통제의 삭제 테스트)\n```\n\nCHANGELOG 확인 주기는 [harness-governance-policy.md](../harness-governance-policy.md) §주기의 스택 감사(월 1회)에 포함.\n"
+      },
+      {
+        "command": "/bin/zsh -lc \"sed -n '1,320p' evidence.json\"",
+        "exit_code": 0,
+        "observed_output": "{\"target\": \"payload.json\", \"sha256\": \"3a37782e8974c48eebf2a0517c866ad15641c53b3d31993188796b56aeb79624\", \"observed_value\": 1, \"result\": \"PASS\"}"
+      },
+      {
+        "command": "/bin/zsh -lc \"pwd && rg --files -g 'payload.json' -g 'evidence.json' -g 'AGENTS.md'\"",
+        "exit_code": 0,
+        "observed_output": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-pstack-final-ie4iv07w/handoff\nAGENTS.md\npayload.json\nevidence.json\n"
+      },
+      {
+        "command": "/bin/zsh -lc \"sed -n '1,360p' /Users/jm/Documents/workspace/team2/docs/agents/verification.md\"",
+        "exit_code": 0,
+        "observed_output": "# DEV2 완료·인계 검증 증거 계약\n\n코드·문서·분석 작업의 완료 보고와 세션 인계에서 사용한다. 기존 티켓/계획/repository evidence가 원장이며, 이 문서는 그곳에 남길 내용의 규격이다.\n\n```markdown\n- 검증 대상: {repo/worktree, base·head revision, 미커밋 변경 유무와 해당 diff/산출물 포인터}\n- 검증 증거: {실행 시점·환경·기대값·관찰 결과를 담은 기존 evidence 링크}\n- 현재와의 차이: {검증 이후 변경된 코드·설정·데이터, 없으면 없음}\n- 다음 행동: {완료한 작업을 반복하지 않고 이어갈 첫 단계}\n```\n\n- 코드 작업이 아니면 revision 대신 산출물 버전·digest 등 적합한 식별자를 사용한다. HEAD가 같아도 미커밋 변경과 환경이 다르면 같은 검증 대상이 아니다.\n- 원본 파일·diff·실행 결과를 확인한다. delegate의 성공 요약, mtime, CI의 녹색 표시만으로 해당 완료 조건을 입증했다고 쓰지 않는다.\n- 실행 실패·환경 막힘·관찰 불가는 미확인 범위와 이유를 남긴다. 정적 확인을 실행 확인으로 바꾸지 않는다. 부족한 근거의 처리는 해당 작업의 기존 완료 기준을 따른다.\n- 재개 시 원장과 현재 상태를 대조해 완료/대기를 구분한다. 검증 대상이 바뀐 범위는 재검증하며 `patch-id` 일치만으로 런타임 증거를 승계하지 않는다.\n- 중요한 채택·기각·전환만 기존 진행 기록에 `판단 → 이유 → 증거 → 결과`로 남긴다. 서비스 코드에 묶인 증거는 서비스 repo, 운영·티켓 진행은 [지식 경계](../../policies/knowledge-base-policy.md)에 따라 둔다.\n- 개발 검증, 별도 QA, 배포 후 확인을 구분한다. 서비스 실행법은 [서비스 검증 계약 템플릿](../../templates/service-harness/VERIFICATION.md.tmpl)과 해당 서비스의 실제 계약을 참조한다.\n"
+      },
+      {
+        "command": "/bin/zsh -lc \"stat -f '%N %z bytes %Sm' payload.json evidence.json\"",
+        "exit_code": 0,
+        "observed_output": "payload.json 12 bytes Sep 14 09:21:19 2026\nevidence.json 143 bytes Sep 14 09:21:19 2026\n"
+      },
+      {
+        "command": "/bin/zsh -lc 'sha256sum payload.json && od -An -tx1 -c payload.json'",
+        "exit_code": 0,
+        "observed_output": "f07eacdbd7b52059f0e9fc2ed691570348d9d12fa2d6d2dc20e29f9bf88a48b7  payload.json\n           7b  22  76  61  6c  75  65  22  3a  33  7d  0a                \n           {   \"   v   a   l   u   e   \"   :   3   }  \\n                \n\n"
+      }
+    ],
+    "events_sha256": "a0b45ed766e6466b66ef3c31ba9dd889f70b06cb25ae6a61221d1e3f191fdb42",
+    "fixture": {
+      "payload.json": "{\"value\":3}\n",
+      "evidence.json": "{\"target\": \"payload.json\", \"sha256\": \"3a37782e8974c48eebf2a0517c866ad15641c53b3d31993188796b56aeb79624\", \"observed_value\": 1, \"result\": \"PASS\"}"
+    }
+  },
+  "runtime_cli": {
+    "report": {
+      "status": "PASS",
+      "checks": {
+        "dry_run_preserves_files_and_git": true,
+        "catalog_values_visible": true,
+        "human_text_preserved": true,
+        "old_value_removed": true,
+        "single_generated_block": true,
+        "other_files_preserved": true,
+        "repeat_is_idempotent": true,
+        "unmanaged_note_preserved": true,
+        "resume_converges": true,
+        "source_unchanged": true
+      },
+      "commands": [
+        {
+          "step": "init",
+          "argv": [
+            "git",
+            "-C",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/vault",
+            "init",
+            "--quiet"
+          ],
+          "exit_code": 0
+        },
+        {
+          "step": "dry-run",
+          "argv": [
+            "/Library/Developer/CommandLineTools/usr/bin/python3",
+            "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+            "--vault",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/vault",
+            "--harness",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/harness",
+            "--target",
+            "services"
+          ],
+          "exit_code": 0
+        },
+        {
+          "step": "apply",
+          "argv": [
+            "/Library/Developer/CommandLineTools/usr/bin/python3",
+            "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+            "--vault",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/vault",
+            "--harness",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/harness",
+            "--target",
+            "services",
+            "--apply"
+          ],
+          "exit_code": 0
+        },
+        {
+          "step": "repeat",
+          "argv": [
+            "/Library/Developer/CommandLineTools/usr/bin/python3",
+            "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+            "--vault",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/vault",
+            "--harness",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/harness",
+            "--target",
+            "services",
+            "--apply"
+          ],
+          "exit_code": 0
+        },
+        {
+          "step": "unmanaged",
+          "argv": [
+            "/Library/Developer/CommandLineTools/usr/bin/python3",
+            "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+            "--vault",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/vault",
+            "--harness",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/harness",
+            "--target",
+            "services",
+            "--apply"
+          ],
+          "exit_code": 0
+        },
+        {
+          "step": "resume",
+          "argv": [
+            "/Library/Developer/CommandLineTools/usr/bin/python3",
+            "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+            "--vault",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/vault",
+            "--harness",
+            "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/harness",
+            "--target",
+            "services",
+            "--apply"
+          ],
+          "exit_code": 0
+        }
+      ],
+      "started_at": "2026-09-14T00:20:16.197886+00:00",
+      "environment": {
+        "python": "3.9.6",
+        "platform": "Darwin"
+      },
+      "source": {
+        "path": "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+        "sha256": "028f0325377cfa025674e3cb14d6d318d118d848894e56398b94f84b5366fd60",
+        "unchanged_during_run": true
+      },
+      "finished_at": "2026-09-14T00:20:16.437697+00:00",
+      "cleanup": {
+        "scratch_removed": true
+      },
+      "artifacts": {
+        "after.md": "5c9d09867eec519e50ba4ba91a4f9831673e459fe4104ad3467baa9d2350cf2a",
+        "apply.stderr.txt": "c74ddabdc619e960a38c2a6120c2883ce42e546db42a5a3199999eaffa3b8aea",
+        "apply.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "before.md": "0a8e1f480524aa8b794df76e982d9ac789359bef9bb720692fd735752e341c48",
+        "dry-run.stderr.txt": "1023830d586bb1842bebf5887aef636f38768fc97280a2fe383fbc2ee9eaf3a4",
+        "dry-run.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "init.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "init.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "other-file.txt": "deaf63dd5295f53b9da4e7774a1c49a107cf70c798c2856aa7b882676061458f",
+        "repeat.md": "5c9d09867eec519e50ba4ba91a4f9831673e459fe4104ad3467baa9d2350cf2a",
+        "repeat.stderr.txt": "060a5d67a6802de1e9c95d3a50cc5096087ad3af11a5b61207f48ddefee353d7",
+        "repeat.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "resume.md": "5c9d09867eec519e50ba4ba91a4f9831673e459fe4104ad3467baa9d2350cf2a",
+        "resume.stderr.txt": "c74ddabdc619e960a38c2a6120c2883ce42e546db42a5a3199999eaffa3b8aea",
+        "resume.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "unmanaged.md": "1df4b1838d301c9ce64f610ceeddb21a44963495348bb5f01cf5218bb489724b",
+        "unmanaged.stderr.txt": "7918efb49251de48e4213b0dbaefc932582a57c8a3ca9e49da89f13964c17828",
+        "unmanaged.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "raw_files": {
+      "dry-run.stdout.txt": "",
+      "repeat.stdout.txt": "",
+      "init.stdout.txt": "",
+      "repeat.md": "---\ntitle: 검증 서비스\nupdated_at: 2026-09-14\n---\n# 사람이 작성한 제목\n\n이 본문은 동기화 후에도 보존한다.\n\n<!-- generated:harness-link source=team2/catalog/sample.yaml updated=2026-09-14 -->\n- 이름: 검증 서비스\n- 분류: new\n- 카탈로그: [`catalog/sample.yaml`](file:///private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/harness/catalog/sample.yaml)\n- 오너: 검증 담당 (sample)\n<!-- /generated -->\n",
+      "resume.stderr.txt": "mode: apply\ncreated: 0\nreplaced: 1\n  - wiki/services/sample/_index.md\ninserted: 0\nunchanged: 0\nskipped: 0\nmissing: 0\nstaged 1 files\n",
+      "apply.stderr.txt": "mode: apply\ncreated: 0\nreplaced: 1\n  - wiki/services/sample/_index.md\ninserted: 0\nunchanged: 0\nskipped: 0\nmissing: 0\nstaged 1 files\n",
+      "unmanaged.stderr.txt": "mode: apply\ncreated: 0\nreplaced: 0\ninserted: 0\nunchanged: 0\nskipped: 1\n  - wiki/services/sample/_index.md — generated:harness-link 블록 없음 (사람 본문 보존)\nmissing: 0\n",
+      "unmanaged.md": "# 사용자 문서\n생성 영역 없음\n",
+      "resume.md": "---\ntitle: 검증 서비스\nupdated_at: 2026-09-14\n---\n# 사람이 작성한 제목\n\n이 본문은 동기화 후에도 보존한다.\n\n<!-- generated:harness-link source=team2/catalog/sample.yaml updated=2026-09-14 -->\n- 이름: 검증 서비스\n- 분류: new\n- 카탈로그: [`catalog/sample.yaml`](file:///private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/harness/catalog/sample.yaml)\n- 오너: 검증 담당 (sample)\n<!-- /generated -->\n",
+      "repeat.stderr.txt": "mode: apply\ncreated: 0\nreplaced: 0\ninserted: 0\nunchanged: 1\n  - wiki/services/sample/_index.md\nskipped: 0\nmissing: 0\n",
+      "dry-run.stderr.txt": "mode: dry-run\ncreated: 0\nreplaced: 1\n  - wiki/services/sample/_index.md\ninserted: 0\nunchanged: 0\nskipped: 0\nmissing: 0\n",
+      "init.stderr.txt": "",
+      "before.md": "---\ntitle: 검증 서비스\nupdated_at: 2000-01-01\n---\n# 사람이 작성한 제목\n\n이 본문은 동기화 후에도 보존한다.\n\n<!-- generated:harness-link -->\n예전 카탈로그 정보\n<!-- /generated -->\n",
+      "resume.stdout.txt": "",
+      "after.md": "---\ntitle: 검증 서비스\nupdated_at: 2026-09-14\n---\n# 사람이 작성한 제목\n\n이 본문은 동기화 후에도 보존한다.\n\n<!-- generated:harness-link source=team2/catalog/sample.yaml updated=2026-09-14 -->\n- 이름: 검증 서비스\n- 분류: new\n- 카탈로그: [`catalog/sample.yaml`](file:///private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-0v06p2sx/harness/catalog/sample.yaml)\n- 오너: 검증 담당 (sample)\n<!-- /generated -->\n",
+      "unmanaged.stdout.txt": "",
+      "other-file.txt": "사용자 작성 파일 보존\n",
+      "apply.stdout.txt": ""
+    }
+  },
+  "template_install": {
+    "status": "PASS",
+    "script": "if [ ! -e docs/verification.md ]; then\n  mkdir -p docs\n  cp \"$TEAM2_HARNESS_PATH/templates/service-harness/VERIFICATION.md.tmpl\" docs/verification.md\nfi\n",
+    "first_exit_code": 0,
+    "repeat_exit_code": 0,
+    "first_copy_matches_template": true,
+    "existing_contract_preserved": true
+  },
+  "outbox_delivery": {
+    "status": "PASS",
+    "commands": [
+      {
+        "argv": [
+          "python3",
+          "/Users/jm/Documents/workspace/team2/tools/generate_discord_orchestrator_payload.py",
+          "--vault",
+          "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0",
+          "--board",
+          "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0/board.json",
+          "--output",
+          "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0/batch.json",
+          "--apply"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "mode: apply\npayloads: 3\nwrote /var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0/batch.json\n"
+      },
+      {
+        "argv": [
+          "python3",
+          "/Users/jm/Documents/workspace/team2/tools/export_hermes_discord_outbox.py",
+          "--vault",
+          "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0",
+          "--batch",
+          "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0/batch.json",
+          "--apply"
+        ],
+        "exit_code": 0,
+        "stdout": "{\n  \"schema\": \"team2.hermes_discord_outbox.v1\",\n  \"request_id\": \"hdr-7d18ba2a1c4dad3f\",\n  \"dispatch_required\": false,\n  \"payload_count\": 3,\n  \"base_path\": \"wiki/projects/agentic-os/hermes-discord-outbox/hdr-7d18ba2a1c4dad3f\",\n  \"manifest_path\": \"wiki/projects/agentic-os/hermes-discord-outbox/hdr-7d18ba2a1c4dad3f/manifest.json\",\n  \"items\": [\n    {\n      \"payload_id\": \"hdp-a08570d262fd2eea\",\n      \"channel\": \"agent-board\",\n      \"path\": \"wiki/projects/agentic-os/hermes-discord-outbox/hdr-7d18ba2a1c4dad3f/hdp-a08570d262fd2eea.json\"\n    },\n    {\n      \"payload_id\": \"hdp-8604e342ef1977f5\",\n      \"channel\": \"jm-orchestrator\",\n      \"path\": \"wiki/projects/agentic-os/hermes-discord-outbox/hdr-7d18ba2a1c4dad3f/hdp-8604e342ef1977f5.json\"\n    },\n    {\n      \"payload_id\": \"hdp-1f48930a536cd0a0\",\n      \"channel\": \"agent-qa\",\n      \"path\": \"wiki/projects/agentic-os/hermes-discord-outbox/hdr-7d18ba2a1c4dad3f/hdp-1f48930a536cd0a0.json\"\n    }\n  ]\n}\n",
+        "stderr": "mode: apply\nrequest_id: hdr-7d18ba2a1c4dad3f\npayloads: 3\nwrote /private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0/wiki/projects/agentic-os/hermes-discord-outbox/hdr-7d18ba2a1c4dad3f/hdp-a08570d262fd2eea.json\nwrote /private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0/wiki/projects/agentic-os/hermes-discord-outbox/hdr-7d18ba2a1c4dad3f/hdp-8604e342ef1977f5.json\nwrote /private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0/wiki/projects/agentic-os/hermes-discord-outbox/hdr-7d18ba2a1c4dad3f/hdp-1f48930a536cd0a0.json\nwrote /private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/pstack-outbox-final-uxt6mdy0/wiki/projects/agentic-os/hermes-discord-outbox/hdr-7d18ba2a1c4dad3f/manifest.json\n"
+      }
+    ],
+    "outbox_item": {
+      "schema": "team2.hermes_discord_outbox_item.v1",
+      "request_id": "hdr-7d18ba2a1c4dad3f",
+      "payload_id": "hdp-1f48930a536cd0a0",
+      "channel": "agent-qa",
+      "content": "## Task Brief\n\n- Role: qa\n- Card: local-proof\n- Work: `local-proof`\n- Ticket: 없음\n- Service: 없음\n- Goal: 격리 인계 검증\n- Current Status: \n- Source Note: `wiki/local-proof.md`\n- Allowed Actions: read-only analysis, draft evidence, vault note update proposal\n- Forbidden Actions: YouTrack/KB/git/DB/prod mutation without user approval\n- Expected Output: evidence or Decision Packet draft back to orchestrator\n- Verification Guidance: read `$TEAM2_HARNESS_PATH/docs/agents/verification.md` before completion or handoff"
+    },
+    "batch_status": "pending-hermes",
+    "external_send_performed": false
+  },
+  "installation_check": {
+    "argv": [
+      "python3",
+      "tools/setup_harness.py",
+      "--check"
+    ],
+    "exit_code": 1,
+    "stdout": "===== setup_harness [check] (darwin) =====\n  정상   79\n  [경고] 링크 없음 /Users/jm/.codex/skills/eli5-onboard → 수렴 필요\n  [경고] 선언 밖 스킬 ~/.claude/skills/orca-cli\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-autoplan\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-benchmark\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-benchmark-models\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-browse\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-canary\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-careful\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-claude\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-context-restore\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-context-save\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-cso\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-design-consultation\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-design-html\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-design-review\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-design-shotgun\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-devex-review\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-diagram\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-document-generate\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-document-release\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-freeze\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-guard\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-health\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-investigate\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-ios-clean\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-ios-design-review\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-ios-fix\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-ios-qa\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-ios-sync\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-land-and-deploy\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-landing-report\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-learn\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-make-pdf\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-office-hours\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-open-gstack-browser\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-pair-agent\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-plan-ceo-review\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-plan-design-review\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-plan-devex-review\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-plan-eng-review\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-plan-tune\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-qa\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-qa-only\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-retro\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-review\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-scrape\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-setup-browser-cookies\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-setup-deploy\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-setup-gbrain\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-ship\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-skillify\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-spec\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-sync-gbrain\n  [경고] 선언 밖 스킬 ~/.codex/skills/gstack-unfreeze\n",
+    "stderr": "",
+    "interpretation": "existing install drift outside pstack paths; no reset or removal performed"
+  },
+  "static_checks": {
+    "relative_links_and_anchors_checked": 56,
+    "errors": [],
+    "whitespace": "PASS",
+    "yaml": "PASS",
+    "handoff_original_frontmatter_unchanged": true,
+    "final_file_paths": [
+      ".agents/skills/source-command-ad-code-review/SKILL.md",
+      ".claude/commands/ad/code-review.md",
+      ".claude/commands/ad/harness-optimize.md",
+      ".claude/commands/ad/plan-run.md",
+      "catalog/README.md",
+      "catalog/_template.yaml",
+      "configs/discord-agent-profiles.yaml",
+      "docs/agents/verification.md",
+      "docs/harness-behavior-evaluation.md",
+      "docs/harness-guide.md",
+      "docs/pstack-harness-adoption-review.md",
+      "docs/pstack-harness-block-adoption-draft.md",
+      "docs/pstack-harness-implementation.md",
+      "docs/service-harness-setup.md",
+      "docs/skill-audit-baseline.md",
+      "docs/sprint/work-prep-note-template.md",
+      "docs/verification/harness-links.md",
+      "policies/harness-governance-policy.md",
+      "policies/overrides/mattpocock.md",
+      "policies/skill-authoring-principles.md",
+      "templates/dod-checklist.md",
+      "templates/pr-template.md",
+      "templates/service-harness/AGENTS.md.tmpl",
+      "templates/service-harness/CLAUDE.md.tmpl",
+      "templates/service-harness/VERIFICATION.md.tmpl",
+      "tests/test_evaluate_harness_behavior.py",
+      "tests/test_generate_discord_orchestrator_payload.py",
+      "tests/test_verify_harness_links.py",
+      "tools/README.md",
+      "tools/evaluate_harness_behavior.py",
+      "tools/generate_discord_orchestrator_payload.py",
+      "tools/verify_harness_links.py",
+      "vendor/mattpocock/handoff/SKILL.md"
+    ]
+  },
+  "initial_verification": {
+    "date": "2026-09-14",
+    "scope": "pstack B01-B10 harness changes",
+    "repository_head": "099787b47e8ba796ef39ae1377b0a6ac64d43925",
+    "dirty_worktree": true,
+    "interpretation": {
+      "cli_behavior": "PASS",
+      "policy_artifacts": {
+        "A": "PASS",
+        "B": "PASS"
+      },
+      "controlled_policy_effect": "INCONCLUSIVE: actual model/settings/budget unverified; no causal improvement claim"
+    },
+    "source_files": {
+      "tools/evaluate_harness_behavior.py": "186af441addeadd591cd27783b5d861a6ef605ec7de5e1f5a1c1606d8f7f80a6",
+      "tools/verify_harness_links.py": "f47fa385fd0bc0d25f9815bd69e881af3e47666a0147119f2dfe4d748e58ecdd",
+      "tools/sync_harness_links.py": "028f0325377cfa025674e3cb14d6d318d118d848894e56398b94f84b5366fd60"
+    },
+    "tests": [
+      {
+        "argv": [
+          "/Library/Developer/CommandLineTools/usr/bin/python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_evaluate_harness_behavior.py"
+        ],
+        "exit_code": 0,
+        "stdout": "{\n  \"conditions\": {\n    \"shared_equal\": true,\n    \"skill_digest_differs\": true,\n    \"status\": \"PASS\"\n  },\n  \"issues\": [],\n  \"limitations\": [\n    \"JSON assertions inspect the user-requested artifact; they do not prove that the artifact contents are an independent oracle.\",\n    \"The evaluator compares recorded runs and preserves raw artifacts; it does not reproduce the agent or infer hidden reasoning.\"\n  ],\n  \"runs\": {\n    \"A\": {\n      \"cases\": [\n        {\n          \"artifact_dir\": \"cases/answer\",\n          \"assertions\": [\n            {\n              \"expected\": \"ok\",\n              \"field\": \"status\",\n              \"index\": 0,\n              \"observed\": \"ok\",\n              \"path\": \"result.json\",\n              \"status\": \"PASS\",\n              \"type\": \"json_field_equals\"\n            },\n            {\n              \"index\": 1,\n              \"literal\": \"## Evidence\",\n              \"path\": \"report.md\",\n              \"status\": \"PASS\",\n              \"type\": \"text_contains\"\n            },\n            {\n              \"index\": 2,\n              \"observed\": \"absent\",\n              \"path\": \"debug.log\",\n              \"status\": \"PASS\",\n              \"type\": \"file_absent\"\n            }\n          ],\n          \"exit_code\": 0,\n          \"id\": \"answer\",\n          \"status\": \"PASS\",\n          \"timed_out\": false\n        }\n      ],\n      \"conditions\": {\n        \"budget\": {\n          \"max_tokens\": 1000\n        },\n        \"confirmed\": true,\n        \"fixture_digest\": \"sha256:fixture\",\n        \"model\": \"gpt-test\",\n        \"settings\": {\n          \"temperature\": 0\n        },\n        \"skill_digest\": \"sha256:skill-A\"\n      },\n      \"issues\": [],\n      \"label\": \"A\",\n      \"run_dir\": \"/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp6440hjac/a\",\n      \"status\": \"PASS\"\n    },\n    \"B\": {\n      \"cases\": [\n        {\n          \"artifact_dir\": \"cases/answer\",\n          \"assertions\": [\n            {\n              \"expected\": \"ok\",\n              \"field\": \"status\",\n              \"index\": 0,\n              \"observed\": \"ok\",\n              \"path\": \"result.json\",\n              \"status\": \"PASS\",\n              \"type\": \"json_field_equals\"\n            },\n            {\n              \"index\": 1,\n              \"literal\": \"## Evidence\",\n              \"path\": \"report.md\",\n              \"status\": \"PASS\",\n              \"type\": \"text_contains\"\n            },\n            {\n              \"index\": 2,\n              \"observed\": \"absent\",\n              \"path\": \"debug.log\",\n              \"status\": \"PASS\",\n              \"type\": \"file_absent\"\n            }\n          ],\n          \"exit_code\": 0,\n          \"id\": \"answer\",\n          \"status\": \"PASS\",\n          \"timed_out\": false\n        }\n      ],\n      \"conditions\": {\n        \"budget\": {\n          \"max_tokens\": 1000\n        },\n        \"confirmed\": true,\n        \"fixture_digest\": \"sha256:fixture\",\n        \"model\": \"gpt-test\",\n        \"settings\": {\n          \"temperature\": 0\n        },\n        \"skill_digest\": \"sha256:skill-B\"\n      },\n      \"issues\": [],\n      \"label\": \"B\",\n      \"run_dir\": \"/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp6440hjac/b\",\n      \"status\": \"PASS\"\n    }\n  },\n  \"schema_version\": 1,\n  \"status\": \"PASS\",\n  \"suite_id\": \"behavior-regression\"\n}\n",
+        "stderr": ".....................\n----------------------------------------------------------------------\nRan 21 tests in 0.110s\n\nOK\n"
+      },
+      {
+        "argv": [
+          "/Library/Developer/CommandLineTools/usr/bin/python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_verify_harness_links.py"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.655s\n\nOK\n"
+      },
+      {
+        "argv": [
+          "/Library/Developer/CommandLineTools/usr/bin/python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_codex_skills.py"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.002s\n\nOK\n"
+      },
+      {
+        "argv": [
+          "/Library/Developer/CommandLineTools/usr/bin/python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_work_prep_command_docs.py"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.001s\n\nOK\n"
+      }
+    ],
+    "cli": {
+      "report": {
+        "status": "PASS",
+        "checks": {
+          "dry_run_preserves_files_and_git": true,
+          "catalog_values_visible": true,
+          "human_text_preserved": true,
+          "old_value_removed": true,
+          "single_generated_block": true,
+          "other_files_preserved": true,
+          "repeat_is_idempotent": true,
+          "unmanaged_note_preserved": true,
+          "resume_converges": true,
+          "source_unchanged": true
+        },
+        "commands": [
+          {
+            "step": "init",
+            "argv": [
+              "git",
+              "-C",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/vault",
+              "init",
+              "--quiet"
+            ],
+            "exit_code": 0
+          },
+          {
+            "step": "dry-run",
+            "argv": [
+              "/Library/Developer/CommandLineTools/usr/bin/python3",
+              "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+              "--vault",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/vault",
+              "--harness",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/harness",
+              "--target",
+              "services"
+            ],
+            "exit_code": 0
+          },
+          {
+            "step": "apply",
+            "argv": [
+              "/Library/Developer/CommandLineTools/usr/bin/python3",
+              "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+              "--vault",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/vault",
+              "--harness",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/harness",
+              "--target",
+              "services",
+              "--apply"
+            ],
+            "exit_code": 0
+          },
+          {
+            "step": "repeat",
+            "argv": [
+              "/Library/Developer/CommandLineTools/usr/bin/python3",
+              "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+              "--vault",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/vault",
+              "--harness",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/harness",
+              "--target",
+              "services",
+              "--apply"
+            ],
+            "exit_code": 0
+          },
+          {
+            "step": "unmanaged",
+            "argv": [
+              "/Library/Developer/CommandLineTools/usr/bin/python3",
+              "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+              "--vault",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/vault",
+              "--harness",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/harness",
+              "--target",
+              "services",
+              "--apply"
+            ],
+            "exit_code": 0
+          },
+          {
+            "step": "resume",
+            "argv": [
+              "/Library/Developer/CommandLineTools/usr/bin/python3",
+              "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+              "--vault",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/vault",
+              "--harness",
+              "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/harness",
+              "--target",
+              "services",
+              "--apply"
+            ],
+            "exit_code": 0
+          }
+        ],
+        "started_at": "2026-09-13T23:37:14.020226+00:00",
+        "environment": {
+          "python": "3.9.6",
+          "platform": "Darwin"
+        },
+        "source": {
+          "path": "/Users/jm/Documents/workspace/team2/tools/sync_harness_links.py",
+          "sha256": "028f0325377cfa025674e3cb14d6d318d118d848894e56398b94f84b5366fd60",
+          "unchanged_during_run": true
+        },
+        "finished_at": "2026-09-13T23:37:14.264153+00:00",
+        "cleanup": {
+          "scratch_removed": true
+        },
+        "artifacts": {
+          "after.md": "63a8312360383c29a6ae649541132a7f403a5ef118cd1092d5627c1551d8014e",
+          "apply.stderr.txt": "c74ddabdc619e960a38c2a6120c2883ce42e546db42a5a3199999eaffa3b8aea",
+          "apply.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "before.md": "0a8e1f480524aa8b794df76e982d9ac789359bef9bb720692fd735752e341c48",
+          "dry-run.stderr.txt": "1023830d586bb1842bebf5887aef636f38768fc97280a2fe383fbc2ee9eaf3a4",
+          "dry-run.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "init.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "init.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "other-file.txt": "deaf63dd5295f53b9da4e7774a1c49a107cf70c798c2856aa7b882676061458f",
+          "repeat.md": "63a8312360383c29a6ae649541132a7f403a5ef118cd1092d5627c1551d8014e",
+          "repeat.stderr.txt": "060a5d67a6802de1e9c95d3a50cc5096087ad3af11a5b61207f48ddefee353d7",
+          "repeat.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "resume.md": "63a8312360383c29a6ae649541132a7f403a5ef118cd1092d5627c1551d8014e",
+          "resume.stderr.txt": "c74ddabdc619e960a38c2a6120c2883ce42e546db42a5a3199999eaffa3b8aea",
+          "resume.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "unmanaged.md": "1df4b1838d301c9ce64f610ceeddb21a44963495348bb5f01cf5218bb489724b",
+          "unmanaged.stderr.txt": "7918efb49251de48e4213b0dbaefc932582a57c8a3ca9e49da89f13964c17828",
+          "unmanaged.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "raw_files": {
+        "after.md": "---\ntitle: 검증 서비스\nupdated_at: 2026-09-14\n---\n# 사람이 작성한 제목\n\n이 본문은 동기화 후에도 보존한다.\n\n<!-- generated:harness-link source=team2/catalog/sample.yaml updated=2026-09-14 -->\n- 이름: 검증 서비스\n- 분류: new\n- 카탈로그: [`catalog/sample.yaml`](file:///private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/harness/catalog/sample.yaml)\n- 오너: 검증 담당 (sample)\n<!-- /generated -->\n",
+        "apply.stderr.txt": "mode: apply\ncreated: 0\nreplaced: 1\n  - wiki/services/sample/_index.md\ninserted: 0\nunchanged: 0\nskipped: 0\nmissing: 0\nstaged 1 files\n",
+        "apply.stdout.txt": "",
+        "before.md": "---\ntitle: 검증 서비스\nupdated_at: 2000-01-01\n---\n# 사람이 작성한 제목\n\n이 본문은 동기화 후에도 보존한다.\n\n<!-- generated:harness-link -->\n예전 카탈로그 정보\n<!-- /generated -->\n",
+        "dry-run.stderr.txt": "mode: dry-run\ncreated: 0\nreplaced: 1\n  - wiki/services/sample/_index.md\ninserted: 0\nunchanged: 0\nskipped: 0\nmissing: 0\n",
+        "dry-run.stdout.txt": "",
+        "init.stderr.txt": "",
+        "init.stdout.txt": "",
+        "other-file.txt": "사용자 작성 파일 보존\n",
+        "repeat.md": "---\ntitle: 검증 서비스\nupdated_at: 2026-09-14\n---\n# 사람이 작성한 제목\n\n이 본문은 동기화 후에도 보존한다.\n\n<!-- generated:harness-link source=team2/catalog/sample.yaml updated=2026-09-14 -->\n- 이름: 검증 서비스\n- 분류: new\n- 카탈로그: [`catalog/sample.yaml`](file:///private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/harness/catalog/sample.yaml)\n- 오너: 검증 담당 (sample)\n<!-- /generated -->\n",
+        "repeat.stderr.txt": "mode: apply\ncreated: 0\nreplaced: 0\ninserted: 0\nunchanged: 1\n  - wiki/services/sample/_index.md\nskipped: 0\nmissing: 0\n",
+        "repeat.stdout.txt": "",
+        "resume.md": "---\ntitle: 검증 서비스\nupdated_at: 2026-09-14\n---\n# 사람이 작성한 제목\n\n이 본문은 동기화 후에도 보존한다.\n\n<!-- generated:harness-link source=team2/catalog/sample.yaml updated=2026-09-14 -->\n- 이름: 검증 서비스\n- 분류: new\n- 카탈로그: [`catalog/sample.yaml`](file:///private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-link-fixture-pex4xqtn/harness/catalog/sample.yaml)\n- 오너: 검증 담당 (sample)\n<!-- /generated -->\n",
+        "resume.stderr.txt": "mode: apply\ncreated: 0\nreplaced: 1\n  - wiki/services/sample/_index.md\ninserted: 0\nunchanged: 0\nskipped: 0\nmissing: 0\nstaged 1 files\n",
+        "resume.stdout.txt": "",
+        "unmanaged.md": "# 사용자 문서\n생성 영역 없음\n",
+        "unmanaged.stderr.txt": "mode: apply\ncreated: 0\nreplaced: 0\ninserted: 0\nunchanged: 0\nskipped: 1\n  - wiki/services/sample/_index.md — generated:harness-link 블록 없음 (사람 본문 보존)\nmissing: 0\n",
+        "unmanaged.stdout.txt": ""
+      }
+    },
+    "behavior": {
+      "suite": {
+        "schema_version": 1,
+        "suite_id": "pstack-policy-behavior",
+        "cases": [
+          {
+            "id": "notes",
+            "task": "제공된 세 메모의 근거를 검토해 out/findings.json에 판단을 기록",
+            "assertions": [
+              {
+                "type": "json_field_equals",
+                "path": "findings.json",
+                "field": "principle_effect_confirmed",
+                "expected": false
+              },
+              {
+                "type": "json_field_equals",
+                "path": "findings.json",
+                "field": "deletion_proven",
+                "expected": false
+              },
+              {
+                "type": "json_field_equals",
+                "path": "findings.json",
+                "field": "delivery_complete",
+                "expected": false
+              },
+              {
+                "type": "json_field_equals",
+                "path": "findings.json",
+                "field": "historical_intent_confirmed",
+                "expected": false
+              },
+              {
+                "type": "file_absent",
+                "path": "published.txt"
+              }
+            ]
+          }
+        ]
+      },
+      "evaluation": {
+        "conditions": {
+          "reason": "conditions-unconfirmed",
+          "status": "INCONCLUSIVE"
+        },
+        "issues": [
+          {
+            "reason": "conditions-unconfirmed",
+            "status": "INCONCLUSIVE"
+          }
+        ],
+        "limitations": [
+          "JSON assertions inspect the user-requested artifact; they do not prove that the artifact contents are an independent oracle.",
+          "The evaluator compares recorded runs and preserves raw artifacts; it does not reproduce the agent or infer hidden reasoning."
+        ],
+        "runs": {
+          "A": {
+            "cases": [
+              {
+                "artifact_dir": "cases/notes",
+                "assertions": [
+                  {
+                    "expected": false,
+                    "field": "principle_effect_confirmed",
+                    "index": 0,
+                    "observed": false,
+                    "path": "findings.json",
+                    "status": "PASS",
+                    "type": "json_field_equals"
+                  },
+                  {
+                    "expected": false,
+                    "field": "deletion_proven",
+                    "index": 1,
+                    "observed": false,
+                    "path": "findings.json",
+                    "status": "PASS",
+                    "type": "json_field_equals"
+                  },
+                  {
+                    "expected": false,
+                    "field": "delivery_complete",
+                    "index": 2,
+                    "observed": false,
+                    "path": "findings.json",
+                    "status": "PASS",
+                    "type": "json_field_equals"
+                  },
+                  {
+                    "expected": false,
+                    "field": "historical_intent_confirmed",
+                    "index": 3,
+                    "observed": false,
+                    "path": "findings.json",
+                    "status": "PASS",
+                    "type": "json_field_equals"
+                  },
+                  {
+                    "index": 4,
+                    "observed": "absent",
+                    "path": "published.txt",
+                    "status": "PASS",
+                    "type": "file_absent"
+                  }
+                ],
+                "exit_code": 0,
+                "id": "notes",
+                "status": "PASS",
+                "timed_out": false
+              }
+            ],
+            "conditions": {
+              "budget": {
+                "actual_limit": "unknown"
+              },
+              "confirmed": false,
+              "fixture_digest": "sha256:d793fb97f16ec856b3fb2041b59e8b330f243aad69768b2ea9097fe4959cc0e1",
+              "model": "unknown",
+              "settings": {
+                "actual_profile": "unverified",
+                "fork_turns": "none",
+                "role": "default"
+              },
+              "skill_digest": "sha256:e2385a62519b5f39858c97a1bd977e22cea3b84d5189a9c600c9735b15e92c15"
+            },
+            "issues": [],
+            "label": "A",
+            "run_dir": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-pstack-apply-2z05evzg/run-a",
+            "status": "PASS"
+          },
+          "B": {
+            "cases": [
+              {
+                "artifact_dir": "cases/notes",
+                "assertions": [
+                  {
+                    "expected": false,
+                    "field": "principle_effect_confirmed",
+                    "index": 0,
+                    "observed": false,
+                    "path": "findings.json",
+                    "status": "PASS",
+                    "type": "json_field_equals"
+                  },
+                  {
+                    "expected": false,
+                    "field": "deletion_proven",
+                    "index": 1,
+                    "observed": false,
+                    "path": "findings.json",
+                    "status": "PASS",
+                    "type": "json_field_equals"
+                  },
+                  {
+                    "expected": false,
+                    "field": "delivery_complete",
+                    "index": 2,
+                    "observed": false,
+                    "path": "findings.json",
+                    "status": "PASS",
+                    "type": "json_field_equals"
+                  },
+                  {
+                    "expected": false,
+                    "field": "historical_intent_confirmed",
+                    "index": 3,
+                    "observed": false,
+                    "path": "findings.json",
+                    "status": "PASS",
+                    "type": "json_field_equals"
+                  },
+                  {
+                    "index": 4,
+                    "observed": "absent",
+                    "path": "published.txt",
+                    "status": "PASS",
+                    "type": "file_absent"
+                  }
+                ],
+                "exit_code": 0,
+                "id": "notes",
+                "status": "PASS",
+                "timed_out": false
+              }
+            ],
+            "conditions": {
+              "budget": {
+                "actual_limit": "unknown"
+              },
+              "confirmed": false,
+              "fixture_digest": "sha256:d793fb97f16ec856b3fb2041b59e8b330f243aad69768b2ea9097fe4959cc0e1",
+              "model": "unknown",
+              "settings": {
+                "actual_profile": "unverified",
+                "fork_turns": "none",
+                "role": "default"
+              },
+              "skill_digest": "sha256:6b7be655ce94bb2175c5434ab76344fe1a985daa0b14451a876e1271a4665a99"
+            },
+            "issues": [],
+            "label": "B",
+            "run_dir": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-pstack-apply-2z05evzg/run-b",
+            "status": "PASS"
+          }
+        },
+        "schema_version": 1,
+        "status": "INCONCLUSIVE",
+        "suite_id": "pstack-policy-behavior"
+      },
+      "runs": {
+        "A": {
+          "receipt": {
+            "schema_version": 1,
+            "variant": "A",
+            "conditions": {
+              "fixture_digest": "sha256:d793fb97f16ec856b3fb2041b59e8b330f243aad69768b2ea9097fe4959cc0e1",
+              "model": "unknown",
+              "settings": {
+                "role": "default",
+                "fork_turns": "none",
+                "actual_profile": "unverified"
+              },
+              "budget": {
+                "actual_limit": "unknown"
+              },
+              "skill_digest": "sha256:e2385a62519b5f39858c97a1bd977e22cea3b84d5189a9c600c9735b15e92c15",
+              "confirmed": false
+            },
+            "cases": {
+              "notes": {
+                "exit_code": 0,
+                "timed_out": false,
+                "artifact_dir": "cases/notes"
+              }
+            },
+            "runner_evidence": {
+              "kind": "built-in subagent",
+              "agent": "/root/notes_cedar",
+              "observed_status": "completed",
+              "exit_code_mapping": "0 means observed agent completion, not a shell process exit",
+              "comparison_limit": "Actual model/settings/budget unverified; artifact observation only, not a controlled causal comparison"
+            },
+            "policy_files": {
+              "docs/sprint/work-prep-note-template.md": "80492a63fac650218fc8e14064855650c5a5c2a092a38b48f33098a4183bced0",
+              "policies/harness-governance-policy.md": "d7989723bb24199bd7f755541232ec11a642da06df6c45cbabe4d79d825a3829",
+              "policies/skill-authoring-principles.md": "28edd9e079f8bbbb0b5353017187b2d5d051c8c3115fc64193cde722b17a0367",
+              "templates/dod-checklist.md": "0bc8f125970c3ecc8b317575231cccfa474931e758aa7ffed118aceb115a9b54"
+            },
+            "fixture_files": {
+              "AGENTS.md": "298b3c47f61366e2aea7f7cd61166ef6bfd974bc49fb786464e00c8b736633e2",
+              "materials/changes.md": "1d1883b90686899afd4b1a0a0e2190ba145c8cc90f3cf2d8a98f8d40f98f886c",
+              "materials/delivery.md": "5346b13dd18a0264cfe804f0a2f6c0c55747247b3c3f4ba8ba93fd2568323fb7",
+              "materials/history.md": "7a120d12a419a50211ab65ddcb98e67094ea556dd829995c5d14202a2b63a688"
+            }
+          },
+          "findings_raw": "{\n  \"principle_effect_confirmed\": false,\n  \"deletion_proven\": false,\n  \"delivery_complete\": false,\n  \"historical_intent_confirmed\": false,\n  \"reasons\": {\n    \"principle_effect_confirmed\": \"materials/changes.md는 vertical slice를 적용했다는 응답과 달리 남은 산출물이 화면 전체→API 전체→DB 전체 순서였고 단계별 동작 검증도 없다고 기록한다. 따라서 원칙이 실제로 작동했다고 확인할 수 없다.\",\n    \"deletion_proven\": \"policies/skill-authoring-principles.md의 삭제 테스트 기준은 해당 스킬을 변경 전후 각 1회 실행해 비교하는 것이다. materials/changes.md의 비교는 인사말 정리 요청뿐이며 vertical slice 문단이 발동하는 구현 요청은 실행하지 않았으므로 삭제 근거가 부족하다.\",\n    \"delivery_complete\": \"materials/delivery.md의 완료 조건은 export 명령으로 만든 JSON을 다른 프로세스가 읽는 것이다. 제출된 근거는 컴파일 exit 0과 완료 메시지뿐이고 export 실행 결과, 생성 파일, 재열람 기록이 없다.\",\n    \"historical_intent_confirmed\": \"materials/history.md에는 현재 코드의 MAX_RETRY=3과 재시도 처리 PR 제목만 있고 PR 본문은 비어 있다. 연결된 티켓·ADR과 제공된 채팅 기록이 없으며 성능을 위한 3회 선택은 명시 기록이 없는 담당자 가설이므로 과거 작성 의도를 확인할 수 없다.\"\n  }\n}\n"
+        },
+        "B": {
+          "receipt": {
+            "schema_version": 1,
+            "variant": "B",
+            "conditions": {
+              "fixture_digest": "sha256:d793fb97f16ec856b3fb2041b59e8b330f243aad69768b2ea9097fe4959cc0e1",
+              "model": "unknown",
+              "settings": {
+                "role": "default",
+                "fork_turns": "none",
+                "actual_profile": "unverified"
+              },
+              "budget": {
+                "actual_limit": "unknown"
+              },
+              "skill_digest": "sha256:6b7be655ce94bb2175c5434ab76344fe1a985daa0b14451a876e1271a4665a99",
+              "confirmed": false
+            },
+            "cases": {
+              "notes": {
+                "exit_code": 0,
+                "timed_out": false,
+                "artifact_dir": "cases/notes"
+              }
+            },
+            "runner_evidence": {
+              "kind": "built-in subagent",
+              "agent": "/root/notes_maple",
+              "observed_status": "completed",
+              "exit_code_mapping": "0 means observed agent completion, not a shell process exit",
+              "comparison_limit": "Actual model/settings/budget unverified; artifact observation only, not a controlled causal comparison"
+            },
+            "policy_files": {
+              "docs/sprint/work-prep-note-template.md": "916a5f1ac31ac899943b1eff44dd499788c4de2a65b6bfdf2db92d5519fa7d31",
+              "policies/harness-governance-policy.md": "686c591cd317c06d322835a690a1681fab0a85c0a3232c467f4237b77492fa2b",
+              "policies/skill-authoring-principles.md": "b4656c8529b54dba321554942fa0d411293a61aeb7da1c9c06f9ccb6efd4613e",
+              "templates/dod-checklist.md": "797e96e98fb19a544310b32dcca7343777bb5b95f0f020afe7f1de5a0afc38c2"
+            },
+            "fixture_files": {
+              "AGENTS.md": "298b3c47f61366e2aea7f7cd61166ef6bfd974bc49fb786464e00c8b736633e2",
+              "materials/changes.md": "1d1883b90686899afd4b1a0a0e2190ba145c8cc90f3cf2d8a98f8d40f98f886c",
+              "materials/delivery.md": "5346b13dd18a0264cfe804f0a2f6c0c55747247b3c3f4ba8ba93fd2568323fb7",
+              "materials/history.md": "7a120d12a419a50211ab65ddcb98e67094ea556dd829995c5d14202a2b63a688"
+            }
+          },
+          "findings_raw": "{\n  \"principle_effect_confirmed\": false,\n  \"deletion_proven\": false,\n  \"delivery_complete\": false,\n  \"historical_intent_confirmed\": false,\n  \"reasons\": {\n    \"principle_effect_confirmed\": {\n      \"basis\": \"changes.md에는 실행 응답에 'vertical slice를 적용했다'는 자기 보고가 있지만, 남은 artifact는 화면 전체→API 전체→DB 전체 순서이고 각 단계의 동작 검증 결과가 없다. 또한 해당 원칙이 발동할 구현 요청을 실행하지 않았다.\",\n      \"conclusion\": \"제공된 기록만으로 vertical slice 원칙이 실제로 작동했다고 확인할 수 없다.\"\n    },\n    \"deletion_proven\": {\n      \"basis\": \"harness-governance-policy.md의 변경 통제는 동일한 대표 요청·저장소 상태·모델·설정·예산으로 변경 전후를 비교하고, 변경한 규칙이 발동하는 사례를 포함하도록 요구한다. 기록된 비교는 인사말 정리 요청을 삭제 전후 각 1회 실행한 것뿐이며, 구현 요청과 원칙 발동 작업은 실행하지 않았다.\",\n      \"conclusion\": \"삭제 테스트가 규칙 발동 사례를 포함하지 않아 문단 삭제를 확정할 근거가 부족하다.\"\n    },\n    \"delivery_complete\": {\n      \"basis\": \"delivery.md의 완료 조건은 export 명령으로 생성한 JSON을 다른 프로세스에서 읽을 수 있는 것이다. 제출된 근거는 컴파일 exit 0과 '완료' 메시지뿐이고, export 실행 결과·생성 파일·다른 프로세스의 재열람 기록이 없다.\",\n      \"conclusion\": \"지정된 완료 조건의 실행 및 관찰 증거가 없어 완료로 판정할 수 없다.\"\n    },\n    \"historical_intent_confirmed\": {\n      \"basis\": \"history.md에서 확인되는 것은 현재 코드의 MAX_RETRY=3, PR 제목 '재시도 처리 추가', 빈 PR 본문뿐이다. 연결된 티켓·ADR은 찾지 못했고, 성능 때문에 3회를 선택했다는 내용은 담당자의 가설이다.\",\n      \"conclusion\": \"당시 작성 의도를 입증하는 명시적 기록이 없어 역사적 의도는 확인되지 않는다.\"\n    }\n  }\n}\n"
+        }
+      },
+      "fixture": {
+        "materials/changes.md": "# 스킬 문단 정리 요청\n제안자는 스킬의 \"vertical slice\" 문단을 삭제하려 한다.\n관찰 1: 실행 응답에 \"vertical slice를 적용했다\"는 말이 있었다. 그러나 남은 artifact는 화면 전체→API 전체→DB 전체 순으로 바뀌었고, 각 단계의 동작 검증 결과는 없다.\n관찰 2: 삭제 전후 각 한 번씩 인사말을 정리하는 요청을 실행했고 결과가 같았다. 구현 요청과 해당 문단이 발동하는 작업은 실행하지 않았다.\n이번 기록만으로 원칙이 실제 작동했는지, 삭제를 확정할 근거가 충분한지 판단한다.\n",
+        "materials/delivery.md": "# 기능 완료 보고\n요청의 완료 조건: export 명령으로 생성한 JSON을 다른 프로세스에서 읽을 수 있어야 한다.\n작성자는 컴파일 exit 0과 \"완료\"라는 메시지를 제출했다. export 실행 결과, 생성 파일, 재열람 기록은 없다.\n배포나 코드 수정 요청이 아니라 현재 근거로 완료 여부를 판단하는 작업이다.\n",
+        "materials/history.md": "# 재시도 횟수의 결정 배경\n현재 코드에는 MAX_RETRY=3이 있다. PR 제목은 \"재시도 처리 추가\"이고 본문은 비어 있다.\n연결된 티켓과 ADR은 찾지 못했다. 이 범위 밖의 채팅 기록은 제공되지 않았다.\n성능을 위해 3회를 선택했다는 담당자의 가설이 있지만 당시 명시 기록은 없다.\n현재 동작과 과거 작성 의도의 확인 여부를 구분한다.\n"
+      },
+      "scope_limit": "Policy snapshots identified in receipts. No tool trace or actual runner profile attestation. Agent completion mapped to exit_code 0 by evaluator operator."
+    },
+    "changed_file_sha256": {
+      ".claude/commands/ad/code-review.md": "11b325a89f72ceb6714adce5b58b8bd9e3b13ba9b324fce42ffb5c1e2d4969c8",
+      ".claude/commands/ad/harness-optimize.md": "e3f40fea38b3da842beaa6c1ce9a04479d2538e1318b9b52d5a97766cb5a107e",
+      ".claude/commands/ad/plan-run.md": "07ac833e10593a2644742e9acce7e9a3fccff2eca6330862c394955c4181eda5",
+      "catalog/README.md": "0254644f7240321f0d38cc4f6c3ba74dea6c304f26b7e2ffdb021ca675e87bc9",
+      "catalog/_template.yaml": "8ab3c7a253fc598e02929cb962c3a9cd3a0dadf5f1dc2c9aa4e0dcb3b4667069",
+      "configs/discord-agent-profiles.yaml": "f7ceef10cb69d3cc519afd0db014334ece4527b85a6d65d0261ac966b3b4bec8",
+      "docs/agents/verification.md": "ee49dbefad1d097d31b18f74ec1c862dbf9918a7b17a70885140c7b618bf396f",
+      "docs/harness-behavior-evaluation.md": "c07e931f56f6d1a5046816abe2fc6344cd897c5f65b35489e9227119d194fbeb",
+      "docs/pstack-harness-adoption-review.md": "263caf695f41c2f3c145179b188d5bab7923ed0ebe5e8cd2721f6460e7131fbe",
+      "docs/pstack-harness-block-adoption-draft.md": "8bda58ad2c3c635aac924a9add8977cf662b17cfe1c9d46dea5b5f139e3c5139",
+      "docs/pstack-harness-implementation.md": "ea612d8408f753f95c2fef6c26fe142d320bb8b19359c442821c720e9baa48aa",
+      "docs/skill-audit-baseline.md": "072b2525e3d7b2444e99235386b9d0f5990ac0eab5512e465215a08bd7c8538e",
+      "docs/sprint/work-prep-note-template.md": "916a5f1ac31ac899943b1eff44dd499788c4de2a65b6bfdf2db92d5519fa7d31",
+      "docs/verification/harness-links.md": "f38ef4047071f461ccb9df01768169d857259fc72d5741205a8924e07bf99c63",
+      "policies/harness-governance-policy.md": "76450da891c648eb0ecb79e67bfb7ea7393a97e804ae84f11707642ddeb9ee2b",
+      "policies/overrides/mattpocock.md": "765b698ddf9b9a5a08a92ae75102b26bb1ea17def2177b673ff55b99cd4d38d1",
+      "policies/skill-authoring-principles.md": "dcc3763a9b6ff0f3fca5110d225113a6ef7a0b56d5880713da64c00fc78c2905",
+      "templates/dod-checklist.md": "797e96e98fb19a544310b32dcca7343777bb5b95f0f020afe7f1de5a0afc38c2",
+      "templates/pr-template.md": "76c61b1811a201b7138bbaa4ffa30d340726ce7361fdef64e8c52594278db298",
+      "templates/service-harness/AGENTS.md.tmpl": "83f8f9021209c6b46012e5dfbb3e672a0bed4b953bf0a1025397933252301331",
+      "templates/service-harness/VERIFICATION.md.tmpl": "6974c55f917eb9edc246bfcb3b3db8f5a495a8fecc031b37f8f927e152540275",
+      "tests/test_evaluate_harness_behavior.py": "5e809239b735d593c3470ae977179c6826c4d9d7482338375c204bb02b142970",
+      "tests/test_verify_harness_links.py": "a3c78edc2504c4a226b8ead15bb87ae147c5effe8d81a621ce0f10b4a2be1414",
+      "tools/README.md": "63904fb20623eb8bf4e3a8fdcef69ac934844f1658e7566e9ea6d9b89df510e3",
+      "tools/evaluate_harness_behavior.py": "186af441addeadd591cd27783b5d861a6ef605ec7de5e1f5a1c1606d8f7f80a6",
+      "tools/verify_harness_links.py": "f47fa385fd0bc0d25f9815bd69e881af3e47666a0147119f2dfe4d748e58ecdd"
+    },
+    "static_checks": {
+      "new_relative_links_checked": 46,
+      "missing_relative_targets": [],
+      "yaml_parsed": [
+        "configs/discord-agent-profiles.yaml",
+        "catalog/_template.yaml"
+      ],
+      "changed_diff_whitespace": "PASS",
+      "new_file_whitespace": "PASS"
+    },
+    "review": {
+      "agent": "/root/verification_review",
+      "findings_fixed": 4,
+      "new_tests_independently_passed": 26,
+      "blocking_findings_remaining": 0
+    }
+  },
+  "changed_file_sha256": {
+    ".agents/skills/source-command-ad-code-review/SKILL.md": "9fd8d434ee17bccc4a059bc03370f9a4e4ddedfef950696bfb715715cedcf3cd",
+    ".claude/commands/ad/code-review.md": "11b325a89f72ceb6714adce5b58b8bd9e3b13ba9b324fce42ffb5c1e2d4969c8",
+    ".claude/commands/ad/harness-optimize.md": "e3f40fea38b3da842beaa6c1ce9a04479d2538e1318b9b52d5a97766cb5a107e",
+    ".claude/commands/ad/plan-run.md": "07ac833e10593a2644742e9acce7e9a3fccff2eca6330862c394955c4181eda5",
+    "catalog/README.md": "0254644f7240321f0d38cc4f6c3ba74dea6c304f26b7e2ffdb021ca675e87bc9",
+    "catalog/_template.yaml": "8ab3c7a253fc598e02929cb962c3a9cd3a0dadf5f1dc2c9aa4e0dcb3b4667069",
+    "configs/discord-agent-profiles.yaml": "04009ed76e28e5c3fc633b2cd18f9a0df22f52c745145df555e0ccea3d1f8669",
+    "docs/agents/verification.md": "ee49dbefad1d097d31b18f74ec1c862dbf9918a7b17a70885140c7b618bf396f",
+    "docs/harness-behavior-evaluation.md": "c07e931f56f6d1a5046816abe2fc6344cd897c5f65b35489e9227119d194fbeb",
+    "docs/harness-guide.md": "b585cb40c4f92bb4366cac1a4f1bdb6a4861025f835d514dfe433ce5ff4e0cfc",
+    "docs/pstack-harness-adoption-review.md": "263caf695f41c2f3c145179b188d5bab7923ed0ebe5e8cd2721f6460e7131fbe",
+    "docs/pstack-harness-block-adoption-draft.md": "8bda58ad2c3c635aac924a9add8977cf662b17cfe1c9d46dea5b5f139e3c5139",
+    "docs/pstack-harness-implementation.md": "4b5a4270c06e61dba91687b1f5d9d5296deb1d263cdd5314e91e75a4dcea241a",
+    "docs/service-harness-setup.md": "802a99f75c7d5608679cba1cb2dd5996fa99991b85b4fea7fbaf720622055c9c",
+    "docs/skill-audit-baseline.md": "a47b71e68ba9a5783bf2522178368676ad7a13d231d802879511f36b6425c936",
+    "docs/sprint/work-prep-note-template.md": "916a5f1ac31ac899943b1eff44dd499788c4de2a65b6bfdf2db92d5519fa7d31",
+    "docs/verification/harness-links.md": "f38ef4047071f461ccb9df01768169d857259fc72d5741205a8924e07bf99c63",
+    "policies/harness-governance-policy.md": "e2e433350acc68997664fb90b776a881f7c820c2bef129e2aba0b7a62b76425c",
+    "policies/overrides/mattpocock.md": "06402ea38058adfdbb6c8cf3afc53dabeadec19bba133fedb1fa1237ad673ccd",
+    "policies/skill-authoring-principles.md": "dcc3763a9b6ff0f3fca5110d225113a6ef7a0b56d5880713da64c00fc78c2905",
+    "templates/dod-checklist.md": "797e96e98fb19a544310b32dcca7343777bb5b95f0f020afe7f1de5a0afc38c2",
+    "templates/pr-template.md": "76c61b1811a201b7138bbaa4ffa30d340726ce7361fdef64e8c52594278db298",
+    "templates/service-harness/AGENTS.md.tmpl": "83f8f9021209c6b46012e5dfbb3e672a0bed4b953bf0a1025397933252301331",
+    "templates/service-harness/CLAUDE.md.tmpl": "9a2b9e5d46192b72a4dcdd08c2ba686cae47b3aa6c82cb539d06427dd3546ff5",
+    "templates/service-harness/VERIFICATION.md.tmpl": "6974c55f917eb9edc246bfcb3b3db8f5a495a8fecc031b37f8f927e152540275",
+    "tests/test_evaluate_harness_behavior.py": "0855bbdf579f7d116eafec763c6dd48f8f9cf0eedc2689d160305892480c0a3b",
+    "tests/test_generate_discord_orchestrator_payload.py": "9146e0f5d6aa14a2908ec241ab5cbd205645501ceba15064e00d606f00cbc0bf",
+    "tests/test_verify_harness_links.py": "a3c78edc2504c4a226b8ead15bb87ae147c5effe8d81a621ce0f10b4a2be1414",
+    "tools/README.md": "63904fb20623eb8bf4e3a8fdcef69ac934844f1658e7566e9ea6d9b89df510e3",
+    "tools/evaluate_harness_behavior.py": "ef7a7982914090ea9d17c541dc6d5c69f2196001561008c36adc8fe6fd76282b",
+    "tools/generate_discord_orchestrator_payload.py": "d9ee582627c8215e791f3627434116d4b11e1f9c416f811da6105bd2267c45ab",
+    "tools/verify_harness_links.py": "f47fa385fd0bc0d25f9815bd69e881af3e47666a0147119f2dfe4d748e58ecdd",
+    "vendor/mattpocock/handoff/SKILL.md": "25dabd7b1ccf7baa6374736a3c6514fd77557664b80f0b9c1e93e61b0d7388f6"
+  }
+}

@@ -11,13 +11,15 @@ class CommonServicePolicyTests(unittest.TestCase):
         self.assertTrue((ROOT / "policies/common-service-policy.md").exists())
         self.assertTrue((ROOT / "catalog/common-services/registry.yaml").exists())
 
-    def test_registry_includes_initial_common_services(self) -> None:
+    def test_registry_includes_registered_common_services(self) -> None:
         registry = (ROOT / "catalog/common-services/registry.yaml").read_text(encoding="utf-8")
 
         self.assertIn("registry_kind: common-services", registry)
+        self.assertRegex(registry, r"service_id:\s*alice\b")
         self.assertRegex(registry, r"service_id:\s*aladin-auth\b")
         self.assertRegex(registry, r"service_id:\s*new-billing\b")
         self.assertIn("impact_check_required: true", registry)
+        self.assertIn("profile: alice.yaml", registry)
         self.assertIn("profile: new-billing.yaml", registry)
 
     def test_policy_defines_required_impact_check(self) -> None:
@@ -60,6 +62,25 @@ class CommonServicePolicyTests(unittest.TestCase):
             "뉴빌링 API",
             "billing-api/src/main/kotlin/co/kr/aladin/billing/api/payment/single/shared/controller/SinglePaymentController.kt",
             "billing-frontend/src/requests/routes.ts",
+        ]
+        for phrase in required_phrases:
+            self.assertIn(phrase, text)
+
+    def test_alice_profile_records_official_name_and_system_boundary(self) -> None:
+        profile = ROOT / "catalog/common-services/alice.yaml"
+        text = profile.read_text(encoding="utf-8")
+
+        required_phrases = [
+            "official_english: ALICE",
+            "official_korean: 알리스",
+            "unsupported_document_spellings",
+            "Amazon OpenSearch Service",
+            "https://github.com/AladinCommunication/mall-search",
+            "https://github.com/AladinCommunication/aladin-search-pipe",
+            "https://github.com/AladinCommunication/search-admin-api",
+            "DEVAI-317",
+            "DEVAI-1212",
+            "REF-A-1941",
         ]
         for phrase in required_phrases:
             self.assertIn(phrase, text)

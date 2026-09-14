@@ -5,7 +5,7 @@
 
 registry_kind: common-services
 policy: policies/common-service-policy.md
-updated_at: 2026-06-18
+updated_at: 2026-09-03
 
 defaults:
   impact_check_required: true
@@ -23,6 +23,41 @@ defaults:
     - canonical-promotion
 
 common_services:
+  - service_id: alice
+    display_name: ALICE(알리스)
+    domain: search
+    status: evidence
+    lifecycle: production
+    profile: alice.yaml
+    owner_scope: ai-team
+    impact_check_required: true
+    description: AI팀이 운영하는 사내 검색 서비스군. OpenSearch 기반 상품 검색 API·색인 pipeline·검색 관리 기능을 포함한다.
+    source_repositories:
+      - https://github.com/AladinCommunication/mall-search
+      - https://github.com/AladinCommunication/aladin-search-pipe
+      - https://github.com/AladinCommunication/search-admin-api
+      - https://github.com/AladinCommunication/search-admin-front
+    check_when:
+      - 검색 API 요청·응답·endpoint 변경
+      - 검색 필드·필터·정렬·랭킹·자동완성·수정어 변경
+      - 색인 schema·pipeline·alias·갱신 주기 변경
+      - OpenSearch cluster·version·shard·권한 변경
+      - storefront 검색 adapter·tenant filter·전용 index 설계
+    known_consumers:
+      - shopping
+    future_consumer_candidates:
+      - storefront
+    evidence_required:
+      - owner-confirmation
+      - api-contract
+      - index-schema
+      - filter-and-ranking-contract
+      - incident-runbook
+    notes:
+      - "공식 표기는 `ALICE(알리스)`다. `Alice-*`는 기존 기술 식별자에서 유지한다."
+      - "`ALIS`와 `Alis`는 AI팀 근거에서 확인되지 않았으므로 새 문서 표기로 사용하지 않는다."
+      - "OpenSearch는 ALICE의 별칭이 아니라 기반 검색엔진 제품이다."
+
   - service_id: aladin-auth
     display_name: 알라딘 인증
     domain: identity-access

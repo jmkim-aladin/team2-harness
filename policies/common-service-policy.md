@@ -21,6 +21,7 @@
 - 로그인, SSO, 세션, 권한, 회원 식별, partner user mapping을 건드린다.
 - 결제, 청구, 환불, 정산, 구독, 포인트/적립금, 세금계산서 흐름을 건드린다.
 - 신규 빌링, 결제, 청구, 환불, 정산, 구독, 빌링키 기능을 만든다.
+- 검색 API, 검색 필드·필터·정렬·랭킹, 색인 schema·pipeline 또는 OpenSearch 운영 구성을 변경한다.
 - 주문/배송/클레임 상태가 다른 서비스에 이벤트나 API로 전파된다.
 - 공유 DB, 공유 SP, 공통 batch, 공통 메시지/이벤트/outbox를 읽거나 쓴다.
 - 팀 서비스 여럿이 같은 기능에서 함께 언급된다 (서비스 목록은 `catalog/`가 SoT).
@@ -48,14 +49,17 @@ Hermes, Codex, Claude Code, GBrain은 공통 서비스 후보를 찾고 위키 d
 - 운영 설정, 인증, 결제, 정산 상태 변경
 - vault 문서의 `confirmed`, `canonical`, `done` 승격
 
-## 초기 공통 서비스
+## 등록 공통 서비스
 
-초기 registry에는 다음 서비스를 등록한다.
+현재 registry에는 다음 서비스를 등록한다.
 
 | service_id | 표시명 | 우선 확인 영역 |
 |---|---|---|
+| `alice` | ALICE(알리스) | 검색 API, 색인, 필터, 랭킹, OpenSearch |
 | `aladin-auth` | 알라딘 인증 | 로그인, SSO, 세션, 권한, 회원 식별 |
 | `new-billing` | 뉴빌링 | 결제, 청구, 환불, 정산, 구독 |
+
+ALICE는 AI팀이 운영하는 검색 서비스군의 공식 표기다. 기반 검색엔진 제품은 OpenSearch이고, 실제 구성요소는 `mall-search`, `aladin-search-pipe`, `search-admin-api`, `search-admin-front`다. `ALIS`·`Alis`를 새 문서 표기로 사용하지 않는다. 상세는 `catalog/common-services/alice.yaml`을 따른다.
 
 뉴빌링은 `billing-backend`, `billing-frontend` 소스가 확인된 개발 중 공통 서비스다. 현재 팀 서비스와의 active 연동은 확인되지 않았으므로 production dependency로 쓰지 않는다. 다만 새로 만들어지는 빌링, 결제, 정산, 구독, 빌링키 기능은 먼저 `catalog/common-services/new-billing.yaml`의 뉴빌링 API 경계를 확인하고, 경유하지 않는다면 사유를 티켓/설계 노트에 남긴다.
 

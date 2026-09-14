@@ -46,7 +46,10 @@
 ## 변경 통제
 
 - 하네스 변경은 PR 경유 — 하네스 예외 브랜치 `team2/{작업-slug}` ([branching-strategy.md](./branching-strategy.md))
-- 스킬 재표현·문장 삭제는 **삭제 테스트** 동반: 변경 전후 해당 스킬 1회 실행 비교, 같으면 확정
+- 스킬 재표현·문장 삭제는 **삭제 테스트** 동반. 같은 대표 요청·저장소 상태·모델·설정·예산으로 변경 전후를 비교하고, 변경한 규칙이 발동하는 사례를 포함한다
+- 후보에게 평가 대상이라는 정보와 상대 후보를 노출하지 않는다. 중립 라벨의 결과를 같은 판정 기준으로 비교한다
+- 필수 행동·위반·산출물·비용을 대조한다. 결과 변동이 결론에 영향을 주면 반복 실행하고, 단일 실행의 일치만으로 규칙이 무효라고 확정하지 않는다. 관찰 가능한 기록이 없는 과정은 미확인으로 남긴다
+- 실행 기록과 실제 산출물 비교는 [하네스 행동 평가](../docs/harness-behavior-evaluation.md)를 따른다. 형식 검사 통과나 에이전트의 자기 보고만으로 행동 평가를 대체하지 않는다
 - 중복 제거 원칙: SoT 내용은 유지 / 참조 파일은 본문 삭제 후 링크 교체 / 요약이 필요하면 3줄 이내 + 링크 / 스킬 파일은 실행에 필요한 최소 정보만
 
 ## Source of Truth 등록부
@@ -55,6 +58,9 @@
 
 | 주제 | Source of Truth | 참조하는 파일들 |
 |------|----------------|----------------|
+| **완료·인계 증거 규격** | `docs/agents/verification.md` | `configs/discord-agent-profiles.yaml` (기존 verification 필드), `tools/generate_discord_orchestrator_payload.py` (Task Brief 전달), `.claude/commands/ad/plan-run.md`, `policies/overrides/mattpocock.md` |
+| **행동 평가 실행 계약** | `docs/harness-behavior-evaluation.md` (변경 판단은 본 문서 §변경 통제) | `tools/README.md` |
+| **서비스 실행 검증 계약 양식** | `templates/service-harness/VERIFICATION.md.tmpl` (실제 계약은 각 서비스 repo) | `catalog/README.md`, `templates/service-harness/AGENTS.md.tmpl`, `docs/agents/verification.md` |
 | **5W1H 작성법** | `docs/sprint/ticket-guide.md` 3항 | `.claude/commands/ad/ticket.md`, `templates/ticket-templates/`, `youtrack/ticket-guide.md` |
 | **스토리 포인트** | `docs/sprint/story-point-guide.md` | `.claude/commands/ad/ticket.md`, `docs/sprint/sprint-planning-overview.md` |
 | **이월 절차** | `docs/sprint/plan-change-process.md` | `docs/sprint/ticket-guide.md` §8 (요약+링크만) |

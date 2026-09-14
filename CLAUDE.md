@@ -27,6 +27,7 @@
 - 용어: "위키"는 로컬 Obsidian vault만 뜻하고, YouTrack Articles는 "지식베이스(KB)" 또는 "기술자료"라고 부른다. "위키에 저장" 요청은 로컬 위키 저장으로 해석한다
 - 지식 분리: 팀 하네스(repo) = "어떻게 일하나"(정책·템플릿·카탈로그·스킬), Obsidian vault = "무엇을 일하나"(프로젝트 진행·운영·도메인·회의·일지·OKR·티켓 산출물). 결정 트리는 [policies/knowledge-base-policy.md](./policies/knowledge-base-policy.md) 참조
 - 공통 서비스 영향: 로그인/권한/회원 식별/결제/정산/구독/공유 API가 걸리면 [policies/common-service-policy.md](./policies/common-service-policy.md)와 [catalog/common-services/registry.yaml](./catalog/common-services/registry.yaml)을 함께 확인
+- 검색 서비스 명칭: 공식 표기는 `ALICE(알리스)`. 검색 API·색인·OpenSearch 경계는 [catalog/common-services/alice.yaml](./catalog/common-services/alice.yaml)을 확인
 - 신규 빌링, 결제, 정산, 구독, 빌링키 기능은 [catalog/common-services/new-billing.yaml](./catalog/common-services/new-billing.yaml)의 뉴빌링 API 경계를 먼저 확인한다. 현재 팀 서비스 active 연동은 없는 상태로 기록한다.
 - Feature ≤ 1주 (필수) / Task ≤ 1일 (필수) — 초과 시 분할. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md)
 - Feature 하위 Task는 개발 / 검증 / 배포·운영 반영으로 분리 — 판정 필수, 해당 시 별도 Task, 해당 없으면 Feature 본문에 사유 기재. 검증은 테스트(내부) / QA(시너지팀) / 테스트→QA 중 선택. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md) 2-2항

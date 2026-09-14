@@ -53,6 +53,8 @@ cp $TEAM2_HARNESS_PATH/templates/service-harness/CLAUDE.md.tmpl ./CLAUDE.md
 
 ## 서비스별 예시
 
+두 설치 방법 모두 아래 [실행 검증 계약 연결](#실행-검증-계약-연결)을 함께 적용한다.
+
 ### naru (기존 CLAUDE.md 있음)
 
 `$TEAM2_WORKSPACE_PATH/naru/NaruServer/CLAUDE.md` 상단에 추가:
@@ -113,6 +115,26 @@ max와 동일하게 레거시 정책 참조 포함.
 
 ---
 
+## 실행 검증 계약 연결
+
+기존 계약이 있으면 그 파일을 유지한다. 없으면 서비스 repo에서 [실행 계약 템플릿](../templates/service-harness/VERIFICATION.md.tmpl)을 빈 경로에 복사한다. 아래 예시는 기존 파일이 있으면 덮어쓰지 않는다.
+
+```bash
+if [ ! -e docs/verification.md ]; then
+  mkdir -p docs
+  cp "$TEAM2_HARNESS_PATH/templates/service-harness/VERIFICATION.md.tmpl" docs/verification.md
+fi
+```
+
+1. 서비스 repo의 실제 명령·사용자 경로·환경 제약으로 빈칸을 채운다. 실행 전까지 초안으로 유지한다.
+2. 실행 준비 → 대상 확인 → 대표 기능 실행 → 증거 수집 → 소유 자원 정리 → 증거 재열람을 수행한다. [하네스 CLI 사례](verification/harness-links.md)처럼 관찰된 결과로 판정한다.
+3. 실행한 계약만 [카탈로그 규격](../catalog/README.md#실제-실행-검증-계약)에 따라 `verification.runtime_contract`의 repo·상대 경로로 등록한다. 기존 `verification.status`는 빠른 루프 커버리지 의미를 유지한다.
+4. 서비스의 CLAUDE.md와 AGENTS.md에 해당 계약 포인터를 연결한다. 기존 파일에는 포인터만 추가하고 본문을 덮어쓰지 않는다.
+
+환경을 확보하지 못한 서비스는 제약과 초안 상태를 기록한다. 대표 기능 하나를 실행했다고 전체 기능 검증이나 배포 검증으로 보고하지 않는다.
+
+---
+
 ## 확인 방법
 
 서비스 레포에서 Claude Code를 실행하고:
@@ -122,3 +144,5 @@ max와 동일하게 레거시 정책 참조 포함.
 ```
 
 Claude가 `$TEAM2_HARNESS_PATH/policies/`의 파일들을 읽어서 답하면 연결 성공이다.
+
+Codex의 AGENTS 진입점도 같은 계약을 찾는지 확인한다. 실행 검증 계약의 수용은 파일 읽기 외에 위 실제 실행과 증거 재열람까지 필요하다.

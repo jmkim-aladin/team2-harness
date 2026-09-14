@@ -293,8 +293,12 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 |---|---|
 | 신규 위키 노트 | `/ad:new-note` (배치는 [knowledge-base-policy.md](../policies/knowledge-base-policy.md) 결정 트리) |
 | KB 조회 | `/ad:team2-kb-read` |
+| KB 등록·초안 게시 | `/ad:kb-publish` — 등록할 때 로컬 전용 내용 제외·링크 변환·저장 확인 |
 | 아키텍처 한 장 요약 | `/ad:tldr` |
 | 변경 설명서 | `/ad:explain` |
+| 낯선 주제·용어·에러를 지금 이해 | `/eli5` — 구체 사례 + ASCII 그림, 터미널 |
+| 같은 설명을 남에게 보낼 한 장으로 | `/eli5-html` — 자족 HTML 1개 |
+| 낯선 저장소에 처음 투입 | `/eli5-onboard` — 업무→용어→흐름→구조 순 단계별 커리큘럼 |
 | 방금 설명이 이해 안 될 때 재설명 | `/wait-what` — 팀 용어집 어휘로 재피치 |
 | 새 기술·개념 다세션 학습 | `/teach` — 현재 디렉토리를 학습 워크스페이스로 |
 | 문서 생성 | `/document-generate` |
@@ -367,6 +371,8 @@ PR 생성 (체크리스트 포함)
 2. 신규 서비스 정보로 템플릿 채우기
 3. 서비스 개발하면서 계속 갱신
 
+두 경로 모두 [실행 검증 계약 연결](service-harness-setup.md#실행-검증-계약-연결)에 따라 계약을 준비·실행하고 카탈로그에 연결한다. 템플릿 복사만으로 검증 완료로 처리하지 않는다.
+
 ## 하네스 갱신 트리거
 
 | 상황 | 갱신 대상 |
@@ -376,7 +382,8 @@ PR 생성 (체크리스트 포함)
 | 배포/롤백 절차 변경 | RUNBOOK.md |
 | DB/SP 영향 범위 변경 | LEGACY_BOUNDARY.md |
 | 서비스 책임 이동 | service-manifest.yaml |
-| 장애/위험 포인트 발견 | AGENTS.md 주의사항 |
+| 장애/위험 포인트 발견 | 운영 노트·하네스 감사, 코드·검사로 표현하기 어려운 제약만 AGENTS.md에 참조 |
+| 실행 명령·기능별 검증 경로 변경 | 서비스 실행 검증 계약·카탈로그의 계약 포인터 |
 | 현대화 진행 상태 변경 | modernization-plan.md |
 | 금지 패턴 추가 | AGENTS.md 금지 사항 |
 
@@ -413,6 +420,7 @@ PR 생성 (체크리스트 포함)
 | 스킬 | 설명 | 상태 |
 |------|------|------|
 | `/ad:team2-kb-read` | YouTrack KB 문서 조회/검색 | 구현됨 |
+| `/ad:kb-publish` | YouTrack KB 등록 시 게시 범위·링크·저장 결과 확인 | 구현됨 |
 | `/ad:team2-onboard` | 신규 서비스 하네스 생성 | 미구현 |
 | `/ad:team2-catalog` | 서비스 카탈로그 조회/갱신 | 미구현 |
 | `/ad:team2-harness-check` | 서비스 하네스 완성도 점검 | 미구현 |

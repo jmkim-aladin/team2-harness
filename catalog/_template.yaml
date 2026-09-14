@@ -50,5 +50,9 @@ verification:
       typecheck: ""       # 선택 — 타입 체크가 별도 명령일 때만
       evidence: ""        # 출처 표기: "max-front/package.json scripts.build|lint", "max/CLAUDE.md §Common Commands L44"
   notes: ""               # 제약 (예: .NET FW 4.8은 mac 빌드 불가 — Windows + VS 2022 전용)
+  # 선택: 실제로 실행·검증한 계약이 있을 때만 추가. path는 해당 repo 기준 상대 경로.
+  # runtime_contract:
+  #   repo: "AladinCommunication/{repo}"
+  #   path: "docs/verification.md"
 
 harness_status: "not-started"  # not-started / in-progress / complete

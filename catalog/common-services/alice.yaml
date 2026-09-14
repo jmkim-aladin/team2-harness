@@ -1,0 +1,121 @@
+# ALICE 공통 검색 서비스 프로파일
+#
+# AI팀이 운영하는 검색 서비스군의 공식 명칭과 구성요소를 구분한다.
+# 운영 계약의 최종 원장은 각 서비스 코드·YouTrack 기술자료·owner 확인이다.
+
+service_id: alice
+display_name: ALICE
+korean_name: 알리스
+domain: search
+status: evidence
+lifecycle: production
+owner_scope: ai-team
+impact_check_required: true
+
+naming:
+  official_english: ALICE
+  official_korean: 알리스
+  preferred_display: "ALICE(알리스)"
+  identifier_variant: Alice
+  unsupported_document_spellings:
+    - ALIS
+    - Alis
+  rules:
+    - "사람 대상 문서의 첫 표기는 `ALICE(알리스)`를 사용한다."
+    - "이후 문맥에서는 `ALICE` 또는 `알리스`를 사용한다."
+    - "`Alice-*`는 Fortify 애플리케이션명 등 기존 기술 식별자에서 원형을 유지한다."
+    - "`ALIS`와 `Alis`는 AI팀 근거에서 확인되지 않은 표기이므로 새 문서에 사용하지 않는다."
+    - "기존 파일명·코드 식별자의 `alis`는 호환성을 검토하지 않고 일괄 변경하지 않는다."
+    - "`ALICE`의 영문 확장형은 확인된 근거가 없으므로 추정해 만들지 않는다."
+
+ownership:
+  primary: 최우빈
+  backup: 김준회
+  evidence:
+    - DEVAI-317
+    - DEVAI-596
+    - REF-A-2451
+
+system_boundary:
+  umbrella_name: ALICE
+  engine:
+    product: Amazon OpenSearch Service
+    short_name: OpenSearch
+    role: 검색 색인 저장·질의 실행 엔진
+    resource_names:
+      - aladin-opensearch-mall-dev
+      - aladin-opensearch-mall-prod
+  legacy_engine:
+    product: DiQuest
+    internal_reference: Mariner4
+    status: replaced
+  notes:
+    - ALICE는 OpenSearch의 제품명이 아니라 AI팀 검색 서비스군의 내부 상위 명칭이다.
+    - OpenSearch는 ALICE가 사용하는 기반 검색엔진 제품이다.
+
+components:
+  mall-search:
+    repository: https://github.com/AladinCommunication/mall-search
+    project_name: mall-search-service
+    role: 알라딘몰 상품 검색 REST API
+    engine: OpenSearch
+  aladin-search-pipe:
+    repository: https://github.com/AladinCommunication/aladin-search-pipe
+    role: 검색 데이터 구축·증분 동기화·OpenSearch 색인 파이프라인
+    legacy_document_aliases:
+      - aladin-pipe
+  search-admin-api:
+    repository: https://github.com/AladinCommunication/search-admin-api
+    project_name: Search-Admin
+    role: 검색 사전·가중치 등 관리자 API
+  search-admin-front:
+    repository: https://github.com/AladinCommunication/search-admin-front
+    role: 검색 관리자 UI
+
+related_services_not_aliases:
+  - name: tobe-search
+    repository: https://github.com/AladinCommunication/tobe-search
+    role: 투비 전용 검색 서비스
+  - name: max-search
+    repository: https://github.com/AladinCommunication/max-search
+    role: 만권당 전용 검색 서비스
+  - name: OpenSearch
+    role: 기반 검색엔진 제품
+
+known_consumers:
+  - shopping
+
+future_consumer_candidates:
+  - storefront
+
+check_when:
+  - 검색 API 요청·응답·endpoint 변경
+  - 검색 필드·필터·정렬·랭킹·자동완성·수정어 변경
+  - 색인 schema·pipeline·갱신 주기·alias 변경
+  - OpenSearch version·cluster·shard·권한 변경
+  - StoreFront 전용 index·tenant filter·검색 adapter 설계
+
+source_evidence:
+  youtrack:
+    - id: DEVAI-317
+      fact: AI팀 업무분장에 `ALICE 검색(알리스)`와 담당자 최우빈 명시
+    - id: DEVAI-1212
+      fact: Fortify 애플리케이션명 `Alice-mall-search`, `Alice-max-search`, `Alice-search-admin-api` 확인
+    - id: REF-A-1941
+      fact: "`알리스(검색)` 아래 aladin-search-pipe·mall-search·search-admin-api 구성 확인"
+    - id: REF-A-627
+      fact: 기존 다이퀘스트에서 OpenSearch로의 검색엔진 이관 확인
+    - id: DEVAI-1066
+      fact: aladin-opensearch-mall 개발·운영 cluster와 OpenSearch version 운영 확인
+  github:
+    - repository: https://github.com/AladinCommunication/mall-search
+      evidence: settings.gradle.kts의 `mall-search-service`, docs/README.md의 OpenSearch 기반 검색 API 설명
+    - repository: https://github.com/AladinCommunication/aladin-search-pipe
+      evidence: docs/README.md의 OpenSearch 색인·CDC 동기화 설명
+    - repository: https://github.com/AladinCommunication/search-admin-api
+      evidence: settings.gradle.kts의 `Search-Admin`, OpenSearch client dependency
+
+open_questions:
+  - "`ALICE` 영문 약어의 확장형 존재 여부"
+  - "대외 표시에서 `ALICE`와 `Alice` 중 owner가 지정한 brand casing 존재 여부"
+  - StoreFront용 API contract·index 전략·tenant filter 지원 범위

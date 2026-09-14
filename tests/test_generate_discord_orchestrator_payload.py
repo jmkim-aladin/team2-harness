@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -95,6 +97,25 @@ class GenerateDiscordOrchestratorPayloadTests(unittest.TestCase):
 
         self.assertEqual(first["request_id"], second["request_id"])
         self.assertEqual(first["payloads"][0]["payload_id"], second["payloads"][0]["payload_id"])
+
+    def test_verification_contract_reaches_written_outbox(self) -> None:
+        board = {"updated_at": "2026-09-14", "cards": [{
+            "id": "sample", "work_id": "sample", "title": "격리 검토",
+            "path": "wiki/sample.md", "suggested_roles": ["qa"]}]}
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp)
+            batch = vault / "batch.json"
+            payloads.write_payloads(batch, payloads.build_payloads(board), apply=True)
+            command = [sys.executable, str(MODULE_PATH.with_name("export_hermes_discord_outbox.py")),
+                       "--vault", str(vault), "--batch", str(batch), "--apply"]
+            proc = subprocess.run(command, capture_output=True, text=True, check=True)
+            manifest = json.loads(proc.stdout)
+            item = next(x for x in manifest["items"] if x["channel"] == "agent-qa")
+            content = json.loads((vault / item["path"]).read_text())["content"]
+            self.assertIn("$TEAM2_HARNESS_PATH/docs/agents/verification.md", content)
+            self.assertIn("before completion or handoff", content)
+            self.assertTrue((MODULE_PATH.parents[1] / "docs/agents/verification.md").is_file())
+            self.assertEqual(json.loads(batch.read_text())["dispatch_status"], "pending-hermes")
 
 
 if __name__ == "__main__":

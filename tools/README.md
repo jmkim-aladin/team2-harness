@@ -2,6 +2,13 @@
 
 팀 하네스 보조 도구 모음. 일회성 또는 정기 실행용 스크립트.
 
+## 하네스 행동·실행 검증
+
+- `evaluate_harness_behavior.py`: 두 실행의 원본 산출물을 사전 assertion으로 비교한다. [입력 계약·실행법·판정 한계](../docs/harness-behavior-evaluation.md).
+- `verify_harness_links.py`: 실제 링크 동기화 CLI의 dry-run·apply·반복·재개·증거 보존을 격리 fixture에서 확인한다. [실행 검증 계약](../docs/verification/harness-links.md).
+
+두 도구 모두 종료 코드는 PASS 0 / FAIL 1 / INCONCLUSIVE 또는 입력 오류 2다. 로그의 성공 문구만으로 동작을 판정하지 않는다.
+
 ## team2-agent.py / bin/team2-agent — 터미널 조작면
 
 컴퓨터 앞에서 쓰는 짧은 control pane 명령. 내부적으로는 아래 Python 도구들을 호출하지만, 사용자는 긴 `python3 tools/...` 명령을 직접 치지 않는다.

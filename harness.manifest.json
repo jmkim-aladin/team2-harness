@@ -30,6 +30,18 @@
       {
         "src": ".codex/skills/youtrack-ticket-5w1h-ko",
         "dest": "~/.claude/skills/youtrack-ticket-5w1h-ko"
+      },
+      {
+        "src": ".codex/skills/eli5",
+        "dest": "~/.claude/skills/eli5"
+      },
+      {
+        "src": ".codex/skills/eli5-html",
+        "dest": "~/.claude/skills/eli5-html"
+      },
+      {
+        "src": ".codex/skills/eli5-onboard",
+        "dest": "~/.claude/skills/eli5-onboard"
       }
     ]
   },

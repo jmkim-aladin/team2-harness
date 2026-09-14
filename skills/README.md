@@ -7,6 +7,7 @@
 | `ad:` | 개발 2팀 공통 스킬 | `.claude/commands/ad/` (이 레포) |
 | `ad:team2` | 팀 운영 스킬 (하네스, KB 연동 등) | `.claude/commands/ad/` (이 레포) |
 | Codex Skill | Codex용 team2 하네스 진입점 | `.codex/skills/` (이 레포, repo-local) |
+| 재피치 스킬 | 명시 호출 전용 설명 스킬 | `.codex/skills/` (이 레포, Claude·Codex 양쪽 링크) |
 
 ## 필요 인증
 
@@ -45,6 +46,20 @@
 | `ad:team2-harness-check` | 서비스 하네스 완성도 점검 | - | 미구현 |
 | `ad:team2-members` | 팀원/담당 서비스 조회 | - | 미구현 |
 
+### 재피치 스킬 (사용자 호출 전용)
+
+| 스킬 | 설명 | 인증 | 상태 |
+|------|------|------|------|
+| `eli5` | 주제·확정된 결론을 무지 독자 눈높이로 터미널 재피치 (구체 사례 + ASCII 그림) | - | 구현됨 |
+| `eli5-html` | 같은 설명을 공유용 자족 HTML 한 장으로 (인라인 SVG, 400단어 이하) | - | 구현됨 |
+| `eli5-onboard` | 낯선 저장소를 도메인 지식 0에서 심화까지 밟는 단계별 온보딩 커리큘럼으로 | - | 구현됨 |
+
+원안은 [claude-plugins-community `eli5`](https://github.com/anthropics/claude-plugins-community/blob/main/eli5/skills/eli5/SKILL.md) 한 종. 즉답(파일 없음)과 공유물(파일 남음)은 출력 매체가 다르므로 둘로 갈랐다.
+
+셋 다 `disable-model-invocation: true` — `/eli5`, `/eli5-html`, `/eli5-onboard`(Codex는 `$` 접두)로 사람이 부를 때만 돈다. 다른 스킬 절차에서 이 규율이 필요하면 이름으로 부르지 말고 `.codex/skills/eli5/SKILL.md`를 읽어 수행한다.
+
+`eli5-onboard`는 대상이 주제가 아니라 **저장소 하나**다. 갈림: 독자가 도메인을 이미 알면 `/ad:tldr`(현황 한 장), 처음 투입이면 이쪽(학습 경로).
+
 ### 서비스별 스킬 (서비스 하네스에서 추가)
 
 | 스킬 | 설명 |
@@ -65,3 +80,4 @@ Codex Skill은 team2 레포의 `.codex/skills/*`에 repo-local로 두고, 같은
 | `dev2-team-harness-ko` | 정책/카탈로그/KB/스프린트 등 team2 컨텍스트 로드 |
 | `dev2-ad-commands-ko` | `/ad:*` 전체를 `.claude/commands/ad/{name}.md`에 위임 |
 | `youtrack-ticket-5w1h-ko` | `/ad:ticket` 티켓 작성 진입점 |
+| `eli5` / `eli5-html` | 엔진 스킬 — Codex·Claude 양쪽에 같은 SKILL.md가 링크된다 |

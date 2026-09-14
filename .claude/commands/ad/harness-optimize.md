@@ -123,7 +123,7 @@ curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content
 1. **사용 통계**: `python3 tools/skill_usage_report.py --days 90` 실행
    - 주의: Claude Code 로그만 집계. Codex(`.codex/skills/*`)·Hermes cron(granola-sync 등) 사용은 안 잡힘 — 0회여도 즉시 삭제 판단 금지, 사용 경로 확인 후 판정
 2. **체크리스트 감사**: 각 스킬을 트리거/구조/유도/가지치기 기준으로 점검, 결과를 `docs/skill-audit-baseline.md`에 갱신 (표 형식 유지, 날짜 갱신)
-3. **삭제 테스트**: 무동작 문장 후보를 지운 버전으로 해당 스킬 1회 실행해 결과 비교. 같으면 삭제 확정
+3. **삭제 테스트**: [거버넌스의 변경 통제](../../../policies/harness-governance-policy.md#변경-통제)에 따라 규칙이 발동하는 대표 요청의 변경 전후 행동을 비교한다. 한 번의 동일 출력만으로 삭제를 확정하지 않는다
 4. **Codex 패리티 검증** (대전제 — [skill-authoring-principles.md](../../../policies/skill-authoring-principles.md)):
    ```bash
    for f in .claude/commands/ad/*.md; do n=$(basename "$f" .md); [ -d ".codex/skills/ad-$n" ] || echo "MISSING codex alias: ad-$n"; done
@@ -171,8 +171,12 @@ curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content
    - 캐시(환경이 SoT인 사실의 재기술), 근거 없는 도구·명령·개수·순서 고정
    - **모델 중첩 지시** — 모델 내장 행동을 재지시해 중첩되는 것: 자기 검증 재지시("다시 확인하라"), 진행 보고 강제("N번마다 요약"), 위임 유도("적극 위임"), 강조 부사("반드시 꼼꼼히"). 구모델 한계 보완용 잔재는 재작성이 아니라 **삭제**가 기본 (근거: 2026-07 Anthropic Opus 5/Fable 5 가이드)
 3. 발견별로 위치·원문·추론 의도·권장 조치(유지 / 완화 / 제거 / 도구화 / 근거 부착)·보존되는 불변조건을 제시한다
+   - 기존 규칙이 있는데 호출되지 않았다면 description·진입 경로를, 읽었는데 지켜지지 않았다면 실행 환경·검증 신호를 먼저 점검한다. 참조 기록이 없으면 읽었는지 미확인으로 남긴다
+   - 반복 오류를 lint·schema·권한·실행 검사로 잡을 수 있으면 도구화 후보로 보낸다. 더 강한 경고 문장을 추가하는 것으로 닫지 않는다
+   - 기존 SoT가 틀렸다면 그곳을 수정 후보로 삼는다. 재발 조건이나 다음 판단의 변화가 불명확한 일회성 관찰·개인 취향은 새 팀 규칙으로 승격하지 않는다
+   - 도구화 후보는 대표 입력·기대 결과를 먼저 고정하고 기존 도구 재사용 여부를 확인한다. 실제 실행·결과 비교·호출법·근거 위치가 완료 기준이며, 상태를 쓰면 재실행·부분 실행 후 재개 시 중복·누락·타 작업 덮어쓰기를 격리 환경에서 검사한다. dry-run도 파일·네트워크·외부 상태의 실제 변경 여부를 확인한다
 4. 재제안 방지: [docs/skill-audit-baseline.md](../../../docs/skill-audit-baseline.md)의 기존 판정·기각 기록과 대조한다
-5. 적용은 삭제 테스트(재표현 전후 해당 스킬 1회 실행 비교) 후 PR로. 강도 하향·등급 변경은 review-required — 기준·권한: [harness-governance-policy.md](../../../policies/harness-governance-policy.md)
+5. 적용은 [삭제 테스트](../../../policies/harness-governance-policy.md#변경-통제) 후 PR로. 강도 하향·등급 변경은 review-required — 같은 정책의 기준·권한을 따른다. 결과와 채택·기각·도구화 후보는 기존 audit baseline에 남기고 외부 티켓을 자동 생성하지 않는다
 
 ## repo↔vault 드리프트 점검
 

@@ -28,6 +28,12 @@
 
 DB·외부 인프라·브라우저가 필요한 검증(통합 테스트, E2E, 부하 테스트)은 기본 루프에서 빼고 `notes`에 제약과 함께 적는다. 명령이 바뀌면 evidence 출처 파일과 함께 갱신한다.
 
+### 실제 실행 검증 계약
+
+빠른 루프와 별도로 실행 준비·대상 확인·사용자 경로·증거·정리를 제공하는 서비스는 `verification.runtime_contract`에 `{repo, path}`를 기록한다. `path`는 해당 repo 기준 상대 경로이며 계약이 없으면 필드를 생략한다. 명령·기능별 경로는 서비스 repo의 계약 한 곳이 소유한다.
+
+공통 형식은 [VERIFICATION 템플릿](../templates/service-harness/VERIFICATION.md.tmpl), 실제 실행 예는 [하네스 링크 동기화 검증](../docs/verification/harness-links.md)이다. 계약은 대표 기능을 끝까지 실행하고 정리 후 증거 보존을 확인해야 검증된 것으로 취급한다. `verification.status`는 기존 빠른 루프 커버리지 의미를 유지하며 runtime 계약 파일의 존재만으로 승격하지 않는다.
+
 ## 운영 모니터링
 
 - Datadog 조직/API 접근 기준 (비민감): [`datadog.yaml`](datadog.yaml) — 키 취급 규칙은 [`policies/datadog-api-policy.md`](../policies/datadog-api-policy.md)
@@ -68,6 +74,7 @@ DB·외부 인프라·브라우저가 필요한 검증(통합 테스트, E2E, �
 
 | 공통 서비스 | 영역 | 확인 기준 |
 |---|---|---|
+| [ALICE (`alice`)](common-services/alice.yaml) | 검색 API, 색인, 필터, 랭킹, OpenSearch | 공식 표기는 `ALICE(알리스)`. 검색 계약·색인·OpenSearch 변경 시 공통 서비스 영향 확인 |
 | 알라딘 인증 (`aladin-auth`) | 로그인, SSO, 세션, 권한, 회원 식별 | 로그인/권한/회원 식별 변경 시 공통 서비스 영향 확인 |
 | [뉴빌링 (`new-billing`)](common-services/new-billing.yaml) | 결제, 청구, 환불, 정산, 구독, 빌링키 | 소스 확인됨, 개발 중, 현재 팀 서비스 active 연동 없음. 신규 빌링성 기능은 뉴빌링 API 우선 확인 |
 

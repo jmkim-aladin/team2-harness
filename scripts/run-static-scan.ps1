@@ -198,7 +198,7 @@ $Registry = [ordered]@{
     Note = 'Kotlin/Spring. main은 2026-01 이후 정지(개발은 develop)'
   }
   'max-server' = @{
-    Path = 'max\MaxServer'; Ref = 'origin/main'; SonarKey = 'MaxServer'
+    Path = 'max-new\MaxServer'; Ref = 'origin/main'; SonarKey = 'MaxServer'
     SonarMode = 'cli'; FortifyMode = 'yes'; Globs = $GlobsKotlin
     ScanFilter = 'fortify\scan-filter.txt'
     Note = 'Kotlin 전환용. scan-filter.txt는 scan 단계 인자로 적용'

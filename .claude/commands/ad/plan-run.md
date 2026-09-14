@@ -63,6 +63,7 @@ disable-model-invocation: true
 - pre-agreed seam에서 TDD를 사용한다.
 - 좁은 test·typecheck를 반복하고 마지막에 대상 repository의 full verification을 실행한다.
 - 실패한 가정은 숨기지 않고 plan 진행 기록과 repository change/evidence에 남긴다.
+- [검증 증거 계약](../../../docs/agents/verification.md)에 따라 실제 검증 대상·환경·결과를 evidence에 연결한다. 재개 시 검증 이후 바뀐 코드·미커밋 상태·환경을 대조하고 영향받는 범위만 재검증한다.
 - milestone 밖의 다음 단계는 구현하지 않는다.
 
 ### 5. 종료 전이
@@ -72,6 +73,7 @@ Acceptance와 full verification이 통과하면:
 - 행을 `completed`로 전이한다.
 - `execution_ref`와 `evidence`를 실제 canonical artifact로 갱신한다.
 - 진행 기록에 결과와 다음 `planned` milestone을 적는다.
+- 중요한 채택·기각·전환은 같은 진행 기록에 `판단 → 이유 → 증거 → 결과`로 남긴다. 모든 명령을 별도 로그에 복제하지 않는다.
 
 같은 blocking condition이 반복돼 사용자 결정이나 외부 상태 없이는 진행할 수 없으면:
 

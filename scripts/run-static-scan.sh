@@ -142,7 +142,7 @@ load_repo() {
       R_SMODE="cli"; R_FMODE="yes"; R_GLOBS="$GLOBS_KOTLIN"
       R_NOTE="Kotlin/Spring. main은 2026-01 이후 정지(개발은 develop) — 1월 baseline과 결과 유사 예상" ;;
     max-server)
-      R_PATH="max/MaxServer"; R_REF="origin/main"; R_SONARKEY="MaxServer"
+      R_PATH="max-new/MaxServer"; R_REF="origin/main"; R_SONARKEY="MaxServer"
       R_SMODE="cli"; R_FMODE="yes"; R_GLOBS="$GLOBS_KOTLIN"
       R_NOTE="Kotlin 전환용. fortify/scan-filter.txt 보유 — scan 단계 인자로 적용" ;;
     max-front)
