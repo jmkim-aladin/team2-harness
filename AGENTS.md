@@ -52,6 +52,39 @@ gstack 스킬 사용 시 [policies/gstack-override-policy.md](./policies/gstack-
 
 근거: 2026-08-08 30일 실측 — 호출당 평균 컨텍스트 470k (zone의 3배).
 
+## 서브에이전트 위임 프롬프트
+
+> SoT: [memory/claude-base.md](./memory/claude-base.md) §위임 프롬프트 계약 — Codex 로드 경로 부재로 아래 블록을 **생성**한다. 직접 고치지 말고 SoT를 고친 뒤 `python3 tools/lint_harness_rules.py --sync-generated`. 모델 선택표는 SoT를 본다.
+
+<!-- generated:delegation-contract source=memory/claude-base.md -->
+절차를 쪼개 순서대로 시키지 말고 **일을 통째로** 준다. 다섯 요소를 모두 채우면 자족적이다.
+
+| 요소 | 내용 |
+|---|---|
+| **목표** | 끝난 상태를 한 문장. 경로·순서는 지정하지 않는다 |
+| **의도(왜)** | 누구를 위해, 무엇이 가능해지는가. 미리 못 정한 결정을 서브에이전트가 이 맥락으로 판단한다 |
+| **불변조건** | 각 항에 이유를 붙인 긍정형. 앵커 문서 경로(티켓 노트·정책·카탈로그)와 repo 관례를 여기 건다 |
+| **완료 기준** | 기계 판정 가능한 신호 — 통과할 명령(lint·build·test), 존재할 파일, 만족할 수치 |
+| **출력 형식** | 회수할 산출물의 모양과 길이. 안 적으면 장황해진다 |
+
+- 커밋·푸시·티켓 상태 변경은 서브에이전트가 하지 않는다 — 게이트는 메인 (근거: 사용자 확인 게이트는 invariant)
+- 부정형 나열("~하지 마라")로 가드레일을 채우지 않는다. 대체 행동이 비면 모델이 그 자리를 임의로 채운다 — `policies/instruction-precedence-policy.md` §표기 규약
+- "다시 검증하라", "단계별로 생각하라" 같은 사고 과정 지시는 넣지 않는다. 신모델 내장 행동이라 중복 단계와 토큰만 늘린다. 산출물에 남길 증거(출처·파일:행·통과 명령)를 요구하는 것은 이와 다르며 유지한다
+
+근거: 2026-09-16 Anthropic Claude 5 세대 가이드 — 완전한 작업 명세(목표·가드레일·종료 조건)를 주고 끝까지 돌리는 쪽이 단계 지시보다 낫다.
+<!-- /generated:delegation-contract -->
+
+## 지시문 준수 검사
+
+팀 지시문(정책·스킬·템플릿)은 [instruction-precedence-policy.md](./policies/instruction-precedence-policy.md) §표기 규약을 따르고, 준수 여부는 검사로 지킨다.
+
+```bash
+python3 tools/lint_harness_rules.py            # 전체 위반 목록
+python3 tools/lint_harness_rules.py --check    # 베이스라인 대비 증가만 차단 (ratchet)
+```
+
+하네스 문서를 고쳤으면 `--check`를 통과시킨 뒤 커밋한다. 상세는 [tools/README.md](./tools/README.md).
+
 ## 외부 시스템
 
 - **YouTrack**: `https://aladincommunication.youtrack.cloud` — REST API(`$YOUTRACK_TOKEN`)만 사용. MCP 미사용

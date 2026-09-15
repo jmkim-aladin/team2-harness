@@ -17,7 +17,7 @@ description: "Use when a request needs DEV2/team2 harness context: policies, ser
 ## 참조
 
 - 진입점: `CLAUDE.md`, `AGENTS.md`
-- 정책: `policies/engineering-policy.md`, `branching-strategy.md`, `code-review-policy.md`, `release-policy.md`, `ai-usage-policy.md`, `security-policy.md`, `incident-policy.md`, `team-members.md`, `knowledge-base-policy.md`, `wiki-document-language-and-title-policy.md`, `business-stakeholder-communication-policy.md`, `data-request-policy.md`
+- 정책: `policies/engineering-policy.md`, `branching-strategy.md`, `code-review-policy.md`, `release-policy.md`, `ai-usage-policy.md`, `security-policy.md`, `incident-policy.md`, `team-members.md`, `knowledge-base-policy.md`, `wiki-document-language-and-title-policy.md`, `business-stakeholder-communication-policy.md`, `data-request-policy.md`, `instruction-precedence-policy.md`
 - 서비스/스프린트/분석: `catalog/{service}.yaml`, `docs/sprint/*.md`, `docs/analysis-guides.md`
 
 ## 용어

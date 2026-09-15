@@ -9,7 +9,7 @@
     python3 tools/setup_harness.py --check    # 보고만 (드리프트 있으면 exit 1)
     python3 tools/setup_harness.py --reset    # 관리 영역 초과분을 격리 후 수렴
 
-관리 영역: ~/.claude/skills, ~/.claude/commands/ad, ~/.codex/skills, settings.json 훅·env, 팀 메모리 링크.
+관리 영역: ~/.claude/skills, ~/.claude/commands/ad, ~/.codex/skills, settings.json 훅·env, 팀 메모리 링크, team2 repo core.hooksPath.
 비관리(절대 안 건드림): 인증·토큰 값, ~/.claude/projects 세션 로그, 개인 CLAUDE.md 내용, plugins on/off.
 --reset 도 삭제하지 않는다 — ~/.claude/harness-quarantine-<ts>/ 로 이동 (되돌리기 = mv).
 
@@ -198,6 +198,36 @@ def converge_memory(m, apply):
         warn(f"{target} 에 {line} 없음 → 수렴 필요")
 
 
+def converge_git_hooks(m, apply):
+    """team2 repo 의 core.hooksPath 를 manifest 선언으로 수렴 — Claude·Codex 공통 pre-commit 게이트."""
+    gh = m.get("git_hooks")
+    if not gh:
+        return
+    want = gh["hooks_path"]
+    hooks_dir = os.path.join(REPO, want)
+    for name in gh.get("scripts", []):
+        script = os.path.join(hooks_dir, name)
+        if not os.path.isfile(script):
+            warn(f"{want}/{name} 없음 — repo 에 훅 스크립트가 있어야 수렴 가능")
+            return
+        if not IS_WIN and not os.access(script, os.X_OK):
+            if apply:
+                os.chmod(script, os.stat(script).st_mode | 0o111)
+                fixed(f"chmod +x {want}/{name}")
+            else:
+                warn(f"{want}/{name} 실행 권한 없음")
+    r = subprocess.run(["git", "-C", REPO, "config", "--get", "core.hooksPath"],
+                       capture_output=True, text=True)
+    cur = r.stdout.strip()
+    if cur == want:
+        ok(f"core.hooksPath={want}")
+    elif apply:
+        subprocess.run(["git", "-C", REPO, "config", "core.hooksPath", want], check=True)
+        fixed(f"core.hooksPath {cur or '(없음)'} → {want}")
+    else:
+        warn(f"core.hooksPath={cur or '(없음)'} → {want} 수렴 필요")
+
+
 def audit_skills(m, mode, qdir):
     ext = m["external_skills"]
     team_names = {os.path.basename(e["dest"]) for e in m["team_links"]["claude_skills"]}
@@ -332,6 +362,7 @@ def main():
     converge_links(m, apply)
     converge_vendored(m, apply)
     converge_memory(m, apply)
+    converge_git_hooks(m, apply)
     audit_skills(m, mode, qdir)
     audit_hooks(m, mode)
     audit_plugins(m)

@@ -140,6 +140,7 @@ curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content
 1. **실측**: `python3 tools/harness_context_audit.py --days 90` + `python3 tools/secret_scan.py` (시크릿 유출 스캔 — 발견 시 다른 모든 항목보다 우선 처리: 제거 + 해당 자격증명 재발급)
    - 상주 컨텍스트 예산 / 훅 목록 / 세션 지표 / 툴 분포·지연 / 반복 Read / 설치 스킬 실사용을 한 번에 출력한다
    - 임계값 초과는 `[경고]`로 표시된다. 임계값은 도구의 `LIMITS`에 있고, 조정하려면 근거를 함께 남긴다
+   - Claude Code 세션이면 `/doctor`도 돈다 — 스킬·CLAUDE.md 라이트사이징 제안을 준다(`claude doctor` CLI는 설치 헬스체크만). Claude 전용 보조 신호이므로 Codex 파리티 판정에는 쓰지 않고, 제안은 대표 요청 행동 비교를 거쳐 채택한다
 
 2. **네 축으로 판정**:
 
@@ -163,13 +164,10 @@ curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content
 
 기준: [policies/instruction-precedence-policy.md](../../../policies/instruction-precedence-policy.md)의 4등급·표기 규약.
 
-1. 대상 문서(정책·스킬·템플릿)의 지시문을 invariant / policy / heuristic / example로 분류한다
-2. 다음을 후보로 surface한다:
-   - "반드시/필수/금지"로 표기된 heuristic (강등 후보)
-   - 의도(왜) 미기재 규칙
-   - `근거:` 없는 실패-사례성 하드 게이트
-   - 캐시(환경이 SoT인 사실의 재기술), 근거 없는 도구·명령·개수·순서 고정
-   - **모델 중첩 지시** — 모델 내장 행동을 재지시해 중첩되는 것: 자기 검증 재지시("다시 확인하라"), 진행 보고 강제("N번마다 요약"), 위임 유도("적극 위임"), 강조 부사("반드시 꼼꼼히"). 구모델 한계 보완용 잔재는 재작성이 아니라 **삭제**가 기본 (근거: 2026-07 Anthropic Opus 5/Fable 5 가이드)
+1. **실측**: `python3 tools/lint_harness_rules.py --summary`로 규칙별 카운트와 베이스라인 대비 추이를 본다. 기계가 잡는 것(R1a 근거 미기재 하드룰 · R2 모델 중첩 지시 · R3 강조 인플레 · R4 이탈 허용 미표기 시퀀스 · R5 크기 초과 · R6 카탈로그 검증 루프 누락 · R7 generated 블록 드리프트)은 여기서 끝난다. 사람 판단이 필요한 것만 다음 단계로
+   - 추이가 늘었으면 `--check`가 이미 PR에서 막았어야 한다 — 막히지 않았다면 게이트 경로부터 점검
+   - 기계가 못 잡는 것: invariant/policy/heuristic **등급 판정**(표면 토큰이 같아 텍스트로 구분 불가), 캐시(환경이 SoT인 사실의 재기술), 근거 없는 도구·명령·개수 고정
+2. `python3 tools/lint_harness_rules.py`(전체 목록)에서 R1a 발견을 파일별로 훑어 등급을 판정한다 — heuristic이면 "기본:" 표기로 완화, invariant/policy면 이유 한 줄 부착, 실패 사례 게이트면 `근거:` 부착. R2·R3는 삭제가 기본. R4는 그룹 상단에 "기본 순서 — 상황에 맞게 조정 가능" 한 줄
 3. 발견별로 위치·원문·추론 의도·권장 조치(유지 / 완화 / 제거 / 도구화 / 근거 부착)·보존되는 불변조건을 제시한다
    - 기존 규칙이 있는데 호출되지 않았다면 description·진입 경로를, 읽었는데 지켜지지 않았다면 실행 환경·검증 신호를 먼저 점검한다. 참조 기록이 없으면 읽었는지 미확인으로 남긴다
    - 반복 오류를 lint·schema·권한·실행 검사로 잡을 수 있으면 도구화 후보로 보낸다. 더 강한 경고 문장을 추가하는 것으로 닫지 않는다
@@ -177,6 +175,7 @@ curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content
    - 도구화 후보는 대표 입력·기대 결과를 먼저 고정하고 기존 도구 재사용 여부를 확인한다. 실제 실행·결과 비교·호출법·근거 위치가 완료 기준이며, 상태를 쓰면 재실행·부분 실행 후 재개 시 중복·누락·타 작업 덮어쓰기를 격리 환경에서 검사한다. dry-run도 파일·네트워크·외부 상태의 실제 변경 여부를 확인한다
 4. 재제안 방지: [docs/skill-audit-baseline.md](../../../docs/skill-audit-baseline.md)의 기존 판정·기각 기록과 대조한다
 5. 적용은 [삭제 테스트](../../../policies/harness-governance-policy.md#변경-통제) 후 PR로. 강도 하향·등급 변경은 review-required — 같은 정책의 기준·권한을 따른다. 결과와 채택·기각·도구화 후보는 기존 audit baseline에 남기고 외부 티켓을 자동 생성하지 않는다
+6. 해결한 위반은 `python3 tools/lint_harness_rules.py --update-baseline`으로 베이스라인에서 내린다(해결분만 삭제 — 신규 위반은 `--accept-new "<사유>"` 없이는 추가되지 않으며 사유가 PR diff에 남는다). 회차 카운트를 [docs/skill-audit-baseline.md](../../../docs/skill-audit-baseline.md) 북극성 거리표 원칙 5 행에 기록한다
 
 ## repo↔vault 드리프트 점검
 

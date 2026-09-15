@@ -6,6 +6,8 @@ description: 저장소 아키텍처 분석 — Clean/Hexagonal/DDD, 네이밍
 
 저장소 전체를 근거 기반으로 분석해 설계 철학, 실제 실행 구조, Clean/Hexagonal/DDD 적합성, 운영 위험과 네이밍을 정리한다. Markdown 원본과 self-contained HTML Reader를 DEV2 로컬 wiki에 저장한다.
 
+아래 단계는 기본 순서다 — 저장소 구조에 맞게 조정할 수 있되, 근거(파일:행) 없는 판정은 내지 않는다.
+
 ## 사용법
 
 ```text

@@ -626,6 +626,36 @@ python3 tools/secret_scan.py --staged    # pre-commit 용
 
 오탐 방지: placeholder(`<...>`·`XXXX`·`$VAR`), 스캔 명령 자기 자신(rg/grep 패턴 인자), `.obsidian` 서드파티 코드는 제외.
 
+## lint_harness_rules.py — 지시문 표기 규약 준수 검사 (ratchet)
+
+[instruction-precedence-policy.md](../policies/instruction-precedence-policy.md) §표기 규약을 문장이 아니라 검사로 지킨다 (북극성 1·5). 정책·스킬·템플릿·CLAUDE.md·AGENTS.md를 heading 트리로 파싱해 item 단위로 판정하고, `docs/harness-rule-baseline.json`에 fingerprint로 기록한 기존 위반은 허용하되 **신규 유입은 차단**한다. `/ad:harness-optimize 제약` 모드 Step 1. Claude·Codex 어느 세션에서든 같은 명령.
+
+```bash
+python3 tools/lint_harness_rules.py                  # 전체 발견 + 규칙별 요약
+python3 tools/lint_harness_rules.py --summary        # 카운트와 베이스라인 대비 추이만
+python3 tools/lint_harness_rules.py --check          # 신규 위반·회귀·generated 드리프트만 → exit 1 (PR 게이트)
+python3 tools/lint_harness_rules.py --update-baseline                    # 해결분을 베이스라인에서 내림 (신규는 추가 안 함)
+python3 tools/lint_harness_rules.py --update-baseline --accept-new "사유"  # 신규 위반을 사유와 함께 수용 — 사유가 PR diff에 남는다
+python3 tools/lint_harness_rules.py --sync-generated # canonical 블록 → generated 블록 재생성 (AGENTS.md 등)
+```
+
+| 규칙 | 잡는 것 | 등급 |
+|---|---|---|
+| R1a | 하드룰(반드시·필수·금지…)인데 같은 item·인접 설명에 근거·의도 단서가 없고, 조상 preamble에도 명시 표지(`근거:`·`의도:`·`이유:`)가 없음 — sibling 절의 근거로는 면책 안 됨 | block(신규만) |
+| R1b | 베이스라인에 `근거:`가 있던 절에서 근거가 사라짐 | block(회귀) |
+| R2 | 모델 내장 행동 재지시("다시 확인", "단계별로 생각", "꼼꼼히") — 규약 설명문 자체는 제외 | block |
+| R3 | 강조 인플레(IMPORTANT/MUST 등 ASCII 대문자, `!!`, 한 문장 반드시 2회, 단독 `**반드시**`) — `**필수 작성 요소**` 같은 라벨은 아님 | block |
+| R4 | 에이전트 절차 문서(스킬·`.codex/skills`·memory·CLAUDE/AGENTS.md)의 Step-N 헤딩 또는 번호 목록 4개 이상 시퀀스에 이탈 허용 표기 없음 — 가이드·템플릿의 절 번호는 대상 아님 | warn |
+| R5 | 파일 크기 한도 초과 — 분리 지시가 아니라 로드량 측정 신호 | warn |
+| R6 | `catalog/*.yaml`에 `service_id` 있는데 `verification` 없음 | block |
+| R7 | `generated:` 블록이 `canonical:` 원본과 바이트 불일치, `targets=`로 선언된 파일에 완결된 블록이 정확히 1개가 아님 | block(항상, 베이스라인 없음) |
+
+ratchet 세부: fingerprint = `sha1(rule|path|heading|정규화 문장)`. 같은 절의 동일 문장은 `count`로 세어 개수 증가도 차단한다(multiset). 위반을 다른 파일로 옮기면 path가 바뀌어 신규로 잡힌다. 베이스라인은 `schema_version`·`matcher_version`을 검증해 규칙 패턴이 바뀐 뒤 옛 판정을 그대로 믿지 않는다 — 불일치면 `--update-baseline --accept-new "<사유>"`로 재판정. 수용 사유는 `acceptance_batches`에 한 번 저장되고 각 finding이 id로 참조한다.
+
+pre-commit: `.githooks/pre-commit`이 `secret_scan --staged`와(하네스 지시문·린터·베이스라인·훅이 staged일 때) `--check`를 돈다. 설치는 `setup_harness.py`가 `core.hooksPath=.githooks`로 수렴(`harness.manifest.json` `git_hooks`). Claude·Codex 어느 세션이 커밋하든 같은 게이트.
+
+기계가 못 하는 것: invariant/policy/heuristic **등급 판정** — 표면 토큰이 같다. R1a 발견을 사람이 훑어 등급을 정하고 완화·이유 부착·`근거:` 부착 중 하나를 택한다.
+
 ## rotate_hermes_outbox.py — Discord outbox 회전
 
 vault의 `hermes-discord-outbox/`가 무한 누적되지 않게 14일 경과 요청 디렉토리를 `~/.hermes-team2/archive/discord-outbox/YYYY-MM/`로 이동. dry-run 기본, `--apply`로 실행. `/ad:harness-optimize 스택` 주기에 포함 권장. 근거: 2026-08-08 실측 — 15,447 JSON/74MB가 vault git의 94.6% 점유.

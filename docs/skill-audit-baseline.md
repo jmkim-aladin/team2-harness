@@ -3,7 +3,37 @@
 기준: [policies/skill-authoring-principles.md](../policies/skill-authoring-principles.md) | 갱신: `/ad:harness-optimize 스킬`·`제약`·`스택`
 통계: `python3 tools/skill_usage_report.py` (팀 스킬) | `python3 tools/harness_context_audit.py` (컨텍스트·외부 스택·훅)
 
-최종 감사일: 2026-08-08 (3회차 — 스택 모드 신설, 외부 스킬·훅 정리)
+최종 감사일: 2026-09-16 (4회차 — 제약 모드 기계화, 위임 계약, Codex 파리티 게이트)
+
+## 4회차 감사 (2026-09-16) — 제약 모드 기계화
+
+계기: Anthropic Claude 5 세대 컨텍스트 엔지니어링 가이드(2026-09) 대조. 결론은 "정책은 이미 앞서 있었고(instruction-precedence 2026-07 근거), 강제 장치가 없어 드리프트했다". 이 회차는 새 규칙을 늘리지 않고 **기존 규약을 검사로 바꾸는** 데 집중했다. 설계는 Codex(gpt-5.6-sol xhigh) 교차 검토 3라운드를 거쳤다 — 부정형 규칙의 정책 자기모순, 사고 유도 삭제가 산출물 근거 요구까지 지우는 문제, 파일별 카운트 ratchet의 위반 교체 은닉, 수동 복제의 SoT 위반, 크기 기준 분할의 왕복 증가 위험 등 6건이 설계에서 잡혔다.
+
+### 실측
+
+- 하드룰 포함 절 194 / 근거·의도 미기재 153 (79%, heading 단위). 라인 단위는 94%로 신호가 없어 item+조상 preamble 단위로 확정
+- lint 초기 베이스라인 (2026-09-16, matcher v5): R1a 314 · R4 43 · R5 10 · R2/R3/R6/R7 0 — 유예 367건, 사유는 `acceptance_batches`에 1회 기록. 대상 128문서(`.codex/skills` 31개 포함 — Codex 파리티) + 카탈로그 14. R1a가 1차 187에서 314로 는 것은 규칙 강화(조상 preamble은 `근거:`·`의도:`·`이유:` 명시 표지만 면책)와 Codex 스킬 편입 때문이며 문서가 나빠진 게 아니다
+- R4 43건 = 스킬 15 · Codex 얇은 alias 26 · sprint 가이드 2. 스킬 6곳(architecture-analysis·data-request·kb-publish·plan-run·sprint-close-check·weekly-report)의 최상위 실행 지침에는 "기본 순서 — 조정 가능, 게이트 유지"를 부착했고, 남은 스킬 15건은 하위 절 단위 번호 절차. 번호 목록 트리거는 에이전트 절차 문서(스킬·`.codex/skills`·memory·CLAUDE/AGENTS.md)로 한정 — 가이드·템플릿 절 번호 14건은 노이즈로 제외. 구현 중 이 트리거가 죽은 코드였던 것을 Codex 교차 검증 후 내부 검증에서 잡아 복구(그래서 중간 수치 2건은 무효)
+- R3 7→0: `**필수 작성 요소**` 같은 명사 라벨 bold를 강조 인플레로 잡던 오탐 — 패턴을 CAPS·`!!`·반복 반드시·단독 `**반드시**`로 좁힘 (Codex 라운드 3 지적)
+- 카탈로그 `verification` 필드 서비스 11/11 — 1회 검토의 "미표준화" 판정을 정정(grep이 조잡했음)
+
+### 적용 완료
+
+- [x] `instruction-precedence-policy.md` 표기 규약 확장 — heuristic 부정형→이유부 긍정형(invariant·policy 금지문은 유지+이유), 모델 내장행동 재지시 삭제(사고 과정 지시만 — 산출물 증거 요구는 유지), §출력 목소리 신설 [북극성 2·5]
+- [x] 위임 프롬프트 5요소 계약(목표·의도·불변조건·완료기준·출력형식) — `memory/claude-base.md` canonical 블록이 SoT, `AGENTS.md`는 generated 블록. 드리프트는 R7이 차단 [북극성 2·4]
+- [x] `tools/lint_harness_rules.py` R1a~R7 + fingerprint ratchet(`docs/harness-rule-baseline.json`) — 기존 위반 유예·신규 차단·해결분 자동 하향·신규 수용은 사유 필수 [북극성 1·5]
+- [x] `.githooks/pre-commit`(secret_scan --staged + lint --check) + `harness.manifest.json` `git_hooks` + `setup_harness.py converge_git_hooks` — Claude·Codex 어느 세션이 커밋하든 같은 게이트 [북극성 5]
+- [x] `/ad:harness-optimize` 제약 모드 Step 1을 lint 실측으로 교체, Step 6 베이스라인 하향 절차, 스택 모드에 `/doctor`(Claude 전용 보조 신호) [북극성 1]
+- [x] `skill-authoring-principles.md` §2 — 분리 판정은 크기가 아니라 호출 경로별 로드량 [북극성 3]
+
+### 기각·이관
+
+- **기각** interview-me 스킬 신설 — `/ad:grill`이 동일 역할. 라우팅 중복은 한쪽이 낡는다
+- **기각** auto-memory로 CLAUDE.md 대체 — 팀 공유 정책은 개인 auto-memory로 못 간다. 관찰만
+- **이관** 대형 문서 분할(R5 10건 — code-review 40KB, ticket-guide 37KB 등): 크기는 신호일 뿐. `harness_context_audit.py` 반복 Read로 대표 요청별 로드량을 전후 비교해 경로 가중 평균이 줄 때만 분리. 다음 회차
+- **이관** R1a 314건 등급 판정 — 회차마다 파일 단위로 훑어 heuristic 완화 / 이유 부착 / `근거:` 부착 중 택일 후 `--update-baseline`. 추이는 아래 거리표 원칙 5 행. 상위 파일: ticket.md·code-review.md·work-prep.md·`.codex/skills/*` 얇은 alias의 "반드시 … 읽고"
+- **이관** R4 Codex alias 26건 — alias의 "경로 잡기 → SoT 읽기 → 따르기"는 설계상 고정에 가깝다. alias 템플릿에 이탈 허용 한 줄을 넣을지, R4 범위에서 alias를 빼는 게 맞는지는 Codex 행동 관찰 후 결정
+- **이관** Codex 행동 검증 — 원 가이드는 Claude 5에서 검증된 결과. 위임 계약·표기 규약이 Codex에서 같은 행동을 내는지 [행동 평가](harness-behavior-evaluation.md) fixture로 확인
 
 ## 2026-09-14 pstack 적용 후 검증 기록
 
@@ -177,14 +207,14 @@
 
 기준: [policies/harness-north-star.md](../policies/harness-north-star.md). 측정 신호가 좁혀지는지 회차 간 추이로 본다.
 
-| # | 원칙 | 측정 신호 | 3회차 (2026-08-08) |
-|---|---|---|---|
-| 1 | 검증 루프 > 지시 | 카탈로그 검증 루프 필드 보유율 | **9/11 실증** (verified 7·partial 2·미구축 2 — shopping·blog는 러너 부재가 사실, 2026-08-08) |
-| 2 | 문제 단위 위임 | 근거 없는 순서·개수·도구 고정 발견 수 | 1차 15선 재표현 완료, 전수 미완 |
-| 3 | smart zone | 호출당 평균 컨텍스트 / 상주 예산 | 470k (목표 200k) / 6,032 tok (상한 8,000) |
-| 4 | 환경=진실 | 캐시·죽은 참조 발견 수 | AGENTS.md 죽은 경로 2건 정리, 전수 스캔 미실시 |
-| 5 | 게이트 기계화 | INVARIANT 중 훅·권한 강제 비율 | 훅 2건 (DB MCP 차단, sqlcmd readonly) |
-| 6 | 아티팩트 기억 | glossary 항목 / decisions 수 | 0건 / 7건 |
+| # | 원칙 | 측정 신호 | 3회차 (2026-08-08) | 4회차 (2026-09-16) |
+|---|---|---|---|---|
+| 1 | 검증 루프 > 지시 | 카탈로그 검증 루프 필드 보유율 | **9/11 실증** (verified 7·partial 2·미구축 2 — shopping·blog는 러너 부재가 사실, 2026-08-08) | 필드 11/11 보유, R6 lint로 회귀 차단. 실증 등급은 미재측 |
+| 2 | 문제 단위 위임 | 근거 없는 순서·개수·도구 고정 발견 수 | 1차 15선 재표현 완료, 전수 미완 | **R4 고정 시퀀스 43건** (스킬 15 · Codex alias 26 · 가이드 2) — 첫 전수 측정. 위임 5요소 계약 도입 |
+| 3 | smart zone | 호출당 평균 컨텍스트 / 상주 예산 | 470k (목표 200k) / 6,032 tok (상한 8,000) | 미측정 (다음 회차 R5 10건 로드량 측정과 함께) |
+| 4 | 환경=진실 | 캐시·죽은 참조 발견 수 | AGENTS.md 죽은 경로 2건 정리, 전수 스캔 미실시 | generated 블록 드리프트 R7 0건 (수동 복제 1건을 생성으로 전환) |
+| 5 | 게이트 기계화 | INVARIANT 중 훅·권한 강제 비율 | 훅 2건 (DB MCP 차단, sqlcmd readonly) | 훅 3건 (+pre-commit: secret_scan·lint ratchet, Claude·Codex 공통). **R1a 근거 미기재 하드룰 314건 유예** (matcher v5 기준) — 회차마다 이 수를 내린다 |
+| 6 | 아티팩트 기억 | glossary 항목 / decisions 수 | 0건 / 7건 | 미측정 |
 
 ### 3회차 추가 (2026-08-08 후속) — 환경 선언화
 

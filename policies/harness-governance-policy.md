@@ -71,7 +71,10 @@
 | **서비스 프로파일** | `catalog/*.yaml` | `.claude/commands/ad/ticket.md` |
 | **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/capacity-plan.md`, `.claude/commands/ad/sprint-close-check.md`, `.claude/commands/ad/weekly-planned.md` |
 | **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만). 필드 스펙은 여기가 SoT, **티켓 노트의 구조·본문 스켈레톤**은 아래 "티켓 노트 스켈레톤" 행이 SoT |
-| **지시 강도·우선순위** | `policies/instruction-precedence-policy.md` | CLAUDE.md, `policies/skill-authoring-principles.md`, `.claude/commands/ad/harness-optimize.md` (전부 링크만) |
+| **지시 강도·우선순위·표기 규약** | `policies/instruction-precedence-policy.md` | CLAUDE.md, AGENTS.md, `policies/skill-authoring-principles.md`, `.claude/commands/ad/harness-optimize.md` (전부 링크만). 준수 검사는 `tools/lint_harness_rules.py`, 판정 기록은 `docs/harness-rule-baseline.json` |
+| **위임 프롬프트 계약(5요소)** | `memory/claude-base.md` §위임 프롬프트 계약 (`canonical:delegation-contract` 마커 블록) | AGENTS.md (`generated:delegation-contract` — 수동 편집 금지, `lint_harness_rules.py --sync-generated`로 생성. 드리프트는 R7이 차단) |
+| **팀 산출물 출력 목소리** | `policies/instruction-precedence-policy.md` §출력 목소리 | `policies/business-stakeholder-communication-policy.md` (독자별 상세), 각 스킬의 출력 형식 절 (링크만) |
+| **지시문 준수 베이스라인** | `docs/harness-rule-baseline.json` (도구 생성물 — 손으로 편집하지 않는다) | `.claude/commands/ad/harness-optimize.md` 제약 모드, `docs/skill-audit-baseline.md` 북극성 거리표 (회차 카운트만) |
 | **하네스 개선 방향(북극성)** | `policies/harness-north-star.md` | harness-governance-policy, `.claude/commands/ad/harness-optimize.md`, CLAUDE.md (전부 링크만) |
 | **컨텍스트 예산·외부 스택 판정** | `policies/harness-governance-policy.md` §컨텍스트 예산 + `docs/skill-stack-and-workflow-plan.md` | CLAUDE.md, AGENTS.md, `.claude/commands/ad/harness-optimize.md` (링크만) |
 | **작업 플로우·스킬 인덱스** | `docs/harness-guide.md` §작업 플로우 | CLAUDE.md, AGENTS.md (링크만) |

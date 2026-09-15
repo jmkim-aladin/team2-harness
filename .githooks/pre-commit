@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# team2 하네스 pre-commit 게이트 — Claude·Codex 어느 세션이 커밋하든 같은 검사가 돈다.
+# 등록: python3 tools/setup_harness.py (core.hooksPath=.githooks 로 수렴). 수동: git config core.hooksPath .githooks
+# 의도: "문서에 적힌 규칙"이 아니라 "커밋이 막히는 검사"로 지시문 규약과 시크릿 정책을 지킨다 (북극성 1·5).
+set -u
+repo="$(git rev-parse --show-toplevel)"
+fail=0
+
+# 부분 staging 은 검사 대상(working tree)과 커밋 내용(index)을 어긋나게 한다 — 경고만, 차단은 하지 않는다
+partial=$(git diff --name-only -- $(git diff --cached --name-only) 2>/dev/null)
+if [ -n "$partial" ]; then
+  echo "pre-commit: [경고] staged 후 다시 수정된 파일이 있다 — 검사는 working tree 기준이다:"
+  echo "$partial" | sed 's/^/  /'
+fi
+
+# 1) 시크릿 — staged 파일만, 항상
+python3 "$repo/tools/secret_scan.py" --staged || fail=1
+
+# 2) 지시문 규약 ratchet — 하네스 지시문 파일이 staged 일 때만 (속도)
+# 트리거 = 린터 대상(MD_PATTERNS·YAML_PATTERNS) + 린터·베이스라인·훅 자체. 린터가 바뀌면 베이스라인 정합도 다시 본다
+if git diff --cached --name-only | grep -Eq '^(CLAUDE\.md|AGENTS\.md|memory/|policies/|\.claude/commands/ad/|\.codex/skills/|templates/|docs/sprint/|docs/agents/|catalog/[^/]+\.yaml|docs/harness-rule-baseline\.json|tools/lint_harness_rules\.py|tests/test_lint_harness_rules|\.githooks/)'; then
+  python3 "$repo/tools/lint_harness_rules.py" --check || fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo
+  echo "pre-commit: 차단. 위반을 고치거나, 의도된 신규 위반이면 --update-baseline --accept-new '<사유>' 로 사유를 남긴 뒤 다시 커밋."
+  echo "           우회(--no-verify)는 하네스 예외 브랜치에서도 쓰지 않는다 — 게이트가 비면 문서만 남는다."
+  exit 1
+fi

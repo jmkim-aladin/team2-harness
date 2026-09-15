@@ -31,6 +31,8 @@ disable-model-invocation: true
 
 ## 실행 루프
 
+기본 순서다 — 저장소 상태와 요청에 맞게 조정할 수 있다. 단, 완료 기준과 사용자 확인 게이트는 순서를 바꿔도 유지한다.
+
 ### 1. 계획과 milestone 선택
 
 1. `LOCAL_WIKI_PATH`를 확인하고 인자로 받은 plan 경로·wikilink·제목을 해소한다.
