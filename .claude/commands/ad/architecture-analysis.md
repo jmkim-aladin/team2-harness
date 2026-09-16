@@ -25,6 +25,8 @@ description: 저장소 아키텍처 분석 — Clean/Hexagonal/DDD, 네이밍
 
 ## 절대 규칙
 
+분석은 대상 저장소를 관찰만 한다 — 부작용이 생기면 분석 결과가 저장소를 바꾼 원인이 되고, 같은 분석을 재현할 수도 없다.
+
 - 분석 대상 소스 파일을 생성·수정·삭제하지 않는다.
 - formatter, codegen, migration, package update, dependency install을 실행하지 않는다.
 - git clean/reset/checkout/stash, commit, push, merge, PR을 실행하지 않는다.

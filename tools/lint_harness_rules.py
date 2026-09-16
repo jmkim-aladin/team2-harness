@@ -29,7 +29,7 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASELINE_REL = "docs/harness-rule-baseline.json"
 SCHEMA_VERSION = 2
-MATCHER_VERSION = 7
+MATCHER_VERSION = 8
 
 # 기본 대상 — 하네스 지시문이 사는 곳만. 서술 문서(docs/ 일반)는 규약 대상이 아니다
 MD_PATTERNS = [
@@ -54,10 +54,21 @@ RULE_ORDER = ["R1a", "R1b", "R2", "R3", "R4", "R5", "R6", "R7"]
 # 베이스라인으로 유예하는 규칙 — R1b(회귀)·R7(드리프트)은 항상 실패해야 의미가 있다
 BASELINED = ["R1a", "R2", "R3", "R4", "R5", "R6"]
 
-HARD_TOKEN = re.compile(r"반드시|필수|금지|하지 않는다|하지 마|절대|무조건")
+HARD_TOKEN = re.compile(r"반드시|필수|금지|하지 않는다|하지 마|절대(?!\s*[/／]?\s*(경로|상대|URL|일자|값|좌표|주소|시간))|무조건")
+# 규칙이 아닌 '라벨·명사구' 용법 — 표 셀의 필수/선택, [분할 필수], 목록 도입 라벨("확인 필수 항목:"), 규칙을 가리키는 명사구("금지 사항", "SP 직접 호출 금지" 등록부 행).
+# 이걸 지운 뒤에도 하드 토큰이 남아야 규칙이다 (2026-09-16 전수 손판정: 237건 중 36건이 이 용법)
+LABEL_USE = re.compile(
+    r"\[분할 필수\]|\[필수\]|\(필수\)|\*\*필수\*\*|\|\s*필수\s*(?=\|)|선택\s*\|\s*필수"
+    r"|필수 (항목|필드|요소|조치|테스트|커스텀|규칙|섹션|status)|금지 (사항|정보|어휘|규칙|포함|영역)"
+    r"|(호출|푸시|배포|사용|반영) 금지(?=[\s*|)\]]|$)|필수(?=\s*(\)|\]|\*\*|$))"
+    r"|\|\s*[^|]{0,10}필수\s*(?=\|)"          # 짧은 표 셀 'SP 3 필수'
+)
+BOLD_LABEL_LINE = re.compile(r"^\*\*[^*]{1,20}\*\*:?$")   # '**필수 작성 요소**' 처럼 소제목 역할의 bold 한 줄
+INTRO_LABEL = re.compile(r":\s*\**\s*$")   # "확인 필수 항목:" 처럼 목록을 여는 라벨 — 규칙은 그 아래 항목들이다
 # item 본문·하위 불릿에서는 서술형 근거도 인정한다
 # 한국어 인과 어미(~이므로/~라서/~니까)는 "왜"를 담는 가장 흔한 형태 — 빠지면 잘 쓴 규칙이 부채로 집계된다 (2026-09-16 code-review.md 파일럿: 15건 중 3건이 이 어미만 있었음)
-LOCAL_REASON_CUE = re.compile(r"근거:|때문|위해|않으면|없으면|이유|므로|라서|니까|기본:|조정 가능|단,|—\s*\S")
+# 결과·목적 서술("~하면 깨진다", "~하기 위함", "되돌릴 수 없다")도 '왜'다 — 인과 접속사만 세면 설명형 규칙이 부채로 잡힌다
+LOCAL_REASON_CUE = re.compile(r"근거:|때문|위해|위함|않으면|없으면|이유|왜 |므로|라서|니까|실패한|깨진|낡는|어긋나|되돌릴 수 없|비가역|보안상|운영상|정책상|기본:|조정 가능|단,|—\s*\S")
 # 조상 preamble 은 명시 표지만 인정한다 — 서술형까지 허용하면 절 하나가 하위 하드룰 전부를 면책한다
 ANCESTOR_REASON_CUE = re.compile(r"근거:|의도:|이유:")
 EXAMPLE_ITEM = re.compile(r"나쁨:|좋음:|예:|예시")
@@ -372,7 +383,9 @@ def scan_markdown_rules(relpath, lines, root, nodes):
                 continue
             norm = normalize(text)
             # R1a — 하드룰인데 근거 단서가 없다
-            if HARD_TOKEN.search(text) and not EXAMPLE_ITEM.search(ctx):
+            rule_text = LABEL_USE.sub("", text)
+            if HARD_TOKEN.search(rule_text) and not EXAMPLE_ITEM.search(ctx) \
+                    and not INTRO_LABEL.search(text.strip()) and not BOLD_LABEL_LINE.match(text.strip()):
                 if not (LOCAL_REASON_CUE.search(ctx) or own_reasoned or anc_reasoned):
                     found.append(finding("R1a", relpath, item.line_no, heading, text, norm))
             bare = no_code(text)

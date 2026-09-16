@@ -10,7 +10,7 @@ description: "Use when the user invokes $ad-code-review, ad code review, /ad:cod
 ## 실행 절차
 
 1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`로 기준 경로를 잡는다.
-2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/code-review.md`를 먼저 읽고 그 절차를 따른다.
+2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/code-review.md`를 먼저 읽고 그 절차를 따른다. 절차는 SoT 한 곳에만 둔다 — 여기 복제하면 한쪽이 낡는다.
 3. **리뷰 범위는 diff hunk에 포함된 줄과 그 줄이 깨뜨리는 기존 동작으로 한정한다** (command 파일의 최우선 규칙). diff 밖 코드는 영향 판단 문맥으로만 읽고 지적하지 않는다 — 눈에 띈 것은 `PR 밖 관찰`로만 남기고 게시하지 않는다. diff에 없는 의도·후속 계획을 추정해 지적하지 않는다.
 4. command 파일이 참조하는 리뷰 정책과 PR 컨텍스트만 추가로 확인한다.
 5. GitHub 조회는 `gh` CLI를 우선 사용한다.

@@ -74,6 +74,8 @@ unset DD_API_KEY DD_APP_KEY
 
 ## AI 도구 사용 시
 
+쓰기는 대시보드·모니터를 즉시 바꾸고 `DELETE`는 되돌릴 수 없다 — 그래서 읽기만 사전 동의다.
+
 - 읽기 호출(`GET` 계열: validate, dashboard/monitor 조회, metrics/logs 쿼리)은 사전 동의로 본다. 매 호출 확인 없이 실행 가능.
 - 대시보드 **신규 생성**(`POST /api/v1/dashboard`)은 위젯 구성 요약을 먼저 제시하고 사용자 확인 후 호출한다. 생성 후 dashboard ID와 URL을 보고한다.
 - 기존 대시보드 **수정**(`PUT /api/v1/dashboard/{id}`)은 대상 ID·변경 위젯·되돌리는 방법을 제시하고 확인 후 호출한다. `PUT`은 전체 교체이므로 먼저 `GET`으로 현재 정의를 받아 병합한다.

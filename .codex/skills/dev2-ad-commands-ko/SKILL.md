@@ -13,7 +13,7 @@ Codex는 team2 하네스 command 파일을 source of truth로 읽고 같은 절�
 2. `/ad:{name}`, `$ad-{name}`, 자연어 요청을 아래 매핑으로 고른다.
 3. `$TEAM2_HARNESS_PATH/.claude/commands/ad/{name}.md` command 파일을 source of truth로 먼저 읽는다.
 4. 도구명 대응: `Bash`→`exec_command`, `Read/Grep/Glob`→`sed`/`rg`/`find`, `Write/Edit`→`apply_patch`, `AskUserQuestion`→짧은 직접 질문.
-5. YouTrack은 REST API/`curl`만 사용한다. MCP 금지.
+5. YouTrack은 REST API/`curl`만 사용한다. MCP 금지 — 토큰과 쓰기 권한을 `curl` 한 경로로 통제하기 위해.
 
 ## 매핑
 
@@ -48,7 +48,7 @@ fi
 AUTH="Authorization: Bearer $YOUTRACK_TOKEN"
 ```
 
-- `mcp__youtrack__*` 또는 DB MCP 도구를 호출하지 않는다.
+- `mcp__youtrack__*` 또는 DB MCP 도구를 호출하지 않는다 — 위 권한 통제 이유.
 - 생성/변경/커밋/푸시/PR은 초안까지만 자동 수행하고 사용자 승인 후 실행한다.
 - YouTrack 티켓/Task/상태, KB 생성/수정/삭제/이동, git commit/push/merge/PR은 승인 필수.
 - 운영 데이터 추출 SQL은 `AladinCommunication/data-requests-dev2`에 둔다.

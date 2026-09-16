@@ -10,8 +10,7 @@ description: "Use when the user invokes $ad-team2-kb-read, ad team2 kb read, /ad
 ## 실행 절차
 
 1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`로 기준 경로를 잡는다.
-2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/team2-kb-read.md`를 먼저 읽고 그 절차를 따른다.
+2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/team2-kb-read.md`를 먼저 읽고 그 절차를 따른다. 절차는 SoT 한 곳에만 둔다 — 여기 복제하면 한쪽이 낡는다.
 3. command 파일이 참조하는 KB 정책과 대상 문서만 추가로 확인한다.
-4. YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.
-5. KB 수정, 이동, 삭제는 사용자 승인 후 실행한다.
-6. YouTrack Articles는 지식베이스(KB) 또는 기술자료라고 부르고, "위키"는 로컬 Obsidian에만 사용한다.
+4. KB 수정, 이동, 삭제는 사용자 승인 후 실행한다.
+5. YouTrack Articles는 지식베이스(KB) 또는 기술자료라고 부르고, "위키"는 로컬 Obsidian에만 사용한다.

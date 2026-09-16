@@ -79,7 +79,7 @@ IDC DB 운영 안정화와 향후 AWS 전환 기반 마련을 위해, 레거시 
 - C 등급은 가능한 경우 chunk update, keyset pagination, version pointer로 전환 후보를 남긴다.
 - lock 이력은 source만으로 확정하지 않는다. 운영 모니터링, 장애 기록, 실행 시간, wait 통계가 없으면 `Needs Review`다.
 - 전체 UPDATE, rename/swap, TRUNCATE/DROP/CREATE, SELECT INTO는 발견 즉시 migration risk로 표시한다.
-- 운영 DB 조사나 query 실행은 사용자 승인 없이 수행하지 않는다.
+- 운영 DB 조사나 query 실행은 사용자 승인 없이 수행하지 않는다. 운영 조회는 부하와 데이터 노출을 동반한다 — 승인은 그 둘을 사람이 저울질하는 지점이다.
 - YouTrack KB/Issue 반영은 사용자 승인 없이 수행하지 않는다.
 - 분석 결과와 evidence import는 로컬 Obsidian 운영 지식 위키에 저장한다.
 - 서비스 DB script에 없는 cross DB SP source mirror는 로컬 Obsidian이 아니라 대상 db-script repo의 `databases/_cross-db/{external-source}/db_script/`에 둔다.

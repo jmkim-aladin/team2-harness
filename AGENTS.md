@@ -87,9 +87,9 @@ python3 tools/lint_harness_rules.py --check    # 베이스라인 대비 증가�
 
 ## 외부 시스템
 
-- **YouTrack**: `https://aladincommunication.youtrack.cloud` — REST API(`$YOUTRACK_TOKEN`)만 사용. MCP 미사용
+- **YouTrack**: `https://aladincommunication.youtrack.cloud` — REST API(`$YOUTRACK_TOKEN`)만 사용. MCP 미사용 — 토큰과 쓰기 권한을 `curl` 한 경로로 통제하기 위해
 - **GitHub**: `gh` CLI로 PR·이슈 조회. Org는 `AladinCommunication`, 개인 계정은 `jmkim-aladin`
-- **DB**: DB 관련 MCP 도구는 사용하지 않는다. dev RDS `sqlcmd`는 read-only 조회만 허용
+- **DB**: DB 관련 MCP 도구는 사용하지 않는다. dev RDS `sqlcmd`는 read-only 조회만 허용 — 훅이 차단한다. 에이전트에 DB 쓰기 경로를 주지 않는다
 - **공통 서비스 영향**: 로그인·결제·정산·구독 등이 걸리면 [policies/common-service-policy.md](./policies/common-service-policy.md) + [catalog/common-services/registry.yaml](./catalog/common-services/registry.yaml) 확인
 - **검색 서비스 명칭**: 공식 표기는 `ALICE(알리스)`. 검색 API·색인·OpenSearch 경계는 [catalog/common-services/alice.yaml](./catalog/common-services/alice.yaml) 확인
 

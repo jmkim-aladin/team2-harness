@@ -2,26 +2,10 @@
   "acceptance_batches": {
     "2026-09-16-1": {
       "accepted": "2026-09-16",
-      "reason": "matcher v7 — 같은 절의 설명 문단·제목을 이유 범위에 포함, R5를 바이트→추정 토큰. code-review.md 파일럿(2026-09-16) 손판정과 린터를 맞춤. 이후 보정은 다음 회차 실측 후"
+      "reason": "matcher v8 — 라벨·명사구 용법(표 셀 필수/선택, [분할 필수], 도입 라벨, '금지 사항'류)과 절대경로의 '절대' 제외, 결과·목적 서술(위함·실패한·낡는·되돌릴 수 없·비가역)을 이유로 인정. 2026-09-16 전수 손판정 237건 대조. 이유 부착 ~45절, Codex alias MCP 3중 복제 11줄 삭제 반영"
     }
   },
   "findings": {
-    "00400486e9cca4fe": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "DB 관련 MCP 도구는 사용하지 않는다. dev RDS `sqlcmd`는 read-only 조회만 허용한다.",
-      "heading": "`$ad-data-request` > 실행 절차",
-      "path": ".codex/skills/ad-data-request/SKILL.md",
-      "rule": "R1a"
-    },
-    "01220368872cad37": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**항상 금지** (확인으로도 해제 불가):",
-      "heading": "작업 준비 (Work Prep) > 사용자 확인 게이트",
-      "path": ".claude/commands/ad/work-prep.md",
-      "rule": "R1a"
-    },
     "021152a0b1d8a415": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -49,50 +33,10 @@
     "04b3a5740167fa41": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
-      "excerpt": "≈11496tok > 한도 8000tok (37575바이트)",
+      "excerpt": "≈11712tok > 한도 8000tok (38262바이트)",
       "heading": "",
       "path": "docs/sprint/ticket-guide.md",
       "rule": "R5"
-    },
-    "05fc25fa2fd17667": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**제목·리뷰 조건 검사 (필수)**: `docs/sprint/ticket-guide.md` §3 제목 작성 원칙과 §3-0 리뷰 조건 작성 원",
-      "heading": "YouTrack 티켓 생성 > 실행 지침",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
-    "080d865cf2d82613": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "> AASM은 (자체 환경 × 대상 환경) 매트릭스로 SMB 자격증명을 사용한다. > AASM dev 인스턴스는 보안상 mall prod 자격증",
-      "heading": "AWS Secrets Manager 컨벤션 > 네이밍 규칙 > 예시: aasm 서비스 (Node.js/Next.js)",
-      "path": "policies/aws-secrets-convention.md",
-      "rule": "R1a"
-    },
-    "09911e12aeb7241e": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "Granola API는 읽기 전용으로 사용한다. Granola 원본 제목/본문을 수정하지 않는다.",
-      "heading": "Granola 회의록 동기화 > 보존 규칙",
-      "path": ".claude/commands/ad/granola-sync.md",
-      "rule": "R1a"
-    },
-    "0a54ed8761c51461": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**판정 보고**: 0회 스킬은 삭제/통합/유지(사유 필수) 중 하나로 사용자에게 제안. 삭제는 사용자 확인 후",
-      "heading": "하네스 최적화 (업데이트·최신화·중복제거) > 스킬 감사 (스킬 모드)",
-      "path": ".claude/commands/ad/harness-optimize.md",
-      "rule": "R1a"
-    },
-    "0a5b50301d726816": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "vault 경로는 `$LOCAL_WIKI_PATH` 기준으로 해석한다 (리터럴 경로 하드코딩 금지).",
-      "heading": "작업 준비 (Work Prep) > 실행 흐름 > 5. 위키 노트 작성",
-      "path": ".claude/commands/ad/work-prep.md",
-      "rule": "R1a"
     },
     "0a9931a14e167384": {
       "acceptance_id": "2026-09-16-1",
@@ -100,54 +44,6 @@
       "excerpt": "사용자 확인 후 푸시한다. (CLAUDE.md 정책: 커밋/푸시 전 반드시 사용자 확인)",
       "heading": "운영 데이터 추출 요청 SQL 등록 > 실행 지침 > 5단계: 푸시",
       "path": ".claude/commands/ad/data-request.md",
-      "rule": "R1a"
-    },
-    "0b06a448fcf097d6": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| **SP 직접 호출 금지** | `policies/engineering-policy.md` §기술 스택 원칙 | `policies/legac",
-      "heading": "하네스 거버넌스 정책 > Source of Truth 등록부",
-      "path": "policies/harness-governance-policy.md",
-      "rule": "R1a"
-    },
-    "0c142769823eb644": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "모든 서비스는 분석 후 반드시 아래 4가지 중 하나로 분류한다.",
-      "heading": "레거시 현대화 정책 > 현대화 4트랙",
-      "path": "policies/legacy-modernization-policy.md",
-      "rule": "R1a"
-    },
-    "0cc9baffcb16afa3": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.",
-      "heading": "`$ad-team2-kb-read` > 실행 절차",
-      "path": ".codex/skills/ad-team2-kb-read/SKILL.md",
-      "rule": "R1a"
-    },
-    "0d7450e0fbf07c0d": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "Feature 유형에만 적용한다. Task는 검사하지 않는다.",
-      "heading": "스프린트 마감 자가점검 (D-5 / D-4) > 점검 카테고리 > 단계·환경 분리 판정 휴리스틱 > 추가 검사 두 가지",
-      "path": ".claude/commands/ad/sprint-close-check.md",
-      "rule": "R1a"
-    },
-    "1015f792e8e73344": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**DB**: DB 관련 MCP 도구는 사용하지 않는다. dev RDS `sqlcmd`는 read-only 조회만 허용",
-      "heading": "Codex 진입점 — 개발 2팀 하네스 > 외부 시스템",
-      "path": "AGENTS.md",
-      "rule": "R1a"
-    },
-    "10e018a86853c47d": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "5W1H 관련 기존 규칙은 그대로 유지 (Feature는 5W1H 전체 섹션 필수)",
-      "heading": "YouTrack 티켓 생성 > 본문 작성 규칙 (필수) > Task 본문: 수행 내용 섹션 (2026-07-15 사용자 확정, DEV2-7772 작업)",
-      "path": ".claude/commands/ad/ticket.md",
       "rule": "R1a"
     },
     "1113c15e3db78cf2": {
@@ -174,30 +70,6 @@
       "path": "policies/aws-secrets-convention.md",
       "rule": "R1a"
     },
-    "12f79a2b2d17f4a8": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "`.env`, `credentials.json` 등은 `.gitignore`에 반드시 포함",
-      "heading": "보안/시크릿 정책 > 시크릿 관리",
-      "path": "policies/security-policy.md",
-      "rule": "R1a"
-    },
-    "18c93b0ce38f860a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "DB/SP 변경이 포함된 PR은 별도 승인 필수",
-      "heading": "개발 2팀 엔지니어링 정책 > 코드 변경 규칙",
-      "path": "policies/engineering-policy.md",
-      "rule": "R1a"
-    },
-    "19591804c6d1db06": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| §10~11 | 태그·필수 커스텀 필드 | ticket, weekly-planned, service-activity |",
-      "heading": "스프린트 티켓 작성 및 운영 가이드",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
     "1966285abe9b11f4": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -212,14 +84,6 @@
       "excerpt": "**YouTrack 티켓에 로컬 경로 등록** (로컬 파일 경로, 로컬 산출물 경로 등 외부에서 접근 불가한 정보를 티켓 본문에 포함하지 않는다",
       "heading": "AI 사용 정책 > AI 작업 가드레일 > 금지",
       "path": "policies/ai-usage-policy.md",
-      "rule": "R1a"
-    },
-    "1a800d9f39de9a45": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| [티켓 작성 및 운영 가이드](./ticket-guide.md) | 5W1H 작성, 태그 컨벤션, 필수 필드 |",
-      "heading": "스프린트 마감 프로세스 가이드 > 관련 문서",
-      "path": "docs/sprint/sprint-closing-process.md",
       "rule": "R1a"
     },
     "1b24996a76829f65": {
@@ -254,30 +118,6 @@
       "path": ".codex/skills/dev2-ad-commands-ko/SKILL.md",
       "rule": "R1a"
     },
-    "1c0a53f9f44e09dc": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "토큰, 비밀번호, API key, connection string 값을 출력하거나 문서에 저장하지 않는다.",
-      "heading": "DEV2 저장소 아키텍처 분석 > 절대 규칙",
-      "path": ".claude/commands/ad/architecture-analysis.md",
-      "rule": "R1a"
-    },
-    "1cfd797065f8ef3a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/architecture-analysis.md`를 먼저 읽고 그대",
-      "heading": "`$ad-architecture-analysis` > 실행 절차",
-      "path": ".codex/skills/ad-architecture-analysis/SKILL.md",
-      "rule": "R1a"
-    },
-    "1fb07ebd5cb838ed": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "배포 전 smoke test 통과 필수",
-      "heading": "릴리즈/배포 정책 > 배포 원칙",
-      "path": "policies/release-policy.md",
-      "rule": "R1a"
-    },
     "211af36c53adfb3e": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -286,28 +126,12 @@
       "path": "templates/dod-checklist.md",
       "rule": "R1a"
     },
-    "2144f9d16d1c023c": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "`DELETE`는 호출하지 않는다.",
-      "heading": "Datadog API 정책 > AI 도구 사용 시",
-      "path": "policies/datadog-api-policy.md",
-      "rule": "R1a"
-    },
     "217b819ec4c17275": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "GitHub는 `gh`; DB MCP 금지; dev RDS `sqlcmd`는 read-only 조회만 허용한다.",
       "heading": "개발 2팀 하네스 > 외부·승인",
       "path": ".codex/skills/dev2-team-harness-ko/SKILL.md",
-      "rule": "R1a"
-    },
-    "21e7a547764348d8": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "필수 유지:",
-      "heading": "작업 준비 (Work Prep) > 실행 흐름 > 5. 위키 노트 작성",
-      "path": ".claude/commands/ad/work-prep.md",
       "rule": "R1a"
     },
     "24a0264be84ab02b": {
@@ -324,14 +148,6 @@
       "excerpt": "| Task | 그 Feature의 단계 안에서만 분해한다. 개발 Feature 아래 검증·배포 Task 금지 |",
       "heading": "YouTrack 티켓 생성 > 단계 분리 (필수)",
       "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
-    "25930a083e11a651": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "후보에게 평가 대상이라는 정보와 상대 후보를 노출하지 않는다. 중립 라벨의 결과를 같은 판정 기준으로 비교한다",
-      "heading": "하네스 거버넌스 정책 > 변경 통제",
-      "path": "policies/harness-governance-policy.md",
       "rule": "R1a"
     },
     "265a16609544c342": {
@@ -358,76 +174,12 @@
       "path": ".codex/skills/ad-new-note/SKILL.md",
       "rule": "R4"
     },
-    "285c29b4a0968ce1": {
+    "2f7e9a9846515daa": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/code-review.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-code-review` > 실행 절차",
-      "path": ".codex/skills/ad-code-review/SKILL.md",
-      "rule": "R1a"
-    },
-    "28bed827b90cb39a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack KB 생성/수정/삭제/이동은 반드시 사용자 확인 후 수행한다",
-      "heading": "개발 2팀 하네스 > 핵심 규칙",
-      "path": "CLAUDE.md",
-      "rule": "R1a"
-    },
-    "28ea7e4eaeb22cd9": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "직접 푸시 금지",
-      "heading": "브랜치 전략 > 브랜치별 규칙 > master",
-      "path": "policies/branching-strategy.md",
-      "rule": "R1a"
-    },
-    "28ecb1454408d596": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "본문에 SP 원문, 운영 실데이터, 시크릿, 개인정보를 저장하지 않는다.",
-      "heading": "작업 준비 (Work Prep) > 실행 흐름 > 5. 위키 노트 작성",
-      "path": ".claude/commands/ad/work-prep.md",
-      "rule": "R1a"
-    },
-    "2b462ff8f034dd3f": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API/`curl`만 사용한다. MCP 금지.",
-      "heading": "`$ad-work-prep` > 절차",
-      "path": ".codex/skills/ad-work-prep/SKILL.md",
-      "rule": "R1a"
-    },
-    "2bd2a4881a306acf": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**`Co-Authored-By: Claude ...` 등 AI 협업 푸터** 커밋·티켓·PR 어디에도 추가하지 않는다. 시스템 기본 프롬프트가",
+      "excerpt": "**`Co-Authored-By: Claude ...` 등 AI 협업 푸터** 메타데이터는 시간이 지나면 노이즈만 된다 (2026-08 사용자 ",
       "heading": "AI 사용 정책 > 메시지 작성 품질 > 금지",
       "path": "policies/ai-usage-policy.md",
-      "rule": "R1a"
-    },
-    "2db3f71486fa90f7": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "plan과 ticket/repository spec에 같은 세부 요구를 이중 유지하지 않는다.",
-      "heading": "계획 실행 (plan-run) > 게이트",
-      "path": ".claude/commands/ad/plan-run.md",
-      "rule": "R1a"
-    },
-    "2e0301950bbcacc5": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| `### 수행 내용` | 필수 | 그 Task에서 실제로 하는 일. 절차형이면 번호 목록, 독립 항목형이면 bullet |",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 3-0. Task 작성 필수 규칙 (필수)",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
-    "2fa3aacf4e06c442": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "프로덕션 배포는 반드시 사람 승인을 거친다",
-      "heading": "릴리즈/배포 정책 > 배포 원칙",
-      "path": "policies/release-policy.md",
       "rule": "R1a"
     },
     "342b4635336290f1": {
@@ -446,44 +198,12 @@
       "path": ".codex/skills/ad-data-request/SKILL.md",
       "rule": "R4"
     },
-    "35b68c8db15c42aa": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.",
-      "heading": "`$ad-ticket` > 실행 절차",
-      "path": ".codex/skills/ad-ticket/SKILL.md",
-      "rule": "R1a"
-    },
     "3752c8263982a9aa": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "dispatch request JSON을 원장처럼 수동 수정하지 않는다.",
       "heading": "Work Board Projection > 금지",
       "path": ".claude/commands/ad/work-board.md",
-      "rule": "R1a"
-    },
-    "37aeb88a3b766ac0": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "모든 스프린트 대상 티켓은 작성 시 \"예상 시작 일자\"를 반드시 기재한다. 시작 일자는 실제 착수일이 변동될 수 있으나, 계획 수립의 기준점으로",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 5. 예상 시작 일자 (필수)",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
-    "37d21acf8673d70d": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**필수 작성 요소**",
-      "heading": "주간업무 보고 가이드 > 2. 상태별 구분 기준 > ④ 완료된 항목",
-      "path": "docs/sprint/weekly-report-guide.md",
-      "rule": "R1a"
-    },
-    "37f33ea46221600c": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| `### 완료 기준` | **필수** (2026-08-03 확정) | 무엇이 나오면 끝인가. 2~4개 |",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 3-0. Task 작성 필수 규칙 (필수)",
-      "path": "docs/sprint/ticket-guide.md",
       "rule": "R1a"
     },
     "38f6d1488b5388ce": {
@@ -502,14 +222,6 @@
       "path": ".codex/skills/ad-tldr/SKILL.md",
       "rule": "R4"
     },
-    "396625de20bb6e4e": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**필수 작성 요소**",
-      "heading": "주간업무 보고 가이드 > 2. 상태별 구분 기준 > ② 미진행 항목",
-      "path": "docs/sprint/weekly-report-guide.md",
-      "rule": "R1a"
-    },
     "39b6f3539dcfb1b9": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -518,28 +230,12 @@
       "path": ".codex/skills/ad-work-board/SKILL.md",
       "rule": "R1a"
     },
-    "3af64a58c602896c": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack 본문은 5W1H 기준으로 \"무엇을 왜 어떻게 처리할지\"만 정확하고 간단하게 기술한다. 프로젝트, 상태, 담당자, 우선순위, 스프",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 3. Feature 작성 필수 규칙: 5W1H 기반 작성 (필수) > 본문 작성 원칙",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
     "3cee730edbb95fd1": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "Epic은 월 단위 스프린트에서는 사용하지 않는다. 업무 범위가 월을 넘기거나, 여러 Feature를 묶어 관리할 필요가 있는 경우에는 사전 논",
       "heading": "스프린트 티켓 작성 및 운영 가이드 > 2. 티켓 단위 권장 범위",
       "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
-    "3f40d321ca3d9d9d": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "운영 식별자(계정, CID, OID 등)는 SQL 파라미터로 명시할 수 있으나 row dump는 저장하지 않는다.",
-      "heading": "Work Prep 노트 템플릿 > 검증 SQL 기준",
-      "path": "docs/sprint/work-prep-note-template.md",
       "rule": "R1a"
     },
     "4026a7a8cc779249": {
@@ -558,43 +254,11 @@
       "path": ".claude/commands/ad/harness-optimize.md",
       "rule": "R1a"
     },
-    "40a76a0bd31b2cd0": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/work-board.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-work-board` > 절차",
-      "path": ".codex/skills/ad-work-board/SKILL.md",
-      "rule": "R1a"
-    },
-    "41563b9bed2315b3": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**Feature:** 총 기간 1주일 이내 (필수). 1주일을 초과하는 Feature는 분할 필수",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 2. 티켓 단위 권장 범위",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
     "42964120872ab36b": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "Clean Architecture, Hexagonal, DDD, CQRS를 폴더명만으로 판정하지 않는다.",
       "heading": "DEV2 저장소 아키텍처 분석 > 3. 철학과 아키텍처 평가",
-      "path": ".claude/commands/ad/architecture-analysis.md",
-      "rule": "R1a"
-    },
-    "42ceb2515552f6cf": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "티켓 생성 시 아래 필드를 반드시 설정한다.",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 11. YouTrack 필수 커스텀 필드",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
-    "4319766e7c1020ab": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "분석 대상 소스 파일을 생성·수정·삭제하지 않는다.",
-      "heading": "DEV2 저장소 아키텍처 분석 > 절대 규칙",
       "path": ".claude/commands/ad/architecture-analysis.md",
       "rule": "R1a"
     },
@@ -606,68 +270,12 @@
       "path": ".codex/skills/ad-architecture-analysis/SKILL.md",
       "rule": "R1a"
     },
-    "44625d5b1ecd6ef2": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "시크릿(API 키, DB 패스워드, 토큰 등)은 절대 코드/문서에 커밋하지 않는다",
-      "heading": "보안/시크릿 정책 > 시크릿 관리",
-      "path": "policies/security-policy.md",
-      "rule": "R1a"
-    },
-    "459698b4ee994b94": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "기록 밀도는 §5 기준을 따른다 (호출부·콜그래프 출력 전문 금지 포함). 추가: 사람이 운영 서버에서 직접 확인할 조회 SQL은 `검증 SQL",
-      "heading": "작업 준비 (Work Prep) > 실행 흐름 > 3.5 코드 레벨 진입점 분석 (자동)",
-      "path": ".claude/commands/ad/work-prep.md",
-      "rule": "R1a"
-    },
-    "4666bd1eace51d2a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "GitHub PR 머지 버튼은 **\"Create a merge commit\"** 사용. \"Squash and merge\", \"Rebase and",
-      "heading": "브랜치 전략 > 커밋 메시지 > Merge 방식",
-      "path": "policies/branching-strategy.md",
-      "rule": "R1a"
-    },
-    "46e0b617ba53c546": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/sprint-close-check.md`를 먼저 읽고 그 절차를",
-      "heading": "`$ad-sprint-close-check` > 실행 절차",
-      "path": ".codex/skills/ad-sprint-close-check/SKILL.md",
-      "rule": "R1a"
-    },
-    "474f46c6427aa5df": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/harness-optimize.md`를 먼저 읽고 그 절차를 따",
-      "heading": "`$ad-harness-optimize` > 실행 절차",
-      "path": ".codex/skills/ad-harness-optimize/SKILL.md",
-      "rule": "R1a"
-    },
-    "476c7cc79da470c6": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "DB 또는 SP 변경이 포함된 PR은 아래를 반드시 포함 (배포 단계 첨부물 SoT는 [release-policy.md](./release-po",
-      "heading": "코드 리뷰 정책 > DB/SP 변경 추가 리뷰 항목 (PR 단계 첨부물 SoT)",
-      "path": "policies/code-review-policy.md",
-      "rule": "R1a"
-    },
     "4977c5816f48d3a6": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "검증 전에는 canonical 문서 제목 정비 완료로 표시하지 않는다.",
       "heading": "운영 위키 문서 언어와 제목 정책 > 기존 문서 보정 기준",
       "path": "policies/wiki-document-language-and-title-policy.md",
-      "rule": "R1a"
-    },
-    "4b3ed7b53a006098": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/new-note.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-new-note` > 실행 절차",
-      "path": ".codex/skills/ad-new-note/SKILL.md",
       "rule": "R1a"
     },
     "4bd7c51aa9ca1045": {
@@ -678,14 +286,6 @@
       "path": ".claude/commands/ad/architecture-analysis.md",
       "rule": "R1a"
     },
-    "4bdb434e2e63f826": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**코드 레벨 디테일 최소화**: 컬럼명·SP명·파일경로·테이블명 나열 금지. 필요 시 도메인 단위(`공급사 계약 도메인`, `정산 처리 로직`",
-      "heading": "YouTrack 티켓 생성 > 본문 작성 규칙 (필수) > 본문",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
     "4c1d2f17a303e59b": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -694,36 +294,12 @@
       "path": ".codex/skills/ad-tldr/SKILL.md",
       "rule": "R1a"
     },
-    "4c48e7815fe16a2b": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "날짜 범위 syntax: `resolved date: 2026-04-01 .. 2026-04-30` (공백 포함, `--data-urlencod",
-      "heading": "가용 용량 분석 (capacity plan) > YouTrack 쿼리 (BD PLAN 스냅샷)",
-      "path": ".claude/commands/ad/capacity-plan.md",
-      "rule": "R1a"
-    },
-    "4d6ad646be24afa4": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**Service**: 대상 서비스 enum 반드시 설정",
-      "heading": "YouTrack 티켓 생성 > 본문 작성 규칙 (필수) > 필드 기본값",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
     "4d86f05b8d309d89": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "사용자가 \"현재 KB가 최종\"이라고 하면 YouTrack KB `DEV2-A-696` 본문을 기준본으로 읽고 비교만 한다. KB 업데이트는 별도",
       "heading": "`$ad-weekly-report` > 운영 기준",
       "path": ".codex/skills/ad-weekly-report/SKILL.md",
-      "rule": "R1a"
-    },
-    "4da6221af0f1f65e": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/granola-sync.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-granola-sync` > 실행 절차",
-      "path": ".codex/skills/ad-granola-sync/SKILL.md",
       "rule": "R1a"
     },
     "4e7fa8699fadb269": {
@@ -782,22 +358,6 @@
       "path": ".codex/skills/ad-sprint-close-check/SKILL.md",
       "rule": "R4"
     },
-    "525f9f1c5659ddf0": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/work-close.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-work-close` > 절차",
-      "path": ".codex/skills/ad-work-close/SKILL.md",
-      "rule": "R1a"
-    },
-    "532775e118e2a72f": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "13점 단일 티켓은 스프린트 투입 금지다. 8점 이하로 분할한다.",
-      "heading": "DEV2 YouTrack 티켓 5W1H > 고정 규칙",
-      "path": ".codex/skills/youtrack-ticket-5w1h-ko/SKILL.md",
-      "rule": "R1a"
-    },
     "5396aaaa61574202": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -822,22 +382,6 @@
       "path": "docs/sprint/ticket-guide.md",
       "rule": "R1a"
     },
-    "5552aa03077540ec": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| 증명 | 문서, 코드 커밋, PR, 배포 기록 등 **객관적으로 확인 가능한 산출물** 필수 |",
-      "heading": "주간 핵심 목표 운영 정책 > 2. 운영 규칙",
-      "path": "docs/sprint/weekly-goal-policy.md",
-      "rule": "R1a"
-    },
-    "559652c9425b889c": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "Feature는 총 기간 1주일 이내가 필수 규칙 (`docs/sprint/ticket-guide.md` 2항). 주간보고 동기화/업데이트 시 ",
-      "heading": "주간업무 보고서 작성 > Feature 기간 초과 경고",
-      "path": ".claude/commands/ad/weekly-report.md",
-      "rule": "R1a"
-    },
     "56f9c69b7683681f": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -853,14 +397,6 @@
       "heading": "`$ad-code-review` > 실행 절차",
       "path": ".codex/skills/ad-code-review/SKILL.md",
       "rule": "R4"
-    },
-    "57532c972f878007": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**Task (Feature 하위):** 1일 이내 (필수). 1일을 초과할 것으로 보이면 Task를 더 쪼개어 작성",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 2. 티켓 단위 권장 범위",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
     },
     "58e8d297427df0c8": {
       "acceptance_id": "2026-09-16-1",
@@ -886,14 +422,6 @@
       "path": "policies/harness-governance-policy.md",
       "rule": "R1a"
     },
-    "5a1a2d0ea10a30b1": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "본문에는 `수용 기준`, `SP 산정 기록 초안`, `운영 기준/운영 메모`처럼 별도 필드, 댓글, PR, 체크리스트로 관리할 내용을 반복 기재",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 3. Feature 작성 필수 규칙: 5W1H 기반 작성 (필수) > 본문 작성 원칙",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
     "5adaf6cd006520d6": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -901,14 +429,6 @@
       "heading": "작업 준비 (Work Prep) > 검증 순서 원칙",
       "path": ".claude/commands/ad/work-prep.md",
       "rule": "R4"
-    },
-    "5ba84366cb9059e9": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "AI 도구는 YouTrack 티켓/Task 생성, 티켓 상태 변경, 커밋/푸시/머지 전에 반드시 사용자에게 확인한다. 하네스 예외 작업은 DEV",
-      "heading": "개발 2팀 하네스 > 핵심 규칙",
-      "path": "CLAUDE.md",
-      "rule": "R1a"
     },
     "5c1eb12cef0e15b5": {
       "acceptance_id": "2026-09-16-1",
@@ -918,22 +438,6 @@
       "path": ".claude/commands/ad/harness-optimize.md",
       "rule": "R4"
     },
-    "5c9880ebde14eab7": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack 쿼리는 `--data-urlencode` 사용 필수 (공백 포함 query). `tag: {YYMM}-planned` 정확 매칭",
-      "heading": "가용 용량 분석 (capacity plan) > 주의",
-      "path": ".claude/commands/ad/capacity-plan.md",
-      "rule": "R1a"
-    },
-    "5d43f1f8f6f3d9e0": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.",
-      "heading": "`$ad-service-activity` > 실행 절차",
-      "path": ".codex/skills/ad-service-activity/SKILL.md",
-      "rule": "R1a"
-    },
     "5d827e65fcfaff38": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -942,76 +446,12 @@
       "path": "docs/agents/verification.md",
       "rule": "R1a"
     },
-    "5df357c56f1972c7": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "[ ] 코드 변경 완료와 필수 테스트 통과를 확인했고, 해당 Task의 완료 조건에 대해 검증 대상·실행 방법·기대값·관찰 결과·근거 위치를 연",
-      "heading": "Definition of Done (DoD) 체크리스트 > 필수 항목",
-      "path": "templates/dod-checklist.md",
-      "rule": "R1a"
-    },
-    "5f2a8bb6e9ec79eb": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API/`curl`만 사용한다. MCP 금지.",
-      "heading": "`$ad-work-close` > 절차",
-      "path": ".codex/skills/ad-work-close/SKILL.md",
-      "rule": "R1a"
-    },
-    "5f88e03d509dfb0e": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "§5 위키 노트 작성에 열거된 본문 저장 금지 항목",
-      "heading": "작업 준비 (Work Prep) > 사용자 확인 게이트",
-      "path": ".claude/commands/ad/work-prep.md",
-      "rule": "R1a"
-    },
-    "603406ff11a1a5ee": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "`mcp__youtrack__*` 또는 DB MCP 도구를 호출하지 않는다.",
-      "heading": "개발 2팀 `/ad:*` 명령 호환 > 자격증명·게이트",
-      "path": ".codex/skills/dev2-ad-commands-ko/SKILL.md",
-      "rule": "R1a"
-    },
-    "60b9147f8552195f": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "CLAUDE.md는 **최소한으로** 유지한다. 팀 공통 정책은 팀 하네스에서 관리하고, 서비스 CLAUDE.md에는 중복 기재하지 않는다.",
-      "heading": "CLAUDE.md 작성 정책 > 원칙",
-      "path": "policies/claude-md-policy.md",
-      "rule": "R1a"
-    },
-    "61642b224f83c98a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.",
-      "heading": "`$ad-weekly-report` > 실행 절차",
-      "path": ".codex/skills/ad-weekly-report/SKILL.md",
-      "rule": "R1a"
-    },
-    "621511700a39a358": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "핫픽스: 시간 제한 없음, 단 사후 리뷰 필수",
-      "heading": "릴리즈/배포 정책 > 배포 시간대",
-      "path": "policies/release-policy.md",
-      "rule": "R1a"
-    },
     "62ec9820f0cdb30b": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "발급이 이미 끝난 회차는 재검증 목적으로 다시 발급하지 않는다. 읽기 전용 조회와 업무 확인만 수행한다.",
       "heading": "알라딘 쇼핑 멤버십 쿠폰 재발방지 월간 이행 보고서 템플릿 > 5. 증거 수준과 미확인 항목",
       "path": "templates/membership-coupon-recurrence-prevention-monthly-report.md",
-      "rule": "R1a"
-    },
-    "62fde5de2bc92cac": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**서비스 고유 금지 사항** (팀 공통이 아닌 것만)",
-      "heading": "CLAUDE.md 작성 정책 > 서비스 CLAUDE.md에 넣어야 하는 것",
-      "path": "policies/claude-md-policy.md",
       "rule": "R1a"
     },
     "6494e3d4695bbc41": {
@@ -1054,14 +494,6 @@
       "path": "docs/sprint/weekly-report-guide.md",
       "rule": "R1a"
     },
-    "6c40048175f5d7ee": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**예상 시작 일자 필수**",
-      "heading": "YouTrack 티켓 생성 > 참조 문서 (Source of Truth) > 핵심 규칙 요약",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
     "6c4e682a5c61b4c1": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -1078,92 +510,12 @@
       "path": "CLAUDE.md",
       "rule": "R1a"
     },
-    "6d82c62920ce7c07": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "외부 입력은 반드시 검증 후 사용",
-      "heading": "보안/시크릿 정책 > 코드 보안",
-      "path": "policies/security-policy.md",
-      "rule": "R1a"
-    },
-    "6e60574373d508e0": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "커밋·PR·티켓 본문 품질(AI co-author 푸터 금지 포함): [ai-usage-policy.md](./ai-usage-policy.md",
-      "heading": "개발 2팀 엔지니어링 정책 > 코드 변경 규칙",
-      "path": "policies/engineering-policy.md",
-      "rule": "R1a"
-    },
     "6f2c22b92b887b2a": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "보관 금지: 운영 DB 비밀번호, 운영 API 시크릿, 타인 계정 자격증명, 결제·개인정보 관련 운영 자격증명.",
       "heading": "로컬 자격증명 정책 (macOS Keychain) > 범위",
       "path": "policies/local-credentials-policy.md",
-      "rule": "R1a"
-    },
-    "6f53173b88640498": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "protected branch, PR 리뷰, CI, 배포 승인, 시크릿/민감정보 금지 규칙은 그대로 적용한다.",
-      "heading": "브랜치 전략 > 브랜치 명명 규칙 > 개발2팀 하네스 예외",
-      "path": "policies/branching-strategy.md",
-      "rule": "R1a"
-    },
-    "6f57804b329d6185": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| **배포·운영 반영** | 환경 반영, 반영 후 결과 확인 | **해당 여부·환경 판정 필수** (2-3항) |",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 2. 티켓 단위 권장 범위 > 2-2. 단계 분리 (필수) — Feature·Task 공통 > 판정 대상 단계",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
-    "708483b7819b6790": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "절대/상대 경로: 해당 Git 저장소를 분석한다.",
-      "heading": "DEV2 저장소 아키텍처 분석 > 사용법",
-      "path": ".claude/commands/ad/architecture-analysis.md",
-      "rule": "R1a"
-    },
-    "713ccbbef1621595": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API와 `curl`만 사용한다. MCP 도구는 사용하지 않는다.",
-      "heading": "DEV2 YouTrack 티켓 5W1H > 고정 규칙",
-      "path": ".codex/skills/youtrack-ticket-5w1h-ko/SKILL.md",
-      "rule": "R1a"
-    },
-    "7174416e988ec2df": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "PR 승인 + 필수 status check 통과 후에만 머지 가능",
-      "heading": "브랜치 전략 > 보호 규칙",
-      "path": "policies/branching-strategy.md",
-      "rule": "R1a"
-    },
-    "71c9895cbb8f4f72": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.",
-      "heading": "`$ad-weekly-planned` > 실행 절차",
-      "path": ".codex/skills/ad-weekly-planned/SKILL.md",
-      "rule": "R1a"
-    },
-    "71d2f18e5f87c5ee": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API/`curl`만 사용한다. 토큰은 env 또는 `~/.claude/settings.json`에서 읽되 출력하지 ",
-      "heading": "개발 2팀 하네스 > 외부·승인",
-      "path": ".codex/skills/dev2-team-harness-ko/SKILL.md",
-      "rule": "R1a"
-    },
-    "75a62eb4b2d62c0b": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/explain.md`를 먼저 읽고 그 절차와 섹션 규격을 따른다",
-      "heading": "`$ad-explain` > 절차",
-      "path": ".codex/skills/ad-explain/SKILL.md",
       "rule": "R1a"
     },
     "75a6e4e026fc14c9": {
@@ -1174,36 +526,12 @@
       "path": ".codex/skills/ad-grill/SKILL.md",
       "rule": "R4"
     },
-    "7811dd208f1d8a9a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "Markdown과 HTML 절대경로",
-      "heading": "DEV2 저장소 아키텍처 분석 > 7. 완료 응답",
-      "path": ".claude/commands/ad/architecture-analysis.md",
-      "rule": "R1a"
-    },
     "7ac65d7409e18cd9": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "운영 evidence가 필요한 항목은 승인 전에는 실행하지 않는다. 승인 후에도 아래 기준을 통과해야 상태 전환할 수 있다.",
       "heading": "DB 이관/CDC 진단 정책 > Evidence Gate",
       "path": "policies/db-migration-cdc-assessment-policy.md",
-      "rule": "R1a"
-    },
-    "7ad08fd430a2e062": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "초안 확정 전 아래 판정은 필수 항목이다.",
-      "heading": "YouTrack 티켓 생성 > 단계 분리 (필수) > 판정 절차",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
-    "7b317a1da9775948": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/okr.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-okr` > 실행 절차",
-      "path": ".codex/skills/ad-okr/SKILL.md",
       "rule": "R1a"
     },
     "7b79da7223e8b8ca": {
@@ -1214,44 +542,12 @@
       "path": ".codex/skills/ad-plan-run/SKILL.md",
       "rule": "R4"
     },
-    "7c38646374146147": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**세부 항목 작성**: 필수",
-      "heading": "주간업무 보고 가이드 > 2. 상태별 구분 기준 > ③ 진행 중 항목",
-      "path": "docs/sprint/weekly-report-guide.md",
-      "rule": "R1a"
-    },
-    "7de67f9131fa0033": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| **종료 (Done)** | **[필수] 결과물 링크 첨부** (문서: YouTrack KB 링크, 디자인 등 / 소스 수정은 커밋 내역으로",
-      "heading": "스프린트 워크플로우 실행 가이드 > 1. 티켓 상태 및 관리 기준",
-      "path": "docs/sprint/sprint-workflow-execution.md",
-      "rule": "R1a"
-    },
     "7df94a045ecbb10c": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "신규 .NET 서비스 생성 금지 (예외는 팀장 승인 필요)",
       "heading": "개발 2팀 엔지니어링 정책 > 기술 스택 원칙 > 신규 서비스",
       "path": "policies/engineering-policy.md",
-      "rule": "R1a"
-    },
-    "83065de5fc27493b": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "git clean/reset/checkout/stash, commit, push, merge, PR을 실행하지 않는다.",
-      "heading": "DEV2 저장소 아키텍처 분석 > 절대 규칙",
-      "path": ".claude/commands/ad/architecture-analysis.md",
-      "rule": "R1a"
-    },
-    "8326f2ea50987679": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| `### SP 산정 근거` | SP 3 필수 | 복잡도·불확실성·작업량 중 해당 축과 산정표 구간 ([SP 가이드](./story-point",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 3-0. Task 작성 필수 규칙 (필수)",
-      "path": "docs/sprint/ticket-guide.md",
       "rule": "R1a"
     },
     "8575d898c2b31f93": {
@@ -1286,62 +582,6 @@
       "path": ".claude/commands/ad/service-activity.md",
       "rule": "R1a"
     },
-    "8940e88494bcce40": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API/`curl`만 사용한다. MCP 금지.",
-      "heading": "개발 2팀 `/ad:*` 명령 호환 > 절차",
-      "path": ".codex/skills/dev2-ad-commands-ko/SKILL.md",
-      "rule": "R1a"
-    },
-    "8a38c587d72198c1": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "본인 담당 티켓 중 마감 프로세스(`docs/sprint/sprint-closing-process.md`) D-5 / D-4 점검 항목에 걸리는",
-      "heading": "스프린트 마감 자가점검 (D-5 / D-4)",
-      "path": ".claude/commands/ad/sprint-close-check.md",
-      "rule": "R1a"
-    },
-    "8b538308bc5cab17": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "팀장 사전 승인 후 티켓 상태를 **Backlog**으로 전환하고 이월 코멘트를 남긴다. 코멘트 필수 항목과 절차는 [업무 계획 변경 절차](.",
-      "heading": "스프린트 마감 프로세스 가이드 > D-5 | 티켓 상태 점검 및 이월 판단 > 이월 대상 처리",
-      "path": "docs/sprint/sprint-closing-process.md",
-      "rule": "R1a"
-    },
-    "8d04ac23274639a5": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| **오픈 (Open)** | 백로그 중 당월 소화 가능한 티켓만 상태 전환. **[필수] 예상 시작 일자** 기입 |",
-      "heading": "스프린트 워크플로우 실행 가이드 > 1. 티켓 상태 및 관리 기준",
-      "path": "docs/sprint/sprint-workflow-execution.md",
-      "rule": "R1a"
-    },
-    "8d0f361fbcfd5c29": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**날짜·기간 본문에 적지 않음**: 시작일/배포일/스프린트 월 표기 금지. YouTrack 필드(`예상 시작일`, `Sprints`)에서만 관",
-      "heading": "YouTrack 티켓 생성 > 본문 작성 규칙 (필수) > 본문",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
-    "8d0fc9eaff0f28cd": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "본인 코드 self-review 불가 (다른 사람이 반드시 리뷰)",
-      "heading": "코드 리뷰 정책 > 리뷰 원칙",
-      "path": "policies/code-review-policy.md",
-      "rule": "R1a"
-    },
-    "8dd0280e74c8a997": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "evidence 없이 `planned` 또는 `in-progress`를 `completed`로 전이하지 않는다.",
-      "heading": "계획 실행 (plan-run) > 게이트",
-      "path": ".claude/commands/ad/plan-run.md",
-      "rule": "R1a"
-    },
     "8df7c59efe6236d1": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -1350,44 +590,12 @@
       "path": ".codex/skills/ad-weekly-report/SKILL.md",
       "rule": "R4"
     },
-    "8e3ef4cc42dcd0c1": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| **13 (XXL)** | **[분할 필수]** 아키텍처 변경 | 인프라 교체, 다수 레거시 연동 | 한 스프린트 내 완료 불가 |",
-      "heading": "스토리 포인트 가이드 및 운영 방안 > 3. 직군별 상세 산정 기준표 (산정 감각 1~13 · 등록 상한 3) > 1) 개발자",
-      "path": "docs/sprint/story-point-guide.md",
-      "rule": "R1a"
-    },
-    "8e88050a15322ac0": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "subgraph에 `style` 지시어를 적용할 때 한글 이름을 직접 참조하면 파싱이 실패한다. 반드시 영문 ID를 부여하고, 한글은 표시 레이",
-      "heading": "Mermaid 다이어그램 작성 컨벤션 > subgraph 규칙 > style 지시어에 한글 이름 사용 금지",
-      "path": "policies/mermaid-convention.md",
-      "rule": "R1a"
-    },
-    "8f1dcc7c367d084b": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**원문 그대로 옮긴다**: 담당자 구분·항목 순서·문구·티켓 ID를 KB 원문 그대로 유지한다. 묶거나 재정렬하지 않는다.",
-      "heading": "주간업무 보고 가이드 > 4-B. 보고 포맷 개편 (2026-07~) > 4-B.1.1 이번 주 핵심목표 (KB DEV2-A-1351 취합)",
-      "path": "docs/sprint/weekly-report-guide.md",
-      "rule": "R1a"
-    },
     "8f654f7b65c3754e": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "사용자가 \"현재 KB가 최종\"이라고 하면 YouTrack KB `DEV2-A-696`은 비교 기준이다. 별도 명시 승인 없이는 KB `POST`",
       "heading": "주간업무 보고서 작성 > 기록 대상 필터 > 최종본 중복 제거 규칙",
       "path": ".claude/commands/ad/weekly-report.md",
-      "rule": "R1a"
-    },
-    "8f99a39104b43ef3": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/service-activity.md`를 먼저 읽고 그 절차를 따",
-      "heading": "`$ad-service-activity` > 실행 절차",
-      "path": ".codex/skills/ad-service-activity/SKILL.md",
       "rule": "R1a"
     },
     "8fe089ad8c762a02": {
@@ -1401,7 +609,7 @@
     "90eff719b345cce6": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
-      "excerpt": "≈6255tok > 한도 6000tok (20914바이트)",
+      "excerpt": "≈6342tok > 한도 6000tok (21196바이트)",
       "heading": "",
       "path": ".claude/commands/ad/ticket.md",
       "rule": "R5"
@@ -1414,22 +622,6 @@
       "path": ".claude/commands/ad/sprint-close-check.md",
       "rule": "R1a"
     },
-    "91d55c151401956c": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**필수 작성 요소**",
-      "heading": "주간업무 보고 가이드 > 2. 상태별 구분 기준 > ③ 진행 중 항목",
-      "path": "docs/sprint/weekly-report-guide.md",
-      "rule": "R1a"
-    },
-    "93b28ffc5d8c5e95": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "개인정보·시크릿·운영 실데이터를 게시하지 않는다. 로컬 전용 자료의 내용을 링크 대신 복사해서 노출하지 않는다.",
-      "heading": "YouTrack KB 등록 > 1. 게시용 본문을 만든다",
-      "path": ".claude/commands/ad/kb-publish.md",
-      "rule": "R1a"
-    },
     "94b12efb4426ecab": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -1438,28 +630,12 @@
       "path": ".codex/skills/ad-explain/SKILL.md",
       "rule": "R4"
     },
-    "955a80cb4eab5414": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "KB 자동 반영 금지 (Obsidian 로컬 저장만)",
-      "heading": "서비스 작업 활동 조회 > 주의",
-      "path": ".claude/commands/ad/service-activity.md",
-      "rule": "R1a"
-    },
     "956c144a45b03ba5": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "판정(4단계) 전에 **이해 패스(3단계)**를 반드시 거친다. 섹션 규격은 `$TEAM2_HARNESS_PATH/.claude/commands",
       "heading": "`$ad-code-review` > 실행 절차",
       "path": ".codex/skills/ad-code-review/SKILL.md",
-      "rule": "R1a"
-    },
-    "95d28edbd24ee9fe": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "세 형태 중 무엇인지 **판정은 필수**이다. `테스트`만으로 충분하면 QA를 만들지 않는다.",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 2. 티켓 단위 권장 범위 > 2-2. 단계 분리 (필수) — Feature·Task 공통 > 검증 단계: 테스트와 QA 구분",
-      "path": "docs/sprint/ticket-guide.md",
       "rule": "R1a"
     },
     "95e1a9c727612e95": {
@@ -1470,14 +646,6 @@
       "path": ".codex/skills/ad-granola-sync/SKILL.md",
       "rule": "R4"
     },
-    "964477d3a446e986": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "개수를 3개에서 2개로 줄인 것은 업무량 축소가 아니라, 설정한 목표를 반드시 달성하고 결과를 만들어내는 실행 문화를 정착시키기 위함이다.",
-      "heading": "주간 핵심 목표 운영 정책 > 2. 운영 규칙",
-      "path": "docs/sprint/weekly-goal-policy.md",
-      "rule": "R1a"
-    },
     "974a1d8f066d7c14": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -1486,36 +654,12 @@
       "path": ".claude/commands/ad/granola-sync.md",
       "rule": "R1a"
     },
-    "977df20bf3580566": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "아래 3개 상태는 스프린트 운영상 필수로 이행되어야 한다. 그 외 상태는 담당자 재량에 따라 자율적으로 운영하되, 업무 종료 시점에는 반드시 \"",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 1. 스프린트 상태 (상태값 기준)",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
     "986c1114c6d92a51": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "**계획 변경 (팀장 사전 협의 필수):** 아래 상황 발생 시 반드시 팀장과 협의 후 조치하며, **결정 사유를 티켓 코멘트로 기록**",
       "heading": "스프린트 워크플로우 실행 가이드 > 2. 단계별 실행 프로세스 > Step 3. 작업 진행 및 유연한 계획 변경 (스프린트 중)",
       "path": "docs/sprint/sprint-workflow-execution.md",
-      "rule": "R1a"
-    },
-    "99987d66ecd108a6": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| 스토리 포인트 | 선택 | 필수 |",
-      "heading": "스프린트 계획 운영 개요 > 월간 맨데이 배분 구조 > 운영 업무 vs 계획 업무",
-      "path": "docs/sprint/sprint-planning-overview.md",
-      "rule": "R1a"
-    },
-    "9a355f2a8acaa89d": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| **검증** | 내부 테스트 또는 시너지팀 QA (아래 참조) | **해당 여부·형태 판정 필수** |",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 2. 티켓 단위 권장 범위 > 2-2. 단계 분리 (필수) — Feature·Task 공통 > 판정 대상 단계",
-      "path": "docs/sprint/ticket-guide.md",
       "rule": "R1a"
     },
     "9ab0c6ae9b55780d": {
@@ -1534,60 +678,12 @@
       "path": "policies/gstack-override-policy.md",
       "rule": "R1a"
     },
-    "9d749f9f5e2573f8": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "이 스킬은 로컬 위키 저장만 수행한다. YouTrack 티켓·KB 업데이트는 하지 않는다.",
-      "heading": "주간 계획 스냅샷 작성 > 실행 지침 > 7. YouTrack 미반영",
-      "path": ".claude/commands/ad/weekly-planned.md",
-      "rule": "R1a"
-    },
-    "a03197b28fb20f61": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/orchestration.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-orchestration` > 실행 절차",
-      "path": ".codex/skills/ad-orchestration/SKILL.md",
-      "rule": "R1a"
-    },
-    "a182499544dbf42f": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**보강 금지**: 상태·일정정보·`티켓 미발행` 같은 주석을 붙이지 않는다. 출처 인용 문구, 필터 제외 사유 각주도 넣지 않는다. 티켓 번호",
-      "heading": "주간업무 보고 가이드 > 4-B. 보고 포맷 개편 (2026-07~) > 4-B.1.1 이번 주 핵심목표 (KB DEV2-A-1351 취합)",
-      "path": "docs/sprint/weekly-report-guide.md",
-      "rule": "R1a"
-    },
-    "a22d2876b98cf883": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**필요로 판정하면 반드시 별도 Feature로 분리한다.** 개발 Feature의 하위 Task나 본문 체크리스트, DoD 항목으로 대체하지 ",
-      "heading": "YouTrack 티켓 생성 > 단계 분리 (필수) > 판정 절차",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
-    "a2e5a88cac99037e": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**월별 스프린트 배정 표 본문 금지**: 배정은 Sprints 필드로만 관리",
-      "heading": "YouTrack 티켓 생성 > 본문 작성 규칙 (필수) > 본문",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
     "a315e8de869e28f4": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "확인 없이 진행 / 확인 필수 구분은 \"사용자 확인 게이트\" 섹션(SoT)을 따른다.",
       "heading": "작업 준비 (Work Prep) > 실행 흐름 > 4. 위키 노트 경로 결정",
       "path": ".claude/commands/ad/work-prep.md",
-      "rule": "R1a"
-    },
-    "a3f44809cc45866b": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "이 명령은 YouTrack, KB, git, DB, 배포를 변경하지 않는다.",
-      "heading": "Work Board Projection > 원칙",
-      "path": ".claude/commands/ad/work-board.md",
       "rule": "R1a"
     },
     "a4a0564ef6467d59": {
@@ -1614,46 +710,6 @@
       "path": ".codex/skills/eli5-onboard/SKILL.md",
       "rule": "R1a"
     },
-    "a5a75e391451b3b4": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/capacity-plan.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-capacity-plan` > 실행 절차",
-      "path": ".codex/skills/ad-capacity-plan/SKILL.md",
-      "rule": "R1a"
-    },
-    "a5c0c6dd3c374cc9": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "다음 회차 전 필수 조치: `{{목록}}`",
-      "heading": "알라딘 쇼핑 멤버십 쿠폰 재발방지 월간 이행 보고서 템플릿 > 6. 결론과 다음 회차",
-      "path": "templates/membership-coupon-recurrence-prevention-monthly-report.md",
-      "rule": "R1a"
-    },
-    "a5f63e6664c9961a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| **13 (XXL)** | **[분할 필수]** 대규모 신규 과제 | 레거시 전체 CSS 테마/구조 개편 |",
-      "heading": "스토리 포인트 가이드 및 운영 방안 > 3. 직군별 상세 산정 기준표 (산정 감각 1~13 · 등록 상한 3) > 3) 디자이너",
-      "path": "docs/sprint/story-point-guide.md",
-      "rule": "R1a"
-    },
-    "a80839978eaa2ce7": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "build/test가 repo-tracked 파일을 바꾼 경우 즉시 중단하고 변경 파일을 사용자에게 알린다. 임의 복구하지 않는다.",
-      "heading": "DEV2 저장소 아키텍처 분석 > 절대 규칙",
-      "path": ".claude/commands/ad/architecture-analysis.md",
-      "rule": "R1a"
-    },
-    "a8e969deba093ff7": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "이 규칙은 **13점 금지·8점 분할 권장을 흡수**한다. 상한이 3이면 두 구간에 도달할 수 없다.",
-      "heading": "스토리 포인트 가이드 및 운영 방안 > 4. 협의 및 운영 규칙 > 등록 Task 상한 규칙 (2026-08-03 확정)",
-      "path": "docs/sprint/story-point-guide.md",
-      "rule": "R1a"
-    },
     "aad47c6aee614984": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -1661,22 +717,6 @@
       "heading": "주간 계획 스냅샷 작성 > 실행 지침 > 1. 인자 파싱",
       "path": ".claude/commands/ad/weekly-planned.md",
       "rule": "R4"
-    },
-    "aaf123272d6968b6": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "develop PR은 **squash merge를 사용하지 않는다**. Task 단위 커밋 이력을 develop에 그대로 보존한다.",
-      "heading": "브랜치 전략 > 커밋 메시지 > Merge 방식",
-      "path": "policies/branching-strategy.md",
-      "rule": "R1a"
-    },
-    "ab10326e8724820d": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/weekly-planned.md`를 먼저 읽고 그 절차를 따른다",
-      "heading": "`$ad-weekly-planned` > 실행 절차",
-      "path": ".codex/skills/ad-weekly-planned/SKILL.md",
-      "rule": "R1a"
     },
     "ac39a2ac5da7fae1": {
       "acceptance_id": "2026-09-16-1",
@@ -1686,70 +726,6 @@
       "path": ".claude/commands/ad/new-note.md",
       "rule": "R4"
     },
-    "acbfa33fa7d0a45e": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.",
-      "heading": "`$ad-okr` > 실행 절차",
-      "path": ".codex/skills/ad-okr/SKILL.md",
-      "rule": "R1a"
-    },
-    "acdba27ad5439387": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "필수 행동·위반·산출물·비용을 대조한다. 결과 변동이 결론에 영향을 주면 반복 실행하고, 단일 실행의 일치만으로 규칙이 무효라고 확정하지 않는다",
-      "heading": "하네스 거버넌스 정책 > 변경 통제",
-      "path": "policies/harness-governance-policy.md",
-      "rule": "R1a"
-    },
-    "ad30131770640688": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**전분기 실적 코멘트 섹션 필수**: KR별 결과·저조/이월 사유 표 + 구조 요인. 범위 축소·지표 조정의 배경 설명",
-      "heading": "OKR 조회 및 작성 > 실행 지침 > 작성 모드 > OKR 작성 규칙 (2026-07 팀장 리뷰 기준)",
-      "path": ".claude/commands/ad/okr.md",
-      "rule": "R1a"
-    },
-    "adda36572c5eed97": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "프로덕션 배포는 사람 승인 필수",
-      "heading": "개발 2팀 엔지니어링 정책 > 코드 변경 규칙",
-      "path": "policies/engineering-policy.md",
-      "rule": "R1a"
-    },
-    "ae05a89053b281e0": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "> 출처: DEV2-A-990 §5. 궁극 목표는 **팀장 개입 없이 개발팀이 자율 산정·Velocity 예측하는 구조 확립**. > 기간은 *",
-      "heading": "스토리 포인트 가이드 및 운영 방안 > 5. 단계별 목표 지표 (Success Metrics)",
-      "path": "docs/sprint/story-point-guide.md",
-      "rule": "R1a"
-    },
-    "ae9842915f845585": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "서비스 하네스의 금지 영역 수정",
-      "heading": "AI 사용 정책 > AI 작업 가드레일 > 금지",
-      "path": "policies/ai-usage-policy.md",
-      "rule": "R1a"
-    },
-    "ae9ee5d6c6f6802a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "결과 기록은 스키마, 카운트, 대표 패턴, 판단만 남긴다. 운영 실데이터, 개인정보, 결제 row, SP 원문, 시크릿은 저장하지 않는다.",
-      "heading": "Work Prep 노트 템플릿 > 검증 SQL 기준",
-      "path": "docs/sprint/work-prep-note-template.md",
-      "rule": "R1a"
-    },
-    "aec708faff78c2c3": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "파일명: `kebab-case.md`. `wiki/services/{service_id}/` 아래에서는 소유 `service_id` 접두어 금지",
-      "heading": "운영 위키 문서 언어와 제목 정책 > 생성 산출물 작성 기준",
-      "path": "policies/wiki-document-language-and-title-policy.md",
-      "rule": "R1a"
-    },
     "b1c8572e6813a21f": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -1757,22 +733,6 @@
       "heading": "`$ad-weekly-planned` > 실행 절차",
       "path": ".codex/skills/ad-weekly-planned/SKILL.md",
       "rule": "R4"
-    },
-    "b2d36dd6a800a87e": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "P1/P2 장애는 반드시 사후 리뷰 실시",
-      "heading": "장애 대응 프로세스 > 사후 리뷰",
-      "path": "policies/incident-response.md",
-      "rule": "R1a"
-    },
-    "b2ecf13d6d0d536b": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "키를 조회했으면 그 값을 사용자 응답·노트·커밋에 인용하지 않는다.",
-      "heading": "Datadog API 정책 > AI 도구 사용 시",
-      "path": "policies/datadog-api-policy.md",
-      "rule": "R1a"
     },
     "b38066a2a95fcfeb": {
       "acceptance_id": "2026-09-16-1",
@@ -1798,76 +758,12 @@
       "path": ".codex/skills/ad-architecture-analysis/SKILL.md",
       "rule": "R4"
     },
-    "ba64748c68b541e6": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**확인 필수 항목**:",
-      "heading": "작업 준비 (Work Prep) > 사용자 확인 게이트",
-      "path": ".claude/commands/ad/work-prep.md",
-      "rule": "R1a"
-    },
-    "baecc4b9364ae70e": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "외부 노출 금지 정보 (로컬 경로, 위키 절대 경로) 는 [security-policy.md](./security-policy.md) 별도 규정",
-      "heading": "AI 사용 정책 > 메시지 작성 품질 > 권장",
-      "path": "policies/ai-usage-policy.md",
-      "rule": "R1a"
-    },
     "bb60c50dcdf13a82": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "출력(이슈 제목, 노트, 테스트 이름)에는 glossary의 canonical 용어를 쓴다. `_금지 동의어_`로 표류하지 않는다",
       "heading": "Domain docs — 팀 배치 > 소비 규칙",
       "path": "docs/agents/domain.md",
-      "rule": "R1a"
-    },
-    "bbe6ad5da20995b2": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "formatter, codegen, migration, package update, dependency install을 실행하지 않는다.",
-      "heading": "DEV2 저장소 아키텍처 분석 > 절대 규칙",
-      "path": ".claude/commands/ad/architecture-analysis.md",
-      "rule": "R1a"
-    },
-    "bc04bcaea5e6e634": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**Feature는 반드시 5W1H 항목을 포함해 작성**한다.",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 3. Feature 작성 필수 규칙: 5W1H 기반 작성 (필수)",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
-    "be4473d4a734ff73": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "날짜·버전·일정 표기 금지",
-      "heading": "YouTrack 티켓 생성 > 본문 작성 규칙 (필수) > 제목",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
-    "be8c787a04efc432": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**자동 생성/체크아웃하지 않는다**. 사용자 확인 후에만 실행한다.",
-      "heading": "작업 준비 (Work Prep) > 실행 흐름 > 8. 브랜치 제안",
-      "path": ".claude/commands/ad/work-prep.md",
-      "rule": "R1a"
-    },
-    "beeaa15a0d011906": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.",
-      "heading": "`$ad-sprint-close-check` > 실행 절차",
-      "path": ".codex/skills/ad-sprint-close-check/SKILL.md",
-      "rule": "R1a"
-    },
-    "bf80fd69204780e5": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| 수준 | 조직에 의미 있는 가치가 있으면서 현실적으로 달성 가능한 수준. 달성이 쉽도록 지나치게 낮은 목표 설정 금지 |",
-      "heading": "주간 핵심 목표 운영 정책 > 2. 운영 규칙",
-      "path": "docs/sprint/weekly-goal-policy.md",
       "rule": "R1a"
     },
     "c02975a3e86ede64": {
@@ -1886,22 +782,6 @@
       "path": "policies/aws-secrets-convention.md",
       "rule": "R1a"
     },
-    "c1f41f6bed67e80b": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "type 결정 후 `wiki/guides/frontmatter-spec.md` 기준 필수 필드 자동 채움.",
-      "heading": "신규 노트 작성 (vault write-time AI 분류) > frontmatter 자동 채움 (type별)",
-      "path": ".claude/commands/ad/new-note.md",
-      "rule": "R1a"
-    },
-    "c3b60e9e6b4f956f": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "특히 레거시 SP 호출 시 파라미터 바인딩 필수",
-      "heading": "보안/시크릿 정책 > 코드 보안",
-      "path": "policies/security-policy.md",
-      "rule": "R1a"
-    },
     "c3bd72727e461fc0": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -1910,28 +790,12 @@
       "path": ".claude/commands/ad/team2-kb-read.md",
       "rule": "R4"
     },
-    "cb14babf866cb653": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/data-request.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-data-request` > 실행 절차",
-      "path": ".codex/skills/ad-data-request/SKILL.md",
-      "rule": "R1a"
-    },
     "cc24aaa1b69658a8": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "YouTrack, KB, git, DB, 배포 변경은 수행하지 않는다.",
       "heading": "`$ad-work-board` > 절차",
       "path": ".codex/skills/ad-work-board/SKILL.md",
-      "rule": "R1a"
-    },
-    "ccca51af909aa965": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "Datadog API 자격증명의 저장·사용·금지 규칙. 비민감 접근 정보(site, endpoint, 자격증명 참조명)는 [`catalog/da",
-      "heading": "Datadog API 정책",
-      "path": "policies/datadog-api-policy.md",
       "rule": "R1a"
     },
     "cd41dace5a4010f2": {
@@ -1958,14 +822,6 @@
       "path": "docs/sprint/sprint-workflow-execution.md",
       "rule": "R4"
     },
-    "d09709075a5ec540": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/work-prep.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-work-prep` > 절차",
-      "path": ".codex/skills/ad-work-prep/SKILL.md",
-      "rule": "R1a"
-    },
     "d101319e38081d3a": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -1990,14 +846,6 @@
       "path": ".codex/skills/ad-weekly-report/SKILL.md",
       "rule": "R1a"
     },
-    "d361a030d5245d37": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "운영 DB 조사나 query 실행은 사용자 승인 없이 수행하지 않는다.",
-      "heading": "DB 이관/CDC 진단 정책 > 분석 원칙",
-      "path": "policies/db-migration-cdc-assessment-policy.md",
-      "rule": "R1a"
-    },
     "d36e349f29b54854": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -2006,44 +854,12 @@
       "path": ".claude/commands/ad/work-prep.md",
       "rule": "R1a"
     },
-    "d3e1672e4165f932": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/ticket.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "DEV2 YouTrack 티켓 5W1H > 실행 절차",
-      "path": ".codex/skills/youtrack-ticket-5w1h-ko/SKILL.md",
-      "rule": "R1a"
-    },
     "d5420fa4bdc3657d": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "운영 데이터 추출 SQL은 [`AladinCommunication/data-requests-dev2`](https://github.com/Ala",
       "heading": "개발 2팀 하네스 > 핵심 규칙",
       "path": "CLAUDE.md",
-      "rule": "R1a"
-    },
-    "d5db0294fdd40ac8": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/team2-kb-read.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-team2-kb-read` > 실행 절차",
-      "path": ".codex/skills/ad-team2-kb-read/SKILL.md",
-      "rule": "R1a"
-    },
-    "d9ed9a897e119c24": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/tldr.md`를 먼저 읽고 그 절차와 섹션 규격을 따른다.",
-      "heading": "`$ad-tldr` > 절차",
-      "path": ".codex/skills/ad-tldr/SKILL.md",
-      "rule": "R1a"
-    },
-    "db43fead6c49d612": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "SQL은 조회 전용이다. `INSERT/UPDATE/DELETE/DDL`은 별도 승인 없이는 작성하거나 실행하지 않는다.",
-      "heading": "Work Prep 노트 템플릿 > 검증 SQL 기준",
-      "path": "docs/sprint/work-prep-note-template.md",
       "rule": "R1a"
     },
     "dca7a9c8af1d5129": {
@@ -2062,22 +878,6 @@
       "path": ".claude/commands/ad/ticket.md",
       "rule": "R4"
     },
-    "df13938610a4ae24": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/weekly-report.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-weekly-report` > 실행 절차",
-      "path": ".codex/skills/ad-weekly-report/SKILL.md",
-      "rule": "R1a"
-    },
-    "e0953fdd398dd099": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**단계·환경 분리 판정 (필수)**: 아래 \"단계 분리\" / \"환경 분리\" 절의 절차를 수행한다. 초안을 사용자에게 제시할 때 판정 결과를 함",
-      "heading": "YouTrack 티켓 생성 > 실행 지침",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
-    },
     "e1b5b3a5334b73e6": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -2094,22 +894,6 @@
       "path": ".codex/skills/dev2-ad-commands-ko/SKILL.md",
       "rule": "R4"
     },
-    "e26fa527060692b4": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| [업무 계획 변경 절차](./plan-change-process.md) | 이월 코멘트 필수 항목, 우선순위 변경 |",
-      "heading": "스프린트 마감 프로세스 가이드 > 관련 문서",
-      "path": "docs/sprint/sprint-closing-process.md",
-      "rule": "R1a"
-    },
-    "e386d96f08490075": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "milestone 밖의 다음 단계는 구현하지 않는다.",
-      "heading": "계획 실행 (plan-run) > 실행 루프 > 4. 구현과 검증",
-      "path": ".claude/commands/ad/plan-run.md",
-      "rule": "R1a"
-    },
     "e483b49aa888b30e": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -2117,14 +901,6 @@
       "heading": "DEV2 YouTrack 티켓 5W1H > 실행 절차",
       "path": ".codex/skills/youtrack-ticket-5w1h-ko/SKILL.md",
       "rule": "R4"
-    },
-    "e5a52183cdc0fad9": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| 5 (L) 이상 | **분할 필수.** 쪼갠 뒤 각각 다시 산정 |",
-      "heading": "스토리 포인트 가이드 및 운영 방안 > 4. 협의 및 운영 규칙 > 등록 Task 상한 규칙 (2026-08-03 확정)",
-      "path": "docs/sprint/story-point-guide.md",
-      "rule": "R1a"
     },
     "e6a17102412da82b": {
       "acceptance_id": "2026-09-16-1",
@@ -2142,84 +918,12 @@
       "path": ".claude/commands/ad/work-prep.md",
       "rule": "R4"
     },
-    "ea959c48fda5b890": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "응답에서 키가 포함될 수 있는 필드(`api_key`, `application_key` 목록 API 등)는 조회하지 않는다.",
-      "heading": "Datadog API 정책 > AI 도구 사용 시",
-      "path": "policies/datadog-api-policy.md",
-      "rule": "R1a"
-    },
-    "eaa1685ae6925c94": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "그 밖의 쓰기 호출은 **매번 사용자 확인 필수**. 요청 body와 영향 범위를 먼저 제시한다.",
-      "heading": "Datadog API 정책 > AI 도구 사용 시",
-      "path": "policies/datadog-api-policy.md",
-      "rule": "R1a"
-    },
-    "eb9a8e638fa9cca9": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "DB, 운영 API, 공급사·벤더 API, 배포 시스템을 호출하지 않는다.",
-      "heading": "DEV2 저장소 아키텍처 분석 > 절대 규칙",
-      "path": ".claude/commands/ad/architecture-analysis.md",
-      "rule": "R1a"
-    },
     "f03e10475b60288f": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "운영자 댓글은 실행 보고 근거로 사용하지만 DB 실측과 동일하게 취급하지 않는다.",
       "heading": "알라딘 쇼핑 멤버십 쿠폰 재발방지 월간 이행 보고서 템플릿 > 5. 증거 수준과 미확인 항목",
       "path": "templates/membership-coupon-recurrence-prevention-monthly-report.md",
-      "rule": "R1a"
-    },
-    "f19b371e395b1b8a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/ticket.md`를 먼저 읽고 그 절차를 따른다.",
-      "heading": "`$ad-ticket` > 실행 절차",
-      "path": ".codex/skills/ad-ticket/SKILL.md",
-      "rule": "R1a"
-    },
-    "f1f650f84fe22a82": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "SP 직접 호출 금지 정책 준수 여부 점검",
-      "heading": "gstack 팀 오버라이드 정책 > 코드 리뷰 오버라이드 > 레거시 경계 확인",
-      "path": "policies/gstack-override-policy.md",
-      "rule": "R1a"
-    },
-    "f5d590269117a3e9": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "| **13 (XXL)** | **[분할 필수]** 신규 서비스(모듈) 전체 기획 | 여러 단계의 기획/배포 필요 |",
-      "heading": "스토리 포인트 가이드 및 운영 방안 > 3. 직군별 상세 산정 기준표 (산정 감각 1~13 · 등록 상한 3) > 2) 기획자",
-      "path": "docs/sprint/story-point-guide.md",
-      "rule": "R1a"
-    },
-    "f63e46f10db32fce": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "> 산정은 **난이도 기준**이라는 아래 운영 원칙과 충돌하지 않는다. 난이도가 높으면 5가 나오는 것이 맞고, 그때 **등록 단위를 줄이라는*",
-      "heading": "스토리 포인트 가이드 및 운영 방안 > 4. 협의 및 운영 규칙 > 등록 Task 상한 규칙 (2026-08-03 확정)",
-      "path": "docs/sprint/story-point-guide.md",
-      "rule": "R1a"
-    },
-    "f65941b10b008390": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.",
-      "heading": "`$ad-capacity-plan` > 실행 절차",
-      "path": ".codex/skills/ad-capacity-plan/SKILL.md",
-      "rule": "R1a"
-    },
-    "f82431447737cff2": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 기록과 실제 산출물 비교는 [하네스 행동 평가](../docs/harness-behavior-evaluation.md)를 따른다. 형식 검",
-      "heading": "하네스 거버넌스 정책 > 변경 통제",
-      "path": "policies/harness-governance-policy.md",
       "rule": "R1a"
     },
     "f91d229b0e6adc22": {
@@ -2229,22 +933,6 @@
       "heading": "TL;DR 핵심 문서 생성 > 절차",
       "path": ".claude/commands/ad/tldr.md",
       "rule": "R4"
-    },
-    "fa1dec8f837632b3": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "스프린트 이월 시 반드시 코멘트로 사유를 남긴다. 상세 절차는 [업무 계획 변경 절차](./plan-change-process.md)를 참조한다",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 8. 이월 규칙 (운영 업무/계획 업무 공통)",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
-    },
-    "faa3a90cdcdbeca3": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "PR에는 사용자 영향, 롤백 방법 필수 기재",
-      "heading": "개발 2팀 엔지니어링 정책 > 코드 변경 규칙",
-      "path": "policies/engineering-policy.md",
-      "rule": "R1a"
     },
     "fb88ed406a230780": {
       "acceptance_id": "2026-09-16-1",
@@ -2269,17 +957,9 @@
       "heading": "YouTrack 티켓 생성 > 본문 작성 규칙 (필수) > 본문",
       "path": ".claude/commands/ad/ticket.md",
       "rule": "R1a"
-    },
-    "fec49c67d8c9be82": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**필요하다고 판정되면 반드시 별도 Feature로 분리한다.** 개발 Feature의 하위 Task나 본문 체크리스트, DoD 항목으로 대체하",
-      "heading": "스프린트 티켓 작성 및 운영 가이드 > 2. 티켓 단위 권장 범위 > 2-2. 단계 분리 (필수) — Feature·Task 공통 > 원칙",
-      "path": "docs/sprint/ticket-guide.md",
-      "rule": "R1a"
     }
   },
-  "matcher_version": 7,
+  "matcher_version": 8,
   "reasoned_headings": {
     ".claude/commands/ad/capacity-plan.md::가용 용량 분석 (capacity plan)": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰": true,
@@ -2287,7 +967,6 @@
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 7. 사용자 승인 후 게시": true,
     ".claude/commands/ad/explain.md::설명서 생성": true,
     ".claude/commands/ad/harness-optimize.md::하네스 최적화 (업데이트·최신화·중복제거)": true,
-    ".claude/commands/ad/harness-optimize.md::하네스 최적화 (업데이트·최신화·중복제거) > 스택 감사 (스택 모드)": true,
     ".claude/commands/ad/harness-optimize.md::하네스 최적화 (업데이트·최신화·중복제거) > 제약 감사 (제약 모드)": true,
     ".claude/commands/ad/kb-publish.md::YouTrack KB 등록": true,
     ".claude/commands/ad/kb-publish.md::YouTrack KB 등록 > 2. 등록할 본문의 링크를 정리한다": true,
@@ -2350,7 +1029,7 @@
   },
   "schema_version": 2,
   "summary": {
-    "R1a": 237,
+    "R1a": 72,
     "R1b": 0,
     "R2": 0,
     "R3": 0,

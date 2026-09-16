@@ -10,7 +10,6 @@ description: "Use when the user invokes $ad-service-activity, ad service activit
 ## 실행 절차
 
 1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`로 기준 경로를 잡는다.
-2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/service-activity.md`를 먼저 읽고 그 절차를 따른다.
+2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/service-activity.md`를 먼저 읽고 그 절차를 따른다. 절차는 SoT 한 곳에만 둔다 — 여기 복제하면 한쪽이 낡는다.
 3. command 파일이 참조하는 서비스 카탈로그, 스프린트, YouTrack 컨텍스트만 추가로 확인한다.
-4. YouTrack은 REST API(`curl`)만 사용하고 MCP 도구는 사용하지 않는다.
-5. 조회 결과를 중심으로 답하고 상태/필드 변경은 사용자 승인 후 실행한다.
+4. 조회 결과를 중심으로 답하고 상태/필드 변경은 사용자 승인 후 실행한다.

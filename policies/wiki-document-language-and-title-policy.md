@@ -87,7 +87,7 @@ Obsidian vault(운영·도메인 지식 SSOT)와 팀 하네스 문서가 서비�
 
 새 문서를 만들 때는 다음을 동시에 맞춘다.
 
-- 파일명: `kebab-case.md`. `wiki/services/{service_id}/` 아래에서는 소유 `service_id` 접두어 금지
+- 파일명: `kebab-case.md`. `wiki/services/{service_id}/` 아래에서는 소유 `service_id` 접두어 금지 — 폴더가 이미 service_id를 담고 있어 파일명에 반복되면 링크·검색에 중복만 는다
 - H1: 서비스별 한글 접두어로 시작
 - frontmatter `title`: H1과 동일하거나 같은 한국어 제목
 - `service` 또는 `service_id`: 기계 판별용 값 유지

@@ -64,13 +64,33 @@ class ReasonRuleTests(unittest.TestCase):
             self.assertEqual(len(by_rule(found, "R5", "policies/ko.md")), 1)
             self.assertEqual(by_rule(found, "R5", "policies/en.md"), [])
 
+    def test_label_and_noun_uses_are_not_rules(self):
+        """표 라벨·목록 도입 라벨·규칙을 가리키는 명사구·'절대경로'의 절대는 규칙이 아니다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "policies/l.md", ["# l", "", "## 절", "",
+                  "| 항목 | 개발 | 운영 |", "|---|---|---|", "| 스토리 포인트 | 선택 | 필수 |",
+                  "| `### 완료 기준` | **필수** | 무엇이 나오면 끝인가 |",
+                  "| **13 (XXL)** | **[분할 필수]** 아키텍처 변경 | 완료 불가 |", "",
+                  "**확인 필수 항목**:", "", "- 외부 노출 금지 정보는 별도 규정을 따른다",
+                  "- 산출물은 Markdown과 HTML 절대경로로 보고한다",
+                  "| **SP 직접 호출 금지** | `policies/engineering-policy.md` | CLAUDE.md (링크만) |"])
+            write(root, "policies/r.md", ["# r", "", "## 절", "",
+                  "- 운영 DB 조사는 사용자 승인 없이 수행하지 않는다",
+                  "- 시크릿은 절대 로그에 출력하지 않는다"])
+            found = lint(root)
+            self.assertEqual(by_rule(found, "R1a", "policies/l.md"), [])
+            self.assertEqual(len(by_rule(found, "R1a", "policies/r.md")), 2)
+
     def test_korean_causal_ending_counts_as_reason(self):
         """'~이므로'·'~라서'는 이유 표현이다 — 없다고 보면 잘 쓴 규칙이 부채로 잡힌다."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write(root, "policies/p.md", ["# p", "", "## 절", "",
                   "- Draft PR은 리뷰하지 않는다. 작성자가 아직 완료 신호를 주지 않은 상태이므로 diff를 읽지 않는다",
-                  "- 게시 전 사용자 확인은 필수다. 되돌릴 수 없는 외부 행동이라서 그렇다"])
+                  "- 게시 전 사용자 확인은 필수다. 되돌릴 수 없는 외부 행동이라서 그렇다",
+                  "- 한글 subgraph 이름에 style을 걸지 않는다. 파싱이 실패한다",
+                  "- 목표 개수를 줄인 것은 반드시 달성하는 문화를 위함이다"])
             self.assertEqual(by_rule(lint(root), "R1a", "policies/p.md"), [])
 
     def test_reason_presence_decides_finding(self):

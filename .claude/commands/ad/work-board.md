@@ -55,7 +55,7 @@ team2-agent decide t_36a47508 "A안으로 결정"
 - board의 기본 단위는 `work_id`가 있는 work item이다.
 - `ticket_id`는 YouTrack 티켓이 있을 때만 채운다.
 - 이 명령은 Discord API, webhook, bot token을 직접 다루지 않는다.
-- 이 명령은 YouTrack, KB, git, DB, 배포를 변경하지 않는다.
+- 이 명령은 YouTrack, KB, git, DB, 배포를 변경하지 않는다 — 투영은 부작용이 없어야 언제든 다시 만들 수 있다.
 
 ## 카드 생성 조건
 

@@ -6,7 +6,7 @@ description: 스프린트 마감 자가점검 — 미종료·SP·5W1H·OKR 누�
 
 > 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
 
-본인 담당 티켓 중 마감 프로세스(`docs/sprint/sprint-closing-process.md`) D-5 / D-4 점검 항목에 걸리는 티켓을 카테고리별로 **목록·링크만** 출력한다. 상태 변경·코멘트 추가·티켓 수정은 **수행하지 않는다**. 처리는 사용자가 YouTrack에서 직접 한다.
+본인 담당 티켓 중 마감 프로세스(`docs/sprint/sprint-closing-process.md`) D-5 / D-4 점검 항목에 걸리는 티켓을 카테고리별로 **목록·링크만** 출력한다. 상태 변경·코멘트 추가·티켓 수정은 **수행하지 않는다**. 처리는 사용자가 YouTrack에서 직접 한다 — 마감 판단은 담당자의 것이고 스킬은 후보만 고른다.
 
 ## 사용법
 
@@ -87,7 +87,7 @@ Feature description이 5W1H 여섯 항목(What/무엇, Why/왜, Who/누가/사�
 
 - 형제 Feature 매칭은 제목 문자열 기반이라 오탐이 난다. 링크(`Subtask`·선행·후행)가 있으면 그쪽을 우선 본다.
 - 하위 Task 조회는 아래 API의 `links` 필드를 사용한다 (`Subtask` linkType, `direction=OUTWARD`가 자식).
-- Feature 유형에만 적용한다. Task는 검사하지 않는다.
+- Feature 유형에만 적용한다. Task는 검사하지 않는다 — 2-2항 분리 규칙이 Feature 단위라서다.
 - 개발 단계는 검사하지 않는다 (사실상 항상 존재하고, 없으면 카테고리 1·3에서 이미 잡힌다).
 
 ## 환경변수
