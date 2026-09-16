@@ -22,6 +22,18 @@ if git diff --cached --name-only | grep -Eq '^(CLAUDE\.md|AGENTS\.md|memory/|pol
   python3 "$repo/tools/lint_harness_rules.py" --check || fail=1
 fi
 
+# 3) 회귀 테스트 — 도구·테스트·Codex 스킬(단어 한도·필수 문구 테스트가 있다)이 staged 일 때. ~5초.
+#    근거: 2026-09-16 단어 한도 초과가 lint·secret 게이트를 통과해 두 번 커밋됨 — 훅이 unittest 를 안 돌렸다
+if git diff --cached --name-only | grep -Eq '^(tools/|tests/|\.codex/skills/|\.githooks/)'; then
+  if ! python3 -m unittest discover -s "$repo/tests" -p 'test_*.py' >"$repo/.git/pre-commit-unittest.log" 2>&1; then
+    echo "pre-commit: unittest 실패 — $repo/.git/pre-commit-unittest.log"
+    grep -E "^(FAIL|ERROR):|^AssertionError" "$repo/.git/pre-commit-unittest.log" | head -5
+    fail=1
+  else
+    grep -E "^Ran " "$repo/.git/pre-commit-unittest.log"
+  fi
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo
   echo "pre-commit: 차단. 위반을 고치거나, 의도된 신규 위반이면 --update-baseline --accept-new '<사유>' 로 사유를 남긴 뒤 다시 커밋."
