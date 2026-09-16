@@ -17,7 +17,7 @@ description: "Use when a request needs DEV2/team2 harness context: policies, ser
 ## 참조
 
 - 진입점: `CLAUDE.md`, `AGENTS.md`
-- 정책: `policies/engineering-policy.md`, `branching-strategy.md`, `code-review-policy.md`, `release-policy.md`, `ai-usage-policy.md`, `security-policy.md`, `incident-policy.md`, `team-members.md`, `knowledge-base-policy.md`, `wiki-document-language-and-title-policy.md`, `business-stakeholder-communication-policy.md`, `data-request-policy.md`
+- 정책: `policies/engineering-policy.md`, `branching-strategy.md`, `code-review-policy.md`, `release-policy.md`, `ai-usage-policy.md`, `security-policy.md`, `incident-policy.md`, `team-members.md`, `knowledge-base-policy.md`, `wiki-document-language-and-title-policy.md`, `business-stakeholder-communication-policy.md`, `data-request-policy.md`, `instruction-precedence-policy.md`
 - 서비스/스프린트/분석: `catalog/{service}.yaml`, `docs/sprint/*.md`, `docs/analysis-guides.md`
 
 ## 용어
@@ -34,7 +34,7 @@ description: "Use when a request needs DEV2/team2 harness context: policies, ser
 
 ## 외부·승인
 
-- YouTrack은 REST API/`curl`만 사용한다. 토큰은 env 또는 `~/.claude/settings.json`에서 읽되 출력하지 않는다.
+- YouTrack은 REST API/`curl`만 사용한다 — 토큰·쓰기 권한 통제. 토큰은 출력하지 않는다.
 - GitHub는 `gh`; DB MCP 금지; dev RDS `sqlcmd`는 read-only 조회만 허용한다.
 - 승인 전 자동 실행 금지: YouTrack 티켓/Task/상태/필드, YouTrack KB, YouTrack/KB/git commit/push/merge/PR, DB/SP, 프로덕션 배포.
 - team2 하네스 자체 변경은 DEV2 티켓 없이 가능하다. 서비스 제품 코드는 제외한다. 사용자 명시 지시가 있으면 `[TEAM2]` 커밋/푸시 가능.

@@ -19,9 +19,9 @@
 - 브랜치 구조·명명·머지 흐름·커밋 메시지 형식: [branching-strategy.md](./branching-strategy.md)
 - 커밋·PR·티켓 본문 품질(AI co-author 푸터 금지 포함): [ai-usage-policy.md](./ai-usage-policy.md) §메시지 작성 품질
 - AI 도구는 커밋, 푸시, PR 생성, 머지 전에 사용자에게 명시 확인을 받는다
-- PR에는 사용자 영향, 롤백 방법 필수 기재
-- DB/SP 변경이 포함된 PR은 별도 승인 필수
-- 프로덕션 배포는 사람 승인 필수
+- PR에는 사용자 영향, 롤백 방법 필수 기재 — 리뷰어는 배포 판단을, 장애 시 당직자는 복구를 PR만 보고 해야 한다
+- DB/SP 변경이 포함된 PR은 별도 승인 필수 — DB 변경은 코드 롤백으로 되돌아가지 않는다
+- 프로덕션 배포·롤백 첨부물: [release-policy.md](./release-policy.md)
 
 ## DB 마이그레이션 컨벤션
 
@@ -37,7 +37,7 @@
 
 ### 신규 서비스
 - 백엔드: Kotlin + Spring Boot 4 + JDK 17+ (원칙)
-- 신규 .NET 서비스 생성 금지 (예외는 팀장 승인 필요)
+- 신규 .NET 서비스 생성 금지 (예외는 팀장 승인 필요) — 팀 방향이 기존 .NET 레거시 탈출이라 신규가 늘면 이관 대상만 늘어난다
 - DB 마이그레이션 방식 표준화
 - 공통 에러 응답, 인증 필터, trace/correlation 처리 공통화
 - API·admin·batch가 같은 repository에 있더라도 artifact·config·secret·deploy·rollback은 애플리케이션별로 분리하고, 실제 사용하는 capability·DB만 선택해 조립한다

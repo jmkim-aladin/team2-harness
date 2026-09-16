@@ -64,7 +64,7 @@ Feature 티켓이 있으면 Feature ID, 없으면 Task ID를 사용한다.
 ### master
 - 항상 배포 가능한 상태 유지
 - `release/*` 또는 `hotfix/*` 브랜치만 머지 가능
-- 직접 푸시 금지
+- 직접 푸시 금지 — master에 닿는 길은 리뷰를 거친 PR 하나여야 한다
 
 ### develop
 - 현재 스프린트의 통합 개발 브랜치
@@ -176,7 +176,7 @@ Task: DEV2-5678 "로그인 오류 수정"
 
 ### Merge 방식
 
-develop PR은 **squash merge를 사용하지 않는다**. Task 단위 커밋 이력을 develop에 그대로 보존한다.
+develop PR은 **squash merge를 사용하지 않는다**. Task 단위 커밋 이력을 develop에 그대로 보존한다. Task 단위로 되돌리고 추적하기 위해서다.
 
 - 기본: merge commit (`--no-ff`) — Feature의 Task 커밋들을 개별로 유지
 - 이유: Task ID 기반 커밋 이력을 통해 YouTrack 연동 추적, `git bisect`, 변경 단위별 revert가 가능하도록 유지

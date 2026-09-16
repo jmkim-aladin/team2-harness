@@ -125,8 +125,8 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 - 사용자 결정/승인/검토/blocked 항목이 남으면 `decision_status`를 `decision-needed | approval-needed | review-needed | blocked` 중 하나로 둔다.
 - `비즈니스 로직`은 트리거/정책/예외/영향을 3-5개 bullet로 요약한다.
 - `기술 근거`는 재탐색용 식별자만 남긴다. raw evidence는 티켓 하위 근거 파일이나 별도 분석 노트로 분리한다.
-- 본문에 SP 원문, 운영 실데이터, 시크릿, 개인정보를 저장하지 않는다.
-- vault 경로는 `$LOCAL_WIKI_PATH` 기준으로 해석한다 (리터럴 경로 하드코딩 금지).
+- 본문에 SP 원문, 운영 실데이터, 시크릿, 개인정보를 저장하지 않는다 — 위키는 팀 공유 사본이고 vault 밖으로 동기화된다 — 한 번 들어가면 회수가 안 된다.
+- vault 경로는 `$LOCAL_WIKI_PATH` 기준으로 해석한다 — 머신마다 경로가 달라 리터럴은 남의 머신에서 깨진다.
 
 ### 6. 관련 KB 검색
 
@@ -151,7 +151,7 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (vault `wiki
 - 티켓 모드: `feature/DEV2-{NNNN}` (커밋 메시지 prefix `[DEV2-{NNNN}]`)
 - 자유글 모드: `feature/no-ticket-{kebab-slug}` (커밋 메시지 prefix `[NO-TICKET]`). 단, 자유글 모드는 **티켓 발의를 먼저** 권장 (`/ad:ticket`).
 
-**자동 생성/체크아웃하지 않는다**. 사용자 확인 후에만 실행한다.
+**자동 생성/체크아웃하지 않는다**. 사용자 확인 후에만 실행한다 — 브랜치는 작업자의 컨텍스트를 바꾸는 행동이라 제안까지만이다.
 
 ### 9. cmux/herdr 작업 라벨 변경 (선택, 감지된 환경에서만)
 
@@ -234,7 +234,7 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (vault `wiki
 
 > dev DB **읽기 쿼리**는 사전 동의되어 있어 확인 게이트 없이 실행 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의").
 
-**항상 금지** (확인으로도 해제 불가):
+**항상 금지** (확인으로도 해제 불가 — 개인정보·운영 실데이터·DB 쓰기 경로는 사용자 한 사람의 확인으로 풀 수 있는 권한이 아니다):
 
 - DB 계열 MCP 서버(postgres/mssql/mysql 등) 사용
 - §5 위키 노트 작성에 열거된 본문 저장 금지 항목

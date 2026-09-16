@@ -22,8 +22,8 @@
 - 브랜치: `feature/{이슈ID}` | 커밋: `[{이슈ID}] 작업 내용`
 - 예외: 개발2팀 하네스(`team2`) 자체 변경은 티켓 없이 `team2/{작업-slug}` 브랜치와 `[TEAM2] 작업 내용` 커밋을 사용할 수 있다
 - 모든 작업은 YouTrack 티켓(5W1H)에서 시작. 단, 개발2팀 하네스 자체 변경은 [브랜치 전략](./policies/branching-strategy.md)의 하네스 예외를 따른다
-- AI 도구는 YouTrack 티켓/Task 생성, 티켓 상태 변경, 커밋/푸시/머지 전에 반드시 사용자에게 확인한다. 하네스 예외 작업은 DEV2 티켓 없이도 사용자 명시 지시로 commit/merge/push 가능하다
-- YouTrack KB 생성/수정/삭제/이동은 반드시 사용자 확인 후 수행한다
+- AI 도구는 YouTrack 티켓/Task 생성, 티켓 상태 변경, 커밋/푸시/머지 전에 반드시 사용자에게 확인한다. 하네스 예외 작업은 DEV2 티켓 없이도 사용자 명시 지시로 commit/merge/push 가능하다 전부 되돌릴 수 없는 외부 행동이다.
+- YouTrack KB 생성/수정/삭제/이동은 반드시 사용자 확인 후 수행한다 — KB는 팀 밖 독자에게 열린 게시면이다
 - 용어: "위키"는 로컬 Obsidian vault만 뜻하고, YouTrack Articles는 "지식베이스(KB)" 또는 "기술자료"라고 부른다. "위키에 저장" 요청은 로컬 위키 저장으로 해석한다
 - 지식 분리: 팀 하네스(repo) = "어떻게 일하나"(정책·템플릿·카탈로그·스킬), Obsidian vault = "무엇을 일하나"(프로젝트 진행·운영·도메인·회의·일지·OKR·티켓 산출물). 결정 트리는 [policies/knowledge-base-policy.md](./policies/knowledge-base-policy.md) 참조
 - 공통 서비스 영향: 로그인/권한/회원 식별/결제/정산/구독/공유 API가 걸리면 [policies/common-service-policy.md](./policies/common-service-policy.md)와 [catalog/common-services/registry.yaml](./catalog/common-services/registry.yaml)을 함께 확인
@@ -32,7 +32,7 @@
 - Feature ≤ 1주 (필수) / Task ≤ 1일 (필수) — 초과 시 분할. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md)
 - Feature 하위 Task는 개발 / 검증 / 배포·운영 반영으로 분리 — 판정 필수, 해당 시 별도 Task, 해당 없으면 Feature 본문에 사유 기재. 검증은 테스트(내부) / QA(시너지팀) / 테스트→QA 중 선택. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md) 2-2항
 - DB/SP 변경 별도 승인, 프로덕션 배포 사람 승인
-- 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지
+- 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지 — 근거·예외 승인 경로: [engineering-policy.md](./policies/engineering-policy.md) §기술 스택 원칙
 - 신규 앱 도메인: 내부 `{app}.internal.{service}[.{env}].aladin.co.kr` (Internal ALB) / 외부 `api.{service}[.{env}].aladin.co.kr/{app}` (API G/W, path strip). 앱 base-path·절대 URL·쿠키 인증 금지. 상세: [policies/internal-domain-policy.md](./policies/internal-domain-policy.md)
 - 운영 데이터 추출 SQL은 [`AladinCommunication/data-requests-dev2`](https://github.com/AladinCommunication/data-requests-dev2)에서 관리 (하네스 `docs/`에 신규 작성 금지). 상세: [policies/data-request-policy.md](./policies/data-request-policy.md)
 

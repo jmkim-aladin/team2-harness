@@ -31,6 +31,8 @@ disable-model-invocation: true
 
 ## 실행 루프
 
+기본 순서다 — 저장소 상태와 요청에 맞게 조정할 수 있다. 단, 완료 기준과 사용자 확인 게이트는 순서를 바꿔도 유지한다.
+
 ### 1. 계획과 milestone 선택
 
 1. `LOCAL_WIKI_PATH`를 확인하고 인자로 받은 plan 경로·wikilink·제목을 해소한다.
@@ -64,7 +66,7 @@ disable-model-invocation: true
 - 좁은 test·typecheck를 반복하고 마지막에 대상 repository의 full verification을 실행한다.
 - 실패한 가정은 숨기지 않고 plan 진행 기록과 repository change/evidence에 남긴다.
 - [검증 증거 계약](../../../docs/agents/verification.md)에 따라 실제 검증 대상·환경·결과를 evidence에 연결한다. 재개 시 검증 이후 바뀐 코드·미커밋 상태·환경을 대조하고 영향받는 범위만 재검증한다.
-- milestone 밖의 다음 단계는 구현하지 않는다.
+- milestone 밖의 다음 단계는 구현하지 않는다 — 한 호출 = 한 milestone이 진행 기록의 단위다.
 
 ### 5. 종료 전이
 
@@ -86,8 +88,8 @@ Acceptance와 full verification이 통과하면:
 
 - YouTrack·KB·push·PR·merge·배포와 외부 시스템 변경은 사용자 승인 후 수행한다.
 - **커밋 전 사용자 확인**을 받는다. team2 하네스 예외는 `[TEAM2]`, 티켓 작업은 `[DEV2-XXXX]` 형식을 사용한다.
-- evidence 없이 `planned` 또는 `in-progress`를 `completed`로 전이하지 않는다.
-- plan과 ticket/repository spec에 같은 세부 요구를 이중 유지하지 않는다.
+- evidence 없이 `planned` 또는 `in-progress`를 `completed`로 전이하지 않는다. 완료 주장과 완료는 다르다 — 증거 규격은 `docs/agents/verification.md`.
+- plan과 ticket/repository spec에 같은 세부 요구를 이중 유지하지 않는다. 두 곳에 있으면 한쪽이 낡는다.
 - 마감 리뷰는 사용자가 `/ad:code-review` 시점을 정한다.
 
 ARGUMENTS: $ARGUMENTS

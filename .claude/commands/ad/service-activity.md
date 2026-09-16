@@ -128,7 +128,7 @@ generated_at: 2026-05-26
 
 ## 주의
 
-- KB 자동 반영 금지 (Obsidian 로컬 저장만)
+- KB 자동 반영 금지 (Obsidian 로컬 저장만) — 조회 스킬은 부작용이 없어야 반복 실행이 안전하다
 - summary 패턴은 prefix 기준이라 본문에 우연히 포함된 경우는 매칭되지 않음 (의도된 동작)
 
 ARGUMENTS: $ARGUMENTS

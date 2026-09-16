@@ -308,7 +308,7 @@ status: draft
 - 가용 맨데이·팀 수용량은 **목표가 아닌 입력값** (velocity-guide.md 철학)
 - 초과 판정 = 즉시 컷 신호 아님. 우선순위 재배치 + OKR 연계 검토
 - 미산정 Task 다수면 SP 산정 회의 먼저 권고
-- YouTrack 쿼리는 `--data-urlencode` 사용 필수 (공백 포함 query). `tag: {YYMM}-planned` 정확 매칭
+- YouTrack 쿼리는 `--data-urlencode` 사용 필수 (공백 포함 query라서). `tag: {YYMM}-planned` 정확 매칭
 - AASM 가중치는 팀장 지침. 변경 시 frontmatter `aasm_weight` 갱신
 
 ARGUMENTS: $ARGUMENTS

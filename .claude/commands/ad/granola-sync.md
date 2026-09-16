@@ -97,7 +97,7 @@ python3 "$TEAM2_HARNESS_PATH/tools/sync_granola_meetings.py" \
 
 ## 보존 규칙
 
-- Granola API는 읽기 전용으로 사용한다. Granola 원본 제목/본문을 수정하지 않는다.
+- Granola API는 읽기 전용으로 사용한다. Granola 원본 제목/본문을 수정하지 않는다 — 원장은 Granola이고 vault는 사본이다.
 - vault 기존 회의록은 `granola_id`로 찾아 중복 생성을 피한다.
 - 기존 회의록의 generated block만 갱신한다.
 - `--title-map`이 있으면 frontmatter `title`, H1, daily link alias만 갱신한다.

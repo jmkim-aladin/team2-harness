@@ -10,5 +10,5 @@ description: "Use when the user invokes $ad-plan, /ad:plan, or wants to synthesi
 ## 실행 절차
 
 1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`로 기준 경로를 잡는다.
-2. `$TEAM2_HARNESS_PATH/.claude/commands/ad/plan.md`를 먼저 읽고 그 절차를 따른다.
+2. `$TEAM2_HARNESS_PATH/.claude/commands/ad/plan.md`를 먼저 읽고 그 절차를 따른다. 절차는 SoT 한 곳에만 둔다 — 여기 복제하면 한쪽이 낡는다.
 3. YouTrack·KB·git은 변경하지 않는다 — vault 계획 노트 산출만.

@@ -47,9 +47,9 @@
 
 - 하네스 변경은 PR 경유 — 하네스 예외 브랜치 `team2/{작업-slug}` ([branching-strategy.md](./branching-strategy.md))
 - 스킬 재표현·문장 삭제는 **삭제 테스트** 동반. 같은 대표 요청·저장소 상태·모델·설정·예산으로 변경 전후를 비교하고, 변경한 규칙이 발동하는 사례를 포함한다
-- 후보에게 평가 대상이라는 정보와 상대 후보를 노출하지 않는다. 중립 라벨의 결과를 같은 판정 기준으로 비교한다
-- 필수 행동·위반·산출물·비용을 대조한다. 결과 변동이 결론에 영향을 주면 반복 실행하고, 단일 실행의 일치만으로 규칙이 무효라고 확정하지 않는다. 관찰 가능한 기록이 없는 과정은 미확인으로 남긴다
-- 실행 기록과 실제 산출물 비교는 [하네스 행동 평가](../docs/harness-behavior-evaluation.md)를 따른다. 형식 검사 통과나 에이전트의 자기 보고만으로 행동 평가를 대체하지 않는다
+- 후보에게 평가 대상이라는 정보와 상대 후보를 노출하지 않는다. 중립 라벨의 결과를 같은 판정 기준으로 비교한다 — 평가를 의식한 후보는 다른 행동을 한다.
+- 필수 행동·위반·산출물·비용을 대조한다. 결과 변동이 결론에 영향을 주면 반복 실행하고, 단일 실행의 일치만으로 규칙이 무효라고 확정하지 않는다 — 모델 출력은 실행마다 흔들린다. 관찰 가능한 기록이 없는 과정은 미확인으로 남긴다.
+- 실행 기록과 실제 산출물 비교는 [하네스 행동 평가](../docs/harness-behavior-evaluation.md)를 따른다. 형식 검사 통과나 에이전트의 자기 보고만으로 행동 평가를 대체하지 않는다 — 보고는 행동이 아니다.
 - 중복 제거 원칙: SoT 내용은 유지 / 참조 파일은 본문 삭제 후 링크 교체 / 요약이 필요하면 3줄 이내 + 링크 / 스킬 파일은 실행에 필요한 최소 정보만
 
 ## Source of Truth 등록부
@@ -71,7 +71,10 @@
 | **서비스 프로파일** | `catalog/*.yaml` | `.claude/commands/ad/ticket.md` |
 | **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/capacity-plan.md`, `.claude/commands/ad/sprint-close-check.md`, `.claude/commands/ad/weekly-planned.md` |
 | **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만). 필드 스펙은 여기가 SoT, **티켓 노트의 구조·본문 스켈레톤**은 아래 "티켓 노트 스켈레톤" 행이 SoT |
-| **지시 강도·우선순위** | `policies/instruction-precedence-policy.md` | CLAUDE.md, `policies/skill-authoring-principles.md`, `.claude/commands/ad/harness-optimize.md` (전부 링크만) |
+| **지시 강도·우선순위·표기 규약** | `policies/instruction-precedence-policy.md` | CLAUDE.md, AGENTS.md, `policies/skill-authoring-principles.md`, `.claude/commands/ad/harness-optimize.md` (전부 링크만). 준수 검사는 `tools/lint_harness_rules.py`, 판정 기록은 `docs/harness-rule-baseline.json` |
+| **위임 프롬프트 계약(5요소)** | `memory/claude-base.md` §위임 프롬프트 계약 (`canonical:delegation-contract` 마커 블록) | AGENTS.md (`generated:delegation-contract` — 수동 편집 금지, `lint_harness_rules.py --sync-generated`로 생성. 드리프트는 R7이 차단) |
+| **팀 산출물 출력 목소리** | `policies/instruction-precedence-policy.md` §출력 목소리 | `policies/business-stakeholder-communication-policy.md` (독자별 상세), 각 스킬의 출력 형식 절 (링크만) |
+| **지시문 준수 베이스라인** | `docs/harness-rule-baseline.json` (도구 생성물 — 손으로 편집하지 않는다) | `.claude/commands/ad/harness-optimize.md` 제약 모드, `docs/skill-audit-baseline.md` 북극성 거리표 (회차 카운트만) |
 | **하네스 개선 방향(북극성)** | `policies/harness-north-star.md` | harness-governance-policy, `.claude/commands/ad/harness-optimize.md`, CLAUDE.md (전부 링크만) |
 | **컨텍스트 예산·외부 스택 판정** | `policies/harness-governance-policy.md` §컨텍스트 예산 + `docs/skill-stack-and-workflow-plan.md` | CLAUDE.md, AGENTS.md, `.claude/commands/ad/harness-optimize.md` (링크만) |
 | **작업 플로우·스킬 인덱스** | `docs/harness-guide.md` §작업 플로우 | CLAUDE.md, AGENTS.md (링크만) |
@@ -80,6 +83,11 @@
 | **시크릿 취급 공통 원칙** | `policies/security-policy.md` §취급 공통 원칙 | aws-secrets-convention, local-credentials-policy, datadog-api-policy (링크만) |
 | **Co-Authored·커밋 메시지 품질** | `policies/ai-usage-policy.md` §메시지 작성 품질 | `policies/engineering-policy.md`, `policies/branching-strategy.md`, `policies/gstack-override-policy.md`, AGENTS.md (전부 링크만) |
 | **세션 컨텍스트 규율** | `memory/claude-base.md` §세션 컨텍스트 규율 | CLAUDE.md (링크만), AGENTS.md (Codex 로드 경로 부재로 기능적 복제 — 머리에 SoT 주석) |
+| **AI 승인 게이트 (커밋·푸시·머지·티켓·KB)** | `policies/ai-usage-policy.md` §AI 작업 가드레일 | CLAUDE.md, AGENTS.md, `.claude/commands/ad/data-request.md`·`kb-publish.md`·`weekly-report.md`, `.codex/skills/dev2-ad-commands-ko`·`dev2-team-harness-ko` — 짧은 invariant라 링크 대신 재서술을 허용한다. 문구가 갈리면 SoT를 고치고 사본을 맞춘다 |
+| **티켓 본문의 로컬 경로 취급** | `policies/ai-usage-policy.md` §AI 작업 가드레일 | `docs/sprint/ticket-guide.md`, `.claude/commands/ad/work-close.md` (근거 인용) |
+| **신규 앱 도메인 명명** | `policies/internal-domain-policy.md` | CLAUDE.md (요약 1줄 + 링크) |
+| **운영 데이터 추출 SQL 관리** | `policies/data-request-policy.md` | CLAUDE.md, `.claude/commands/ad/data-request.md` (링크만) |
+| **하네스 자체 변경 티켓 예외** | `policies/branching-strategy.md` §개발2팀 하네스 예외 | CLAUDE.md, `.codex/skills/dev2-team-harness-ko/SKILL.md` |
 | **하네스 갱신 트리거** | `docs/harness-guide.md` §하네스 갱신 트리거 | `templates/dod-checklist.md`, `templates/pr-template.md` (링크만) |
 | **현대화 4트랙** | `policies/legacy-modernization-policy.md` §현대화 4트랙 | `templates/service-harness/*.tmpl` 5종, `templates/ticket-templates/modernization.md` (링크만) |
 | **SP 직접 호출 금지** | `policies/engineering-policy.md` §기술 스택 원칙 | `policies/legacy-modernization-policy.md`, `policies/gstack-override-policy.md`, CLAUDE.md (링크만) |

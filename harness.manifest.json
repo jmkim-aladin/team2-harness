@@ -100,6 +100,13 @@
     "caveman"
   ],
   "_hooks_doc": "settings.json 훅 command 에 이 부분 문자열이 없으면 미등록 훅 — 경고, --reset 시 제거. GSD 훅 9개가 3주간 미검출된 재발 방지 (2026-08-08).",
+  "git_hooks": {
+    "hooks_path": ".githooks",
+    "scripts": [
+      "pre-commit"
+    ]
+  },
+  "_git_hooks_doc": "team2 repo 의 core.hooksPath 를 이 값으로 수렴. pre-commit 이 secret_scan --staged 와 lint_harness_rules --check 를 돈다 — Claude·Codex 공통 게이트 (2026-09-16, 지시문 규약 드리프트 400건 실측 후 도입).",
   "removed": {
     "GSD": {
       "date": "2026-08-08",

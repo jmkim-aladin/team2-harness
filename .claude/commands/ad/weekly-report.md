@@ -82,6 +82,7 @@ SoT: [docs/sprint/weekly-report-guide.md](../../../docs/sprint/weekly-report-gui
 
 원칙 SoT: 가이드 §1 (포함/제외/예외). 실행용 판단 기준:
 
+<!-- canonical:weekly-report-filter targets=.codex/skills/ad-weekly-report/SKILL.md -->
 | 항목 | 포함 여부 |
 |------|----------|
 | Type=Feature/Epic, 개발자 담당, 대상 월 스프린트 일치 | 포함 |
@@ -92,6 +93,7 @@ SoT: [docs/sprint/weekly-report-guide.md](../../../docs/sprint/weekly-report-gui
 | Type=Feature, 사업부 작성 운영 (예: 멀티캠퍼스 IF) | 개발자 담당 + 대상 월 스프린트 일치 시 검토 후 포함 |
 | Type=Task, 사업부 단발 운영 요청 | 제외 |
 | Type=Bug, 단발 장애/점검 | 제외 |
+<!-- /canonical:weekly-report-filter -->
 
 ### 최종본 중복 제거 규칙
 
@@ -148,6 +150,8 @@ curl -s -H "$AUTH" \
 - 신규 항목 탐색은 보고서 본문 ID 목록만 재조회하지 말고 `Sprints:{대상월}` · `tag:{YYMM}-planned` · `State:{In Progress}` · `resolved date:{대상월 범위}` 를 각각 질의해 합집합으로 만든 뒤 본문에 없는 dev Feature/Epic을 찾는다.
 
 ## 실행 지침
+
+기본 순서다 — 저장소 상태와 요청에 맞게 조정할 수 있다. 단, 완료 기준과 사용자 확인 게이트는 순서를 바꿔도 유지한다.
 
 ### 1. 조회 모드 (기본)
 

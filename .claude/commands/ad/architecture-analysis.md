@@ -6,6 +6,8 @@ description: 저장소 아키텍처 분석 — Clean/Hexagonal/DDD, 네이밍
 
 저장소 전체를 근거 기반으로 분석해 설계 철학, 실제 실행 구조, Clean/Hexagonal/DDD 적합성, 운영 위험과 네이밍을 정리한다. Markdown 원본과 self-contained HTML Reader를 DEV2 로컬 wiki에 저장한다.
 
+아래 단계는 기본 순서다 — 저장소 구조에 맞게 조정할 수 있되, 근거(파일:행) 없는 판정은 내지 않는다.
+
 ## 사용법
 
 ```text
@@ -22,6 +24,8 @@ description: 저장소 아키텍처 분석 — Clean/Hexagonal/DDD, 네이밍
 - `--static-only`: compile/test를 실행하지 않고 정적 분석만 수행한다.
 
 ## 절대 규칙
+
+분석은 대상 저장소를 관찰만 한다 — 부작용이 생기면 분석 결과가 저장소를 바꾼 원인이 되고, 같은 분석을 재현할 수도 없다.
 
 - 분석 대상 소스 파일을 생성·수정·삭제하지 않는다.
 - formatter, codegen, migration, package update, dependency install을 실행하지 않는다.
