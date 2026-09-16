@@ -12,7 +12,7 @@
 ### 실측
 
 - 하드룰 포함 절 194 / 근거·의도 미기재 153 (79%, heading 단위). 라인 단위는 94%로 신호가 없어 item+조상 preamble 단위로 확정
-- lint 초기 베이스라인 (2026-09-16, matcher v5): R1a 314 · R4 43 · R5 10 · R2/R3/R6/R7 0 — 유예 367건, 사유는 `acceptance_batches`에 1회 기록. 대상 128문서(`.codex/skills` 31개 포함 — Codex 파리티) + 카탈로그 14. R1a가 1차 187에서 314로 는 것은 규칙 강화(조상 preamble은 `근거:`·`의도:`·`이유:` 명시 표지만 면책)와 Codex 스킬 편입 때문이며 문서가 나빠진 게 아니다
+- lint 베이스라인 (2026-09-16, matcher v7 — 파일럿 보정 후): R1a 237 · R4 43 · R5 4 · R2/R3/R6/R7 0 — 유예 284건, 사유는 `acceptance_batches`에 1회 기록. 대상 128문서(`.codex/skills` 31개 포함 — Codex 파리티) + 카탈로그 14. R1a는 1차 187 → 규칙 강화·Codex 스킬 편입으로 314 → 파일럿 보정으로 237. 수치 이동은 전부 측정기 쪽 변화이며 문서가 좋아지거나 나빠진 게 아니다(아래 파일럿)
 - R4 43건 = 스킬 15 · Codex 얇은 alias 26 · sprint 가이드 2. 스킬 6곳(architecture-analysis·data-request·kb-publish·plan-run·sprint-close-check·weekly-report)의 최상위 실행 지침에는 "기본 순서 — 조정 가능, 게이트 유지"를 부착했고, 남은 스킬 15건은 하위 절 단위 번호 절차. 번호 목록 트리거는 에이전트 절차 문서(스킬·`.codex/skills`·memory·CLAUDE/AGENTS.md)로 한정 — 가이드·템플릿 절 번호 14건은 노이즈로 제외. 구현 중 이 트리거가 죽은 코드였던 것을 Codex 교차 검증 후 내부 검증에서 잡아 복구(그래서 중간 수치 2건은 무효)
 - R3 7→0: `**필수 작성 요소**` 같은 명사 라벨 bold를 강조 인플레로 잡던 오탐 — 패턴을 CAPS·`!!`·반복 반드시·단독 `**반드시**`로 좁힘 (Codex 라운드 3 지적)
 - 카탈로그 `verification` 필드 서비스 11/11 — 1회 검토의 "미표준화" 판정을 정정(grep이 조잡했음)
@@ -26,12 +26,22 @@
 - [x] `/ad:harness-optimize` 제약 모드 Step 1을 lint 실측으로 교체, Step 6 베이스라인 하향 절차, 스택 모드에 `/doctor`(Claude 전용 보조 신호) [북극성 1]
 - [x] `skill-authoring-principles.md` §2 — 분리 판정은 크기가 아니라 호출 경로별 로드량 [북극성 3]
 
+### 파일럿 — code-review.md 삭제 패스 (같은 날)
+
+가설: R1a 상위 파일(15건, 40KB)을 손으로 판정하면 지울 게 많을 것이다. **기각.**
+
+- 15건 손판정: 이유 있음 11건(`~이므로`·`실측 2026-08-11 …`·표 위 설명 문단·절 제목), 중복 3건, 이유 누락 1건. 삭제 3줄 + 이유 1줄 부착이 전부. 파일은 잘 쓰여 있었다
+- 진짜 발견은 **측정기 오차**: 린터가 한국어 인과·조건 어미(므로·라서·니까·없으면)와 같은 절의 설명 문단·제목을 이유로 안 쳤다. 보정(v6→v7) 후 R1a 314→237, code-review.md 15→0. 형제 규칙 항목·다른 절의 이유로는 여전히 면책 안 됨
+- **40KB는 UTF-8 착시**: 한글 3B/자. code-review.md는 ≈12.3K 토큰, orchestration.md(영문 18.8KB)는 ≈4.7K. R5를 바이트→추정 토큰(한글 1자≈1tok, 그 외 4자≈1tok)으로 바꿔 10→4건. fenced code는 146줄이지만 4KB — "bash 레시피 90줄 도구화"의 기대 이득도 과대평가였다
+- 삭제 테스트: 중복 3줄은 살아남은 문장이 같은 규칙을 그대로 말하므로 구성상 행동 동일 — A/B 생략. 이유 부착·도구화처럼 행동이 바뀔 수 있는 변경은 [행동 평가](harness-behavior-evaluation.md)로
+- 교훈: "정책이 있는데 안 지켜진다"의 상당 부분이 **측정기가 규약을 너무 좁게 읽은 것**이었다. 다음 회차는 R1a 상위 파일(ticket-guide 20 · ticket.md 14 · work-prep 11 · architecture-analysis 10)을 같은 방식으로 손판정하되, 먼저 5건을 읽고 오탐률을 재고 나서 시작한다. 보정은 손판정 대조가 있을 때만 — 수치를 내리기 위한 보정은 하지 않는다
+
 ### 기각·이관
 
 - **기각** interview-me 스킬 신설 — `/ad:grill`이 동일 역할. 라우팅 중복은 한쪽이 낡는다
 - **기각** auto-memory로 CLAUDE.md 대체 — 팀 공유 정책은 개인 auto-memory로 못 간다. 관찰만
 - **이관** 대형 문서 분할(R5 10건 — code-review 40KB, ticket-guide 37KB 등): 크기는 신호일 뿐. `harness_context_audit.py` 반복 Read로 대표 요청별 로드량을 전후 비교해 경로 가중 평균이 줄 때만 분리. 다음 회차
-- **이관** R1a 314건 등급 판정 — 회차마다 파일 단위로 훑어 heuristic 완화 / 이유 부착 / `근거:` 부착 중 택일 후 `--update-baseline`. 추이는 아래 거리표 원칙 5 행. 상위 파일: ticket.md·code-review.md·work-prep.md·`.codex/skills/*` 얇은 alias의 "반드시 … 읽고"
+- **이관** R1a 237건 등급 판정 — 회차마다 파일 단위로 훑어 heuristic 완화 / 이유 부착 / `근거:` 부착 중 택일 후 `--update-baseline`. 추이는 아래 거리표 원칙 5 행. 상위 파일: ticket.md·code-review.md·work-prep.md·`.codex/skills/*` 얇은 alias의 "반드시 … 읽고"
 - **이관** R4 Codex alias 26건 — alias의 "경로 잡기 → SoT 읽기 → 따르기"는 설계상 고정에 가깝다. alias 템플릿에 이탈 허용 한 줄을 넣을지, R4 범위에서 alias를 빼는 게 맞는지는 Codex 행동 관찰 후 결정
 - **이관** Codex 행동 검증 — 원 가이드는 Claude 5에서 검증된 결과. 위임 계약·표기 규약이 Codex에서 같은 행동을 내는지 [행동 평가](harness-behavior-evaluation.md) fixture로 확인
 
@@ -213,7 +223,7 @@
 | 2 | 문제 단위 위임 | 근거 없는 순서·개수·도구 고정 발견 수 | 1차 15선 재표현 완료, 전수 미완 | **R4 고정 시퀀스 43건** (스킬 15 · Codex alias 26 · 가이드 2) — 첫 전수 측정. 위임 5요소 계약 도입 |
 | 3 | smart zone | 호출당 평균 컨텍스트 / 상주 예산 | 470k (목표 200k) / 6,032 tok (상한 8,000) | 미측정 (다음 회차 R5 10건 로드량 측정과 함께) |
 | 4 | 환경=진실 | 캐시·죽은 참조 발견 수 | AGENTS.md 죽은 경로 2건 정리, 전수 스캔 미실시 | generated 블록 드리프트 R7 0건 (수동 복제 1건을 생성으로 전환) |
-| 5 | 게이트 기계화 | INVARIANT 중 훅·권한 강제 비율 | 훅 2건 (DB MCP 차단, sqlcmd readonly) | 훅 3건 (+pre-commit: secret_scan·lint ratchet, Claude·Codex 공통). **R1a 근거 미기재 하드룰 314건 유예** (matcher v5 기준) — 회차마다 이 수를 내린다 |
+| 5 | 게이트 기계화 | INVARIANT 중 훅·권한 강제 비율 | 훅 2건 (DB MCP 차단, sqlcmd readonly) | 훅 3건 (+pre-commit: secret_scan·lint ratchet, Claude·Codex 공통). **R1a 근거 미기재 하드룰 237건 유예** (matcher v7 기준) — 회차마다 이 수를 내린다 |
 | 6 | 아티팩트 기억 | glossary 항목 / decisions 수 | 0건 / 7건 | 미측정 |
 
 ### 3회차 추가 (2026-08-08 후속) — 환경 선언화

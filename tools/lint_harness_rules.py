@@ -29,7 +29,7 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASELINE_REL = "docs/harness-rule-baseline.json"
 SCHEMA_VERSION = 2
-MATCHER_VERSION = 5
+MATCHER_VERSION = 7
 
 # 기본 대상 — 하네스 지시문이 사는 곳만. 서술 문서(docs/ 일반)는 규약 대상이 아니다
 MD_PATTERNS = [
@@ -56,7 +56,8 @@ BASELINED = ["R1a", "R2", "R3", "R4", "R5", "R6"]
 
 HARD_TOKEN = re.compile(r"반드시|필수|금지|하지 않는다|하지 마|절대|무조건")
 # item 본문·하위 불릿에서는 서술형 근거도 인정한다
-LOCAL_REASON_CUE = re.compile(r"근거:|때문|위해|않으면|이유|기본:|조정 가능|단,|—\s*\S")
+# 한국어 인과 어미(~이므로/~라서/~니까)는 "왜"를 담는 가장 흔한 형태 — 빠지면 잘 쓴 규칙이 부채로 집계된다 (2026-09-16 code-review.md 파일럿: 15건 중 3건이 이 어미만 있었음)
+LOCAL_REASON_CUE = re.compile(r"근거:|때문|위해|않으면|없으면|이유|므로|라서|니까|기본:|조정 가능|단,|—\s*\S")
 # 조상 preamble 은 명시 표지만 인정한다 — 서술형까지 허용하면 절 하나가 하위 하드룰 전부를 면책한다
 ANCESTOR_REASON_CUE = re.compile(r"근거:|의도:|이유:")
 EXAMPLE_ITEM = re.compile(r"나쁨:|좋음:|예:|예시")
@@ -75,7 +76,13 @@ FLEX_CUE = re.compile(r"기본[:：]|기본 순서|이탈|조정 가능|조정�
 # R4의 번호 목록 트리거는 에이전트 절차 문서에만 — 가이드·템플릿의 "N. 제목" 절 번호는 구조이지 고정 시퀀스가 아니다
 R4_PROCEDURE_SCOPE = (".claude/commands/ad/", ".codex/skills/", "memory/", "CLAUDE.md", "AGENTS.md")
 
-LIMITS = {".claude/commands/ad": 16000, "policies": 12000, "default": 20000}
+# 추정 토큰 한도 — 한글 1자≈1tok, 그 외 4자≈1tok. 바이트는 한국어(3B/자)를 3배로 세어 쓰지 않는다
+LIMITS = {".claude/commands/ad": 6000, "policies": 4000, "default": 8000}
+
+
+def approx_tokens(text):
+    ko = sum(1 for ch in text if "\uac00" <= ch <= "\ud7a3")
+    return ko + (len(text) - ko) // 4
 
 LIST_RE = re.compile(r"^(\s*)([-*+]|\d+[.)])\s+(.*)$")
 FENCE_RE = re.compile(r"^\s*(```|~~~)")
@@ -356,6 +363,9 @@ def scan_markdown_rules(relpath, lines, root, nodes):
         heading = node.path
         anc = ancestor_preamble(node, lines)
         anc_reasoned = bool(ANCESTOR_REASON_CUE.search(anc))
+        # 같은 절의 설명 문단과 절 제목은 그 절 규칙들의 '왜'다 — 형제 규칙 항목(list·table)은 아니다
+        own_prose = ((node.title or '') + ' ' + ' '.join(' '.join(it.lines) for it in node.items if it.kind == 'para'))
+        own_reasoned = bool(LOCAL_REASON_CUE.search(own_prose))
         for item in node.items:
             text, ctx = item.text, item.context
             if not text:
@@ -363,7 +373,7 @@ def scan_markdown_rules(relpath, lines, root, nodes):
             norm = normalize(text)
             # R1a — 하드룰인데 근거 단서가 없다
             if HARD_TOKEN.search(text) and not EXAMPLE_ITEM.search(ctx):
-                if not (LOCAL_REASON_CUE.search(ctx) or anc_reasoned):
+                if not (LOCAL_REASON_CUE.search(ctx) or own_reasoned or anc_reasoned):
                     found.append(finding("R1a", relpath, item.line_no, heading, text, norm))
             bare = no_code(text)
             negated = NEGATED.search(ctx)
@@ -393,14 +403,15 @@ def scan_markdown_rules(relpath, lines, root, nodes):
     return found
 
 
-def scan_size(relpath, size):
+def scan_size(relpath, text):
     limit = LIMITS["default"]
     for prefix, value in LIMITS.items():
         if prefix != "default" and relpath.startswith(prefix):
             limit = value
             break
-    if size > limit:
-        return [finding("R5", relpath, 1, "", f"{size}바이트 > 한도 {limit}바이트")]
+    tokens = approx_tokens(text)
+    if tokens > limit:
+        return [finding("R5", relpath, 1, "", f"≈{tokens}tok > 한도 {limit}tok ({len(text.encode())}바이트)")]
     return []
 
 
@@ -593,10 +604,10 @@ def scan(root, md_files, yaml_files, baseline=None):
         rel = rel_of(root, path)
         lines, node_root, nodes = parse_markdown(read_text(path))
         found += scan_markdown_rules(rel, lines, node_root, nodes)
-        found += scan_size(rel, os.path.getsize(path))
+        found += scan_size(rel, read_text(path))
     for path in yaml_files:
         rel = rel_of(root, path)
-        found += scan_size(rel, os.path.getsize(path))
+        found += scan_size(rel, read_text(path))
         found += scan_yaml(rel, read_text(path))
     found += scan_generated(root, md_files, canonical_index(root, md_files))
     found += scan_r1b(root, md_files, baseline)

@@ -41,6 +41,38 @@ def by_rule(found, rule, path=None):
 class ReasonRuleTests(unittest.TestCase):
     """R1a — 하드룰에 근거 단서가 붙었는지."""
 
+    def test_same_heading_prose_is_reason_but_sibling_rule_is_not(self):
+        """절의 설명 문단은 그 절 규칙들의 이유다. 형제 규칙 항목에 있는 이유로는 면책되지 않는다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "policies/a.md", ["# a", "", "## 절", "",
+                  "범위를 넘긴 리뷰는 작성자 시간을 쓰게 만들기 때문에 아래를 지킨다.", "",
+                  "- diff 밖 파일은 지적하지 않는다", "- 확대해석 금지"])
+            write(root, "policies/b.md", ["# b", "", "## 절", "",
+                  "- 첫 규칙은 이유가 있다 — 되돌릴 수 없기 때문이다", "- 둘째 규칙은 금지다"])
+            found = lint(root)
+            self.assertEqual(by_rule(found, "R1a", "policies/a.md"), [])
+            self.assertEqual(len(by_rule(found, "R1a", "policies/b.md")), 1)
+
+    def test_size_rule_counts_tokens_not_bytes(self):
+        """같은 바이트라도 한국어는 토큰이 3배 — 한도는 추정 토큰으로 본다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "policies/ko.md", ["# ko", "", "가" * 4500])          # ≈4500 tok > 4000
+            write(root, "policies/en.md", ["# en", "", "a" * 13500])          # 13.5KB but ≈3375 tok
+            found = lint(root)
+            self.assertEqual(len(by_rule(found, "R5", "policies/ko.md")), 1)
+            self.assertEqual(by_rule(found, "R5", "policies/en.md"), [])
+
+    def test_korean_causal_ending_counts_as_reason(self):
+        """'~이므로'·'~라서'는 이유 표현이다 — 없다고 보면 잘 쓴 규칙이 부채로 잡힌다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "policies/p.md", ["# p", "", "## 절", "",
+                  "- Draft PR은 리뷰하지 않는다. 작성자가 아직 완료 신호를 주지 않은 상태이므로 diff를 읽지 않는다",
+                  "- 게시 전 사용자 확인은 필수다. 되돌릴 수 없는 외부 행동이라서 그렇다"])
+            self.assertEqual(by_rule(lint(root), "R1a", "policies/p.md"), [])
+
     def test_reason_presence_decides_finding(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -316,8 +348,11 @@ class RatchetCliTests(CliMixin, unittest.TestCase):
             root = Path(tmp)
             write(root, "rules.md", [
                 "# 문서", "", "## 배포 절차", "",
-                "- 배포 전 체크리스트를 반드시 채운다",
+                "- 배포 전 체크리스트를 반드시 채운다", "",
+                "## 롤백", "",
+                "- 롤백 스크립트는 필수다",
             ])
+            # reasoned.md 의 `근거:` 문단은 같은 절 규칙의 이유다 — R1a 0건, reasoned_headings 등재 (v7)
             write(root, "reasoned.md", [
                 "# 게이트", "", "## 커밋 게이트", "",
                 "- 커밋 전 사용자 확인을 반드시 거친다", "",
