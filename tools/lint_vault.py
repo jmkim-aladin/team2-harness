@@ -31,7 +31,8 @@ TYPE_RULES: dict[str, dict] = {
     "ticket": {
         "required": ["ticket_id", "ticket_status", "assignee", "service", "sprint"],
         "location": r"^wiki/processes/tickets/",
-        "filename": r"^dev2-\d+\.md$",
+        # 협업 프로젝트(예: DEV1) 티켓도 원래 이슈 ID를 파일명으로 유지한다.
+        "filename": r"^[a-z][a-z0-9]*-\d+\.md$",
     },
     "worksheet": {
         "required": ["ticket_id", "target_yearmonth"],
