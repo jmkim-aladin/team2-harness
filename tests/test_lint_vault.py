@@ -48,5 +48,31 @@ status: draft
         self.assertEqual(violations, [])
 
 
+class TicketFilenameTest(unittest.TestCase):
+    def lint_ticket(self, filename, ticket_id):
+        rel = f"wiki/processes/tickets/{filename}"
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / rel
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                f"---\ntype: ticket\nticket_id: {ticket_id}\n"
+                "ticket_status: in-progress\nassignee: jmkim\n"
+                "service: max\nsprint: 2026-09\n---\n\n# Ticket\n",
+                encoding="utf-8",
+            )
+            return lint_file(rel, path)
+
+    def test_ticket_notes_allow_other_project_ids(self):
+        for ticket_id in ("DEV1-10525", "DEV1-8246", "DEV2-9253"):
+            with self.subTest(ticket_id=ticket_id):
+                self.assertEqual(self.lint_ticket(f"{ticket_id.lower()}.md", ticket_id), [])
+
+    def test_ticket_filename_still_requires_lowercase_project_and_number(self):
+        for filename in ("DEV1-10525.md", "dev1-abc.md", "10525.md", "dev1-10525-draft.md"):
+            with self.subTest(filename=filename):
+                violations = self.lint_ticket(filename, "DEV1-10525")
+                self.assertTrue(any("파일명 패턴 위반" in v for v in violations))
+
+
 if __name__ == "__main__":
     unittest.main()
