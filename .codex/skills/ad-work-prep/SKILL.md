@@ -5,7 +5,7 @@ description: "Use when the user invokes $ad-work-prep, ad work prep, /ad:work-pr
 
 # `$ad-work-prep`
 
-`/ad:work-prep` Codex alias. 실제 절차는 team2 하네스 command 파일이 source of truth다.
+`/ad:work-prep`의 Codex `$` alias다. 실제 절차의 source of truth는 team2 하네스 command 파일이다.
 
 ## 절차
 

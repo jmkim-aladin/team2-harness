@@ -73,7 +73,7 @@
     "1966285abe9b11f4": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
-      "excerpt": "≈12326tok > 한도 6000tok (40664바이트)",
+      "excerpt": "≈13189tok > 한도 6000tok (43464바이트)",
       "heading": "",
       "path": ".claude/commands/ad/code-review.md",
       "rule": "R5"
@@ -92,22 +92,6 @@
       "excerpt": "후속 작업 안내",
       "heading": "YouTrack 티켓 생성 > 후속 작업 안내",
       "path": ".claude/commands/ad/ticket.md",
-      "rule": "R4"
-    },
-    "1b4ed0ec9e183b45": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-team2-kb-read` > 실행 절차",
-      "path": ".codex/skills/ad-team2-kb-read/SKILL.md",
-      "rule": "R4"
-    },
-    "1b9d2197987cd914": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-capacity-plan` > 실행 절차",
-      "path": ".codex/skills/ad-capacity-plan/SKILL.md",
       "rule": "R4"
     },
     "1b9d6c4df3120dd5": {
@@ -150,30 +134,6 @@
       "path": ".claude/commands/ad/ticket.md",
       "rule": "R1a"
     },
-    "265a16609544c342": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "절차",
-      "heading": "`$ad-work-board` > 절차",
-      "path": ".codex/skills/ad-work-board/SKILL.md",
-      "rule": "R4"
-    },
-    "27f4686f1cc60063": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-orchestration` > 실행 절차",
-      "path": ".codex/skills/ad-orchestration/SKILL.md",
-      "rule": "R4"
-    },
-    "27fe05c095881cf8": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-new-note` > 실행 절차",
-      "path": ".codex/skills/ad-new-note/SKILL.md",
-      "rule": "R4"
-    },
     "2f7e9a9846515daa": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -190,14 +150,6 @@
       "path": "docs/sprint/ticket-guide.md",
       "rule": "R1a"
     },
-    "34d0ac6c019845ff": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-data-request` > 실행 절차",
-      "path": ".codex/skills/ad-data-request/SKILL.md",
-      "rule": "R4"
-    },
     "3752c8263982a9aa": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -212,14 +164,6 @@
       "excerpt": "4. Velocity 활용 — 다음 달 계획 수립",
       "heading": "Velocity 측정 및 활용 가이드 > 4. Velocity 활용 — 다음 달 계획 수립",
       "path": "docs/sprint/velocity-guide.md",
-      "rule": "R4"
-    },
-    "391f8e6c2172654a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "절차",
-      "heading": "`$ad-tldr` > 절차",
-      "path": ".codex/skills/ad-tldr/SKILL.md",
       "rule": "R4"
     },
     "39b6f3539dcfb1b9": {
@@ -286,22 +230,6 @@
       "path": ".claude/commands/ad/architecture-analysis.md",
       "rule": "R1a"
     },
-    "4c1d2f17a303e59b": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack, KB, vault, git 커밋, 배포는 수행하지 않는다.",
-      "heading": "`$ad-tldr` > 절차",
-      "path": ".codex/skills/ad-tldr/SKILL.md",
-      "rule": "R1a"
-    },
-    "4d86f05b8d309d89": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "사용자가 \"현재 KB가 최종\"이라고 하면 YouTrack KB `DEV2-A-696` 본문을 기준본으로 읽고 비교만 한다. KB 업데이트는 별도",
-      "heading": "`$ad-weekly-report` > 운영 기준",
-      "path": ".codex/skills/ad-weekly-report/SKILL.md",
-      "rule": "R1a"
-    },
     "4e7fa8699fadb269": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -350,14 +278,6 @@
       "path": ".claude/commands/ad/kb-publish.md",
       "rule": "R1a"
     },
-    "51bedf71a2920864": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-sprint-close-check` > 실행 절차",
-      "path": ".codex/skills/ad-sprint-close-check/SKILL.md",
-      "rule": "R4"
-    },
     "5396aaaa61574202": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -389,22 +309,6 @@
       "heading": "YouTrack KB 등록 > 입력과 범위",
       "path": ".claude/commands/ad/kb-publish.md",
       "rule": "R1a"
-    },
-    "573702945d06fe07": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-code-review` > 실행 절차",
-      "path": ".codex/skills/ad-code-review/SKILL.md",
-      "rule": "R4"
-    },
-    "58e8d297427df0c8": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "절차",
-      "heading": "`$ad-work-close` > 절차",
-      "path": ".codex/skills/ad-work-close/SKILL.md",
-      "rule": "R4"
     },
     "5994bf53c82c0dc4": {
       "acceptance_id": "2026-09-16-1",
@@ -502,14 +406,6 @@
       "path": ".claude/commands/ad/granola-sync.md",
       "rule": "R1a"
     },
-    "6c81ae32a625030e": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지",
-      "heading": "개발 2팀 하네스 > 핵심 규칙",
-      "path": "CLAUDE.md",
-      "rule": "R1a"
-    },
     "6f2c22b92b887b2a": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -518,36 +414,12 @@
       "path": "policies/local-credentials-policy.md",
       "rule": "R1a"
     },
-    "75a6e4e026fc14c9": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-grill` > 실행 절차",
-      "path": ".codex/skills/ad-grill/SKILL.md",
-      "rule": "R4"
-    },
     "7ac65d7409e18cd9": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
       "excerpt": "운영 evidence가 필요한 항목은 승인 전에는 실행하지 않는다. 승인 후에도 아래 기준을 통과해야 상태 전환할 수 있다.",
       "heading": "DB 이관/CDC 진단 정책 > Evidence Gate",
       "path": "policies/db-migration-cdc-assessment-policy.md",
-      "rule": "R1a"
-    },
-    "7b79da7223e8b8ca": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-plan-run` > 실행 절차",
-      "path": ".codex/skills/ad-plan-run/SKILL.md",
-      "rule": "R4"
-    },
-    "7df94a045ecbb10c": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "신규 .NET 서비스 생성 금지 (예외는 팀장 승인 필요)",
-      "heading": "개발 2팀 엔지니어링 정책 > 기술 스택 원칙 > 신규 서비스",
-      "path": "policies/engineering-policy.md",
       "rule": "R1a"
     },
     "8575d898c2b31f93": {
@@ -582,14 +454,6 @@
       "path": ".claude/commands/ad/service-activity.md",
       "rule": "R1a"
     },
-    "8df7c59efe6236d1": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-weekly-report` > 실행 절차",
-      "path": ".codex/skills/ad-weekly-report/SKILL.md",
-      "rule": "R4"
-    },
     "8f654f7b65c3754e": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -609,7 +473,7 @@
     "90eff719b345cce6": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
-      "excerpt": "≈6342tok > 한도 6000tok (21196바이트)",
+      "excerpt": "≈6385tok > 한도 6000tok (21335바이트)",
       "heading": "",
       "path": ".claude/commands/ad/ticket.md",
       "rule": "R5"
@@ -621,30 +485,6 @@
       "heading": "스프린트 마감 자가점검 (D-5 / D-4) > 점검 카테고리 > 단계·환경 분리 판정 휴리스틱 > 추가 검사 두 가지",
       "path": ".claude/commands/ad/sprint-close-check.md",
       "rule": "R1a"
-    },
-    "94b12efb4426ecab": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "절차",
-      "heading": "`$ad-explain` > 절차",
-      "path": ".codex/skills/ad-explain/SKILL.md",
-      "rule": "R4"
-    },
-    "956c144a45b03ba5": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "판정(4단계) 전에 **이해 패스(3단계)**를 반드시 거친다. 섹션 규격은 `$TEAM2_HARNESS_PATH/.claude/commands",
-      "heading": "`$ad-code-review` > 실행 절차",
-      "path": ".codex/skills/ad-code-review/SKILL.md",
-      "rule": "R1a"
-    },
-    "95e1a9c727612e95": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-granola-sync` > 실행 절차",
-      "path": ".codex/skills/ad-granola-sync/SKILL.md",
-      "rule": "R4"
     },
     "974a1d8f066d7c14": {
       "acceptance_id": "2026-09-16-1",
@@ -661,14 +501,6 @@
       "heading": "스프린트 워크플로우 실행 가이드 > 2. 단계별 실행 프로세스 > Step 3. 작업 진행 및 유연한 계획 변경 (스프린트 중)",
       "path": "docs/sprint/sprint-workflow-execution.md",
       "rule": "R1a"
-    },
-    "9ab0c6ae9b55780d": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-service-activity` > 실행 절차",
-      "path": ".codex/skills/ad-service-activity/SKILL.md",
-      "rule": "R4"
     },
     "9b46dfe96a26f360": {
       "acceptance_id": "2026-09-16-1",
@@ -694,14 +526,6 @@
       "path": "policies/db-migration-cdc-assessment-policy.md",
       "rule": "R1a"
     },
-    "a4c5faf8ad3f4d2d": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-harness-optimize` > 실행 절차",
-      "path": ".codex/skills/ad-harness-optimize/SKILL.md",
-      "rule": "R4"
-    },
     "a4e1414ee6320959": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -726,14 +550,6 @@
       "path": ".claude/commands/ad/new-note.md",
       "rule": "R4"
     },
-    "b1c8572e6813a21f": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-weekly-planned` > 실행 절차",
-      "path": ".codex/skills/ad-weekly-planned/SKILL.md",
-      "rule": "R4"
-    },
     "b38066a2a95fcfeb": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -749,14 +565,6 @@
       "heading": "릴리즈/배포 정책 > 롤백 기준",
       "path": "policies/release-policy.md",
       "rule": "R1a"
-    },
-    "b76ad20d031ccdb5": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-architecture-analysis` > 실행 절차",
-      "path": ".codex/skills/ad-architecture-analysis/SKILL.md",
-      "rule": "R4"
     },
     "bb60c50dcdf13a82": {
       "acceptance_id": "2026-09-16-1",
@@ -822,14 +630,6 @@
       "path": "docs/sprint/sprint-workflow-execution.md",
       "rule": "R4"
     },
-    "d101319e38081d3a": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-ticket` > 실행 절차",
-      "path": ".codex/skills/ad-ticket/SKILL.md",
-      "rule": "R4"
-    },
     "d20fad2fb83e990c": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -837,14 +637,6 @@
       "heading": "설명서 생성 > 절차",
       "path": ".claude/commands/ad/explain.md",
       "rule": "R4"
-    },
-    "d2c175dfd8ced319": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "`## 이번 주 요약` 바로 다음에 `## 이번 주 핵심목표`를 둔다. 출처는 KB `DEV2-A-1351`(주간업무 핵심 목표, parent는",
-      "heading": "`$ad-weekly-report` > 운영 기준",
-      "path": ".codex/skills/ad-weekly-report/SKILL.md",
-      "rule": "R1a"
     },
     "d36e349f29b54854": {
       "acceptance_id": "2026-09-16-1",
@@ -876,14 +668,6 @@
       "excerpt": "표준 처리 절차",
       "heading": "YouTrack 티켓 생성 > 외부(사업부) 티켓 처리 규칙 (필수) > 표준 처리 절차",
       "path": ".claude/commands/ad/ticket.md",
-      "rule": "R4"
-    },
-    "e1b5b3a5334b73e6": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "`$ad-okr` > 실행 절차",
-      "path": ".codex/skills/ad-okr/SKILL.md",
       "rule": "R4"
     },
     "e1d24357ca7b1a38": {
@@ -941,22 +725,6 @@
       "heading": "운영 위키 문서 언어와 제목 정책 > 기존 문서 보정 기준",
       "path": "policies/wiki-document-language-and-title-policy.md",
       "rule": "R1a"
-    },
-    "fbceb1083a9e37fc": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "절차",
-      "heading": "`$ad-work-prep` > 절차",
-      "path": ".codex/skills/ad-work-prep/SKILL.md",
-      "rule": "R4"
-    },
-    "fda09f8050f2d128": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "**코드블록 자제**: 본문에 ` ``` ` 사용 금지. 항목은 bullet/표로 표현",
-      "heading": "YouTrack 티켓 생성 > 본문 작성 규칙 (필수) > 본문",
-      "path": ".claude/commands/ad/ticket.md",
-      "rule": "R1a"
     }
   },
   "matcher_version": 8,
@@ -964,6 +732,7 @@
     ".claude/commands/ad/capacity-plan.md::가용 용량 분석 (capacity plan)": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침": true,
+    ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 3. 이해 패스 — 판정 전에 변경을 이해한다": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 7. 사용자 승인 후 게시": true,
     ".claude/commands/ad/explain.md::설명서 생성": true,
     ".claude/commands/ad/harness-optimize.md::하네스 최적화 (업데이트·최신화·중복제거)": true,
@@ -1029,11 +798,11 @@
   },
   "schema_version": 2,
   "summary": {
-    "R1a": 72,
+    "R1a": 65,
     "R1b": 0,
     "R2": 0,
     "R3": 0,
-    "R4": 43,
+    "R4": 21,
     "R5": 4,
     "R6": 0
   },

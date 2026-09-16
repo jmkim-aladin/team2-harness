@@ -82,6 +82,7 @@ SoT: [docs/sprint/weekly-report-guide.md](../../../docs/sprint/weekly-report-gui
 
 원칙 SoT: 가이드 §1 (포함/제외/예외). 실행용 판단 기준:
 
+<!-- canonical:weekly-report-filter targets=.codex/skills/ad-weekly-report/SKILL.md -->
 | 항목 | 포함 여부 |
 |------|----------|
 | Type=Feature/Epic, 개발자 담당, 대상 월 스프린트 일치 | 포함 |
@@ -92,6 +93,7 @@ SoT: [docs/sprint/weekly-report-guide.md](../../../docs/sprint/weekly-report-gui
 | Type=Feature, 사업부 작성 운영 (예: 멀티캠퍼스 IF) | 개발자 담당 + 대상 월 스프린트 일치 시 검토 후 포함 |
 | Type=Task, 사업부 단발 운영 요청 | 제외 |
 | Type=Bug, 단발 장애/점검 | 제외 |
+<!-- /canonical:weekly-report-filter -->
 
 ### 최종본 중복 제거 규칙
 

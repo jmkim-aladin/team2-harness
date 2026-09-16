@@ -219,6 +219,20 @@ class FixedSequenceTests(unittest.TestCase):
             self.assertEqual(len(by_rule(found, "R4", ".claude/commands/ad/skill.md")), 1,
                              "같은 본문이라도 스킬 디렉토리면 번호 목록 4개 이상은 시퀀스로 본다")
 
+    def test_codex_thin_alias_is_out_of_scope(self):
+        """alias의 '경로 → SoT 읽기 → 따르기' 순서는 alias의 정의라 이탈 허용을 붙일 자리가 없다."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            body = ["## 실행 절차", "", "1. 경로를 잡는다.", "2. SoT를 읽는다.",
+                    "3. 그 절차를 따른다.", "4. 승인 후 실행한다."]
+            write(root, ".codex/skills/ad-thing/SKILL.md",
+                  ["# `$ad-thing`", "", "`/ad:thing`의 Codex `$` alias다. SoT는 command 파일이다.", ""] + body)
+            write(root, ".codex/skills/dev2-context/SKILL.md", ["# 컨텍스트 스킬", ""] + body)
+            found = lint(root)
+            self.assertEqual(by_rule(found, "R4", ".codex/skills/ad-thing/SKILL.md"), [])
+            self.assertEqual(len(by_rule(found, "R4", ".codex/skills/dev2-context/SKILL.md")), 1,
+                             "alias 선언이 없는 Codex 스킬은 계속 R4 대상이다")
+
     def test_root_preamble_flex_cue_clears_group(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

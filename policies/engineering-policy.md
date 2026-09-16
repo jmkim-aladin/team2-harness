@@ -37,7 +37,7 @@
 
 ### 신규 서비스
 - 백엔드: Kotlin + Spring Boot 4 + JDK 17+ (원칙)
-- 신규 .NET 서비스 생성 금지 (예외는 팀장 승인 필요)
+- 신규 .NET 서비스 생성 금지 (예외는 팀장 승인 필요) — 팀 방향이 기존 .NET 레거시 탈출이라 신규가 늘면 이관 대상만 늘어난다
 - DB 마이그레이션 방식 표준화
 - 공통 에러 응답, 인증 필터, trace/correlation 처리 공통화
 - API·admin·batch가 같은 repository에 있더라도 artifact·config·secret·deploy·rollback은 애플리케이션별로 분리하고, 실제 사용하는 capability·DB만 선택해 조립한다

@@ -86,6 +86,10 @@ STEP_HEADING = re.compile(r"Step ?\d|\d+단계")
 FLEX_CUE = re.compile(r"기본[:：]|기본 순서|이탈|조정 가능|조정할 수|순서.*바꿀|바꿔도|상황에 맞게|판단 경계|기본 접근|권장 순서")
 # R4의 번호 목록 트리거는 에이전트 절차 문서에만 — 가이드·템플릿의 "N. 제목" 절 번호는 구조이지 고정 시퀀스가 아니다
 R4_PROCEDURE_SCOPE = (".claude/commands/ad/", ".codex/skills/", "memory/", "CLAUDE.md", "AGENTS.md")
+# Codex 얇은 alias의 "경로 잡기 → SoT 읽기 → 그 절차 따르기 → 승인 게이트" 순서는 heuristic이 아니라 alias의 정의다.
+# 순서를 이탈하면 SoT를 안 읽은 것이고 그러면 alias가 아니다 — 이탈 허용을 붙일 자리가 없으므로 R4 대상에서 뺀다.
+CODEX_ALIAS_PATH = re.compile(r"^\.codex/skills/[^/]+/SKILL\.md$")
+CODEX_ALIAS_CUE = re.compile(r"Codex (?:`\$` )?alias")
 
 # 추정 토큰 한도 — 한글 1자≈1tok, 그 외 4자≈1tok. 바이트는 한국어(3B/자)를 3배로 세어 쓰지 않는다
 LIMITS = {".claude/commands/ad": 6000, "policies": 4000, "default": 8000}
@@ -402,7 +406,10 @@ def scan_markdown_rules(relpath, lines, root, nodes):
     # R4 — 고정 시퀀스에 이탈 여지가 없다
     root_pre = preamble_text(root, lines)
     groups = {}
+    is_codex_alias = bool(CODEX_ALIAS_PATH.match(relpath)) and any(CODEX_ALIAS_CUE.search(ln) for ln in lines)
     for node in nodes:
+        if is_codex_alias:
+            break
         if STEP_HEADING.search(node.title):
             owner = node.parent if node.parent is not None else root
             groups.setdefault(id(owner), owner)

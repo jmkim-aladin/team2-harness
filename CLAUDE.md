@@ -32,7 +32,7 @@
 - Feature ≤ 1주 (필수) / Task ≤ 1일 (필수) — 초과 시 분할. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md)
 - Feature 하위 Task는 개발 / 검증 / 배포·운영 반영으로 분리 — 판정 필수, 해당 시 별도 Task, 해당 없으면 Feature 본문에 사유 기재. 검증은 테스트(내부) / QA(시너지팀) / 테스트→QA 중 선택. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md) 2-2항
 - DB/SP 변경 별도 승인, 프로덕션 배포 사람 승인
-- 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지
+- 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지 — 근거·예외 승인 경로: [engineering-policy.md](./policies/engineering-policy.md) §기술 스택 원칙
 - 신규 앱 도메인: 내부 `{app}.internal.{service}[.{env}].aladin.co.kr` (Internal ALB) / 외부 `api.{service}[.{env}].aladin.co.kr/{app}` (API G/W, path strip). 앱 base-path·절대 URL·쿠키 인증 금지. 상세: [policies/internal-domain-policy.md](./policies/internal-domain-policy.md)
 - 운영 데이터 추출 SQL은 [`AladinCommunication/data-requests-dev2`](https://github.com/AladinCommunication/data-requests-dev2)에서 관리 (하네스 `docs/`에 신규 작성 금지). 상세: [policies/data-request-policy.md](./policies/data-request-policy.md)
 
