@@ -7,6 +7,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -23,6 +24,10 @@ CONTAINER_VAULT = "/workspace/team2-vault"
 CONTAINER_HERMES_CLI = "/opt/hermes/.venv/bin/hermes"
 DEFAULT_BOARD = "team2"
 HERDR = "herdr"
+CMUX = "cmux"
+NO_TICKET_LABEL = "NO-TICKET"
+LABEL_TEXT_LIMIT = 60
+LABEL_SEPARATOR = " — "
 ORCHESTRATION_WORKSPACE_LABEL = "team2-orchestration"
 TRIAGE_WORKSPACE_LABEL = "team2-triage"
 ORCHESTRATOR_AGENT_NAME = "global-orchestrator"
@@ -319,6 +324,12 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     role_parser.add_argument("ticket_id")
     role_parser.add_argument("role", choices=sorted(TICKET_CELL_ROLES))
     role_parser.add_argument("instruction", nargs="*")
+    label_parser = herdr_sub.add_parser("label", help="Label the current herdr/cmux tab and pane with the active ticket and task")
+    label_parser.add_argument("--no-ticket", action="store_true", help="Label as NO-TICKET when the work has no ticket")
+    label_parser.add_argument("--agent", default="", help="Agent name for peer/role/worker panes ({ticket}/{agent} — {task})")
+    label_parser.add_argument("--pane", default="", help="Target herdr pane id (default: current HERDR_PANE_ID)")
+    label_parser.add_argument("ticket", nargs="?", default="", help="Ticket or work id; omit with --no-ticket")
+    label_parser.add_argument("summary", nargs="*", help="Ticket title or task description (one line, 60 chars)")
     close_parser = herdr_sub.add_parser("close", help="Close a ticket/work tab after checking child panes")
     close_parser.add_argument("--service", default="triage")
     close_parser.add_argument("--kind", choices=TASK_KINDS, default="auto")
@@ -495,6 +506,141 @@ def service_workspace_cwd(service: str, config: Config) -> Path:
 
 def ticket_tab_label(ticket_id: str) -> str:
     return ticket_id
+
+
+def truncate_label_text(text: str, limit: int = LABEL_TEXT_LIMIT) -> str:
+    """라벨은 pane 한 줄에 들어가야 하므로 줄바꿈을 접고 limit자에서 말줄임한다."""
+    one_line = " ".join((text or "").split())
+    if len(one_line) <= limit:
+        return one_line
+    return one_line[: max(limit - 1, 0)].rstrip() + "…"
+
+
+def instruction_summary(instruction: str, limit: int = LABEL_TEXT_LIMIT) -> str:
+    """지시문에서 업무 요약을 뽑는다 — 첫 줄의 첫 문장까지만. 뒤 문장은 pane 한 줄에 못 담는다."""
+    first_line = next((line.strip() for line in (instruction or "").splitlines() if line.strip()), "")
+    if not first_line:
+        return ""
+    sentence_end = re.search(r"[.!?。](?:\s|$)", first_line)
+    if sentence_end:
+        first_line = first_line[: sentence_end.start()]
+    return truncate_label_text(first_line, limit)
+
+
+def label_ticket_token(ticket: str) -> str:
+    """티켓·work-id 가 없으면 NO-TICKET — 라벨에서 빈 자리를 남기면 무슨 작업인지 못 읽는다."""
+    return (ticket or "").strip() or NO_TICKET_LABEL
+
+
+def tab_label_for(ticket: str) -> str:
+    return label_ticket_token(ticket)
+
+
+def pane_label_for(ticket: str, *, summary: str = "", agent: str = "") -> str:
+    head = label_ticket_token(ticket)
+    agent_name = (agent or "").strip()
+    if agent_name:
+        head = f"{head}/{agent_name}"
+    tail = truncate_label_text(summary)
+    return f"{head}{LABEL_SEPARATOR}{tail}" if tail else head
+
+
+def herdr_tab_rename_command(tab_id: str, label: str) -> list[str]:
+    return [HERDR, "tab", "rename", tab_id, label]
+
+
+def herdr_pane_rename_command(pane_id: str, label: str) -> list[str]:
+    return [HERDR, "pane", "rename", pane_id, label]
+
+
+def cmux_rename_tab_command(surface_id: str, label: str) -> list[str]:
+    return [CMUX, "rename-tab", "--surface", surface_id, label]
+
+
+def herdr_pane_tab_id(output: str) -> str:
+    try:
+        payload = json.loads(output)
+    except json.JSONDecodeError:
+        return ""
+    return str(payload.get("result", {}).get("pane", {}).get("tab_id") or "")
+
+
+def command_available(name: str) -> bool:
+    return shutil.which(name) is not None
+
+
+def inside_herdr(env: dict[str, str] | None = None) -> bool:
+    environment = os.environ if env is None else env
+    return bool(environment.get("HERDR_ENV")) and bool(environment.get("HERDR_PANE_ID")) and command_available(HERDR)
+
+
+def inside_cmux(env: dict[str, str] | None = None) -> bool:
+    environment = os.environ if env is None else env
+    return bool(environment.get("CMUX_WORKSPACE_ID")) and bool(environment.get("CMUX_SURFACE_ID")) and command_available(CMUX)
+
+
+def label_inputs(args: argparse.Namespace) -> tuple[str, str]:
+    """(ticket, summary). --no-ticket 이면 첫 위치인자도 요약으로 되돌린다 — 티켓 자리가 비기 때문."""
+    parts = list(getattr(args, "summary", None) or [])
+    ticket = (getattr(args, "ticket", "") or "").strip()
+    if getattr(args, "no_ticket", False):
+        if ticket:
+            parts.insert(0, ticket)
+        ticket = ""
+    return ticket, " ".join(parts).strip()
+
+
+def herdr_label_pane_id(args: argparse.Namespace, env: dict[str, str] | None = None) -> str:
+    """명시 --pane 은 호출자가 이미 pane 을 안다는 뜻이라 환경 감지를 건너뛴다."""
+    environment = os.environ if env is None else env
+    explicit = (getattr(args, "pane", "") or "").strip()
+    if explicit:
+        return explicit if command_available(HERDR) else ""
+    if inside_herdr(environment):
+        return (environment.get("HERDR_PANE_ID") or "").strip()
+    return ""
+
+
+def warn_label_failure(scope: str, detail: str) -> None:
+    """라벨은 부수 기능이라 경고만 남긴다 — 상위 작업(pane 기동·지시 전달)이 본류다."""
+    sys.stderr.write(f"team2-agent: label skipped ({scope}): {detail}\n")
+
+
+def label_agent_pane_by_id(pane_id: str, label: str, config: Config, execute) -> bool:
+    """pane id 를 이미 아는 경로(route 등)용. agent 이름은 건드리지 않는다 — 이름은 라우팅 주소다."""
+    rename_proc = execute(herdr_pane_rename_command(pane_id, label), config.harness)
+    if rename_proc.returncode != 0:
+        warn_label_failure(pane_id, "herdr pane rename failed")
+        return False
+    return True
+
+
+def label_started_agent_pane(agent_name: str, label: str, config: Config, execute) -> bool:
+    """spawn·route 직후 pane 라벨을 붙인다. 실패해도 False 만 돌려주고 상위 작업을 막지 않는다."""
+    get_proc = execute([HERDR, "agent", "get", agent_name], config.harness)
+    if get_proc.returncode != 0:
+        warn_label_failure(agent_name, "herdr agent get failed")
+        return False
+    info = herdr_agent_info(get_proc.stdout or "")
+    if not info:
+        warn_label_failure(agent_name, "pane id missing in herdr agent get output")
+        return False
+    return label_agent_pane_by_id(info.pane_id, label, config, execute)
+
+
+def label_ref_and_agent(agent_name: str, work_ref: str, *, kind: str = "auto") -> tuple[str, str]:
+    """(라벨의 티켓 자리, 에이전트 자리). role agent 이름이면 소속 티켓과 role로 나눈다 — 한 칸에 몰면 업무 문자열이 밀려난다.
+
+    lead 이름(`ticket-DEV2-1234`, renamed `DEV2-1234`)은 에이전트 자리를 비운다. tab 라벨과 중복되기 때문.
+    """
+    name = (agent_name or "").strip()
+    lead_prefix = f"{task_lead_name(work_ref, kind=kind)}-"
+    if name.startswith(lead_prefix):
+        return work_ref, name[len(lead_prefix):]
+    match = re.fullmatch(r"(?:ticket|work)-(.+)-([^-]+)", name)
+    if match and match.group(2) in TICKET_CELL_ROLES:
+        return match.group(1), match.group(2)
+    return work_ref, ""
 
 
 def herdr_ask_packet(config: Config, *, task_id: str = "", expect: str = "result", instruction: str = "") -> str:
@@ -1375,8 +1521,16 @@ def run_herdr_worker(args: argparse.Namespace, config: Config, execute=None) -> 
         ),
         config.harness,
     )
-    if start_proc.returncode != 0 or not instruction:
+    if start_proc.returncode != 0:
         return int(start_proc.returncode)
+    label_started_agent_pane(
+        args.name,
+        pane_label_for("", summary=instruction_summary(instruction), agent=args.name),
+        config,
+        execute,
+    )
+    if not instruction:
+        return 0
     if codex_non_interactive and result_path:
         result_text = wait_for_file_text(result_path, DEFAULT_HERDR_ASK_TIMEOUT_MS)
         if result_text is None:
@@ -1492,6 +1646,14 @@ def run_herdr_route(args: argparse.Namespace, config: Config, execute=None) -> i
         submit_proc = submit_herdr_agent_input(active_lead_name, agent_info, config, execute)
         if submit_proc.returncode != 0:
             return int(submit_proc.returncode)
+        # 단계 전환(분석→구현→리뷰)은 route 가 새 지시를 아는 시점에만 확실히 알 수 있다 — 프롬프트 지시 대신 여기서 갱신한다.
+        label_ref, label_agent = label_ref_and_agent(active_lead_name, work_ref, kind=kind)
+        label_agent_pane_by_id(
+            agent_info.pane_id,
+            pane_label_for(label_ref, summary=instruction_summary(instruction), agent=label_agent),
+            config,
+            execute,
+        )
     else:
         if kind == "ticket":
             steps = start_ticket_lead_steps(config, tab, work_ref, service=service, cwd=workspace_cwd, instruction=instruction)
@@ -1503,6 +1665,12 @@ def run_herdr_route(args: argparse.Namespace, config: Config, execute=None) -> i
         focus_proc = execute([HERDR, "agent", "focus", lead_name], config.harness)
         if focus_proc.returncode != 0:
             return int(focus_proc.returncode)
+        label_started_agent_pane(
+            lead_name,
+            pane_label_for(work_ref, summary=instruction_summary(instruction)),
+            config,
+            execute,
+        )
 
     return run_steps(
         [
@@ -1591,6 +1759,12 @@ def run_herdr_work(args: argparse.Namespace, config: Config, execute=None) -> in
     code = run_steps(start_work_lead_steps(config, tab, args.work_id, service=service, instruction=instruction, cwd=workspace_cwd), execute)
     if code != 0:
         return code
+    label_started_agent_pane(
+        work_cell_name(args.work_id),
+        pane_label_for(args.work_id, summary=instruction_summary(instruction)),
+        config,
+        execute,
+    )
     return run_steps(
         [
             ExecutionStep(
@@ -1639,6 +1813,7 @@ def run_herdr_tickets(args: argparse.Namespace, config: Config, execute=None) ->
         code = run_steps(start_ticket_lead_steps(config, tab, ticket_id, service=service, cwd=workspace_cwd), execute)
         if code != 0:
             return code
+        label_started_agent_pane(ticket_cell_name(ticket_id), pane_label_for(ticket_id), config, execute)
         started_count += 1
         if tab.root_pane_id:
             workspace = workspace._replace(active_tab_id="", root_pane_id="")
@@ -1668,10 +1843,59 @@ def run_herdr_role(args: argparse.Namespace, config: Config, execute=None) -> in
     if not tab:
         return 2
     instruction = instruction_text(args.instruction, "")
-    return run_steps(
+    code = run_steps(
         start_role_agent_steps(config, tab, args.ticket_id, args.role, service=service, instruction=instruction, cwd=workspace_cwd),
         execute,
     )
+    if code != 0:
+        return code
+    label_started_agent_pane(
+        role_agent_name(args.ticket_id, args.role),
+        pane_label_for(args.ticket_id, summary=instruction_summary(instruction), agent=args.role),
+        config,
+        execute,
+    )
+    return code
+
+
+def run_herdr_label(args: argparse.Namespace, config: Config, execute=None) -> int:
+    """herdr/cmux 밖에서는 조용히 no-op. 라벨 실패도 경고만 하고 0을 돌려준다 — 체인된 상위 명령을 끊지 않기 위해."""
+    should_emit = execute is None
+    if execute is None:
+        execute = lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False, capture_output=True)
+    env = dict(os.environ)
+    ticket, summary = label_inputs(args)
+    tab_label = tab_label_for(ticket)
+    pane_label = pane_label_for(ticket, summary=summary, agent=args.agent)
+
+    applied = False
+    if inside_cmux(env):
+        applied = True
+        surface_proc = execute(cmux_rename_tab_command(env.get("CMUX_SURFACE_ID", ""), tab_label), config.harness)
+        if surface_proc.returncode != 0:
+            warn_label_failure("cmux surface", "cmux rename-tab failed")
+
+    pane_id = herdr_label_pane_id(args, env)
+    if pane_id:
+        applied = True
+        get_proc = execute([HERDR, "pane", "get", pane_id], config.harness)
+        tab_id = herdr_pane_tab_id(get_proc.stdout or "") if get_proc.returncode == 0 else ""
+        if tab_id:
+            tab_proc = execute(herdr_tab_rename_command(tab_id, tab_label), config.harness)
+            if tab_proc.returncode != 0:
+                warn_label_failure("herdr tab", "herdr tab rename failed")
+        else:
+            warn_label_failure("herdr tab", f"tab id missing for pane {pane_id}")
+        pane_proc = execute(herdr_pane_rename_command(pane_id, pane_label), config.harness)
+        if pane_proc.returncode != 0:
+            warn_label_failure("herdr pane", "herdr pane rename failed")
+
+    if not applied:
+        warn_label_failure("environment", "herdr/cmux 밖이라 라벨을 붙이지 않는다")
+        return 0
+    if should_emit:
+        sys.stdout.write(f"tab={tab_label}\npane={pane_label}\n")
+    return 0
 
 
 def run_herdr_close(args: argparse.Namespace, config: Config, execute=None) -> int:
@@ -1841,6 +2065,8 @@ def run(
         return run_herdr_tickets(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "role":
         return run_herdr_role(parsed, cfg, runner)
+    if parsed.command == "herdr" and parsed.herdr_command == "label":
+        return run_herdr_label(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "close":
         return run_herdr_close(parsed, cfg, runner)
     if parsed.command == "herdr" and parsed.herdr_command == "reset":

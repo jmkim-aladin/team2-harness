@@ -14,3 +14,4 @@ description: "Use when the user invokes $ad-orchestration, ad orchestration, /ad
 3. 그 파일의 섹션 0(caller/worker 판정)을 **다른 어떤 행동보다 먼저** 수행한다. worker로 판정되면 거기서 멈추고 지시받은 작업만 한다.
 4. 명령 문법의 authority는 이 파일도 command 파일도 아니라 `herdr --skill` 출력이다. 플래그가 어긋나면 그쪽을 다시 읽는다.
 5. Codex가 caller일 때는 기본 샌드박스가 `$HERDR_SOCKET_PATH` 쓰기를 막아 `herdr pane current`가 `Operation not permitted`로 실패할 수 있다. command 파일 섹션 1의 escalation 지침을 먼저 확인한다.
+6. pane 라벨은 `team2-agent herdr label {티켓|--no-ticket} "{업무}" --agent {이름}`으로 붙인다. agent 이름(`codex0`/`claude1`)은 라우팅 주소라 라벨 목적으로 rename하지 않는다 — 스키마 SoT는 `$TEAM2_HARNESS_PATH/docs/cmux-herdr-labeling.md`.

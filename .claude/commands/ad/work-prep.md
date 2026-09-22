@@ -155,9 +155,14 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (vault `wiki
 
 ### 9. cmux/herdr 작업 라벨 변경 (선택, 감지된 환경에서만)
 
-절차 SoT: [docs/cmux-herdr-labeling.md](../../../docs/cmux-herdr-labeling.md) — 감지 스크립트·리네이밍 명령·라벨 규칙 전체.
+절차 SoT: [docs/cmux-herdr-labeling.md](../../../docs/cmux-herdr-labeling.md) — 스키마·감지·갱신 시점 전체.
 
-요약: cmux 안이면 surface tab을 `DEV2-{NNNN}`(자유글은 `NO-TICKET`)로, herdr 안이면 tab/agent는 티켓번호·pane은 `티켓번호 — 제목`으로 변경. 외부 환경이면 스킵. 실패는 경고만 하고 진행. 사용자 확인 없이 기본 진행하되 변경 전후 이름을 출력.
+```bash
+team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-ticket "{제목}"
+```
+
+명령 한 줄로 끝낸다 — 환경 감지·60자 컷·실패 경고·외부 환경 no-op이 모두 코드에 있어 수동 rename보다 어긋날 여지가 없다.
+`herdr agent rename`은 호출하지 않는다 — agent 이름은 route/ask/collect/close의 라우팅 주소라 덮어쓰면 대상을 잃는다.
 
 ### 10. 출력 형식
 
@@ -224,7 +229,7 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (vault `wiki
 - 위키 노트 **갱신**: frontmatter 변경 내역을 출력한 뒤 바로 작성 (본문은 보존)
 - 위키 노트 **종료 반영**: 사용자가 티켓 종료/완료/마감/닫힘을 요청하거나 완료 사실을 보고하면 §12 기준으로 `ticket_status: done`과 종료 기록을 바로 반영
 - Daily 아젠다 **추가**: 추가할 한 줄을 출력한 뒤 바로 추가 (idempotent — 중복 시 스킵)
-- **cmux/herdr 작업 라벨 변경**: cmux/herdr 안에서 실행 중일 때만 (§9), 변경 전후 이름을 출력에 명시. 외부면 스킵
+- **cmux/herdr 작업 라벨 변경**: `team2-agent herdr label`을 그대로 실행 (§9). 외부 환경 판정·스킵은 명령이 알아서 하므로 사전 확인이 필요 없다
 
 **확인 필수 항목**:
 
