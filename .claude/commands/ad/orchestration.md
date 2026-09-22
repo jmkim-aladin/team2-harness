@@ -111,6 +111,17 @@ herdr agent rename "$HERDR_PANE_ID" claude0    # or codex0 when you are Codex
 Never overwrite an existing name — it may be the address someone else is already
 holding. Without any name the peer cannot reach you and the flow is one-way.
 
+The agent name is the address; the pane label is what the human reads. They are
+separate, so label the pane instead of renaming the agent:
+
+```bash
+team2-agent herdr label DEV2-6509 "리뷰" --agent claude1   # → pane "DEV2-6509/claude1 — 리뷰"
+```
+
+Schema, refresh points and detection live in
+[docs/cmux-herdr-labeling.md](../../../docs/cmux-herdr-labeling.md) — renaming the agent
+for labelling purposes breaks `ask` / `route` / `collect` / `close`, which resolve targets by name.
+
 ## 3. Open the peer
 
 Layout and split per `herdr --skill`. Standing user policy on this machine: start every
