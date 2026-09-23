@@ -93,6 +93,13 @@ TYPE_RULES: dict[str, dict] = {
         "location": r"(^wiki/services/[a-z0-9-]+/analysis/|^wiki/projects/)",
         "filename": r"^[a-z0-9-]+\.md$",
     },
+    "explain": {
+        # /ad:explain 산출물. 위치는 analysis와 같다.
+        # reader·mode는 render_explain_report.py가 강제하는 필드 — lint도 같은 계약을 본다.
+        "required": ["mode", "reader"],
+        "location": r"(^wiki/services/[a-z0-9-]+/analysis/|^wiki/projects/)",
+        "filename": r"^[a-z0-9-]+\.md$",
+    },
     "decision": {
         "required": ["service_id"],
         "location": r"^wiki/services/[a-z0-9-]+/decisions/",

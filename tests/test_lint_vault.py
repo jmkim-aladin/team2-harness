@@ -48,6 +48,27 @@ status: draft
         self.assertEqual(violations, [])
 
 
+class ExplainTypeTest(unittest.TestCase):
+    REL = "wiki/services/shopping/analysis/2026-09-15-explain-benepia-order-kcp.md"
+
+    def lint_explain(self, frontmatter):
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / self.REL
+            path.parent.mkdir(parents=True)
+            path.write_text(f"---\n{frontmatter}---\n\n# Explain\n", encoding="utf-8")
+            return lint_file(self.REL, path)
+
+    def test_explain_note_is_valid_under_service_analysis(self):
+        violations = self.lint_explain(
+            "type: explain\nmode: diff\nreader: 개발 리뷰어\nsubject: DEV2-9253\n"
+        )
+        self.assertEqual(violations, [])
+
+    def test_explain_note_requires_reader_like_renderer(self):
+        violations = self.lint_explain("type: explain\nmode: diff\n")
+        self.assertTrue(any("`reader` 누락" in v for v in violations))
+
+
 class TicketFilenameTest(unittest.TestCase):
     def lint_ticket(self, filename, ticket_id):
         rel = f"wiki/processes/tickets/{filename}"
