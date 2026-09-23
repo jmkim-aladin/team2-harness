@@ -105,6 +105,13 @@ gh pr diff {N} --repo {owner}/{repo} --name-only
 
 # 전체 diff (코드 리뷰용) — rtk proxy 필수, 아래 절 참조
 rtk proxy gh pr diff {N} --repo {owner}/{repo} > {스크래치}/pr{N}.diff
+
+# 앞선 리뷰 라운드 — 인라인 코멘트와 작성자 답변 (아래 절 참조)
+gh api repos/{owner}/{repo}/pulls/{N}/comments --jq '.[] | "--- \(.user.login) \(.path):\(.line)\n\(.body)\n"'
+
+# 리뷰 본문·일반 코멘트
+gh api repos/{owner}/{repo}/pulls/{N}/reviews --jq '.[] | "--- \(.user.login) \(.state)\n\(.body)\n"'
+gh api repos/{owner}/{repo}/issues/{N}/comments --jq '.[] | "--- \(.user.login)\n\(.body)\n"'
 ```
 
 #### 전체 diff는 `rtk proxy`로 받고 받았는지 센다
@@ -121,6 +128,18 @@ rtk proxy gh pr diff {N} --repo {owner}/{repo} > {스크래치}/pr{N}.diff
 
 - 레포 해석 결과와 함께 "PR #{N}은 Draft 상태 — 리뷰 스킵" 한 줄을 노출하고 종료한다.
 - 사용자가 Draft인 걸 알고도 명시적으로 "그래도 리뷰해줘"라고 요청하면 그때만 진행한다.
+
+#### 앞선 리뷰 라운드를 먼저 읽는다
+
+PR은 대개 여러 번 리뷰된다. 앞선 라운드에서 이미 지적했고 **작성자가 답변까지 단 항목**을 다시 올리면, 작성자는 같은 설명을 두 번 쓰고 리뷰어 신뢰는 그만큼 깎인다.
+
+- diff를 읽기 전에 인라인 코멘트·리뷰 본문·일반 코멘트를 모두 수집한다. 같은 사람(나 자신 포함)이 앞서 남긴 것도 세션이 다르면 컨텍스트에 없다
+- **답변이 달린 항목은 새 코멘트로 다시 올리지 않는다.** 답변을 4단계 판정의 입력으로 쓰고, 답변으로 해소되지 않은 부분만 **그 스레드의 답글**로 남긴다
+- 답변이 diff 밖 사실(레포 밖 파일, 운영 DB 상태, 배포 계획)을 근거로 들면 [hypothesis-verification-order](../../../policies/hypothesis-verification-order.md)를 적용해 검증하고, 검증 결과를 미리보기에 남긴다. 확인되면 그 축은 `✅ 실행 확인`으로 올린다
+- 앞선 라운드에 없던 항목만 새 코멘트가 된다
+- 미리보기에 `앞선 라운드 ({N}건) — 답변됨 {N} / 미답변 {N}` 한 줄을 노출한다. 수집을 건너뛰면 돌았는지 알 수 없다
+
+근거: 2026-09-22 실측 Tobe PR #205 — 같은 리뷰어가 1라운드에서 물은 "신규 API 호출부 부재"에 작성자가 "이벤트 페이지는 `ucl_editor` 경로라 이 레포에서 추적되지 않는다"고 답했는데, 새 세션이 기존 코멘트를 읽지 않고 같은 질문을 다시 게시해 삭제로 되돌렸다.
 
 ### 2. 서비스 컨텍스트 참조
 
@@ -406,6 +425,7 @@ GitHub에 게시하는 코멘트/리뷰 본문에는 로컬 하네스 내부 정
 ## PR #{번호} 리뷰 결과
 머지: {headRefName} → {baseRefName}
 작성자: {author.name}({author.login})
+앞선 라운드: {N}건 — 답변됨 {N} / 미답변 {N} (없으면 `첫 리뷰`)
 
 ### 하네스 체크리스트 (통과도 근거를 댄다)
 ✅ 기본: 티켓 요구 3건 모두 구현 — {파일:심볼} / 테스트 {테스트명}
