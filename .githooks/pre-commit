@@ -4,6 +4,8 @@
 # 의도: "문서에 적힌 규칙"이 아니라 "커밋이 막히는 검사"로 지시문 규약과 시크릿 정책을 지킨다 (북극성 1·5).
 set -u
 repo="$(git rev-parse --show-toplevel)"
+# 워크트리에서는 $repo/.git 이 파일이다 — 로그는 실제 git-dir 에 둔다
+log="$(git rev-parse --absolute-git-dir)/pre-commit-unittest.log"
 fail=0
 
 # 부분 staging 은 검사 대상(working tree)과 커밋 내용(index)을 어긋나게 한다 — 경고만, 차단은 하지 않는다
@@ -25,12 +27,13 @@ fi
 # 3) 회귀 테스트 — 도구·테스트·Codex 스킬(단어 한도·필수 문구 테스트가 있다)이 staged 일 때. ~5초.
 #    근거: 2026-09-16 단어 한도 초과가 lint·secret 게이트를 통과해 두 번 커밋됨 — 훅이 unittest 를 안 돌렸다
 if git diff --cached --name-only | grep -Eq '^(tools/|tests/|\.codex/skills/|\.githooks/)'; then
-  if ! python3 -m unittest discover -s "$repo/tests" -p 'test_*.py' >"$repo/.git/pre-commit-unittest.log" 2>&1; then
-    echo "pre-commit: unittest 실패 — $repo/.git/pre-commit-unittest.log"
-    grep -E "^(FAIL|ERROR):|^AssertionError" "$repo/.git/pre-commit-unittest.log" | head -5
+  # 워크트리 커밋은 GIT_DIR 등을 훅에 넘긴다 — 임시 repo를 만드는 테스트가 실제 repo를 보지 않게 비운다
+  if ! (unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX GIT_COMMON_DIR; python3 -m unittest discover -s "$repo/tests" -p 'test_*.py') >"$log" 2>&1; then
+    echo "pre-commit: unittest 실패 — $log"
+    grep -E "^(FAIL|ERROR):|^AssertionError" "$log" | head -5
     fail=1
   else
-    grep -E "^Ran " "$repo/.git/pre-commit-unittest.log"
+    grep -E "^Ran " "$log"
   fi
 fi
 
