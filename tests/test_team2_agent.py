@@ -36,14 +36,234 @@ def seeds_orch_worker(command: Sequence[str]) -> bool:
 class Team2AgentTests(unittest.TestCase):
     def test_codex_launch_profiles_match_team_roles(self) -> None:
         expected = {
-            "orchestrator": ("orchestrator", "gpt-5.6-sol", "xhigh"),
-            "worker": ("worker", "gpt-5.6-luna", "max"),
-            "reviewer": ("reviewer", "gpt-5.6-sol", "xhigh"),
-            "verifier": ("verifier", "gpt-5.6-sol", "xhigh"),
+            "orchestrator": ("orchestrator", "gpt-6-astra", "xhigh"),
+            "worker": ("worker", "gpt-6-luna", "max"),
+            "reviewer": ("reviewer", "gpt-6-sol", "xhigh"),
+            "verifier": ("verifier", "gpt-6-sol", "xhigh"),
         }
         for requested, values in expected.items():
             profile = agent.codex_launch_profile(requested)
             self.assertEqual(tuple(profile), values)
+
+    def test_claude_launch_models_match_team_roles(self) -> None:
+        expected = {
+            "orchestrator": "claude-fable-5-1",
+            "worker": "claude-opus-5-5",
+            "reviewer": "claude-opus-5-5",
+            "verifier": "claude-opus-5-5",
+            "nonsense": "claude-opus-5-5",
+        }
+        for requested, model in expected.items():
+            self.assertEqual(agent.claude_launch_model(requested), model)
+
+    def test_profiles_command_prints_every_role(self) -> None:
+        with patch("builtins.print") as printed:
+            self.assertEqual(agent.run(["profiles"]), 0)
+        role_block = printed.call_args.args[0].split("\n\n")[0].splitlines()
+        self.assertEqual(role_block[0], "role\tcodex_model\tcodex_effort\tclaude_model")
+        self.assertIn("orchestrator\tgpt-6-astra\txhigh\tclaude-fable-5-1", role_block)
+        self.assertIn("reviewer\tgpt-6-sol\txhigh\tclaude-opus-5-5", role_block)
+        self.assertEqual(len(role_block), 1 + len(agent.CODEX_LAUNCH_PROFILES))
+
+    def test_profiles_command_prints_tier_table_and_override_rules(self) -> None:
+        with patch("builtins.print") as printed:
+            self.assertEqual(agent.run(["profiles"]), 0)
+        blocks = printed.call_args.args[0].split("\n\n")
+        tier_block = blocks[1].splitlines()
+        self.assertEqual(
+            tier_block,
+            [
+                "tier\tcodex_model\tclaude_model\tuse",
+                "fast\tgpt-6-luna\tclaude-sonnet-5\t기계적 탐색·위치 찾기·단순 편집·포맷 변환",
+                "workhorse\tgpt-6-sol\tclaude-opus-5-5\t일반 코딩·버그 수정·테스트 작성·구조 파악",
+                "frontier\tgpt-6-astra\tclaude-fable-5-1\t설계 판단·까다로운 디버깅·장시간 자율 작업",
+            ],
+        )
+        rules = blocks[2]
+        self.assertIn("low < medium < high < xhigh < max < ultra", rules)
+        self.assertIn("--why", rules)
+        self.assertIn("effort xhigh 이상", rules)
+        self.assertIn("orchestrator", rules)
+
+    def test_role_defaults_are_derived_from_tier_table(self) -> None:
+        # 모델 id는 MODEL_TIERS 한 곳에만 있다 — 역할 기본값은 tier 이름으로 적는다.
+        for role, default in agent.ROLE_LAUNCH_DEFAULTS.items():
+            with self.subTest(role=role):
+                self.assertEqual(agent.CODEX_LAUNCH_PROFILES[role].model, agent.MODEL_TIERS[default.codex_tier].codex_model)
+                self.assertEqual(agent.CLAUDE_LAUNCH_MODELS[role], agent.MODEL_TIERS[default.claude_tier].claude_model)
+        self.assertEqual(list(agent.MODEL_TIERS), ["fast", "workhorse", "frontier"])
+
+    def test_ai_argv_resolves_tier_to_engine_model(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        expected = {
+            "fast": ("gpt-6-luna", "claude-sonnet-5"),
+            "workhorse": ("gpt-6-sol", "claude-opus-5-5"),
+            "frontier": ("gpt-6-astra", "claude-fable-5-1"),
+        }
+        for tier, (codex_model, claude_model) in expected.items():
+            override = agent.LaunchOverride(tier=tier, why="난이도 조정")
+            with self.subTest(tier=tier):
+                codex = agent.ai_argv("codex", "hello", config, codex_role="worker", override=override)[2]
+                self.assertIn(f"--model {codex_model}", codex)
+                self.assertIn('model_reasoning_effort="max"', codex)
+                self.assertIn(f'[model] role=worker model={codex_model} effort=max override="난이도 조정"', codex)
+                claude = agent.ai_argv("claude", "hello", config, codex_role="worker", override=override)[2]
+                self.assertIn(f"--model {claude_model}", claude)
+                # tier만 바꾸면 effort는 Claude가 스스로 정한다.
+                self.assertNotIn("--effort", claude)
+                self.assertIn(f'[model] role=worker model={claude_model} effort=<실제 effort> override="난이도 조정"', claude)
+
+    def test_ai_argv_without_override_matches_default_command(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        for engine in ("codex", "claude"):
+            for role in ("orchestrator", "worker", "reviewer", "verifier"):
+                with self.subTest(engine=engine, role=role):
+                    default = agent.ai_argv(engine, "hello", config, codex_role=role)
+                    explicit = agent.ai_argv(engine, "hello", config, codex_role=role, override=agent.LaunchOverride())
+                    self.assertEqual(default, explicit)
+                    self.assertNotIn("override=", default[2])
+                    self.assertNotIn("--effort", default[2])
+        claude = agent.ai_argv("claude", "hello", config, codex_role="worker")[2]
+        self.assertIn("claude --dangerously-skip-permissions --model claude-opus-5-5 '", claude)
+
+    def test_ai_argv_passes_claude_effort_override_and_logs_it(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        override = agent.LaunchOverride(tier="frontier", effort="high", why="설계 판단")
+        command = agent.ai_argv("claude", "hello", config, codex_role="worker", override=override)[2]
+        self.assertIn("--model claude-fable-5-1 --effort high", command)
+        self.assertNotIn("model_reasoning_effort", command)
+        self.assertIn('[model] role=worker model=claude-fable-5-1 effort=high override="설계 판단"', command)
+
+    def test_launch_override_error_rules(self) -> None:
+        cases = [
+            # (engine, role, override, 거부 여부)
+            ("codex", "worker", agent.LaunchOverride(tier="frontier"), True),  # --why 누락
+            ("codex", "worker", agent.LaunchOverride(effort="high", why="  "), True),  # 공백 사유
+            ("codex", "worker", agent.LaunchOverride(tier="frontier", why="설계"), False),
+            ("codex", "worker", agent.LaunchOverride(why="사유만"), False),  # override 아님
+            ("codex", "orchestrator", agent.LaunchOverride(tier="fast", why="싸게"), True),
+            ("claude", "orchestrator", agent.LaunchOverride(effort="max", why="깊게"), True),
+            ("codex", "reviewer", agent.LaunchOverride(tier="fast", why="싸게"), True),
+            ("codex", "reviewer", agent.LaunchOverride(tier="frontier", why="깊게"), True),
+            ("claude", "verifier", agent.LaunchOverride(tier="fast", why="싸게"), True),
+            ("codex", "reviewer", agent.LaunchOverride(tier="workhorse", effort="max", why="깊게"), False),
+            ("codex", "reviewer", agent.LaunchOverride(effort="high", why="가볍게"), True),
+            ("codex", "reviewer", agent.LaunchOverride(effort="max", why="깊게"), False),
+            ("claude", "reviewer", agent.LaunchOverride(effort="high", why="가볍게"), True),
+            ("claude", "reviewer", agent.LaunchOverride(effort="max", why="깊게"), False),
+            ("codex", "worker", agent.LaunchOverride(effort="ultra", why="끝까지"), True),  # luna 상한 max
+            ("codex", "worker", agent.LaunchOverride(tier="frontier", effort="ultra", why="끝까지"), False),
+            ("claude", "worker", agent.LaunchOverride(tier="frontier", effort="ultra", why="끝까지"), True),  # fable 상한 max
+            ("codex", "reviewer", agent.LaunchOverride(effort="ultra", why="끝까지"), False),  # sol 상한 ultra
+        ]
+        for engine, role, override, rejected in cases:
+            with self.subTest(engine=engine, role=role, override=override):
+                error = agent.launch_override_error(engine, role, override)
+                self.assertEqual(error is not None, rejected, error)
+
+    def test_invalid_launch_override_exits_before_any_herdr_call(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        cases = [
+            ["herdr", "worker", "--tier", "frontier", "orch-worker-3", "설계"],
+            ["herdr", "worker", "--tier", "fast", "--effort", "ultra", "--why", "끝까지", "orch-worker-3", "탐색"],
+            ["herdr", "role", "--tier", "fast", "--why", "싸게", "--service", "max", "DEV2-6509", "planner", "분할"],
+            ["herdr", "role", "--tier", "fast", "--why", "싸게", "--service", "max", "DEV2-6509", "reviewer", "리뷰"],
+            ["herdr", "role", "--effort", "high", "--why", "가볍게", "--service", "max", "DEV2-6509", "qa", "검증"],
+            ["herdr", "role", "--engine", "claude", "--effort", "ultra", "--why", "끝까지", "--service", "max", "DEV2-6509", "developer", "구현"],
+        ]
+        for argv in cases:
+            seen: list[list[str]] = []
+
+            def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+                seen.append(list(command))
+                return completed()
+
+            with self.subTest(argv=argv), patch.object(agent.sys, "stderr") as stderr, patch.object(agent.subprocess, "run") as sub_run:
+                self.assertEqual(agent.run(argv, config=config, runner=runner), 2)
+                self.assertEqual(seen, [])
+                sub_run.assert_not_called()
+                self.assertIn("team2-agent:", "".join(call.args[0] for call in stderr.write.call_args_list))
+
+    def test_run_herdr_worker_applies_tier_and_effort_override(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":3}]}}'
+        agent_stdout = '{"result":{"agent":{"name":"orch-worker-3","pane_id":"p-worker","agent_status":"idle","workspace_id":"w2"}}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "agent", "get", "orch-worker-3"]:
+                return completed(stdout=agent_stdout)
+            return completed()
+
+        code = agent.run(
+            ["herdr", "worker", "--tier", "frontier", "--effort", "ultra", "--why", "원인 불명 장애 추적", "orch-worker-3"],
+            config=config,
+            runner=runner,
+        )
+
+        self.assertEqual(code, 0)
+        start = next(command for command in seen if command[:3] == ["herdr", "agent", "start"])
+        self.assertIn("--model gpt-6-astra", start[-1])
+        self.assertIn('model_reasoning_effort="ultra"', start[-1])
+        self.assertIn('[model] role=worker model=gpt-6-astra effort=ultra override="원인 불명 장애 추적"', start[-1])
+
+    def test_run_herdr_role_applies_claude_effort_override_for_reviewer(self) -> None:
+        seen: list[list[str]] = []
+        workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w-max","label":"max","focused":false,"pane_count":3}]}}'
+        tabs_stdout = '{"result":{"tabs":[{"tab_id":"t-6509","label":"DEV2-6509","workspace_id":"w-max"}]}}'
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+
+        def runner(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+            seen.append(list(command))
+            if command == ["herdr", "workspace", "list"]:
+                return completed(stdout=workspace_stdout)
+            if command == ["herdr", "tab", "list", "--workspace", "w-max"]:
+                return completed(stdout=tabs_stdout)
+            if command == ["herdr", "agent", "get", "ticket-DEV2-6509-reviewer"]:
+                return completed(stdout='{"result":{"agent":{"pane_id":"p-reviewer","agent_status":"idle"}}}')
+            return completed()
+
+        code = agent.run(
+            ["herdr", "role", "--engine", "claude", "--effort", "max", "--why", "결제 경로 회귀", "--service", "max", "DEV2-6509", "reviewer", "회귀 리뷰"],
+            config=config,
+            runner=runner,
+        )
+
+        self.assertEqual(code, 0)
+        start = next(command for command in seen if command[:3] == ["herdr", "agent", "start"])
+        self.assertIn("--model claude-opus-5-5 --effort max", start[-1])
+        self.assertNotIn("model_reasoning_effort", start[-1])
+        self.assertIn('[model] role=reviewer model=claude-opus-5-5 effort=max override="결제 경로 회귀"', start[-1])
+
+    def test_override_options_only_on_worker_and_role(self) -> None:
+        self.assertEqual(agent.parse_args(["herdr", "worker", "--tier", "fast", "--why", "x", "w"]).tier, "fast")
+        self.assertEqual(agent.parse_args(["herdr", "role", "--effort", "max", "--why", "x", "DEV2-1", "reviewer"]).effort, "max")
+        for argv in (
+            ["herdr", "tickets", "--tier", "fast", "DEV2-1"],
+            ["herdr", "work", "--tier", "fast", "work-1"],
+            ["herdr", "open", "--tier", "fast"],
+        ):
+            with self.subTest(argv=argv), patch.object(agent.sys, "stderr"), self.assertRaises(SystemExit):
+                agent.parse_args(argv)
+
+    def test_lead_and_orchestrator_prompts_point_to_profiles_for_overrides(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        prompts = [
+            agent.orchestrator_prompt(config),
+            agent.ticket_lead_prompt(config, "DEV2-6509", service="max"),
+            agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm"),
+        ]
+        for prompt in prompts:
+            with self.subTest(prompt=prompt[:20]):
+                self.assertIn("--tier/--effort/--why", prompt)
+                self.assertIn("/repo/bin/team2-agent profiles", prompt)
+                # 기준 표는 profiles가 SoT — 프롬프트에 모델 id를 복제하지 않는다.
+                for tier in agent.MODEL_TIERS.values():
+                    self.assertNotIn(tier.claude_model, prompt)
+                    self.assertNotIn(tier.codex_model, prompt)
 
     def test_team2_role_to_codex_role(self) -> None:
         expected = {
@@ -62,31 +282,43 @@ class Team2AgentTests(unittest.TestCase):
     def test_ai_argv_routes_codex_worker_and_emits_start_log(self) -> None:
         config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
         command = agent.ai_argv("codex", "hello", config, codex_role="worker")[2]
-        self.assertIn("--model gpt-5.6-luna", command)
+        self.assertIn("--model gpt-6-luna", command)
         self.assertIn('model_reasoning_effort="max"', command)
-        self.assertIn("[model] role=worker model=gpt-5.6-luna effort=max", command)
+        self.assertIn("[model] role=worker model=gpt-6-luna effort=max", command)
 
     def test_ai_argv_routes_codex_reviewer_and_emits_start_log(self) -> None:
         config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
         command = agent.ai_argv("codex", "hello", config, codex_role="reviewer")[2]
-        self.assertIn("--model gpt-5.6-sol", command)
+        self.assertIn("--model gpt-6-sol", command)
         self.assertIn('model_reasoning_effort="xhigh"', command)
-        self.assertIn("[model] role=reviewer model=gpt-5.6-sol effort=xhigh", command)
+        self.assertIn("[model] role=reviewer model=gpt-6-sol effort=xhigh", command)
 
-    def test_ai_argv_keeps_codex_model_flags_off_claude_but_emits_start_log(self) -> None:
+    def test_ai_argv_routes_codex_orchestrator_to_astra(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        command = agent.ai_argv("codex", "hello", config, codex_role="orchestrator")[2]
+        self.assertIn("--model gpt-6-astra", command)
+        self.assertIn("[model] role=orchestrator model=gpt-6-astra effort=xhigh", command)
+
+    def test_ai_argv_passes_claude_model_but_not_codex_effort(self) -> None:
         config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
         command = agent.ai_argv("claude", "hello", config, codex_role="reviewer")[2]
+        self.assertIn("--model claude-opus-5-5", command)
         # Codex 전용 옵션은 Claude에 전달하지 않는다.
-        self.assertNotIn("--model", command)
         self.assertNotIn("model_reasoning_effort", command)
-        # role은 넘기되 model/effort는 Claude가 스스로 보고한다.
-        self.assertIn("[model] role=reviewer model=<실제 model> effort=<실제 effort>", command)
+        # model은 launcher 값, effort는 Claude가 스스로 보고한다.
+        self.assertIn("[model] role=reviewer model=claude-opus-5-5 effort=<실제 effort>", command)
         self.assertIn("unknown", command)
+
+    def test_ai_argv_routes_claude_orchestrator_to_fable(self) -> None:
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        command = agent.ai_argv("claude", "hello", config, codex_role="orchestrator")[2]
+        self.assertIn("--model claude-fable-5-1", command)
+        self.assertIn("[model] role=orchestrator model=claude-fable-5-1", command)
 
     def test_ai_argv_normalizes_unknown_claude_role_to_worker(self) -> None:
         config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
         command = agent.ai_argv("claude", "hello", config, codex_role="nonsense")[2]
-        self.assertIn("[model] role=worker", command)
+        self.assertIn("[model] role=worker model=claude-opus-5-5", command)
 
     def test_default_config_uses_container_paths_when_mounted(self) -> None:
         mounted = {"/workspace/team2", "/workspace/team2-vault", "/opt/hermes/.venv/bin/hermes"}
@@ -359,12 +591,12 @@ class Team2AgentTests(unittest.TestCase):
     def test_herdr_prompts_stay_compact_and_share_contract_terms(self) -> None:
         config = agent.Config(harness=Path("/repo"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
         prompts = {
-            "orchestrator": (agent.orchestrator_prompt(config), 1300),
+            "orchestrator": (agent.orchestrator_prompt(config), 1400),
             "worker": (agent.worker_prompt(config), 620),
             "ask_packet": (agent.herdr_ask_packet(config, task_id="DEV2-6509", expect="result", instruction="분석"), 520),
             "route_packet": (agent.herdr_route_packet(config, work_ref="DEV2-6509", expect="result", instruction="후속"), 460),
-            "ticket_lead": (agent.ticket_lead_prompt(config, "DEV2-6509", service="aasm", instruction="분석"), 520),
-            "work_lead": (agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="수정"), 500),
+            "ticket_lead": (agent.ticket_lead_prompt(config, "DEV2-6509", service="aasm", instruction="분석"), 620),
+            "work_lead": (agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="수정"), 600),
             "role_agent": (agent.role_agent_prompt(config, "DEV2-6509", "developer", "수정", service="aasm"), 260),
         }
 
@@ -847,10 +1079,10 @@ class Team2AgentTests(unittest.TestCase):
         argv = agent.ai_argv("codex", "hello", config)
 
         self.assertEqual(argv[:2], ["zsh", "-ic"])
-        self.assertIn("codex --model gpt-5.6-luna", argv[2])
+        self.assertIn("codex --model gpt-6-luna", argv[2])
         self.assertIn('model_reasoning_effort="max"', argv[2])
         self.assertIn("--sandbox danger-full-access --ask-for-approval never", argv[2])
-        self.assertIn("[model] role=worker model=gpt-5.6-luna effort=max", argv[2])
+        self.assertIn("[model] role=worker model=gpt-6-luna effort=max", argv[2])
 
     def test_ai_argv_can_run_from_service_workspace(self) -> None:
         config = agent.Config(harness=Path("/workspace/team2"), vault=Path("/vault"), hermes_cli="/hermes", board="team2")
@@ -1226,10 +1458,10 @@ class Team2AgentTests(unittest.TestCase):
 
         command = agent.start_worker_command(config, workspace_id="w2", name="orch-worker-3", instruction="DEV2-6509 브리프")
 
-        self.assertIn("codex exec --model gpt-5.6-luna", command[-1])
+        self.assertIn("codex exec --model gpt-6-luna", command[-1])
         self.assertIn('model_reasoning_effort="max"', command[-1])
-        self.assertIn("[model] role=worker model=gpt-5.6-luna effort=max", command[-1])
-        self.assertNotIn("codex --model gpt-5.6-luna", command[-1])
+        self.assertIn("[model] role=worker model=gpt-6-luna effort=max", command[-1])
+        self.assertNotIn("codex --model gpt-6-luna", command[-1])
 
     def test_run_herdr_worker_uses_requested_engine(self) -> None:
         seen: list[list[str]] = []

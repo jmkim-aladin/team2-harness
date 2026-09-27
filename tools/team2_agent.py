@@ -84,12 +84,75 @@ class CodexLaunchProfile(NamedTuple):
     effort: str
 
 
-CODEX_LAUNCH_PROFILES = {
-    "orchestrator": CodexLaunchProfile("orchestrator", "gpt-5.6-sol", "xhigh"),
-    "worker": CodexLaunchProfile("worker", "gpt-5.6-luna", "max"),
-    "reviewer": CodexLaunchProfile("reviewer", "gpt-5.6-sol", "xhigh"),
-    "verifier": CodexLaunchProfile("verifier", "gpt-5.6-sol", "xhigh"),
+class ModelTier(NamedTuple):
+    name: str
+    codex_model: str
+    claude_model: str
+    use: str
+
+
+class RoleLaunchDefault(NamedTuple):
+    codex_tier: str
+    codex_effort: str
+    claude_tier: str
+
+
+class LaunchOverride(NamedTuple):
+    """오케스트레이터가 업무 난이도에 맞춰 기본값을 벗어날 때의 입력. tier·effort 중 하나라도 있으면 override다."""
+
+    tier: str | None = None
+    effort: str | None = None
+    why: str = ""
+
+    @property
+    def active(self) -> bool:
+        return bool(self.tier or self.effort)
+
+
+NO_OVERRIDE = LaunchOverride()
+
+# 모델 id의 SoT. 모델 교체는 이 표만 고친다. 선언 순서가 낮은→높은 tier 순서다.
+# 짝짓기 근거: Codex models_cache 설명(astra "Frontier intelligence", sol "Workhorse", luna "Fast and affordable")과
+# Claude 등급(Fable 5.1 최상위, Opus 5.5, Sonnet 5).
+MODEL_TIERS = {
+    "fast": ModelTier("fast", "gpt-6-luna", "claude-sonnet-5", "기계적 탐색·위치 찾기·단순 편집·포맷 변환"),
+    "workhorse": ModelTier("workhorse", "gpt-6-sol", "claude-opus-5-5", "일반 코딩·버그 수정·테스트 작성·구조 파악"),
+    "frontier": ModelTier("frontier", "gpt-6-astra", "claude-fable-5-1", "설계 판단·까다로운 디버깅·장시간 자율 작업"),
 }
+
+EFFORT_LEVELS = ("low", "medium", "high", "xhigh", "max", "ultra")
+
+# 모델별 허용 effort 상한. luna catalog에는 ultra가 없다(실측).
+MODEL_MAX_EFFORT = {
+    "gpt-6-astra": "ultra",
+    "gpt-6-sol": "ultra",
+    "gpt-6-luna": "max",
+    "claude-sonnet-5": "max",
+    "claude-opus-5-5": "max",
+    "claude-fable-5-1": "max",
+}
+
+# 리뷰·검증은 품질 게이트라 조용히 약해지면 안 된다 — tier는 기본값 고정, effort는 하한 이상.
+GATE_ROLES = frozenset({"reviewer", "verifier"})
+GATE_MIN_EFFORT = "xhigh"
+# orchestrator는 자기 모델을 스스로 고르지 않는다 — 기준값 고정.
+FIXED_LAUNCH_ROLES = frozenset({"orchestrator"})
+
+# 역할별 launch 기본값의 SoT(tier 이름으로 적는다). 스킬·가이드는 값을 복제하지 않고 `team2-agent profiles`로 조회한다.
+ROLE_LAUNCH_DEFAULTS = {
+    "orchestrator": RoleLaunchDefault("frontier", "xhigh", "frontier"),
+    "worker": RoleLaunchDefault("fast", "max", "workhorse"),
+    "reviewer": RoleLaunchDefault("workhorse", "xhigh", "workhorse"),
+    "verifier": RoleLaunchDefault("workhorse", "xhigh", "workhorse"),
+}
+
+CODEX_LAUNCH_PROFILES = {
+    role: CodexLaunchProfile(role, MODEL_TIERS[default.codex_tier].codex_model, default.codex_effort)
+    for role, default in ROLE_LAUNCH_DEFAULTS.items()
+}
+
+# Claude는 기본적으로 --model만 지정한다. effort는 override가 있을 때만 --effort로 넘긴다.
+CLAUDE_LAUNCH_MODELS = {role: MODEL_TIERS[default.claude_tier].claude_model for role, default in ROLE_LAUNCH_DEFAULTS.items()}
 
 TEAM2_ROLE_TO_CODEX_ROLE = {
     "planner": "orchestrator",
@@ -117,22 +180,120 @@ def codex_role_for_team2_role(role: str) -> str:
     return TEAM2_ROLE_TO_CODEX_ROLE.get(role, "worker")
 
 
-def codex_start_instruction(profile: CodexLaunchProfile) -> str:
-    log = f"[model] role={profile.role} model={profile.model} effort={profile.effort}"
+def override_log_suffix(override: LaunchOverride) -> str:
+    """시작 로그 끝에 붙일 사유. 로그가 한 줄·한 인용으로 남도록 공백을 접고 따옴표·백틱을 바꾼다."""
+    if not override.active:
+        return ""
+    why = " ".join(override.why.split()).replace('"', "'").replace("`", "'")
+    return f' override="{why}"'
+
+
+def codex_start_instruction(profile: CodexLaunchProfile, override: LaunchOverride = NO_OVERRIDE) -> str:
+    log = f"[model] role={profile.role} model={profile.model} effort={profile.effort}{override_log_suffix(override)}"
     return f"첫 사용자 표시 응답의 첫 줄에 `{log}`를 한 번 출력한다."
 
 
-def claude_start_instruction(role: str) -> str:
-    """Claude는 native model profile을 쓰므로 launcher가 model/effort를 정하지 않는다.
+def claude_launch_model(role: str) -> str:
+    return CLAUDE_LAUNCH_MODELS.get(role, CLAUDE_LAUNCH_MODELS["worker"])
 
-    Codex의 -m / model_reasoning_effort는 Claude에 전달하면 안 된다. role만 넘기고
-    실제 배정값은 Claude가 스스로 보고하되, 확인 불가 필드는 unknown으로 둔다.
+
+def claude_start_instruction(role: str, model: str, override: LaunchOverride = NO_OVERRIDE) -> str:
+    """Claude에는 기본적으로 --model만 넘기므로 model은 launcher 값, effort는 Claude가 스스로 보고한다.
+
+    override effort를 --effort로 넘겼으면 그 값을 적는다. Codex 전용 model_reasoning_effort는 Claude에 전달하면 안 된다.
+    확인 불가 필드는 unknown으로 둔다.
     """
+    effort = override.effort or "<실제 effort>"
     return (
         "첫 사용자 표시 응답의 첫 줄에 "
-        f"`[model] role={role} model=<실제 model> effort=<실제 effort>` 형식으로 한 번 출력한다. "
+        f"`[model] role={role} model={model} effort={effort}{override_log_suffix(override)}` 형식으로 한 번 출력한다. "
         "확인할 수 없는 값은 추측하지 않고 unknown으로 출력한다."
     )
+
+
+def launch_role(role: str) -> str:
+    """알 수 없는 role은 worker로 정규화한다 — 기본 프로필 조회와 같은 규칙."""
+    return role if role in ROLE_LAUNCH_DEFAULTS else "worker"
+
+
+def default_tier(engine: str, role: str) -> str:
+    default = ROLE_LAUNCH_DEFAULTS[launch_role(role)]
+    return default.claude_tier if engine == "claude" else default.codex_tier
+
+
+def codex_override_profile(role: str, override: LaunchOverride = NO_OVERRIDE) -> CodexLaunchProfile:
+    base = codex_launch_profile(role)
+    model = MODEL_TIERS[override.tier].codex_model if override.tier else base.model
+    return base._replace(model=model, effort=override.effort or base.effort)
+
+
+def claude_override_model(role: str, override: LaunchOverride = NO_OVERRIDE) -> str:
+    return MODEL_TIERS[override.tier].claude_model if override.tier else claude_launch_model(launch_role(role))
+
+
+def effort_rank(effort: str) -> int:
+    return EFFORT_LEVELS.index(effort)
+
+
+def launch_override_error(engine: str, role: str, override: LaunchOverride) -> str | None:
+    """override 검증. 위반이면 사람이 읽을 메시지, 통과면 None. herdr를 부르기 전에 호출해 부작용 없이 거부한다."""
+    if not override.active:
+        return None
+    if not override.why.strip():
+        return "--tier/--effort를 쓰면 --why로 사유를 남겨야 한다"
+    role = launch_role(role)
+    if role in FIXED_LAUNCH_ROLES:
+        return f"launch role={role}: 기준값 고정이라 --tier/--effort를 받지 않는다"
+    if role in GATE_ROLES:
+        base_tier = default_tier(engine, role)
+        if override.tier and override.tier != base_tier:
+            return f"launch role={role}: 품질 게이트라 tier를 {base_tier}에서 바꿀 수 없다"
+        if override.effort and effort_rank(override.effort) < effort_rank(GATE_MIN_EFFORT):
+            return f"launch role={role}: 품질 게이트라 effort가 {GATE_MIN_EFFORT} 이상이어야 한다"
+    if engine == "claude":
+        model, effort = claude_override_model(role, override), override.effort
+    else:
+        profile = codex_override_profile(role, override)
+        model, effort = profile.model, profile.effort
+    cap = MODEL_MAX_EFFORT.get(model)
+    if effort and cap and effort_rank(effort) > effort_rank(cap):
+        return f"model={model}: effort {cap}까지만 허용한다 (요청 {effort})"
+    return None
+
+
+def launch_override_from_args(args: argparse.Namespace) -> LaunchOverride:
+    return LaunchOverride(getattr(args, "tier", None), getattr(args, "effort", None), getattr(args, "why", None) or "")
+
+
+def reject_launch_override(engine: str, role: str, override: LaunchOverride) -> bool:
+    """검증 실패면 stderr에 남기고 True. 호출부는 herdr 호출 전에 exit 2로 끝낸다."""
+    error = launch_override_error(engine, role, override)
+    if error:
+        sys.stderr.write(f"team2-agent: {error}\n")
+        return True
+    return False
+
+
+def launch_profiles_text() -> str:
+    rows = [("role", "codex_model", "codex_effort", "claude_model")]
+    for role, profile in CODEX_LAUNCH_PROFILES.items():
+        rows.append((role, profile.model, profile.effort, claude_launch_model(role)))
+    rows.append(())
+    rows.append(("tier", "codex_model", "claude_model", "use"))
+    for tier in MODEL_TIERS.values():
+        rows.append((tier.name, tier.codex_model, tier.claude_model, tier.use))
+    caps: dict[str, list[str]] = {}
+    for model, cap in MODEL_MAX_EFFORT.items():
+        caps.setdefault(cap, []).append(model)
+    cap_text = " / ".join(f"{cap}: {', '.join(models)}" for cap, models in sorted(caps.items(), key=lambda item: effort_rank(item[0])))
+    notes = [
+        "",
+        'override: herdr worker|role --tier TIER --effort LEVEL --why "사유" — 기본값을 쓰고 업무 난이도가 다를 때만. --tier/--effort에는 --why 필수',
+        f"effort: {' < '.join(EFFORT_LEVELS)} — 모델 상한 초과는 거부 ({cap_text})",
+        f"gate: {'·'.join(sorted(GATE_ROLES))}는 기본 tier 고정, effort {GATE_MIN_EFFORT} 이상",
+        f"fixed: {'·'.join(sorted(FIXED_LAUNCH_ROLES))}(planner·architect 포함)는 기본값 고정, override 거부",
+    ]
+    return "\n".join(["\t".join(row) for row in rows] + notes)
 
 
 class ExecutionStep(NamedTuple):
@@ -211,6 +372,13 @@ def add_engine_option(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--engine", choices=AGENT_ENGINES, default=None, help="AI engine for newly started herdr agents")
 
 
+def add_launch_override_options(parser: argparse.ArgumentParser) -> None:
+    """worker·role 전용. orchestrator로 뜨는 서브커맨드에는 붙이지 않는다 — 기준값 고정."""
+    parser.add_argument("--tier", choices=tuple(MODEL_TIERS), default=None, help="Override the role default model tier (see `team2-agent profiles`)")
+    parser.add_argument("--effort", choices=EFFORT_LEVELS, default=None, help="Override the reasoning effort (see `team2-agent profiles`)")
+    parser.add_argument("--why", default="", help="Reason for --tier/--effort; required with them and logged at start")
+
+
 def config_with_engine(config: Config, args: argparse.Namespace) -> Config:
     engine = getattr(args, "engine", None)
     return config._replace(agent_engine=engine) if engine else config
@@ -265,6 +433,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     sub.add_parser("board", help="Show Hermes team2 board stats")
     sub.add_parser("cockpit", help="Refresh desktop decision cockpit")
     sub.add_parser("cycle", help="Run the full team2 knowledge cycle")
+    sub.add_parser("profiles", help="Print role launch defaults, model tiers, and override rules")
 
     for action in ("brief", "ask", "decide", "approve", "revise", "split", "snooze", "done"):
         action_parser = sub.add_parser(action, help=f"Queue {action} action for a Hermes task")
@@ -288,6 +457,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     add_engine_option(open_parser)
     worker_parser = herdr_sub.add_parser("worker", help="Start an additional herdr worker in the orchestration workspace")
     add_engine_option(worker_parser)
+    add_launch_override_options(worker_parser)
     worker_parser.add_argument("name")
     worker_parser.add_argument("instruction", nargs="*")
     ask_parser = herdr_sub.add_parser("ask", help="Send a structured work packet to an agent, wait, and read the result")
@@ -320,6 +490,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     work_parser.add_argument("instruction", nargs="*")
     role_parser = herdr_sub.add_parser("role", help="Start a role agent inside a ticket cell")
     add_engine_option(role_parser)
+    add_launch_override_options(role_parser)
     role_parser.add_argument("--service", default="triage")
     role_parser.add_argument("ticket_id")
     role_parser.add_argument("role", choices=sorted(TICKET_CELL_ROLES))
@@ -415,6 +586,11 @@ STRUCTURE_RULE = "팀 서비스 기준: 서비스 space -> ticket/work tab -> wo
 APPROVAL_BAN = "YouTrack/KB/git commit/push/PR/DB/prod 변경 금지"
 
 
+def model_override_rule(team2_agent: Path) -> str:
+    """기준 표는 복제하지 않고 profiles 출력만 가리킨다 — SoT는 MODEL_TIERS."""
+    return f"모델은 기본값을 쓰고 업무 난이도가 다를 때만 --tier/--effort/--why로 바꾼다(기준: `{team2_agent} profiles`)."
+
+
 def orchestrator_prompt(config: Config) -> str:
     team2_agent = config.harness / "bin" / "team2-agent"
     return (
@@ -428,6 +604,7 @@ def orchestrator_prompt(config: Config) -> str:
         f"`{team2_agent} herdr work --engine {config.agent_engine} --service {{service|triage}} {{work-id}} \"작업 설명\"`로 work tab을 만든다. "
         "기존 DEV2 tab이면 route. 서비스 불명확하면 triage. 비서비스/단기 병렬 작업은 필요할 때만 "
         f"`{team2_agent} herdr worker --engine {config.agent_engine} orch-worker-1 \"작업 설명\"`로 띄우고 결과 후 자동으로 닫는다. "
+        f"{model_override_rule(team2_agent)} "
         f"idle worker는 `{team2_agent} herdr ask orch-worker-N --expect result \"작업 설명\"`로 쓴다. "
         f"후속 지시는 `{team2_agent} herdr route --engine {config.agent_engine} --service {{service|triage}} {{DEV2-1234|work-id}} \"후속 지시\"`, "
         f"결과 확인은 `{team2_agent} herdr collect {{DEV2-1234|work-id}}`, 종료는 `{team2_agent} herdr close --service {{service}} {{DEV2-1234|work-id}}`. "
@@ -691,6 +868,7 @@ def ticket_lead_prompt(config: Config, ticket_id: str, *, service: str = "triage
         "/ad:work-prep 기준: YouTrack 읽기전용, 카탈로그/정책/vault note 확인. "
         "필요한 role agent만 생성. "
         f"role agent는 `{team2_agent} herdr role --engine {config.agent_engine} --service {service} {ticket_id} analyst \"요구사항과 코드 진입점 분석\"`처럼 띄운다. "
+        f"{model_override_rule(team2_agent)} "
         "TEAM2_ROUTE_PACKET은 후속 지시다. "
         "role 결과는 위키 note에 모아 GLOBAL_RESULT_PACKET으로 Decision Needed/Approval Needed/Blocked만 반환한다. 종료=close. "
         f"사용자 확인 없이 {APPROVAL_BAN}."
@@ -707,6 +885,7 @@ def work_lead_prompt(config: Config, work_id: str, *, service: str = "triage", i
         f"너는 {work_id} work-lead다. Global/worker가 {service_label} space work tab 맡김. "
         f"{STRUCTURE_RULE} 카탈로그/정책/vault note 확인 후 필요 role만 생성. "
         f"role agent는 `{team2_agent} herdr role --engine {config.agent_engine} --service {service} {work_id} developer \"구현 후보와 검증 방법 정리\"`처럼 띄운다. "
+        f"{model_override_rule(team2_agent)} "
         "TEAM2_ROUTE_PACKET은 후속 지시다. "
         "role 결과는 위키 note에 모아 GLOBAL_RESULT_PACKET으로 Decision Needed/Approval Needed/Blocked만 반환한다. 종료=close. "
         f"사용자 확인 없이 {APPROVAL_BAN}."
@@ -746,8 +925,7 @@ def ai_argv(
     non_interactive: bool = False,
     codex_output_path: Path | None = None,
     codex_role: str = "worker",
-    codex_model: str | None = None,
-    codex_effort: str | None = None,
+    override: LaunchOverride = NO_OVERRIDE,
 ) -> list[str]:
     return [
         "zsh",
@@ -760,8 +938,7 @@ def ai_argv(
             non_interactive=non_interactive,
             codex_output_path=codex_output_path,
             codex_role=codex_role,
-            codex_model=codex_model,
-            codex_effort=codex_effort,
+            override=override,
         ),
     ]
 
@@ -775,12 +952,12 @@ def ai_command_text(
     non_interactive: bool = False,
     codex_output_path: Path | None = None,
     codex_role: str = "worker",
-    codex_model: str | None = None,
-    codex_effort: str | None = None,
+    override: LaunchOverride = NO_OVERRIDE,
 ) -> str:
+    """override는 호출 전에 launch_override_error로 검증된 값만 받는다."""
     run_cwd = cwd or config.harness
     if engine == "codex":
-        profile = codex_launch_profile(codex_role, model=codex_model, effort=codex_effort)
+        profile = codex_override_profile(codex_role, override)
         argv = [engine]
         if non_interactive:
             argv.append("exec")
@@ -794,17 +971,22 @@ def ai_command_text(
                 "danger-full-access",
             ]
         )
-        prompt = f"{codex_start_instruction(profile)} {prompt}"
+        prompt = f"{codex_start_instruction(profile, override)} {prompt}"
         if non_interactive and codex_output_path:
             argv.extend(["--output-last-message", str(codex_output_path)])
         if not non_interactive:
             argv.extend(["--ask-for-approval", "never"])
         argv.append(prompt)
     elif engine == "claude":
-        # Codex 전용 옵션(-m, model_reasoning_effort)은 넘기지 않는다. role만 정규화해
-        # 동일 형식의 시작 로그를 요청한다.
-        prompt = f"{claude_start_instruction(codex_launch_profile(codex_role).role)} {prompt}"
-        argv = [engine, "--dangerously-skip-permissions", prompt]
+        # Codex 전용 model_reasoning_effort는 넘기지 않는다. role을 정규화해 --model을 지정하고,
+        # effort는 override가 있을 때만 Claude CLI의 --effort로 넘긴다.
+        role = launch_role(codex_role)
+        model = claude_override_model(role, override)
+        prompt = f"{claude_start_instruction(role, model, override)} {prompt}"
+        argv = [engine, "--dangerously-skip-permissions", "--model", model]
+        if override.effort:
+            argv.extend(["--effort", override.effort])
+        argv.append(prompt)
     else:
         argv = [engine, prompt]
     return f"cd {shlex.quote(str(run_cwd))}; {shlex.join(argv)}"
@@ -1075,6 +1257,7 @@ def start_worker_command(
     codex_output_path: Path | None = None,
     split: str = DEFAULT_HERDR_PANE_SPLIT,
     focus: bool | None = False,
+    override: LaunchOverride = NO_OVERRIDE,
 ) -> list[str]:
     command = [
         HERDR,
@@ -1100,6 +1283,7 @@ def start_worker_command(
                 non_interactive=bool(instruction and selected_engine == "codex"),
                 codex_output_path=codex_output_path,
                 codex_role="worker",
+                override=override,
             ),
         ]
     )
@@ -1204,6 +1388,7 @@ def start_role_agent_command(
     service: str = "triage",
     engine: str | None = None,
     cwd: Path | None = None,
+    override: LaunchOverride = NO_OVERRIDE,
 ) -> list[str]:
     agent_cwd = cwd or config.harness
     command = [
@@ -1231,6 +1416,7 @@ def start_role_agent_command(
                 config,
                 cwd=agent_cwd,
                 codex_role=codex_role_for_team2_role(role),
+                override=override,
             ),
         ]
     )
@@ -1301,37 +1487,33 @@ def start_work_lead_steps(config: Config, tab: HerdrTab, work_id: str, *, servic
     return [ExecutionStep(start_work_lead_command(config, tab_id=tab.tab_id, work_id=work_id, service=service, instruction=instruction, cwd=cwd), config.harness)]
 
 
-def start_role_agent_steps(config: Config, tab: HerdrTab, ticket_id: str, role: str, *, service: str, instruction: str, cwd: Path) -> list[ExecutionStep]:
+def start_role_agent_steps(
+    config: Config,
+    tab: HerdrTab,
+    ticket_id: str,
+    role: str,
+    *,
+    service: str,
+    instruction: str,
+    cwd: Path,
+    override: LaunchOverride = NO_OVERRIDE,
+) -> list[ExecutionStep]:
+    start = ExecutionStep(
+        start_role_agent_command(
+            config,
+            tab_id=tab.tab_id,
+            ticket_id=ticket_id,
+            role=role,
+            instruction=instruction,
+            service=service,
+            cwd=cwd,
+            override=override,
+        ),
+        config.harness,
+    )
     if tab.root_pane_id:
-        return [
-            ExecutionStep(
-                start_role_agent_command(
-                    config,
-                    tab_id=tab.tab_id,
-                    ticket_id=ticket_id,
-                    role=role,
-                    instruction=instruction,
-                    service=service,
-                    cwd=cwd,
-                ),
-                config.harness,
-            ),
-            ExecutionStep([HERDR, "pane", "close", tab.root_pane_id], config.harness),
-        ]
-    return [
-        ExecutionStep(
-            start_role_agent_command(
-                config,
-                tab_id=tab.tab_id,
-                ticket_id=ticket_id,
-                role=role,
-                instruction=instruction,
-                service=service,
-                cwd=cwd,
-            ),
-            config.harness,
-        )
-    ]
+        return [start, ExecutionStep([HERDR, "pane", "close", tab.root_pane_id], config.harness)]
+    return [start]
 
 
 def start_board_command(config: Config, *, workspace_id: str | None = None) -> list[str]:
@@ -1493,6 +1675,10 @@ def ensure_ticket_tab(workspace: HerdrWorkspace, ticket_id: str, config: Config,
 
 def run_herdr_worker(args: argparse.Namespace, config: Config, execute=None) -> int:
     should_emit = execute is None
+    selected_engine = args.engine or config.agent_engine
+    override = launch_override_from_args(args)
+    if reject_launch_override(selected_engine, "worker", override):
+        return 2
     if execute is None:
         execute = lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False, capture_output=True)
     list_proc = execute([HERDR, "workspace", "list"], config.harness)
@@ -1502,7 +1688,6 @@ def run_herdr_worker(args: argparse.Namespace, config: Config, execute=None) -> 
     if not workspace:
         return 2
     instruction = instruction_text(args.instruction, "")
-    selected_engine = args.engine or config.agent_engine
     codex_non_interactive = bool(instruction and selected_engine == "codex")
     result_path = codex_worker_result_path(args.name) if codex_non_interactive else None
     if result_path:
@@ -1518,6 +1703,7 @@ def run_herdr_worker(args: argparse.Namespace, config: Config, execute=None) -> 
             name=args.name,
             instruction=instruction,
             codex_output_path=result_path,
+            override=override,
         ),
         config.harness,
     )
@@ -1829,6 +2015,9 @@ def run_herdr_tickets(args: argparse.Namespace, config: Config, execute=None) ->
 
 
 def run_herdr_role(args: argparse.Namespace, config: Config, execute=None) -> int:
+    override = launch_override_from_args(args)
+    if reject_launch_override(config.agent_engine, codex_role_for_team2_role(args.role), override):
+        return 2
     if execute is None:
         execute = lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False, capture_output=True)
     list_proc = execute([HERDR, "workspace", "list"], config.harness)
@@ -1844,7 +2033,7 @@ def run_herdr_role(args: argparse.Namespace, config: Config, execute=None) -> in
         return 2
     instruction = instruction_text(args.instruction, "")
     code = run_steps(
-        start_role_agent_steps(config, tab, args.ticket_id, args.role, service=service, instruction=instruction, cwd=workspace_cwd),
+        start_role_agent_steps(config, tab, args.ticket_id, args.role, service=service, instruction=instruction, cwd=workspace_cwd, override=override),
         execute,
     )
     if code != 0:
@@ -2043,6 +2232,9 @@ def run(
 ) -> int:
     cfg = config or default_config()
     parsed = parse_args(argv)
+    if parsed.command == "profiles":
+        print(launch_profiles_text())
+        return 0
     if parsed.command == "herdr":
         cfg = config_with_engine(cfg, parsed)
         if parsed.herdr_command == "open":
