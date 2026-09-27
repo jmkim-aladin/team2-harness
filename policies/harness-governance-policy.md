@@ -78,10 +78,10 @@
 | **하네스 개선 방향(북극성)** | `policies/harness-north-star.md` | harness-governance-policy, `.claude/commands/ad/harness-optimize.md`, CLAUDE.md (전부 링크만) |
 | **컨텍스트 예산·외부 스택 판정** | `policies/harness-governance-policy.md` §컨텍스트 예산 + `docs/skill-stack-and-workflow-plan.md` | CLAUDE.md, AGENTS.md, `.claude/commands/ad/harness-optimize.md` (링크만) |
 | **작업 플로우·스킬 인덱스** | `docs/harness-guide.md` §작업 플로우 | CLAUDE.md, AGENTS.md (링크만) |
-| **DB/SP 첨부물 (PR 단계)** | `policies/code-review-policy.md` | engineering/legacy-modernization/gstack-override-policy, templates (링크만) |
+| **DB/SP 첨부물 (PR 단계)** | `policies/code-review-policy.md` | engineering/legacy-modernization-policy, templates (링크만) |
 | **DB/SP 첨부물 (배포 단계)** | `policies/release-policy.md` | 동일 |
 | **시크릿 취급 공통 원칙** | `policies/security-policy.md` §취급 공통 원칙 | aws-secrets-convention, local-credentials-policy, datadog-api-policy (링크만) |
-| **Co-Authored·커밋 메시지 품질** | `policies/ai-usage-policy.md` §메시지 작성 품질 | `policies/engineering-policy.md`, `policies/branching-strategy.md`, `policies/gstack-override-policy.md`, AGENTS.md (전부 링크만) |
+| **Co-Authored·커밋 메시지 품질** | `policies/ai-usage-policy.md` §메시지 작성 품질 | `policies/engineering-policy.md`, `policies/branching-strategy.md`, AGENTS.md (전부 링크만) |
 | **세션 컨텍스트 규율** | `memory/claude-base.md` §세션 컨텍스트 규율 | CLAUDE.md (링크만), AGENTS.md (Codex 로드 경로 부재로 기능적 복제 — 머리에 SoT 주석) |
 | **AI 승인 게이트 (커밋·푸시·머지·티켓·KB)** | `policies/ai-usage-policy.md` §AI 작업 가드레일 | CLAUDE.md, AGENTS.md, `.claude/commands/ad/data-request.md`·`kb-publish.md`·`weekly-report.md`, `.codex/skills/dev2-ad-commands-ko`·`dev2-team-harness-ko` — 짧은 invariant라 링크 대신 재서술을 허용한다. 문구가 갈리면 SoT를 고치고 사본을 맞춘다 |
 | **티켓 본문의 로컬 경로 취급** | `policies/ai-usage-policy.md` §AI 작업 가드레일 | `docs/sprint/ticket-guide.md`, `.claude/commands/ad/work-close.md` (근거 인용) |
@@ -90,5 +90,5 @@
 | **하네스 자체 변경 티켓 예외** | `policies/branching-strategy.md` §개발2팀 하네스 예외 | CLAUDE.md, `.codex/skills/dev2-team-harness-ko/SKILL.md` |
 | **하네스 갱신 트리거** | `docs/harness-guide.md` §하네스 갱신 트리거 | `templates/dod-checklist.md`, `templates/pr-template.md` (링크만) |
 | **현대화 4트랙** | `policies/legacy-modernization-policy.md` §현대화 4트랙 | `templates/service-harness/*.tmpl` 5종, `templates/ticket-templates/modernization.md` (링크만) |
-| **SP 직접 호출 금지** | `policies/engineering-policy.md` §기술 스택 원칙 | `policies/legacy-modernization-policy.md`, `policies/gstack-override-policy.md`, CLAUDE.md (링크만) |
+| **SP 직접 호출 금지** | `policies/engineering-policy.md` §기술 스택 원칙 | `policies/legacy-modernization-policy.md`, CLAUDE.md (링크만) |
 | **티켓 노트 스켈레톤** | `docs/sprint/work-prep-note-template.md` | `templates/vault-notes/ticket.md` (최소 스켈레톤 + 링크) |

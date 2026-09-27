@@ -18,7 +18,7 @@
 ## 작업 플로우
 
 ```
-정렬 → 스펙+분할 → 착수 준비 → 구현 → 리뷰 → 종료
+정렬 → 스펙+분할 → 착수 준비 → (설계 검증) → 구현 → 리뷰 → 종료
 ```
 
 | 단계 | 명령 | 하는 일 |
@@ -26,11 +26,12 @@
 | 정렬 | `/ad:grill` | `grilling`+`domain-modeling` — frontier 라운드, 용어집·결정 기록 |
 | 스펙+분할 | `/ad:ticket` | 5W1H Feature 발행 → Task 분할 |
 | 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
+| 설계 검증 (선택) | `/ad:eng-review` | 스코프 챌린지 + 아키텍처·품질·테스트·성능 이슈 판정 — 1일 이상·경계 변경 시 |
 | 구현 | `/ad:implement` | vendored `implement`(내부 `tdd`) — seam 합의, red→green |
 | 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 |
 | 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
 
-온램프: 버그 → `diagnosing-bugs`(모델 호출) 또는 `/investigate` / 프로토타입 필요 → `prototype` / 대형 안개 과제 → `/wayfinder` / 데이터 추출 → `/ad:data-request` / 월말 → `/ad:sprint-close-check`, `/ad:capacity-plan`
+온램프: 버그 → `diagnosing-bugs`(모델 호출) / 프로토타입 필요 → `prototype` / 대형 안개 과제 → `/wayfinder` / 데이터 추출 → `/ad:data-request` / 월말 → `/ad:sprint-close-check`, `/ad:capacity-plan`
 
 규모별: 1시간 이내(오타·설정) 바로 처리 / 반나절(버그) 준비→구현→리뷰 / 1일 이상 전체 플로우.
 
@@ -80,5 +81,5 @@
 
 - 단계 분리(개발/검증/배포)는 조직 현실 기반 수평 분할 — 수직 슬라이스는 개발 Task 내부에만
 - spec은 YouTrack Feature 본문(5W1H). 별도 spec 파일을 만들지 않는다
-- gstack 스킬은 `policies/gstack-override-policy.md`, mattpocock 스킬은 `policies/overrides/mattpocock.md`가 우선
+- mattpocock 스킬은 `policies/overrides/mattpocock.md`가 우선
 - mattpocock 스킬의 이슈 트래커·도메인 문서 설정: `$TEAM2_HARNESS_PATH/docs/agents/` (issue-tracker.md, domain.md). repo 루트 CONTEXT.md 를 만들지 않는다

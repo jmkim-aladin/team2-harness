@@ -19,6 +19,7 @@ Codex는 team2 하네스 command 파일을 source of truth로 읽고 같은 절�
 
 - `plan`: grill 결과를 vault 다세션 계획으로 합성
 - `plan-run`: vault 계획의 internal milestone 하나를 구현·검증하고 진행 기록
+- `eng-review`: 구현 전 계획·설계 검증 (스코프·아키텍처·코드 품질·테스트·성능)
 - `implement`: YouTrack 5W1H spec 기반 구현
 - `ticket`: 티켓 생성/5W1H
 - `work-prep`: 작업 준비, 위키 노트

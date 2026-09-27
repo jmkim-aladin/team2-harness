@@ -246,8 +246,8 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 ### 1. 개발 티켓 (메인 플로우)
 
 ```
-/ad:grill → /ad:ticket → /ad:work-prep → /ad:implement → /ad:code-review → /ad:work-close
-  정렬        스펙+분할      착수 준비        구현(tdd)       리뷰            종료
+/ad:grill → /ad:ticket → /ad:work-prep → (/ad:eng-review) → /ad:implement → /ad:code-review → /ad:work-close
+  정렬        스펙+분할      착수 준비        설계 검증           구현(tdd)       리뷰            종료
 ```
 
 | 단계 | 동사 | 엔진 |
@@ -255,6 +255,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 정렬 | `/ad:grill` | `grilling` + `domain-modeling` — frontier 라운드, 용어집·결정 기록 |
 | 스펙+분할 | `/ad:ticket` | 5W1H 합성 + Task 분할 (YouTrack) |
 | 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
+| 설계 검증 (선택) | `/ad:eng-review` | 스코프 챌린지 + 아키텍처·코드 품질·테스트·성능 이슈 판정 — 1일 이상·경계 변경 시 |
 | 구현 | `/ad:implement` | vendored `implement`(내부 `tdd`) — seam 합의, red→green |
 | 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 |
 | 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
@@ -271,15 +272,15 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 세션보다 큰 안개 과제 | `/wayfinder` — 결정 티켓 지도, 길이 보이면 `/ad:ticket`으로 합류 |
 | 설계 질문을 코드로 답해야 | `prototype` (모델 호출) |
 | 문서·API 조사 위임 | `research` (모델 호출, 백그라운드) |
-| 아키텍처 검토 | `/ad:architecture-analysis`, `/plan-eng-review`, `/plan-ceo-review` |
+| 기존 저장소 아키텍처 분석 | `/ad:architecture-analysis` |
+| 구현 전 계획·설계 검증 | `/ad:eng-review` |
 | 다른 조직에 결정 질문 | `/to-questionnaire` |
 
 ### 3. 버그·장애
 
 | 상황 | 동사·엔진 |
 |---|---|
-| 어려운 버그·성능 회귀 | `diagnosing-bugs` (모델 호출 — "고장났다" 신호에 자동) |
-| 근본 원인 조사 | `/investigate` |
+| 어려운 버그·성능 회귀·근본 원인 조사 | `diagnosing-bugs` (모델 호출 — "고장났다" 신호에 자동) |
 | 장애 대응 절차 | [policies/incident-response.md](../policies/incident-response.md) |
 
 ### 4. 스프린트·팀 운영 (주기 업무)
@@ -305,7 +306,6 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 낯선 저장소에 처음 투입 | `/eli5-onboard` — 30분 안에 1분 설명 가능 → 업무→용어→흐름→구조 순 단계별 커리큘럼 |
 | 방금 설명이 이해 안 될 때 재설명 | `/wait-what` — 팀 용어집 어휘로 재피치 |
 | 새 기술·개념 다세션 학습 | `/teach` — 현재 디렉토리를 학습 워크스페이스로 |
-| 문서 생성 | `/document-generate` |
 
 ### 6. 데이터 요청
 
@@ -408,6 +408,7 @@ PR 생성 (체크리스트 포함)
 | `/ad:ticket` | YouTrack 티켓 생성 (5W1H) | 구현됨 |
 | `/ad:plan` | grill 결과를 vault 다세션 계획·진행 원장으로 합성 | 구현됨 |
 | `/ad:plan-run` | vault 계획의 internal milestone 하나를 실행하고 진행·근거 기록 | 구현됨 |
+| `/ad:eng-review` | 구현 전 계획·설계 검증 (스코프 챌린지 → 아키텍처·품질·테스트·성능 → 교차 모델 의견) | 구현됨 |
 | `/ad:work-board` | Hermes work board projection + dispatch request 갱신 | 구현됨 |
 | `/ad:ticket-split` | 2일 초과 이슈 분할 | 미구현 |
 | `/ad:time-log` | 소요시간 기록 | 미구현 |

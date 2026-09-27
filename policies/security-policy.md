@@ -33,3 +33,4 @@
 - OWASP Top 10 취약점 주의 (SQL Injection, XSS 등)
 - 특히 레거시 SP 호출 시 파라미터 바인딩 필수
 - 외부 입력은 반드시 검증 후 사용
+- 기본: 보안 점검은 Claude Code 내장 `/security-review`(현재 브랜치 변경분)로 하고, 이 문서와 [aws-secrets-convention.md](./aws-secrets-convention.md) 네이밍 준수를 함께 확인한다

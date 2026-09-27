@@ -174,6 +174,12 @@ Task: DEV2-5678 "로그인 오류 수정"
 
 > 커밋 메시지 본문 품질 규칙(AI 생성 시 `Co-Authored-By` 푸터 금지, verbatim 인용/구현 단계 bullet 회피)은 [ai-usage-policy.md `메시지 작성 품질`](./ai-usage-policy.md#메시지-작성-품질) 참고.
 
+### PR 제목
+
+```
+[{이슈ID}] {작업 요약}
+```
+
 ### Merge 방식
 
 develop PR은 **squash merge를 사용하지 않는다**. Task 단위 커밋 이력을 develop에 그대로 보존한다. Task 단위로 되돌리고 추적하기 위해서다.

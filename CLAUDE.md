@@ -54,7 +54,7 @@
 
 ## 외부 스킬
 
-gstack 스킬 사용 시 [policies/gstack-override-policy.md](./policies/gstack-override-policy.md) 참조 — 팀 Git 컨벤션·배포 정책이 gstack 기본값보다 우선한다. 실사용 유지분은 [docs/gstack-usage-guide.md](./docs/gstack-usage-guide.md).
+gstack은 제거됐다(2026-09-28) — `plan-eng-review`는 `/ad:eng-review`로 번안, `investigate`→`diagnosing-bugs`, `context-save`·`context-restore`→`/handoff`, `review`→`/ad:code-review`. 판정: [docs/skill-audit-baseline.md](./docs/skill-audit-baseline.md) 6회차.
 
 superpowers는 제거됐다(2026-08-08) — mattpocock이 대체: `brainstorming`→`/ad:grill`, `systematic-debugging`→`diagnosing-bugs`, `executing-plans`·`tdd`→`/ad:implement`+`tdd`. 판정: [policies/overrides/mattpocock.md](./policies/overrides/mattpocock.md).
 

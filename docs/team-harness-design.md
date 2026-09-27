@@ -48,7 +48,7 @@ graph TD
     Root --> Docs["docs/<br/>가이드·설계·OKR·스프린트"]
 
     Policies --> P1["engineering / branching<br/>code-review / ai-usage"]
-    Policies --> P2["gstack-override<br/>knowledge-base / claude-md"]
+    Policies --> P2["overrides/ (외부 스킬)<br/>knowledge-base / claude-md"]
     Policies --> P3["security / incident<br/>release / team-members"]
 
     Catalog --> C1["max · tobe (legacy)"]
@@ -106,7 +106,7 @@ AI가 레포를 처음 만났을 때 읽는 파일. 단 71줄.
 | `code-review-policy.md` | 1명 이상 승인, 셀프 머지 금지 |
 | `release-policy.md` | 프로덕션 배포 사람 승인 필수 |
 | `ai-usage-policy.md` | AI가 할 수 있는 것/없는 것 |
-| `gstack-override-policy.md` | 외부 AI 도구가 우리 컨벤션 어기지 않게 |
+| `overrides/mattpocock.md` | 외부 AI 스킬이 우리 컨벤션 어기지 않게 |
 | `knowledge-base-policy.md` | git vs YouTrack KB 분담 |
 | `claude-md-policy.md` | CLAUDE.md 최소화 규칙 |
 | `legacy-modernization-policy.md` | 레거시 현대화 트랙 (observe/wrap/extract/freeze) |
@@ -317,15 +317,17 @@ CLAUDE.md 최상단에 박혀있는, AI가 가장 먼저 읽는 5줄:
 5. DB/SP 변경 별도 승인, 프로덕션 배포 사람 승인
 ```
 
-이 5줄이 안 지켜지는 패턴이 발견되면 → 가드레일로 박는다 (`/ad:ticket`의 7일 검증, `gstack-override-policy`의 커밋 형식 강제 등).
+이 5줄이 안 지켜지는 패턴이 발견되면 → 가드레일로 박는다 (`/ad:ticket`의 7일 검증, `policies/overrides/`의 외부 스킬 오버라이드 등).
 
 ---
 
-## 12. 외부 도구 길들이기 — `gstack-override-policy`
+## 12. 외부 도구 길들이기 — `policies/overrides/`
 
-gstack 같은 외부 AI 스킬은 자체 컨벤션이 있다 (예: conventional commits `feat: …`).
+외부 AI 스킬은 자체 컨벤션이 있다 (예: conventional commits `feat: …`).
 
-우리 팀은 `[T2-123] 작업 내용` 형식을 쓴다. 외부 도구가 우리 규칙을 어기지 않게 명시적으로 오버라이드.
+우리 팀은 `[T2-123] 작업 내용` 형식을 쓴다. 외부 도구가 우리 규칙을 어기지 않게 명시적으로 오버라이드. 지금은 vendored 외부 스킬마다 `policies/overrides/{스택}.md`에 팀 규칙 우선과 upstream 대비 차이를 적는다 (현재 [mattpocock.md](../policies/overrides/mattpocock.md)).
+
+이 계층의 시작은 gstack이었다. 당시 `gstack-override-policy.md` 발췌 — gstack은 2026-09-28 하네스에서 제거됐고, 팀 규칙은 각 SoT([branching-strategy.md](../policies/branching-strategy.md), [ai-usage-policy.md](../policies/ai-usage-policy.md))에 남았다:
 
 ```markdown
 ### 커밋 메시지 형식
@@ -370,7 +372,7 @@ flowchart TD
 |---|---|
 | 코드리뷰 시 PR 본문에 로컬 하네스 경로 노출 | `ad:code-review`에 노출 금지 가드 + memory에 박음 |
 | Feature가 1주 넘는데 그냥 생성됨 | `ad:ticket`에 7일 검증·차단 추가 |
-| gstack `/ship`이 Co-Authored-By를 자동 삽입 | `gstack-override-policy.md`에 금지 명시 |
+| gstack `/ship`이 Co-Authored-By를 자동 삽입 | `ai-usage-policy.md` §메시지 작성 품질에 금지 명시 |
 | AI가 SP 직접 호출 코드를 썼음 | `ai-usage-policy.md` + 서비스 `LEGACY_BOUNDARY.md` 보강 |
 
 ### `/ad:harness-optimize` — 하네스 자가 점검 스킬
@@ -403,7 +405,7 @@ flowchart LR
 | 신입 온보딩 | 슬랙·노션·머릿속 헤맴 | CLAUDE.md → policies/ 한 번 |
 | AI 작업물 일관성 | 매번 컨텍스트 붙여넣기 | 자동 적용, 가드레일 작동 |
 | 정책 변경 추적 | 슬랙 합의 → 잊힘 | git PR로 이력 남음 |
-| 외부 도구 컨벤션 충돌 | gstack이 멋대로 커밋 | gstack-override로 강제 |
+| 외부 도구 컨벤션 충돌 | 외부 스킬이 자체 형식으로 커밋 | `policies/overrides/`로 강제 |
 
 ---
 
@@ -461,7 +463,7 @@ flowchart TB
 - `policies/claude-md-policy.md` — 진입점 설계 철학
 - `policies/ai-usage-policy.md` — AI 가드레일 + 하네스 개선 루프
 - `policies/knowledge-base-policy.md` — git ↔ KB 분담
-- `policies/gstack-override-policy.md` — 외부 도구 어댑터
+- `policies/overrides/mattpocock.md` — 외부 스킬 어댑터
 - `.claude/commands/ad/ticket.md` — 가장 정교한 스킬 예시
 - `.claude/commands/ad/harness-optimize.md` — 자가 점검 스킬
 - `catalog/_template.yaml` — 서비스 프로파일 표준

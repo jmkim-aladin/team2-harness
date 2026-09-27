@@ -34,9 +34,7 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 
 ## 도구 대응
 
-gstack 본문은 Claude Code 도구명을 사용하므로 Codex에서는 이렇게 읽는다: `Bash`→`exec_command`, `Read`→`sed`/`rg`/`cat`, `Write`·`Edit`→`apply_patch`, `Grep`·`Glob`→`rg`/`find`, `Agent`→가능하면 multi-agent, `AskUserQuestion`→짧은 직접 질문.
-
-gstack 스킬 사용 시 [policies/gstack-override-policy.md](./policies/gstack-override-policy.md)를 참조한다 — 팀 Git 컨벤션·배포 정책이 gstack 기본값보다 우선한다.
+`/ad:*` SoT와 vendored 스킬 본문은 Claude Code 도구명을 사용하므로 Codex에서는 이렇게 읽는다: `Bash`→`exec_command`, `Read`→`sed`/`rg`/`cat`, `Write`·`Edit`→`apply_patch`, `Grep`·`Glob`→`rg`/`find`, `Agent`→가능하면 multi-agent, `AskUserQuestion`→짧은 직접 질문.
 
 ## 세션 컨텍스트 규율
 

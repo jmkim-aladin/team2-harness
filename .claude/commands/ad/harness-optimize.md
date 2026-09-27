@@ -133,7 +133,7 @@ curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content
 
 ## 스택 감사 (스택 모드)
 
-하네스 **바깥**을 본다 — 상주 컨텍스트 예산, 외부 스킬 스택(gstack·superpowers 등), 훅, 세션 지표. 스킬 모드가 "우리 스킬이 잘 쓰였나"를 보는 반면 이 모드는 "환경이 모델의 사고 대역을 좁히고 있지 않나"를 본다.
+하네스 **바깥**을 본다 — 상주 컨텍스트 예산, 외부 스킬 스택(vendored mattpocock·플러그인 등), 훅, 세션 지표. 스킬 모드가 "우리 스킬이 잘 쓰였나"를 보는 반면 이 모드는 "환경이 모델의 사고 대역을 좁히고 있지 않나"를 본다.
 
 기준·판정 근거: [docs/skill-stack-and-workflow-plan.md](../../../docs/skill-stack-and-workflow-plan.md)
 
@@ -187,7 +187,7 @@ curl -s -H "$AUTH" "$BASE/api/articles/REF-A-3122?fields=updated,summary,content
 REPO="/Users/jm/Documents/workspace/team2"
 # 운영업무/도메인/회의/티켓/OKR 성격 후보
 find "$REPO/docs" -maxdepth 2 -type f -name '*.md' \
-  | grep -Ev 'sprint/|superpowers/|setup-guide|harness-guide|gstack-usage-guide|analysis-guides|wiki-navigation-guide|service-harness-setup|team-harness-design|db-migration|legacy-modernization|ralph-loop' \
+  | grep -Ev 'sprint/|setup-guide|harness-guide|analysis-guides|wiki-navigation-guide|service-harness-setup|team-harness-design|db-migration|legacy-modernization|ralph-loop' \
   | grep -E 'DEV2-|domain-guide|firewall-application|okr|meeting'
 ```
 

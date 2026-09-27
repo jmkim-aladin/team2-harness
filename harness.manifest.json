@@ -54,24 +54,7 @@
   },
   "external_skills": {
     "_doc": "외부 스택 존치 선언. keep 밖 항목은 --check 에서 경고, --reset 에서 격리. 판정 근거: docs/skill-audit-baseline.md 3회차.",
-    "claude_keep": [
-      "_gstack-command",
-      "browse",
-      "codex",
-      "context-restore",
-      "context-save",
-      "document-generate",
-      "gstack",
-      "gstack-upgrade",
-      "investigate",
-      "plan-ceo-review",
-      "plan-eng-review",
-      "qa",
-      "review",
-      "setup-gbrain",
-      "ship",
-      "sync-gbrain"
-    ],
+    "claude_keep": [],
     "claude_unmanaged_links": [
       "computer-use",
       "orchestration"
@@ -112,9 +95,9 @@
       "date": "2026-08-08",
       "reason": "90일 호출 0 + 훅 9개 상시 발화. .planning/ 산출물은 repo 보존, 재개 시 재설치"
     },
-    "gstack-unused-48": {
-      "date": "2026-08-08",
-      "reason": "90일 실사용 0 — 목록은 docs/skill-audit-baseline.md 3회차"
+    "gstack": {
+      "date": "2026-09-28",
+      "reason": "30일 실사용이 plan-eng-review 1종에 집중(Claude 8회·Codex 6회), 나머지 휴면. Codex 리뷰 워커가 gstack review 본문(~39k tok)을 자가 로드, 2026-08-27 업그레이드가 비활성 스킬 54종을 재링크한 드리프트. plan-eng-review 는 /ad:eng-review 로 번안. 2026-08-08 선제거한 휴면 48종(목록은 docs/skill-audit-baseline.md 3회차)도 이 항목에 흡수"
     },
     "superpowers": {
       "date": "2026-08-08",

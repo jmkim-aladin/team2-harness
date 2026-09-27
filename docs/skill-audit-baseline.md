@@ -3,7 +3,33 @@
 기준: [policies/skill-authoring-principles.md](../policies/skill-authoring-principles.md) | 갱신: `/ad:harness-optimize 스킬`·`제약`·`스택`
 통계: `python3 tools/skill_usage_report.py` (팀 스킬) | `python3 tools/harness_context_audit.py` (컨텍스트·외부 스택·훅)
 
-최종 감사일: 2026-09-16 (5회차 — 제약 모드, SoT 사본 전수 대조)
+최종 감사일: 2026-09-28 (6회차 — 스택 모드, gstack 제거)
+
+## 6회차 감사 (2026-09-28) — gstack 제거
+
+계기: 3회차에 "선별 유지 16종 · sunset 2026-11-08"로 둔 gstack의 실사용·토큰을 재측정. Claude 로그(30일 보존, 08-28~09-27, 288세션) + Codex 로그(05~09월, 1,303세션) 전수.
+
+### 실측
+
+- **호출은 한 종에 몰렸다.** Claude 30일 gstack 호출 9회 = `plan-eng-review` 8 + `browse` 1, 나머지 14종 0. Codex `$` 명시 호출은 전체 86회 중 `plan-eng-review` 54, 최근 30일은 7회(plan-eng-review 6, plan-ceo-review 1). 같은 30일 `ad:code-review`는 Claude에서만 184회
+- **비용은 Codex 자가 로드에 있었다.** Codex 리뷰 워커(`/ad:code-review` 교차 모델 fan-out, "You are reviewing a GitHub pull request…")가 스킬 목록의 `review: Pre-landing PR review`를 보고 gstack `review` 본문(88~106KB)을 스스로 읽었다 — 9월 54세션, 세션당 ≈38.8k tok(Codex 창 258k의 15%). 54세션 중 52세션은 `$ad-code-review` 없는 워커 세션. 자동 수정까지 하는 절차라 "판정만" 규격과 충돌 위험
+- **드리프트 재발.** 2026-08-27 gstack 업그레이드(1.60.1.0)가 `~/.codex/skills/gstack-*` 54종을 재링크. `config.toml` 비활성은 42종, 12종이 bare 이름과 중복 노출(`cso`·`claude` 포함). `setup_harness.py --check`는 경고했지만 자동 실행 경로가 없어 한 달간 방치
+- 상주: Claude gstack description 16종 ≈300 tok, Codex 목록 gstack 10종 ≈1.2k tok. Claude `plan-eng-review` 1회 = 본문 65.5k자(≈16k tok), 요청 17.5회, 출력 평균 43k — 30일 Claude 총량 대비 1% 미만
+- superpowers(08-08 제거) 사후 확인: 제거 전 Codex에서 `using-superpowers` 부트스트랩 283세션·`verification-before-completion` 165세션 등 자가 로드 ≈3.4M tok. 제거 후 1세션(당일). 대체재(`ad-plan`·`wayfinder`·`ad-implement`·`tdd`·`diagnosing-bugs`)가 자리를 채움
+
+### 적용 완료
+
+- [x] **gstack 전면 제거** — `harness.manifest.json` `claude_keep`에서 16종 제거, `removed.gstack` 등재(`gstack-unused-48` 흡수). `policies/gstack-override-policy.md`·`docs/gstack-usage-guide.md` 삭제. 규칙별 대조: 브랜치·커밋 형식·Co-Authored·배포 승인·DB/SP·리뷰어 승인·레거시 경계·AWS Secrets는 각 SoT에 이미 있음. SoT 부재였던 PR 제목은 `branching-strategy.md` §PR 제목으로, `/security-review` 지침은 `security-policy.md`로 이관. "커밋 분류(회고·집계)"는 소비처가 0(원 소비자 gstack `/retro`는 3회차에 비활성)이라 이관 없이 폐기 [북극성 4]
+- [x] **`/ad:eng-review` 신설** — `plan-eng-review`의 방법(Step 0 스코프 챌린지, 4섹션, 신뢰도·인용 게이트, 커버리지 다이어그램, 교차 모델 의견, 필수 산출)만 번안. 1,877줄 → 본문 + 점검표 2파일. gstack preamble·텔레메트리·학습 저장·리뷰 대시보드·연쇄 호출 제외, 팀 경계(카탈로그·공통 서비스·단계 분리·vault 기록) 추가. 교차 모델 프롬프트 첫 줄에 스킬 파일 읽기 금지 — 워커 자가 로드 누수 재발 방지. 출처 `docs/eng-review/NOTICE.md`(MIT) [북극성 3]
+- [x] 대체 매핑: `investigate`→`diagnosing-bugs`, `context-save`·`context-restore`→`/handoff`, `review`→`/ad:code-review`, `codex`→`codex exec` 직접(이미 `/ad:code-review`가 그렇게 씀). 대체 없이 폐기: `plan-ceo-review`(30일 1회, 확장 관점은 `/ad:grill`), `document-generate`, `browse`·`qa`, `ship`
+- [x] 플로우 지도(`docs/harness-guide.md`, `memory/claude-base.md`)에 설계 검증 단계 추가, `/investigate`·`/document-generate`·`/plan-*-review` 행 제거
+
+### 기각·이관
+
+- **이관** 개인 환경 격리(사용자 결정 2026-09-28): `~/.claude/skills` gstack 16종·`~/.codex/skills` gstack 67종·`config.toml` gstack 항목 → `skills-disabled/`, `~/.gstack` 격리, `~/.gstack/projects` 산출물 60건 tar 보관. 영구 삭제는 sunset 2026-11-08
+- **이관** 재발 방지 — 외부 스택 업그레이드 뒤 `setup_harness.py --check`가 자동으로 돌지 않는다. 문장 규율이 아니라 훅·주기 감사로 기계화 [북극성 5]
+- **이관** `tools/harness_context_audit.py` §6 "설치 스킬 실사용"이 호출이 아니라 언급을 센다(`ad:code-review` 4,745 vs 실제 184). 감사 지표로 쓰기 전 수정
+- **이관** `.claude/commands/ad/code-review.md` 699행 gstack `/codex review` 언급 — main 작업트리에 미커밋 수정이 있어 이번 브랜치에서 건드리지 않음
 
 ## 5회차 감사 (2026-09-16) — SoT 사본 대조
 

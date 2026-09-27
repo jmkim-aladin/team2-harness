@@ -1,6 +1,6 @@
 # mattpocock/skills 오버라이드 정책
 
-[vendor/mattpocock/](../../vendor/mattpocock/) 스킬 사용 시 팀 규칙이 원본보다 우선한다. gstack의 [gstack-override-policy.md](../gstack-override-policy.md)와 같은 계층.
+[vendor/mattpocock/](../../vendor/mattpocock/) 스킬 사용 시 팀 규칙이 원본보다 우선한다.
 
 - 원본: [mattpocock/skills](https://github.com/mattpocock/skills) v1.2.3 (`6acc160e`), MIT
 - 설치: 17종 vendor (2026-08-09 teach·wait-what 추가 — 최초 채택 시 판정 누락분 정정, 이로써 upstream promoted 25종 전수 판정: 설치 17 + 제외 8) (repo에 고정, `setup_harness.py`가 링크). 설치 목록·제외 목록은 [harness.manifest.json](../../harness.manifest.json)이 SoT

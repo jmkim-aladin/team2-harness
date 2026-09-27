@@ -73,7 +73,7 @@
     "1966285abe9b11f4": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
-      "excerpt": "≈13189tok > 한도 6000tok (43464바이트)",
+      "excerpt": "≈16753tok > 한도 6000tok (55422바이트)",
       "heading": "",
       "path": ".claude/commands/ad/code-review.md",
       "rule": "R5"
@@ -502,14 +502,6 @@
       "path": "docs/sprint/sprint-workflow-execution.md",
       "rule": "R1a"
     },
-    "9b46dfe96a26f360": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "어떤 스킬도 프로덕션 자동 배포를 수행하지 않는다",
-      "heading": "gstack 팀 오버라이드 정책 > 배포 오버라이드 > 프로덕션 배포 사람 승인 필수",
-      "path": "policies/gstack-override-policy.md",
-      "rule": "R1a"
-    },
     "a315e8de869e28f4": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -572,14 +564,6 @@
       "excerpt": "출력(이슈 제목, 노트, 테스트 이름)에는 glossary의 canonical 용어를 쓴다. `_금지 동의어_`로 표류하지 않는다",
       "heading": "Domain docs — 팀 배치 > 소비 규칙",
       "path": "docs/agents/domain.md",
-      "rule": "R1a"
-    },
-    "c02975a3e86ede64": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "시크릿 값 로깅 금지, 민감 필드 마스킹 확인",
-      "heading": "gstack 팀 오버라이드 정책 > 보안 오버라이드 > AWS Secrets 컨벤션",
-      "path": "policies/gstack-override-policy.md",
       "rule": "R1a"
     },
     "c1ed3eb4bf701dc0": {
@@ -732,8 +716,12 @@
     ".claude/commands/ad/capacity-plan.md::가용 용량 분석 (capacity plan)": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침": true,
+    ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 1. PR 정보 수집": true,
+    ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 1. PR 정보 수집 > 릴리스 묶음 PR — 다시 리뷰하지 않고 묶음을 본다": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 3. 이해 패스 — 판정 전에 변경을 이해한다": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 7. 사용자 승인 후 게시": true,
+    ".claude/commands/ad/eng-review.md::설계 검증 (eng-review)": true,
+    ".claude/commands/ad/eng-review.md::설계 검증 (eng-review) > 6. 산출물과 기록": true,
     ".claude/commands/ad/explain.md::설명서 생성": true,
     ".claude/commands/ad/harness-optimize.md::하네스 최적화 (업데이트·최신화·중복제거)": true,
     ".claude/commands/ad/harness-optimize.md::하네스 최적화 (업데이트·최신화·중복제거) > 제약 감사 (제약 모드)": true,
@@ -798,7 +786,7 @@
   },
   "schema_version": 2,
   "summary": {
-    "R1a": 65,
+    "R1a": 63,
     "R1b": 0,
     "R2": 0,
     "R3": 0,
@@ -806,5 +794,5 @@
     "R5": 4,
     "R6": 0
   },
-  "updated": "2026-09-16"
+  "updated": "2026-09-28"
 }
