@@ -162,18 +162,22 @@ team2-agent herdr worker --engine claude orch-worker-3 "추가 분석 작업"
 team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
 ```
 
-### Codex agent 모델 라우팅
+### agent 모델 라우팅
 
-Claude 또는 herdr가 Codex engine을 시작하면 prompt의 역할명만 사용하는 것이 아니라 CLI model과 reasoning effort를 함께 지정한다. 각 agent는 새 작업의 첫 응답 첫 줄에 `[model] role=<role> model=<model> effort=<effort>`를 출력한다.
+herdr가 agent를 시작하면 prompt의 역할명만 쓰지 않고 launch role별 모델을 CLI 인자로 지정한다. Codex는 model과 reasoning effort를, Claude는 `--model`만 지정한다. 각 agent는 새 작업의 첫 응답 첫 줄에 `[model] role=<role> model=<model> effort=<effort>`를 출력한다.
 
-| 실행 대상 | Codex launch role | 모델 |
-|---|---|---|
-| global orchestrator, ticket/work lead, planner, architect | `orchestrator` | `gpt-5.6-sol` · `xhigh` |
-| orch-worker, analyst, developer, designer, data | `worker` | `gpt-5.6-luna` · `max` |
-| reviewer | `reviewer` | `gpt-5.6-sol` · `xhigh` |
-| QA | `verifier` | `gpt-5.6-sol` · `xhigh` |
+| 실행 대상 | launch role |
+|---|---|
+| global orchestrator, ticket/work lead, planner, architect | `orchestrator` |
+| orch-worker, analyst, developer, designer, data | `worker` |
+| reviewer | `reviewer` |
+| QA | `verifier` |
 
-이 launch role은 새 Codex 최상위 thread의 역할이다. 그 thread가 다시 Codex subagent를 생성하면 개인 `~/.codex/config.toml`과 custom agent 설정이 적용된다. Claude engine에는 이 Codex 전용 인자를 전달하지 않는다.
+role별 모델 값은 `tools/team2_agent.py`의 `MODEL_TIERS`(모델 id)·`ROLE_LAUNCH_DEFAULTS`(role→tier·effort)가 SoT다. 문서에 복제하지 않으므로 현재 값은 `team2-agent profiles`로 조회한다.
+
+기본값을 쓰되 업무 난이도가 기본과 다를 때만 `herdr worker`·`herdr role`에 `--tier {fast|workhorse|frontier}`·`--effort`·`--why "사유"`를 붙여 바꾸고, 엔진 중립 tier는 CLI가 `MODEL_TIERS` 표로 엔진별 모델 id로 푼다(tier 표와 규칙도 `team2-agent profiles`가 출력). CLI는 herdr 호출 전에 사유 누락, orchestrator override, reviewer·verifier의 tier 변경·effort 하한 미달, 모델별 effort 상한 초과를 거부하고(exit 2), 통과하면 시작 로그 끝에 `override="<사유>"`를 남긴다. Claude는 override effort가 있을 때만 `--effort`를 받는다.
+
+이 launch role은 새 최상위 thread의 역할이다. Codex thread가 다시 Codex subagent를 생성하면 개인 `~/.codex/config.toml`과 custom agent 설정이 적용된다. Claude engine에는 Codex 전용 `model_reasoning_effort`를 전달하지 않는다.
 
 사용자는 `global-orchestrator` pane에 자연어로 지시한다. 오래 걸리거나 병렬 처리할 비서비스 작업은 orchestrator가 `team2-agent herdr worker --engine {codex|claude} orch-worker-N "작업"`으로 작업 단위 worker를 동적으로 띄운다. instruction이 있는 worker는 결과를 읽은 뒤 자동으로 pane을 닫는다. DEV2 티켓 묶음은 orchestrator가 서비스 판정에 필요한 최소 정보만 확인한 뒤 `team2-agent herdr tickets --engine {codex|claude} --service {service}`로 서비스 space 안에 ticket tab을 만든다. 티켓 상세 정리, 분석, 상태 판단은 각 tab의 `ticket-lead`가 담당하며, `/ad:work-prep` 기준으로 필요한 role agent만 `team2-agent herdr role --engine {codex|claude} --service {service}`로 띄운다. 이미 생성된 티켓/작업에 후속 지시를 보낼 때는 `team2-agent herdr route --engine {codex|claude} --service {service} {DEV2-1234|work-id} "후속 지시"`를 사용하고, 결과 확인은 `team2-agent herdr collect {DEV2-1234|work-id}`로 한다. 종료할 때는 `team2-agent herdr close --service {service} {DEV2-1234|work-id}`로 tab 안의 lead/role pane을 함께 닫는다. 기본은 working/blocked pane이 있으면 닫지 않고, 강제 종료는 `--force`를 명시한다. `team2-agent board`, `cockpit`, `brief`, `ask`, `delegate`, `decide`, `done` 등은 orchestrator/worker/ticket-lead가 내부 도구로 사용한다.
 
