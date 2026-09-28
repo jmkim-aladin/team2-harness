@@ -31,6 +31,13 @@ def sample_card() -> dict[str, object]:
         "path": "wiki/processes/tickets/dev2-1001.md",
         "summary": "A안을 선택할지 결정 필요",
         "suggested_roles": ["orchestrator", "planner"],
+        "attention": "human",
+        "human_request": {
+            "question": "A안으로 결정하나?",
+            "reason": "결제 정책은 사업 결정이다",
+            "recommendation": "A안",
+            "evidence": "wiki/processes/tickets/dev2-1001.md §근거",
+        },
     }
 
 
@@ -86,6 +93,8 @@ class GenerateDecisionCockpitTests(unittest.TestCase):
             self.assertIn("t_1001", markdown)
             self.assertIn("wiki/processes/tickets/dev2-1001.md", markdown)
             self.assertIn("team2-agent brief t_1001", markdown)
+            self.assertIn("질문: A안으로 결정하나?", markdown)
+            self.assertIn("근거: wiki/processes/tickets/dev2-1001.md §근거", markdown)
             stored = json.loads((vault / cockpit.DEFAULT_JSON_PATH).read_text(encoding="utf-8"))
             self.assertEqual(stored["items"][0]["pending_actions"][0]["action_id"], "hba-test")
 
@@ -113,7 +122,44 @@ class GenerateDecisionCockpitTests(unittest.TestCase):
         items = cockpit.build_items({"cards": cards}, {"cards": {}}, {"items": []})
         markdown = cockpit.render_markdown(cockpit.render_json(items, "2026-06-17T00:00:00+09:00", "apply"))
 
+        self.assertEqual(len(items), 41)
         self.assertLess(markdown.count("\n"), 500)
+
+    def test_only_ready_human_requests_become_user_items(self) -> None:
+        legacy = sample_card() | {"id": "legacy"}
+        legacy.pop("attention")
+        incomplete = sample_card() | {"id": "incomplete", "human_request": {"question": "q", "reason": "r"}}
+        review = sample_card() | {"id": "review", "column": "Review Needed", "attention": "agent"}
+        approval = sample_card() | {"id": "approval", "column": "Approval Needed", "attention": "agent"}
+        ready = sample_card() | {"id": "ready"}
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp)
+            write_json(vault / cockpit.DEFAULT_BOARD_JSON,
+                       {"cards": [legacy, incomplete, review, approval, ready]})
+
+            result = cockpit.generate_cockpit(vault, apply=True, updated_at="2026-09-27T00:00:00+09:00")
+
+            self.assertEqual([item["card_id"] for item in result["items"]], ["ready"])
+            self.assertEqual(result["cards"], 1)
+            self.assertEqual(result["board_cards"], 5)
+            self.assertEqual(result["ai_review_queued"], 4)
+            self.assertEqual(result["ai_question_prep"], 3)
+            markdown = (vault / cockpit.DEFAULT_MARKDOWN_PATH).read_text(encoding="utf-8")
+            self.assertIn("- AI 검토 대기: 4 (보드 카드 5)", markdown)
+            self.assertIn("- AI 검토·질문 준비: 3", markdown)
+            self.assertEqual(markdown.count("### ["), 1)
+
+    def test_empty_user_requests_still_report_unfinished_agent_work(self) -> None:
+        approval = sample_card() | {"column": "Approval Needed", "attention": "agent"}
+        items = cockpit.build_items({"cards": [approval]}, {"cards": {}}, {"items": []})
+        counts = cockpit.board_counts({"cards": [approval]}, {"cards": {}}, {"items": []})
+        markdown = cockpit.render_markdown(cockpit.render_json(items, "2026-09-27T00:00:00+09:00", "apply", counts))
+
+        self.assertIn("- 현재 사용자에게 올릴 결정·승인 요청 없음", markdown)
+        self.assertIn("- AI 검토·질문 준비: 1", markdown)
+        self.assertIn("요청이 없다는 것은 완료나 승인을 뜻하지 않는다", markdown)
+        self.assertIn("라벨만으로 사람이 필요한 일이 되지 않는다", markdown)
+        self.assertIn("스스로 승인하지 않는다", markdown)
 
 
 if __name__ == "__main__":

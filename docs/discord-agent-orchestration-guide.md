@@ -89,7 +89,7 @@ python3 "$TEAM2_HARNESS_PATH/tools/generate_decision_board.py" --vault "$LOCAL_W
 
 board card는 `work_id`를 필수 식별자로 가진다. YouTrack 티켓에서 온 업무는 `work_id=DEV2-1234`와 `ticket_id=DEV2-1234`를 함께 가진다. 분석, 프로젝트 고도화, 운영 개선처럼 티켓이 없는 업무는 `canonical_id` 또는 vault path stem을 `work_id`로 사용하고 `ticket_id`는 비운다.
 
-카드 생성 조건:
+AI 검토 목록에 들어오는 조건:
 
 - `decision_status: decision-needed`
 - `decision_status: approval-needed`
@@ -101,6 +101,27 @@ board card는 `work_id`를 필수 식별자로 가진다. YouTrack 티켓에서 
 - `review_state: needs-review`
 
 `ticket_status: in-progress`, `decision_status: none`인 작업은 board에 올리지 않는다.
+
+### AI 검토와 사용자 결정의 분리
+
+기본: 위 상태값은 작업이 남았다는 표시다. 사용자 확인이 필요하다는 판정으로 쓰지 않는다. AI가 위키의 기존 결정, 소스와 테스트를 먼저 확인해 사람이 모든 카드를 다시 읽는 부담을 줄인다.
+
+- 사실 확인·문서 정정·이미 해결된 검토 요청은 AI가 근거를 기록하고 정리한다. 기록에는 확인한 코드 버전, 방법, 결과와 미확인 범위를 남긴다. `ticket_status: done`이나 오래된 날짜만으로 검토를 종료하지 않는다.
+- 정책 선택과 실행 승인이 실제로 남으면 대기한다. 기존 승인·결정 기록을 발견한 경우에는 그 기록의 적용 범위를 확인한다. AI의 사실 검증은 새로운 승인이나 운영 반영을 대신하지 않는다.
+- 기본: 같은 문제를 다룬 여러 문서는 원래 업무 단위로 연결하고, 일별 보고서는 근거로 사용한다. 날짜가 다르다는 이유만으로 사용자 질문을 새로 만들지 않는다.
+- `hermes-decision-board.json`에는 전체 작업을 유지한다. Markdown은 사용자 질문을 먼저 보여주고 AI 목록은 접는다. 사용자 요약과 desktop cockpit에는 준비된 질문만 표시한다. 큐 등록은 실행 완료를 뜻하지 않는다.
+
+사용자 질문이 준비됐을 때 원본 노트에 아래 필드를 적는다. 이 필드는 승인 기록이 아니라 질문이며, 질문·이유·추천·근거 중 하나라도 비면 AI 검토 목록에 남는다. 기존 노트에 필드가 없어도 사용자에게 양식을 채워 달라고 요청하지 않는다.
+
+```yaml
+attention: human
+human_question: "부분 취소 시 이용권을 유지할까요?"
+human_reason: "새 상품에 적용할 정책은 기존 기록과 소스에서 확인되지 않았다."
+human_recommendation: "기존 상품과 같은 유지 정책을 추천한다."
+human_evidence: "관련 정책 노트와 코드 대조 결과의 위치"
+```
+
+AI가 이어서 할 구체적인 일이 있으면 `agent_next_action`에 적는다. 필요한 부분 검증만 끝났다면 남은 검증을 유지한다. `review_state: reviewed`와 `decision_status: none`은 해당 검토 요청이 근거로 해소됐을 때 사용하며, 공식 티켓 완료·배포·`canonical` 승격과 구분한다.
 
 Hermes가 기존 Discord bot으로 처리할 dispatch request는 read-only로 생성한다. 이 명령은 Discord API를 호출하지 않는다.
 

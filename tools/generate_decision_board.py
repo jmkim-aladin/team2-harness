@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate the DEV2 Hermes decision board projection from vault notes.
 
-The board is a projection, not a source of truth. It only surfaces notes that
-need user decision, approval, review, or explicit unblock work.
+The board is a projection, not a source of truth. Review flags create agent
+work. Only an explicit, complete decision packet creates a human request.
 """
 from __future__ import annotations
 
@@ -122,6 +122,41 @@ def classify(fm: dict[str, Any]) -> str | None:
     return None
 
 
+def attention_fields(fm: dict[str, Any], column: str) -> dict[str, Any]:
+    """Route responsibility without granting approval or changing source status."""
+    def packet_value(key: str) -> str:
+        value = fm.get(f"human_{key}")
+        if key == "evidence" and isinstance(value, list):
+            return "; ".join(str(item).strip() for item in value if str(item).strip())
+        if not isinstance(value, str) or value.strip() in {"|", ">", "|-", ">-"}:
+            return ""
+        return value.strip()
+
+    packet = {
+        key: packet_value(key)
+        for key in ("question", "reason", "recommendation", "evidence")
+    }
+    requested = scalar(fm, "attention") == "human"
+    ready = requested and all(packet.values())
+    approval = column == "Approval Needed"
+    missing = [key for key, value in packet.items() if not value]
+    return {
+        "attention": "human" if ready else "agent",
+        "human_request": packet if ready else {},
+        "agent_task": {
+            "kind": "complete-human-request" if requested and not ready else "prepare-approval" if approval else "verify-evidence",
+            "missing_human_fields": missing if requested and not ready else [],
+            "next_action": scalar(fm, "agent_next_action").strip() or (
+                f"사용자 질문의 미작성 항목({', '.join(missing)})을 근거로 정리한다. 필요한 승인은 계속 대기한다."
+                if requested and not ready else
+                "대상·영향·검증 근거를 확인하고 승인할 작업을 구체화한다. 승인 전에는 실행하지 않는다."
+                if approval else
+                "위키와 소스를 대조하고 필요한 테스트로 확인한다. 근거로 해결되지 않는 결정만 질문으로 정리한다."
+            ),
+        },
+    }
+
+
 def title_from_body(body: str, fallback: str) -> str:
     for line in body.splitlines():
         if line.startswith("# "):
@@ -160,9 +195,17 @@ def note_service(fm: dict[str, Any]) -> str:
 
 
 def note_summary(body: str) -> str:
-    for line in body.splitlines():
+    lines = body.splitlines()
+    # Prefer an authored problem or judgment over extraction timestamps/SHAs.
+    for line in lines:
+        stripped = line.strip().removeprefix("- ")
+        if stripped.startswith(("문제:", "현재 판단:", "결론:")):
+            return stripped
+    for line in lines:
         stripped = line.strip()
-        if not stripped or stripped.startswith("#") or stripped.startswith("<!--"):
+        if not stripped or stripped.startswith(("#", "<!--", "|", "```")):
+            continue
+        if re.search(r"^(?:- )?(?:추출|조사 시각|vault HEAD|harness `)", stripped):
             continue
         if stripped.startswith("- ["):
             continue
@@ -202,6 +245,7 @@ def collect_cards(vault: Path) -> list[dict[str, Any]]:
             "path": rel,
             "summary": note_summary(body),
             "suggested_roles": ROLE_ROUTING[column],
+            **attention_fields(fm, column),
         }
         cards.append(card)
     order = {column: index for index, column in enumerate(COLUMN_ORDER)}
@@ -229,6 +273,14 @@ def role_text(roles: list[str]) -> str:
     return ", ".join(f"`{role}`" for role in roles)
 
 
+def is_ready_human_request(card: dict[str, Any]) -> bool:
+    packet = card.get("human_request")
+    return card.get("attention") == "human" and isinstance(packet, dict) and all(
+        isinstance(packet.get(key), str) and packet[key].strip()
+        for key in ("question", "reason", "recommendation", "evidence")
+    )
+
+
 def render_card(card: dict[str, Any]) -> list[str]:
     service = f" · {card['service']}" if card.get("service") else ""
     summary = card.get("summary") or "요약 없음"
@@ -241,25 +293,53 @@ def render_card(card: dict[str, Any]) -> list[str]:
 
 
 def render_markdown(cards: list[dict[str, Any]], updated_at: str) -> str:
+    human = [card for card in cards if is_ready_human_request(card)]
+    agent = [card for card in cards if not is_ready_human_request(card)]
+    approval_pending = sum(card["column"] == "Approval Needed" for card in agent)
+    question_prep = sum(card["column"] in {"Decision Needed", "Approval Needed", "Blocked"}
+                        or card.get("agent_task", {}).get("kind") == "complete-human-request" for card in agent)
     lines = [
         "---",
         "type: project",
-        "title: Hermes Decision Board",
+        "title: Hermes 사용자 결정과 AI 검토",
         "canonical_id: project:agentic-os/hermes-decision-board",
         "status: draft",
         f"updated_at: {updated_at}",
         "---",
         "",
-        "# Hermes Decision Board",
+        "# Hermes 사용자 결정과 AI 검토",
         "",
         "<!-- llm-hint -->",
-        "이 문서는 Hermes/Discord 오케스트레이션용 decision board projection이다. 원장은 vault 업무/분석 노트와 YouTrack이다.",
+        "위키·소스·테스트로 확인할 일은 AI가 맡는다. 사람에게는 검토 후에도 남는 정책 결정과 실행 승인만 요청한다. 원장은 각 위키 문서와 YouTrack이다.",
         "<!-- /llm-hint -->",
         "",
         f"<!-- generated:decision-board source=vault updated={updated_at} -->",
+        "",
+        f"- 사용자에게 준비된 질문: {len(human)}건",
+        f"- AI가 확인하거나 질문을 준비할 항목: {len(agent)}건",
+        f"- 그중 AI 검토·질문 준비: {question_prep}건 (승인 요청 준비 {approval_pending}건 포함) — 승인 전 실행 대기",
+        "",
+        "검토 대기는 사용자에게 전부 읽어 달라는 뜻이 아니다. 아래 수치는 작업 목록이며 실제 실행·검증 완료 건수가 아니다.",
+        "",
+        "## 사용자에게 필요한 결정",
+        "",
     ]
+    if not human:
+        lines.append("- 아직 근거와 질문이 준비된 요청이 없다. AI 검토·질문 정리가 남아 있으며, 승인이나 업무 완료를 뜻하지 않는다.")
+    for card in human:
+        packet = card["human_request"]
+        lines.extend([
+            f"### {card_link(card)}", "",
+            f"- 결정할 내용: {packet['question']}",
+            f"- 사람이 필요한 이유: {packet['reason']}",
+            f"- 추천: {packet['recommendation']}",
+            f"- 확인한 근거: {packet['evidence']}", "",
+        ])
+    lines.extend(["", "## AI가 먼저 처리할 일", "",
+                  "근거 대조·테스트·중복 정리는 AI가 처리하고, 확인한 범위와 결과를 원본에 남긴다. 오래됐거나 중복이라는 이유만으로 업무나 승인을 완료 처리하지 않는다.", "",
+                  "<details>", f"<summary>AI 검토 목록 {len(agent)}건 — 필요할 때 펼치기</summary>", ""])
     grouped = {column: [] for column in COLUMN_ORDER}
-    for card in cards:
+    for card in agent:
         grouped.setdefault(card["column"], []).append(card)
     for column in COLUMN_ORDER:
         lines.extend(["", f"## {column}", ""])
@@ -268,7 +348,7 @@ def render_markdown(cards: list[dict[str, Any]], updated_at: str) -> str:
             continue
         for card in grouped[column]:
             lines.extend(render_card(card))
-    lines.extend(["", "<!-- /generated -->", ""])
+    lines.extend(["", "</details>", "", "<!-- /generated -->", ""])
     return "\n".join(lines)
 
 
@@ -277,6 +357,8 @@ def render_json(cards: list[dict[str, Any]], updated_at: str) -> dict[str, Any]:
         "schema": "team2.hermes_decision_board.v1",
         "updated_at": updated_at,
         "source": "vault",
+        "human_requests": sum(is_ready_human_request(card) for card in cards),
+        "agent_reviews": sum(not is_ready_human_request(card) for card in cards),
         "cards": cards,
     }
 

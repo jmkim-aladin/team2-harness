@@ -59,36 +59,100 @@ def card_heading(card: dict[str, Any]) -> str:
     return f"[{card_value(card, 'column')}] {work_id}{service_part} — {title}"
 
 
+HUMAN_REQUEST_FIELDS = ("question", "reason", "recommendation", "evidence")
+UNRESOLVED_COLUMNS = {"Decision Needed", "Approval Needed", "Blocked"}
+REVIEW_COLUMNS = {"Review Needed", "Done Candidate"}
+
+
+def is_ready_human_request(card: dict[str, Any]) -> bool:
+    """Only attention=human with a complete four-field packet reaches the user."""
+    if card.get("attention") != "human":
+        return False
+    request = card.get("human_request")
+    if not isinstance(request, dict):
+        return False
+    return all(isinstance(request.get(field), str) and request[field].strip() for field in HUMAN_REQUEST_FIELDS)
+
+
+def attention_state(card: dict[str, Any]) -> str:
+    attention = card.get("attention")
+    if attention == "human":
+        return "human" if is_ready_human_request(card) else "human-incomplete"
+    if attention == "agent":
+        return "agent"
+    return "legacy-unrouted"
+
+
+def needs_human_prep(card: dict[str, Any]) -> bool:
+    """Decision/approval/blocker labels whose question an agent must check or prepare.
+
+    The label alone is not a human dependency; it only marks work to review.
+    """
+    if is_ready_human_request(card):
+        return False
+    return (card.get("agent_task") or {}).get("kind") == "complete-human-request" or card.get("attention") == "human" or card_value(card, "column") in UNRESOLVED_COLUMNS
+
+
+def split_cards(cards: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    human = [card for card in cards if is_ready_human_request(card)]
+    agent = [card for card in cards if not is_ready_human_request(card)]
+    return human, agent
+
+
+def agent_roles(card: dict[str, Any]) -> list[str]:
+    roles = [role for role in card.get("suggested_roles", []) if role in ROLE_CHANNELS]
+    if roles:
+        return list(dict.fromkeys(roles))
+    return ["qa" if card_value(card, "column") in REVIEW_COLUMNS else "domain_analyst"]
+
+
 def build_board_summary(cards: list[dict[str, Any]], updated_at: str) -> str:
     counts = {column: 0 for column in COLUMN_ORDER}
     for card in cards:
         column = card_value(card, "column")
         counts[column] = counts.get(column, 0) + 1
+    human, agent = split_cards(cards)
+    states = [attention_state(card) for card in agent]
     lines = [f"## Agent Board Summary ({updated_at})", ""]
     for column in COLUMN_ORDER:
         lines.append(f"- {column}: {counts.get(column, 0)}")
-    if cards:
-        lines.extend(["", "### Cards"])
-        for card in cards:
-            lines.append(f"- {card_heading(card)}")
-    else:
-        lines.extend(["", "현재 board card가 없습니다."])
+    lines.extend(
+        [
+            "",
+            f"- 사용자 요청 준비 완료: {len(human)}",
+            f"- AI 검토 대기: {len(agent)}"
+            f" (attention 미지정 {states.count('legacy-unrouted')}, human 패킷 미완성 {states.count('human-incomplete')})",
+            f"- AI 검토·질문 준비: {sum(1 for card in agent if needs_human_prep(card))}",
+        ]
+    )
     return "\n".join(lines)
 
 
 def build_user_digest(cards: list[dict[str, Any]], updated_at: str) -> str:
-    if not cards:
-        return f"## Orchestrator Digest ({updated_at})\n\n현재 사용자 개입 카드 없음."
+    human, agent = split_cards(cards)
+    prep = sum(1 for card in agent if needs_human_prep(card))
     lines = [f"## Orchestrator Digest ({updated_at})", ""]
-    for index, card in enumerate(cards, start=1):
+    if human:
+        lines.append(f"사용자 결정·승인 요청 {len(human)}건.")
+    else:
+        lines.append("현재 사용자에게 올릴 결정·승인 요청 없음.")
+    lines.extend(
+        [
+            f"AI 검토 대기 {len(agent)}건 · AI 검토·질문 준비 {prep}건 — 요청이 없다는 것이 완료나 승인을 뜻하지 않는다.",
+            "",
+        ]
+    )
+    for index, card in enumerate(human, start=1):
+        request = card["human_request"]
         lines.extend(
             [
                 f"### {index}. {card_heading(card)}",
-                f"- Work: `{card_value(card, 'work_id')}`",
-                f"- Ticket: {ticket_text(card)}",
-                f"- Summary: {card_value(card, 'summary') or '요약 없음'}",
+                f"- 질문: {request['question'].strip()}",
+                f"- 이유: {request['reason'].strip()}",
+                f"- 권장: {request['recommendation'].strip()}",
+                f"- 근거: {request['evidence'].strip()}",
+                f"- Work: `{card_value(card, 'work_id')}` · Ticket: {ticket_text(card)}",
                 f"- Source: `{card_value(card, 'path')}`",
-                f"- Roles: {', '.join(card.get('suggested_roles', []))}",
                 "",
             ]
         )
@@ -96,41 +160,60 @@ def build_user_digest(cards: list[dict[str, Any]], updated_at: str) -> str:
 
 
 def build_task_brief(card: dict[str, Any], role: str) -> str:
-    return "\n".join(
+    state = attention_state(card)
+    lines = [
+        "## Task Brief",
+        "",
+        f"- Role: {role} (profile: `configs/discord-agent-profiles.yaml` roles.{role})",
+        f"- Card: {card_value(card, 'id') or card_value(card, 'path')}",
+        f"- Work: `{card_value(card, 'work_id')}`",
+        f"- Ticket: {ticket_text(card)}",
+        f"- Service: {card_value(card, 'service') or '없음'}",
+        f"- Goal: {card_value(card, 'title')}",
+        f"- Current Status: {card_value(card, 'column')}",
+        f"- Attention: {state}",
+        f"- Source Note: `{card_value(card, 'path')}`",
+        "- First: read the source note, related source code and test output yourself before concluding",
+        "- Verify: independently validate each material conclusion; record source revision, environment, result and limits in the vault note",
+        "- Review Rule: resolve a factual review only after recording that evidence; needs-review alone is not a user request",
+    ]
+    if state == "legacy-unrouted":
+        lines.append("- Triage: attention is missing (legacy card); classify it with evidence instead of escalating to the user")
+    if state == "human-incomplete":
+        lines.append("- Triage: human packet is incomplete; fill question/reason/recommendation/evidence from verified facts before the orchestrator asks")
+    if needs_human_prep(card):
+        lines.append(
+            "- Labels: the column label alone does not establish a human dependency. Close a factual or stale request "
+            "only on recorded evidence or an existing documented decision; genuinely unresolved policy choices and "
+            "execution approvals stay pending and are never self-approved. If a genuine user decision remains, "
+            "draft human_request (question, reason, recommendation, evidence) for the orchestrator"
+        )
+    agent_task = card.get("agent_task")
+    next_action = agent_task.get("next_action") if isinstance(agent_task, dict) else None
+    if isinstance(next_action, str) and next_action.strip():
+        lines.append(f"- Next Action: {next_action.strip()}")
+    lines.extend(
         [
-            "## Task Brief",
-            "",
-            f"- Role: {role}",
-            f"- Card: {card_value(card, 'id') or card_value(card, 'path')}",
-            f"- Work: `{card_value(card, 'work_id')}`",
-            f"- Ticket: {ticket_text(card)}",
-            f"- Service: {card_value(card, 'service') or '없음'}",
-            f"- Goal: {card_value(card, 'title')}",
-            f"- Current Status: {card_value(card, 'column')}",
-            f"- Source Note: `{card_value(card, 'path')}`",
-            "- Allowed Actions: read-only analysis, draft evidence, vault note update proposal",
-            "- Forbidden Actions: YouTrack/KB/git/DB/prod mutation without user approval",
-            "- Expected Output: evidence or Decision Packet draft back to orchestrator",
+            "- Allowed Actions: read-only analysis, local tests, evidence recording and vault note updates within authorization",
+            "- Forbidden Actions: YouTrack/KB/git/DB/prod mutation or canonical promotion without user approval",
+            "- Expected Output: verification evidence and either a resolved factual review or a human_request draft back to orchestrator",
             "- Verification Guidance: read `$TEAM2_HARNESS_PATH/docs/agents/verification.md` before completion or handoff",
         ]
     )
+    return "\n".join(lines)
 
 
 def build_payloads(board: dict[str, Any]) -> list[dict[str, str]]:
-    cards = list(board.get("cards") or [])
+    cards = [card for card in board.get("cards") or [] if isinstance(card, dict)]
     updated_at = str(board.get("updated_at") or now_stamp())
     payloads: list[dict[str, str]] = [
         {"channel": "agent-board", "content": build_board_summary(cards, updated_at)},
         {"channel": "jm-orchestrator", "content": build_user_digest(cards, updated_at)},
     ]
-    for card in cards:
-        for role in card.get("suggested_roles", []):
-            if role == "orchestrator":
-                continue
-            channel = ROLE_CHANNELS.get(role)
-            if not channel:
-                continue
-            payloads.append({"channel": channel, "content": build_task_brief(card, role)})
+    _, agent = split_cards(cards)
+    for card in agent:
+        for role in agent_roles(card):
+            payloads.append({"channel": ROLE_CHANNELS[role], "content": build_task_brief(card, role)})
     return payloads
 
 

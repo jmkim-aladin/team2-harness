@@ -17,8 +17,26 @@ global_rules:
   - Role profiles must read the vault note before acting on a work item.
   - Role profiles must write durable findings to vault draft notes, not only Discord.
   - Only the orchestrator asks the user for decisions unless explicitly delegated.
+  - The orchestrator asks the user only for board cards with attention=human and a complete human_request packet.
+  - Cards without attention (legacy) or with an incomplete human_request go to agent triage, never to the user automatically.
+  - needs-review alone is agent work; a factual review is resolved by recorded evidence, not by asking the user.
+  - Board labels alone (Decision Needed, Approval Needed, Blocked) do not establish a human dependency.
+  - Close a factual or stale request only on recorded evidence or an existing documented decision; genuinely unresolved policy choices and execution approvals remain pending and are never self-approved.
+  - An empty user request list is not completion or approval; digests report AI review queued and AI review/question prep counts.
   - YouTrack, KB, git, DB write, deploy, and canonical promotion require user approval.
   - Raw logs, grep output, and speculative reasoning stay out of user-facing channels.
+
+self_verification:
+  applies_to: all role profiles except orchestrator user-facing replies
+  steps:
+    - Read the vault note, related source code, and test output before concluding.
+    - Independently validate each material conclusion instead of relaying another agent's claim.
+    - Record source revision, environment, result, and limits in the vault note within authorization.
+    - Resolve a factual review only after that evidence is recorded.
+    - Keep policy and production approvals with the user; do not canonical-promote.
+    - Follow the card agent_task.next_action when present.
+    - When a genuine user decision remains, draft a human_request packet for the orchestrator.
+  role_fallback: Agent cards whose suggested_roles have no role channel go to qa for Review Needed or Done Candidate, otherwise domain_analyst.
 
 roles:
   orchestrator:
@@ -188,6 +206,16 @@ handoff_contracts:
       - allowed_actions
       - forbidden_actions
       - expected_output
+
+  human_request:
+    # board card attention=human 일 때만 유효. 네 항목 모두 비어 있지 않은 문자열이어야 사용자에게 올라간다.
+    card_fields:
+      attention: human | agent
+    required_fields:
+      - question
+      - reason
+      - recommendation
+      - evidence
 
   decision_packet:
     required_fields:
