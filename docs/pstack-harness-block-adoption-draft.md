@@ -81,7 +81,7 @@ pstack에서 추가할 부분은 실제 산출물을 확인하고, 관찰할 수
 
 ## B04. 리뷰의 핵심 안전 가정을 작은 검사로 확인
 
-**현재:** [코드 리뷰](../.claude/commands/ad/code-review.md) §검증 순서와 §APPROVE 승인 조건은 이미 조사와 통과 근거를 요구한다. 새로운 영향 목록을 만들기보다 “어떤 사실 덕분에 안전하다고 판단했는가”를 명확하게 한다. [원본 blast-radius §How sure are you / Steps 2–5](https://github.com/cursor/plugins/blob/5bf2b1544db739998121a306340631963c2ff3de/pstack/skills/blast-radius/SKILL.md).
+**현재:** [코드 리뷰](../.claude/commands/ad/code-review.md) §검증 순서와 §이벤트와 승인 조건은 이미 조사와 통과 근거를 요구한다. 새로운 영향 목록을 만들기보다 “어떤 사실 덕분에 안전하다고 판단했는가”를 명확하게 한다. [원본 blast-radius §How sure are you / Steps 2–5](https://github.com/cursor/plugins/blob/5bf2b1544db739998121a306340631963c2ff3de/pstack/skills/blast-radius/SKILL.md).
 
 **§검증 순서에 둘 조건부 블록:**
 

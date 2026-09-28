@@ -9,4 +9,4 @@ description: "사용자가 source-command-ad-code-review라는 기존 호출 이
 
 1. `TEAM2_HARNESS_PATH`를 사용하며 기본값은 `/Users/jm/Documents/workspace/team2`다.
 2. 다른 도구보다 먼저 `$TEAM2_HARNESS_PATH/.claude/commands/ad/code-review.md`를 읽고 그 절차를 따른다.
-3. 해당 문서의 범위·검증·미리보기·게시 권한을 그대로 적용한다. 이 alias에 리뷰 본문이나 별도 승인 기준을 복제하지 않는다.
+3. 해당 문서의 범위·검증·미리보기·게시 권한을 그대로 적용하고, 상세 참조(`docs/code-review/*.md`)는 그 문서가 정한 조건에서만 읽는다. 이 alias에 리뷰 본문이나 별도 승인 기준을 복제하지 않는다.

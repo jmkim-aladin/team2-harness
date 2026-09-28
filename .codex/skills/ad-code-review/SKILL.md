@@ -10,15 +10,9 @@ description: "Use when the user invokes $ad-code-review, ad code review, /ad:cod
 ## 실행 절차
 
 1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`로 기준 경로를 잡는다.
-2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/code-review.md`를 먼저 읽고 그 절차·섹션 규격·판정 기준을 따른다. 절차는 SoT 한 곳에만 둔다 — 여기 복제하면 한쪽이 낡는다.
-3. command 파일이 참조하는 리뷰 정책과 PR 컨텍스트만 추가로 확인한다. GitHub 조회는 `gh` CLI를 우선 사용한다.
-4. 교차 모델 검증(command 파일 5단계)에서 Codex 호스트의 상대 모델은 Claude Code다 — 자기 자신을 검증하지 않는다:
-
-```bash
-(cd "{로컬 클론}" && claude -p "$(cat "$PROMPT_FILE")" \
-  --model opus --allowedTools Read Grep Glob) < /dev/null
-```
-
+2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/code-review.md`를 먼저 읽고 그 절차·판정 기준을 따른다 — 절차는 SoT 한 곳에만 둔다. 여기 복제하면 한쪽이 낡는다.
+3. 상세 참조(`docs/code-review/*.md`)는 command 파일의 «조건부 참조» 표가 정한 조건에서만 읽는다. GitHub 조회는 `gh` CLI를 우선 사용한다.
+4. 교차 모델 검증에서 Codex 호스트의 상대 모델은 Claude Code다 — 자기 자신을 검증하지 않는다. 실행 명령은 command 파일의 교차 모델 참조를 따른다.
 5. 리뷰 코멘트 등록, 승인, 머지, 상태 변경은 사용자 승인 후 실행한다.
 
 ## 최우선 규칙
@@ -33,5 +27,5 @@ SoT를 읽기 전에도 이 범위 규칙은 깨지 않는다. 아래는 command
 - **확대해석 금지**: diff에 없는 의도·설계 계획·후속 작업을 추정해 지적하지 않는다. 스펙 축 근거는 티켓·설계 문서에 **명시된 것**뿐이다
 - 추정이 남으면 지적이 아니라 3단계 `확인 못 한 것` 또는 질의 코멘트다
 - "이렇게 했으면 더 좋았다"류 대안 제시는 diff가 실제로 깨는 것을 지목할 때만 코멘트가 된다
-- **릴리스 묶음 PR**(원 PR 증거가 있는 stage·prod 배포 PR. 브랜치 이름만으로는 판정하지 않는다)은 판정 대상이 바뀐다: 원 PR에서 이미 리뷰된 hunk는 재판정하지 않고, 릴리스 전용 변경과 묶음 구성(누락·혼입·교차 영향·환경값·선행 의존·base 드리프트)을 판정한다 — 1단계 «릴리스 묶음 PR»
+- **릴리스 묶음 PR**(원 PR 증거가 있는 stage·prod 배포 PR. 브랜치 이름만으로는 판정하지 않는다)은 판정 대상이 바뀐다: 원 PR에서 이미 리뷰된 hunk는 재판정하지 않고, 릴리스 전용 변경과 묶음 구성(누락·혼입·교차 영향·환경값·선행 의존·base 드리프트)을 판정한다 — 1단계 «릴리스 묶음 후보»
 <!-- /generated:code-review-scope -->
