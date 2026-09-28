@@ -70,14 +70,6 @@
       "path": "policies/aws-secrets-convention.md",
       "rule": "R1a"
     },
-    "1966285abe9b11f4": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "≈16753tok > 한도 6000tok (55422바이트)",
-      "heading": "",
-      "path": ".claude/commands/ad/code-review.md",
-      "rule": "R5"
-    },
     "19e66a61c7bb1b4c": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -284,14 +276,6 @@
       "excerpt": "개발2팀 하네스(`team2`) 자체 변경은 YouTrack 티켓 없이 진행할 수 있다. 적용 범위는 정책, 카탈로그, 스킬, 템플릿, 하네스 ",
       "heading": "브랜치 전략 > 브랜치 명명 규칙 > 개발2팀 하네스 예외",
       "path": "policies/branching-strategy.md",
-      "rule": "R1a"
-    },
-    "54584b419f1066be": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "`Command`, `Querybook`, `Shadow-Read`, `Reconciliation`, `Adapter`, `Read Model`",
-      "heading": "운영 위키 문서 언어와 제목 정책 > 기본 원칙",
-      "path": "policies/wiki-document-language-and-title-policy.md",
       "rule": "R1a"
     },
     "548fcffd4e65aa6a": {
@@ -638,14 +622,6 @@
       "path": "CLAUDE.md",
       "rule": "R1a"
     },
-    "dca7a9c8af1d5129": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "절차",
-      "heading": "GitHub PR 코드 리뷰 > 실행 지침 > 5. 교차 모델 검증 (기본 실행) > 절차",
-      "path": ".claude/commands/ad/code-review.md",
-      "rule": "R4"
-    },
     "dda0140103d568ff": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -717,9 +693,7 @@
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 1. PR 정보 수집": true,
-    ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 1. PR 정보 수집 > 릴리스 묶음 PR — 다시 리뷰하지 않고 묶음을 본다": true,
     ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 3. 이해 패스 — 판정 전에 변경을 이해한다": true,
-    ".claude/commands/ad/code-review.md::GitHub PR 코드 리뷰 > 실행 지침 > 7. 사용자 승인 후 게시": true,
     ".claude/commands/ad/eng-review.md::설계 검증 (eng-review)": true,
     ".claude/commands/ad/eng-review.md::설계 검증 (eng-review) > 6. 산출물과 기록": true,
     ".claude/commands/ad/explain.md::설명서 생성": true,
@@ -745,6 +719,12 @@
     "AGENTS.md::Codex 진입점 — 개발 2팀 하네스": true,
     "AGENTS.md::Codex 진입점 — 개발 2팀 하네스 > 서브에이전트 위임 프롬프트": true,
     "AGENTS.md::Codex 진입점 — 개발 2팀 하네스 > 세션 컨텍스트 규율": true,
+    "docs/code-review/cross-model.md::교차 모델 실행": true,
+    "docs/code-review/cross-model.md::교차 모델 실행 > 준비": true,
+    "docs/code-review/preview.md::코드 리뷰 미리보기 규격": true,
+    "docs/code-review/preview.md::코드 리뷰 미리보기 규격 > 미리보기 템플릿": true,
+    "docs/code-review/preview.md::코드 리뷰 미리보기 규격 > 이해 브리핑": true,
+    "docs/code-review/release-bundle.md::릴리스 묶음 PR 리뷰": true,
     "docs/sprint/ticket-guide.md::스프린트 티켓 작성 및 운영 가이드": true,
     "docs/sprint/ticket-guide.md::스프린트 티켓 작성 및 운영 가이드 > 2. 티켓 단위 권장 범위": true,
     "docs/sprint/ticket-guide.md::스프린트 티켓 작성 및 운영 가이드 > 2. 티켓 단위 권장 범위 > 2-2. 단계 분리 (필수) — Feature·Task 공통": true,
@@ -781,17 +761,17 @@
     "policies/skill-authoring-principles.md::스킬 작성 원칙 > 체크리스트 5단계 > 1. 트리거 — 누가 부르는가부터 정한다": true,
     "policies/skill-authoring-principles.md::스킬 작성 원칙 > 체크리스트 5단계 > 5. 강도 표기 — 안전장치와 권장을 구분되게 쓴다": true,
     "policies/wiki-document-language-and-title-policy.md::운영 위키 문서 언어와 제목 정책": true,
-    "policies/wiki-document-language-and-title-policy.md::운영 위키 문서 언어와 제목 정책 > 문체 — 한다체 + 명사형 압축": true,
+    "policies/wiki-document-language-and-title-policy.md::운영 위키 문서 언어와 제목 정책 > 문체 — 관계가 드러나는 짧은 문장": true,
     "templates/ticket-templates/feature.md::기능 추가 티켓 템플릿": true
   },
   "schema_version": 2,
   "summary": {
-    "R1a": 63,
+    "R1a": 62,
     "R1b": 0,
     "R2": 0,
     "R3": 0,
-    "R4": 21,
-    "R5": 4,
+    "R4": 20,
+    "R5": 3,
     "R6": 0
   },
   "updated": "2026-09-28"

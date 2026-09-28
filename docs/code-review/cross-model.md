@@ -1,6 +1,6 @@
 # 교차 모델 실행
 
-[`/ad:code-review`](../../.claude/commands/ad/code-review.md) 5단계에서 교차 모델을 실제로 실행할 때 읽는다. 발동 조건·대조·승인 조건은 본문이 SoT다. gstack `/codex review`는 쓰지 않고 `codex exec`·`claude -p`를 직접 쓴다 — `/codex review`는 현재 브랜치의 로컬 diff를 보므로 하네스 cwd에서 돌리면 하네스 자신을 리뷰한다.
+[`/ad:code-review`](../../.claude/commands/ad/code-review.md) 5단계에서 교차 모델을 실제로 실행할 때 읽는다. 발동 조건·대조·승인 조건은 본문이 SoT다. `codex exec`·`claude -p`를 직접 쓴다 — 대상 레포를 `-C`로 지목하지 않으면 하네스 cwd에서 하네스 자신을 리뷰한다 (아래 «cwd»).
 
 ## 준비
 
