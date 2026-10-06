@@ -1,0 +1,121 @@
++----------------------------------------------------------------------+
+|  OpenHands SDK v1.49.6                                               |
+|                                                                      |
+|  Report a bug: github.com/OpenHands/software-agent-sdk/issues        |
+|  Get help: openhands.dev/joinslack                                   |
+|  Scale up: openhands.dev/product/sdk                                 |
+|                                                                      |
+|  Set OPENHANDS_SUPPRESS_BANNER=1 to hide this message                |
++----------------------------------------------------------------------+
+
+[09/28/26 12:41:38] WARNING  Current configuration will not reload config.py:311
+                             as not all conditions are met, please              
+                             refer to documentation.                            
+[09/28/26 12:41:40] INFO     Registered file-based agent          default.py:167
+                             'bash-runner' from                                 
+                             /private/tmp/team2-openhands-pilot-2               
+                             0260928/backend/lib/python3.13/site-               
+                             packages/openhands/tools/preset/suba               
+                             gents/bash_runner.md                               
+[09/28/26 12:41:40] INFO     Registered file-based agent          default.py:167
+                             'code-explorer' from                               
+                             /private/tmp/team2-openhands-pilot-2               
+                             0260928/backend/lib/python3.13/site-               
+                             packages/openhands/tools/preset/suba               
+                             gents/code_explorer.md                             
+[09/28/26 12:41:40] INFO     Registered file-based agent          default.py:167
+                             'general-purpose' from                             
+                             /private/tmp/team2-openhands-pilot-2               
+                             0260928/backend/lib/python3.13/site-               
+                             packages/openhands/tools/preset/suba               
+                             gents/default.md                                   
+[09/28/26 12:41:40] INFO     Registered file-based agent          default.py:167
+                             'web-researcher' from                              
+                             /private/tmp/team2-openhands-pilot-2               
+                             0260928/backend/lib/python3.13/site-               
+                             packages/openhands/tools/preset/suba               
+                             gents/web_researcher.md                            
+[09/28/26 12:41:40] INFO     Started server process [23655]        server.py:103
+[09/28/26 12:41:40] INFO     Waiting for application startup.           on.py:48
+[09/28/26 12:41:40] INFO     TMUX_TMPDIR not set; defaulting to       api.py:119
+                             per-server tmux directory                          
+                             /private/tmp/team2-openhands-pilot-20260           
+                             928/tmp/openhands-agent-server-23655               
+Fatal Python error: Aborted
+
+Current thread 0x00000001ed7b6180 (most recent call first):
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/browser_use/browser/profile.py", line 206 in get_display_size
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/browser_use/browser/profile.py", line 1173 in detect_display_configuration
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/browser_use/browser/profile.py", line 799 in model_post_init
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/pydantic/main.py", line 263 in __init__
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/browser_use/browser/session.py", line 58 in <module>
+  File "<frozen importlib._bootstrap>", line 488 in _call_with_frames_removed
+  File "<frozen importlib._bootstrap_external>", line 1023 in exec_module
+  File "<frozen importlib._bootstrap>", line 935 in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1331 in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 1360 in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1395 in _gcd_import
+  File "/opt/homebrew/Cellar/python@3.13/3.13.13_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/importlib/__init__.py", line 88 in import_module
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/browser_use/browser/__init__.py", line 26 in __getattr__
+  File "<frozen importlib._bootstrap>", line 1420 in _handle_fromlist
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/browser_use/tools/registry/views.py", line 6 in <module>
+  File "<frozen importlib._bootstrap>", line 488 in _call_with_frames_removed
+  File "<frozen importlib._bootstrap_external>", line 1023 in exec_module
+  File "<frozen importlib._bootstrap>", line 935 in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1331 in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 1360 in _find_and_load
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/browser_use/agent/views.py", line 29 in <module>
+  File "<frozen importlib._bootstrap>", line 488 in _call_with_frames_removed
+  File "<frozen importlib._bootstrap_external>", line 1023 in exec_module
+  File "<frozen importlib._bootstrap>", line 935 in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1331 in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 1360 in _find_and_load
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/browser_use/mcp/client.py", line 32 in <module>
+  File "<frozen importlib._bootstrap>", line 488 in _call_with_frames_removed
+  File "<frozen importlib._bootstrap_external>", line 1023 in exec_module
+  File "<frozen importlib._bootstrap>", line 935 in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1331 in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 1360 in _find_and_load
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/browser_use/mcp/__init__.py", line 6 in <module>
+  File "<frozen importlib._bootstrap>", line 488 in _call_with_frames_removed
+  File "<frozen importlib._bootstrap_external>", line 1023 in exec_module
+  File "<frozen importlib._bootstrap>", line 935 in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1331 in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 1360 in _find_and_load
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/tools/browser_use/logging_fix.py", line 58 in <module>
+  File "<frozen importlib._bootstrap>", line 488 in _call_with_frames_removed
+  File "<frozen importlib._bootstrap_external>", line 1023 in exec_module
+  File "<frozen importlib._bootstrap>", line 935 in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1331 in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 1360 in _find_and_load
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/tools/browser_use/server.py", line 4 in <module>
+  File "<frozen importlib._bootstrap>", line 488 in _call_with_frames_removed
+  File "<frozen importlib._bootstrap_external>", line 1023 in exec_module
+  File "<frozen importlib._bootstrap>", line 935 in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1331 in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 1360 in _find_and_load
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/tools/browser_use/impl.py", line 30 in <module>
+  File "<frozen importlib._bootstrap>", line 488 in _call_with_frames_removed
+  File "<frozen importlib._bootstrap_external>", line 1023 in exec_module
+  File "<frozen importlib._bootstrap>", line 935 in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1331 in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 1360 in _find_and_load
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/tools/browser_use/definition.py", line 796 in is_usable
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/sdk/tool/registry.py", line 100 in <lambda>
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/sdk/tool/registry.py", line 105 in _check_tool_usable
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/sdk/tool/registry.py", line 201 in list_usable_tools
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/agent_server/server_details_router.py", line 58 in <lambda>
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/pydantic/main.py", line 263 in __init__
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/agent_server/telemetry/factory.py", line 76 in build_runtime_properties
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/agent_server/telemetry/service.py", line 107 in build_telemetry_sink
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/openhands/agent_server/api.py", line 178 in api_lifespan
+  File "/opt/homebrew/Cellar/python@3.13/3.13.13_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 214 in __aenter__
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/fastapi/routing.py", line 240 in merged_lifespan
+  File "/opt/homebrew/Cellar/python@3.13/3.13.13_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 214 in __aenter__
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/fastapi/routing.py", line 240 in merged_lifespan
+  File "/opt/homebrew/Cellar/python@3.13/3.13.13_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 214 in __aenter__
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/fastapi/routing.py", line 240 in merged_lifespan
+  File "/opt/homebrew/Cellar/python@3.13/3.13.13_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 214 in __aenter__
+  File "/private/tmp/team2-openhands-pilot-20260928/backend/lib/python3.13/site-packages/fastapi/routing.py", line 240 in merged_lifespan
+
+Extension modules: multidict._multidict, yarl._quoting_c, propcache._helpers_c, aiohttp._http_writer, aiohttp._http_parser, aiohttp._websocket.mask, aiohttp._websocket.reader_c, frozenlist._frozenlist, markupsafe._speedups, yaml._yaml, _cffi_backend, PIL._imaging, tree_sitter_bash._binding, websockets.speedups, cython.cimports.libc.math, charset_normalizer.md, charset_normalizer.cd, psutil._psutil_osx, grpc._cython.cygrpc, google._upb._message, objc._objc, CoreFoundation._CoreFoundation, CoreFoundation._inlines, Foundation._Foundation, Foundation._inlines, AppKit._AppKit, AppKit._inlines (total: 27)
