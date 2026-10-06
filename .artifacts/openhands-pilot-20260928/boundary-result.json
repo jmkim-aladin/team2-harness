@@ -1,0 +1,22 @@
+{
+  "checks": {
+    "blocked_GET": true,
+    "blocked_POST": true,
+    "blocked_PUT": true,
+    "blocked_PATCH": true,
+    "blocked_DELETE": true,
+    "allowed_mock_control": true,
+    "home_read_blocked": true,
+    "child_shell_blocked": true,
+    "node_child_blocked": true,
+    "canvas_installed": true,
+    "blocked_mock_received_zero": true
+  },
+  "mock_received": [
+    [
+      18761,
+      "GET"
+    ]
+  ],
+  "scope": "OS sandbox and subprocesses; no LLM, MCP, real credentials or external-service requests"
+}

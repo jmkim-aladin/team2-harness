@@ -230,7 +230,7 @@ repos:
   max-monoplate: "https://github.com/AladinCommunication/max-monoplate" # 신규 프론트 모노레포 (pnpm + turbo)
 
   # 관련 레포 (shopping/WebCatalog 공유)
-  shopping-db-script: "shop-db-script (DBSourceTemplate fork)" # local: /Users/jm/Documents/workspace/shopping/shop-db-script
+  shopping-db-script: "https://github.com/AladinCommunication/aladin-mall-db-script" # local: /Users/jm/Documents/workspace/shopping/aladin-mall-db-script (WebCatalog·EbookCms 등 COOL·LEGO DB)
   aladin-mall-migration: "https://github.com/AladinCommunication/aladin-mall-migration" # 주문/땡큐 웹 (구 dev1-web-aladin)
   dev1-backoffice-thanks: "https://github.com/AladinCommunication/dev1-backoffice-thanks" # 땡큐 VB6 백오피스
 

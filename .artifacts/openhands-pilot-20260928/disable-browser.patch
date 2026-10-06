@@ -1,0 +1,26 @@
+--- original/tool_router.py
++++ pilot/tool_router.py
+@@ -12,9 +12,9 @@
+ 
+ 
+ tool_router = APIRouter(prefix="/tools", tags=["Tools"])
+-register_default_tools(enable_browser=True)
+-register_builtins_agents(enable_browser=True)
+-register_gemini_tools(enable_browser=True)
++register_default_tools(enable_browser=False)
++register_builtins_agents(enable_browser=False)
++register_gemini_tools(enable_browser=False)
+ register_planning_tools()
+ 
+ 
+--- original/conversation_router.py
++++ pilot/conversation_router.py
+@@ -77,7 +77,7 @@
+                 model="your-model-provider/your-model-name",
+                 api_key=SecretStr("your-api-key-here"),
+             ),
+-            tools=get_default_tools(enable_browser=True),
++            tools=get_default_tools(enable_browser=False),
+         ),
+         workspace=LocalWorkspace(working_dir="workspace/project"),
+         initial_message=SendMessageRequest(

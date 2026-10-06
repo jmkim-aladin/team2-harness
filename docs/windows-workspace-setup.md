@@ -67,8 +67,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\clone-catalog-repo
 
 - `C:\Users\jmkim\Documents\workspace\shopping\dev1-web-aladin`
 - `C:\Users\jmkim\Documents\workspace\shopping\mall-search`
+- `C:\Users\jmkim\Documents\workspace\shopping\aladin-mall-db-script` — 공식 DB 스크립트 레포 (`https://github.com/AladinCommunication/aladin-mall-db-script`)
 
-`shop-db-script`는 위키에 경로가 남아 있지만 현재 `https://github.com/AladinCommunication/shop-db-script` 원격을 찾을 수 없어 자동 클론 대상에서 제외했다.
+`shop-db-script`는 개인 레포(`jmkim-aladin/shop-db-script`)의 일괄 export 스냅샷이라 자동 클론 대상에서 제외했다. DB 변경은 `aladin-mall-db-script`에 올린다.
 
 ## macOS와 Windows 공통 운영 원칙
 
