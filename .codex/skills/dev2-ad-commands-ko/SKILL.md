@@ -31,7 +31,7 @@ Codex는 team2 하네스 command 파일을 source of truth로 읽고 같은 절�
 - `okr`
 - `team2-kb-read` (`목록` 인자로 트리 조회)
 - `harness-optimize`: repo-vault 경계/정리
-- `data-request`, `service-activity`, `capacity-plan`
+- `data-request`, `service-activity`, `capacity-plan`, `wbs`
 - `granola-sync`, `new-note`
 - `orchestration`: Herdr pane peer-agent 협업(핑퐁·병렬 fan-out·형제 pane 명령). `HERDR_ENV=1` 필요
 

@@ -290,7 +290,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 월말 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-planned` |
 | 월별 정적 점검 | [Fortify SSC FPR 일괄 등록 런북](./static-scan-runbook.md#월별-fpr-일괄-등록) — `scripts/upload-fortify-fprs.py --month YYYYMM` dry-run 확인 후 `--apply`; 대상 버전이 이미 있으면 전체 skip |
 | 주간 | `/ad:weekly-report` |
-| 수시 | `/ad:okr`, `/ad:service-activity`, `/ad:granola-sync` |
+| 수시 | `/ad:okr`, `/ad:service-activity`, `/ad:granola-sync`, `/ad:wbs`(WBS·간트 엑셀/HTML 추출) |
 
 ### 5. 지식·문서 작업
 

@@ -270,6 +270,7 @@ Codex Skill도 YouTrack은 REST API(`$YOUTRACK_TOKEN`)로만 호출한다.
 | `/ad:ticket` | O | - |
 | `/ad:code-review` | - | O |
 | `/ad:team2-kb-read` | O | - |
+| `/ad:wbs` | O | - |
 
 ---
 
