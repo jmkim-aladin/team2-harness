@@ -241,7 +241,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 
 **상황당 동사 하나** — 어떤 업무든 아래 표에서 상황을 찾으면 진입 동사(`ad:*`)가 나온다. 대부분 모델 호출이라 요청에 맞으면 에이전트가 스스로 부르고, 이 절은 사람이 전체를 보는 지도다. 층 설계(동사/엔진/자료)는 [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §구조.
 
-사용자 호출 전용(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:implement`, `/ad:plan-run`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`.
+사용자 호출 전용(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:code-review-self`, `/ad:implement`, `/ad:plan-run`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`.
 
 ### 1. 개발 티켓 (메인 플로우)
 
@@ -257,7 +257,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
 | 설계 검증 (선택) | `/ad:eng-review` | 스코프 챌린지 + 아키텍처·코드 품질·테스트·성능 이슈 판정 — 1일 이상·경계 변경 시 |
 | 구현 | `/ad:implement` | vendored `implement`(내부 `tdd`) — seam 합의, red→green |
-| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 |
+| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정. 자기 PR은 `/ad:code-review-self` — 별도 리뷰어 에이전트 + 반영·재리뷰 루프 |
 | 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
 
 규모별: 1시간 이내(오타·설정) 바로 처리 / 반나절(버그) 준비→구현→리뷰 / 1일 이상 전체.
@@ -413,6 +413,7 @@ PR 생성 (체크리스트 포함)
 | `/ad:ticket-split` | 2일 초과 이슈 분할 | 미구현 |
 | `/ad:time-log` | 소요시간 기록 | 미구현 |
 | `/ad:code-review` | GitHub PR 코드 리뷰 (이해 패스 → 팀 체크리스트 판정 → 교차 모델 검증 → 승인 조건 게이트) | 구현됨 |
+| `/ad:code-review-self` | 자기 PR 셀프 리뷰 — Herdr 리뷰어 peer가 `/ad:code-review`, 작성 세션이 PR 코멘트로 상태를 읽어 반영·답글·재리뷰를 `리뷰 완료`까지. `HERDR_ENV=1` 필요 | 구현됨 |
 | `/ad:tldr` | 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성 | 구현됨 |
 | `/ad:explain` | 코드 변경·분석 결과 설명서 (배경→직관→본체→퀴즈, md + HTML) | 구현됨 |
 | `/ad:orchestration` | Herdr pane peer-agent 협업 (핑퐁, 병렬 fan-out, 형제 pane 명령). `HERDR_ENV=1` 필요 | 구현됨 |
