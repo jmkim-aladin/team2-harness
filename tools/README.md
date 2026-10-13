@@ -659,3 +659,20 @@ pre-commit: `.githooks/pre-commit`이 `secret_scan --staged`와(하네스 지시
 ## rotate_hermes_outbox.py — Discord outbox 회전
 
 vault의 `hermes-discord-outbox/`가 무한 누적되지 않게 14일 경과 요청 디렉토리를 `~/.hermes-team2/archive/discord-outbox/YYYY-MM/`로 이동. dry-run 기본, `--apply`로 실행. `/ad:harness-optimize 스택` 주기에 포함 권장. 근거: 2026-08-08 실측 — 15,447 JSON/74MB가 vault git의 94.6% 점유.
+
+## export_wbs.py — YouTrack 하위 트리 → WBS·간트 엑셀 + HTML 간트 (시제품)
+
+루트 이슈 ID 하나에서 Subtask 링크를 재귀로 따라가 프로젝트 경계(DEV2·DEVSY·DEVDG)와 무관하게 하위 트리 전체를 모아 `.xlsx`로 낸다. 시트: WBS / 간트(날짜 열 칸 색칠, 레벨별 행 그룹) / 팀별 요약 / 점검 / 메타. YouTrack은 GET만 호출하고, 토큰은 `YOUTRACK_TOKEN` 또는 `cred.py get youtrack-token`에서 받아 헤더에만 쓴다.
+
+```bash
+python3 tools/export_wbs.py DEV2-5237 --out ~/Downloads/wbs-DEV2-5237.xlsx              # --out 필수, repo 안 경로는 거부
+python3 tools/export_wbs.py DEV2-5237 --out ~/Downloads/wbs.xlsx --html ~/Downloads/gantt.html --html-title "SF 프로젝트 간트"
+python3 tools/export_wbs.py DEV2-5237 --out ~/Downloads/wbs.xlsx --gantt-unit week --today 2026-10-07
+```
+
+- `--html`: 단일 파일 HTML 간트(인라인 JSON, 외부 스크립트 없음, 템플릿 `export_wbs_gantt.html`) — 표(엑셀 WBS 전 열·열 선택·열 폭 드래그)와 타임라인(폭 맞춤/주/일)을 분할선으로 나누고, 팀별 요약·점검 목록·Depend/Relates 연결선을 보여준다. 엑셀과 같은 계산(진척률·rollup·점검)을 쓴다
+- 계획 일정은 `Sprints`(월 단위) 최소월 1일~최대월 말일 근사 — 시작일·완료일 필드가 생기면 `planned_dates()`만 바꾼다
+- 실제 시작 = State(`상태`)가 처음 In Progress가 된 날, 실제 종료 = `resolved`. 진척률은 취소성 종료(Won't fix 등)를 분모에서 뺀다
+- 상위 행은 자기 일정이 없거나 하위가 더 넓으면 하위 범위를 빗금(rollup)으로 표시한다
+- '유형' 칸(엑셀 WBS 시트 채움·HTML 표 배지)은 `TYPE_COLORS` 한 표로 칠한다 — Epic 보라·Feature 청록·Task 회색·Bug 빨강, 그 밖·빈 값은 중립 회색
+- 산출물은 업무 데이터라 repo 밖에 쓴다

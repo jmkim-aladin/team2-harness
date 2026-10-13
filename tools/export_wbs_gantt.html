@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f0f2f5; --ink: #1f2328; --ink-2: #4b5563; --muted: #8a94a3;
+  --line: #d9dee5; --grid: #e9edf2; --month: #c5ccd6;
+  --plan: #b9d3f0; --act: #1f5aa6; --late: #e0702f; --cancel: #b4b9c0; --cancel-2: #8d939b; --today: #d12d36;
+  --ru-plan: #6f9fd8; --ru-act: #1f5aa6; --link: #5a6b80; --good: #2f7d4f;
+  --lv1-bg: #1f3864; --lv1-ink: #ffffff; --lv2-bg: #dde6f4; --band: rgba(31, 90, 166, .05); --guide: #c6cdd6;
+  --chip-on: #1f3864; --chip-on-ink: #ffffff; --focus: #1f5aa6; --hover: rgba(127, 127, 127, .10);
+  --ty-ring: rgba(0, 0, 0, .12); /* 유형 배지 테두리 — 배지 색 자체는 payload type_colors로 받는다 */
+  --dw: 2px; /* 초기값일 뿐 — fitDw 계산이 타임라인 폭에 맞춰 덮어쓴다 */
+  --tw: 45vw; --head-h: 42px; --top-h: 0px; --foot-h: 0px;
+  --col-wbs: 64px; --col-id: 92px; --col-title: 300px; --col-type: 70px; --col-team: 70px; --col-asg: 70px;
+  --col-state: 88px; --col-spr: 130px; --col-est: 70px; --col-spent: 90px; --col-sp: 44px; --col-plan: 96px;
+  --col-act: 96px; --col-deps: 140px; --col-prog: 110px; --title-left: var(--col-wbs);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1116; --surface: #161b22; --surface-2: #1d232c; --ink: #e6edf3; --ink-2: #b1bac4; --muted: #7d8590;
+    --line: #2f363f; --grid: #1f262f; --month: #3a434e;
+    --plan: #2a4a72; --act: #6cb0ff; --late: #f08a48; --cancel: #4a5059; --cancel-2: #6b727b; --today: #ff6b70;
+    --ru-plan: #4f80bb; --ru-act: #6cb0ff; --link: #8b9bb0; --good: #56c288;
+    --lv1-bg: #2c4f86; --lv1-ink: #ffffff; --lv2-bg: #1d2a3c; --band: rgba(108, 176, 255, .05); --guide: #39424d;
+    --chip-on: #6cb0ff; --chip-on-ink: #0e1116; --focus: #6cb0ff; --hover: rgba(255, 255, 255, .06);
+    --ty-ring: rgba(255, 255, 255, .18);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1116; --surface: #161b22; --surface-2: #1d232c; --ink: #e6edf3; --ink-2: #b1bac4; --muted: #7d8590;
+  --line: #2f363f; --grid: #1f262f; --month: #3a434e;
+  --plan: #2a4a72; --act: #6cb0ff; --late: #f08a48; --cancel: #4a5059; --cancel-2: #6b727b; --today: #ff6b70;
+  --ru-plan: #4f80bb; --ru-act: #6cb0ff; --link: #8b9bb0; --good: #56c288;
+  --lv1-bg: #2c4f86; --lv1-ink: #ffffff; --lv2-bg: #1d2a3c; --band: rgba(108, 176, 255, .05); --guide: #39424d;
+  --chip-on: #6cb0ff; --chip-on-ink: #0e1116; --focus: #6cb0ff; --hover: rgba(255, 255, 255, .06);
+  --ty-ring: rgba(255, 255, 255, .18);
+}
+:root.zoom-day { --head-h: 60px; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); padding: 16px; overflow-x: hidden;
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", sans-serif;
+}
+button, select, input { font: inherit; color: inherit; }
+a { color: var(--act); }
+.top { display: grid; gap: 10px; margin-bottom: 10px; }
+.titlebar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.titlebar h1 { font-size: 18px; margin: 0; }
+.titlebar .sub { color: var(--ink-2); }
+.titlebar .sp { flex: 1; }
+.btn { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; }
+.kpi .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--ink-2); font-size: 12px; }
+.kpi .d { color: var(--muted); font-size: 11px; }
+.kpi.hero .v { color: var(--act); }
+details.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+details.panel > summary { cursor: pointer; padding: 6px 12px; font-weight: 600; color: var(--ink-2); }
+.sumwrap { overflow-x: auto; padding: 0 12px 8px; }
+table.sum { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+table.sum th, table.sum td { padding: 4px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+table.sum th { color: var(--muted); font-weight: 600; font-size: 12px; }
+table.sum th:first-child, table.sum td:first-child { text-align: left; }
+table.sum tr.total td { font-weight: 700; }
+.pbar { display: inline-block; width: 56px; height: 6px; border-radius: 3px; background: var(--grid); vertical-align: middle; margin-right: 6px; overflow: hidden; }
+.pbar i { display: block; height: 100%; background: var(--good); }
+.row-ctl { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.row-ctl .lab { color: var(--ink-2); font-size: 12px; }
+.row-ctl .gap { width: 10px; }
+.chip { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; cursor: pointer; }
+.chip b { font-variant-numeric: tabular-nums; margin-left: 4px; }
+.chip[aria-pressed="true"] { background: var(--chip-on); color: var(--chip-on-ink); border-color: var(--chip-on); }
+.chip.off { opacity: .5; text-decoration: line-through; }
+.chip.zero { opacity: .6; }
+select, input[type="search"] { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+input[type="search"] { width: 200px; max-width: 100%; }
+.count { color: var(--muted); font-size: 12px; }
+details.colpick { position: relative; }
+details.colpick > summary { list-style: none; }
+details.colpick > summary::-webkit-details-marker { display: none; }
+details.colpick .menu { position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.18); padding: 8px 10px; display: grid; grid-template-columns: repeat(2, max-content); gap: 4px 16px; }
+.checklist { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; max-height: 180px; overflow: auto; }
+.checklist table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.checklist td, .checklist th { padding: 3px 10px; border-bottom: 1px solid var(--grid); text-align: left; white-space: nowrap; }
+.checklist th { position: sticky; top: 0; background: var(--surface-2); color: var(--muted); }
+.checklist td.t { white-space: normal; }
+.checklist .rule { padding: 6px 10px; color: var(--ink-2); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--ink-2); font-size: 12px; align-items: center; }
+.sw { display: inline-block; width: 22px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+.sw.plan { background: var(--plan); }
+.sw.act { background: var(--act); height: 6px; }
+.sw.late { background: var(--late); height: 6px; }
+.sw.ru-plan, .bar.ru-plan { background: repeating-linear-gradient(135deg, var(--ru-plan) 0 2px, transparent 2px 5px); box-shadow: inset 0 0 0 1px var(--ru-plan); }
+.sw.ru-act, .bar.ru-act { background: repeating-linear-gradient(135deg, var(--ru-act) 0 2px, transparent 2px 4px); }
+.sw.ru-act { height: 6px; }
+.sw.cancel { background: var(--cancel); }
+.sw.today { width: 2px; height: 14px; background: var(--today); border-radius: 0; }
+.sw.dep { height: 0; border-top: 2px solid var(--link); border-radius: 0; }
+.sw.dep-v { height: 0; border-top: 2px solid var(--today); border-radius: 0; }
+.sw.rel { height: 0; border-top: 2px dashed var(--link); border-radius: 0; }
+.sw.lv1 { background: var(--lv1-bg); } .sw.lv2 { background: var(--lv2-bg); border: 1px solid var(--line); }
+
+.split { display: grid; grid-template-columns: var(--tw) 6px minmax(0, 1fr); height: calc(100vh - var(--top-h) - var(--foot-h) - 52px); min-height: 360px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.pane { overflow-x: scroll; overflow-y: auto; position: relative; min-width: 0; }
+.divider { background: var(--surface-2); border-left: 1px solid var(--line); border-right: 1px solid var(--line); cursor: col-resize; touch-action: none; }
+.divider:hover, .divider.on { background: var(--focus); opacity: .5; }
+.tbl { width: max-content; min-width: 100%; }
+.thead, .tr { display: grid; grid-template-columns: var(--cols); }
+.thead { position: sticky; top: 0; z-index: 6; height: var(--head-h); background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.thc { position: relative; display: flex; align-items: flex-end; padding: 0 6px 5px; font-size: 12px; font-weight: 600; color: var(--ink-2); background: var(--surface-2); border-right: 1px solid var(--grid); white-space: nowrap; overflow: hidden; }
+.rsz { position: absolute; top: 0; right: 0; width: 7px; height: 100%; cursor: col-resize; touch-action: none; }
+.rsz:hover, .rsz.on { background: var(--focus); opacity: .45; }
+.tr, .gr { border-bottom: 1px solid var(--grid); cursor: pointer; }
+.tr[hidden], .gr[hidden] { display: none; }
+.tr.lv1, .gr.lv1 { height: 34px; --bh: 18px; }
+.tr.lv2, .gr.lv2 { height: 28px; --bh: 12px; }
+.tr.lv3, .gr.lv3 { height: 24px; --bh: 7px; }
+.td { display: flex; align-items: center; min-width: 0; padding: 0 6px; overflow: hidden; white-space: nowrap; background: var(--surface); border-right: 1px solid var(--grid); font-size: 12px; color: var(--ink-2); }
+.td > .tx { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.c-wbs { position: sticky; left: 0; z-index: 3; font-variant-numeric: tabular-nums; color: var(--muted); }
+.c-title { position: sticky; left: var(--title-left); z-index: 3; color: var(--ink); font-size: 13px; padding-left: 2px; gap: 3px; }
+.thc.c-wbs, .thc.c-title { z-index: 7; }
+.c-id a { text-decoration: none; font-variant-numeric: tabular-nums; }
+.c-id a:hover { text-decoration: underline; }
+.c-sp, .c-prog { font-variant-numeric: tabular-nums; }
+.ru { font-style: italic; color: var(--muted); }
+.tr.lv1 .td { background: var(--lv1-bg); color: var(--lv1-ink); font-weight: 700; }
+.tr.lv1 .td a { color: var(--lv1-ink); }
+.tr.lv2 .td { background: var(--lv2-bg); font-weight: 700; color: var(--ink); }
+.tr.hov .td, .gr.hov { box-shadow: inset 0 0 0 9999px var(--hover); }
+.tr.rel .td, .gr.rel { box-shadow: inset 0 0 0 9999px rgba(224, 112, 47, .14); }
+.tr.ctx, .gr.ctx { opacity: .5; }
+.tr.hit .c-title { box-shadow: inset 3px 0 0 var(--late); }
+.tr.cancel .c-title .tx { text-decoration: line-through; color: var(--muted); }
+.guides { flex: none; align-self: stretch; background-image: repeating-linear-gradient(to right, transparent 0 7px, var(--guide) 7px 8px, transparent 8px 16px); }
+.caret { flex: none; width: 18px; height: 18px; border: 0; background: transparent; cursor: pointer; padding: 0; color: inherit; font-size: 11px; line-height: 18px; }
+.caret.sp { cursor: default; }
+.st-doing { color: var(--act); font-weight: 600; }
+.st-todo { color: var(--muted); }
+.tybdg { display: inline-block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 17px; box-shadow: inset 0 0 0 1px var(--ty-ring); }
+
+.tl { position: relative; width: calc(var(--dw) * var(--days)); }
+.th { position: sticky; top: 0; z-index: 6; height: var(--head-h); background: var(--surface-2); border-bottom: 1px solid var(--line); overflow: hidden; }
+.th .mon { position: absolute; top: 0; height: 21px; padding: 2px 4px; font-size: 11px; font-weight: 700; color: var(--ink-2); border-left: 1px solid var(--month); white-space: nowrap; overflow: hidden; }
+.th .wk { position: absolute; top: 21px; height: 21px; padding: 3px 3px; font-size: 10px; color: var(--muted); border-left: 1px solid var(--grid); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.th .wk.hide { color: transparent; }
+.th .dy { position: absolute; top: 42px; height: 18px; font-size: 10px; line-height: 18px; color: var(--muted); text-align: center; border-left: 1px solid var(--grid); display: none; }
+.th .dy.we { color: var(--cancel-2); background: var(--surface); }
+:root.zoom-day .th .dy { display: block; }
+.th .tmark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--today); }
+.th .tlab.right { transform: translateX(calc(-100% - 2px)); }
+.th .tlab { position: absolute; top: 2px; transform: translateX(-50%); background: var(--today); color: #fff; font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 3px; white-space: nowrap; z-index: 2; }
+.tb { position: relative; }
+.lines { position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px calc(var(--dw) * 7)); background-position-x: calc(var(--dw) * var(--wkoff)); }
+.lines .ml { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--month); }
+.tline { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--today); z-index: 3; pointer-events: none; }
+.gr { position: relative; }
+.gr.lv1, .gr.lv2 { background: var(--band); }
+.bar { position: absolute; border-radius: 3px; }
+.bar.plan, .bar.ru-plan { height: var(--bh); top: calc(50% - var(--bh) / 2); }
+.bar.act, .bar.late, .bar.ru-act { height: calc(var(--bh) / 2 + 1px); top: calc(50% - var(--bh) / 4 - 0.5px); }
+.bar.plan { background: var(--plan); }
+.bar.act { background: var(--act); }
+.bar.late { background: var(--late); }
+.gr.cancel .bar.plan { background: var(--cancel); }
+.gr.cancel .bar.act, .gr.cancel .bar.late { background: var(--cancel-2); }
+.gr.cancel .bar { opacity: .7; }
+.tail { position: absolute; top: 50%; transform: translateY(-50%); display: flex; gap: 4px; align-items: center; white-space: nowrap; font-size: 10px; z-index: 1; }
+.tail .el { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.tail .el b { color: var(--late); font-weight: 700; }
+.gr.nolab .tail .el { display: none; }
+.bdg { font-size: 10px; padding: 0 5px; border-radius: 8px; border: 1px solid var(--link); color: var(--link); text-decoration: none; background: var(--surface); }
+.bdg.k-r { border-style: dashed; display: none; }
+:root.show-rel .bdg.k-r { display: inline; }
+:root.hide-dep .bdg.k-d { display: none; }
+svg.links { position: absolute; top: 0; left: 0; z-index: 2; pointer-events: none; overflow: visible; }
+svg.links path { fill: none; stroke: var(--link); stroke-width: 1.4; }
+svg.links path.v { stroke: var(--today); stroke-width: 1.8; }
+svg.links path.r { stroke-dasharray: 3 3; }
+svg.links path.dim { stroke-dasharray: 4 3; opacity: .45; }
+svg.links.focus path { opacity: .12; }
+svg.links.focus path.hl { opacity: 1; stroke-width: 2.2; }
+svg.links .ah { fill: var(--link); }
+svg.links .ahv { fill: var(--today); }
+.foot { margin-top: 8px; color: var(--muted); font-size: 12px; }
+.tip { position: fixed; z-index: 50; max-width: min(400px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.18); padding: 10px 12px; font-size: 12px; pointer-events: none; }
+.tip.pinned { pointer-events: auto; }
+.tip h3 { margin: 0 0 6px; font-size: 13px; }
+.tip dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0; }
+.tip dt { color: var(--muted); }
+.tip dd { margin: 0; }
+.tip a { display: inline-block; margin-top: 8px; }
+@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 720px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  input[type="search"] { width: 100%; }
+}
+</style>
+</head>
+<body>
+<header class="top" id="top">
+  <div class="titlebar">
+    <h1 id="h-title"></h1>
+    <span class="sub" id="h-sub"></span>
+    <span class="sp"></span>
+    <button class="btn" id="theme" type="button" title="테마 전환">테마: 자동</button>
+  </div>
+  <section class="kpis" id="kpis" aria-label="핵심 지표"></section>
+  <details class="panel" id="teams" open>
+    <summary>팀별 요약 (엑셀 '팀별 요약' 시트와 같은 계산)</summary>
+    <div class="sumwrap"><table class="sum" id="sum"></table></div>
+  </details>
+  <div class="row-ctl" id="chips"><span class="lab">점검</span></div>
+  <div class="checklist" id="checklist" hidden></div>
+  <div class="row-ctl">
+    <span class="lab">필터</span>
+    <select id="f-team" aria-label="팀"></select>
+    <span id="f-bucket" class="row-ctl"></span>
+    <label><input type="checkbox" id="f-hidecancel" checked> 취소 숨기기</label>
+    <input type="search" id="f-q" placeholder="제목·ID 검색" aria-label="제목·ID 검색">
+    <span class="gap"></span>
+    <span class="lab">펼침</span>
+    <button class="btn" type="button" id="x-all">전체 펼치기</button>
+    <button class="btn" type="button" id="x-feature">Feature까지</button>
+    <button class="btn" type="button" id="x-none">전체 접기</button>
+    <span class="gap"></span>
+    <span class="row-ctl" id="zoom"><span class="lab">보기</span></span>
+    <span class="gap"></span>
+    <span class="row-ctl" id="linkctl"><span class="lab">연결선</span></span>
+    <details class="colpick" id="colpick"><summary class="btn">열 선택</summary><div class="menu" id="colmenu"></div></details>
+    <span class="count" id="f-count"></span>
+  </div>
+  <div class="legend">
+    <span><i class="sw plan"></i>계획(Sprints)</span>
+    <span><i class="sw act"></i>실제 · 계획 안</span>
+    <span><i class="sw late"></i>실제 · 계획 밖(+지연일)</span>
+    <span><i class="sw ru-plan"></i>하위 집계 계획(빗금)</span>
+    <span><i class="sw ru-act"></i>하위 집계 실제(빗금)</span>
+    <span><i class="sw cancel"></i>취소성 종료</span>
+    <span><i class="sw today"></i>오늘</span>
+    <span><i class="sw dep"></i>선행 → 후행</span>
+    <span><i class="sw dep-v"></i>선후 위반</span>
+    <span><i class="sw rel"></i>Relates</span>
+    <span><i class="sw lv1"></i>레벨 1 · <i class="sw lv2"></i>레벨 2 · 막대 두께 1 &gt; 2 &gt; 3</span>
+    <span>기울임 날짜 = 하위 집계</span>
+  </div>
+</header>
+<main class="split" id="split">
+  <section class="pane" id="pt" aria-label="WBS 표"><div class="tbl"><div class="thead" id="thead"></div><div id="tbody"></div></div></section>
+  <div class="divider" id="divider" role="separator" aria-orientation="vertical" aria-label="표·타임라인 경계" tabindex="0" title="드래그: 경계 이동 · 더블클릭: 기본값"></div>
+  <section class="pane" id="pg" aria-label="타임라인">
+    <div class="tl" id="tl">
+      <div class="th" id="th"></div>
+      <div class="tb" id="tb">
+        <div class="lines" id="lines"></div>
+        <svg class="links" id="svg" aria-hidden="true"><defs>
+          <marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0,0 L8,4 L0,8 z"></path></marker>
+          <marker id="ahv" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="ahv" d="M0,0 L8,4 L0,8 z"></path></marker>
+        </defs><g id="paths"></g></svg>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="foot" id="foot"></footer>
+<div class="tip" id="tip" hidden></div>
+<script type="application/json" id="wbs-data">/*__DATA__*/</script>
+<script>
+(function () {
+  "use strict";
+  var D = JSON.parse(document.getElementById("wbs-data").textContent);
+  var rows = D.rows, DAY = 86400000, byId = {};
+  rows.forEach(function (r, i) { r.i = i; r.kids = []; byId[r.id] = r; });
+  rows.forEach(function (r) { if (r.par && byId[r.par]) byId[r.par].kids.push(r); });
+  function dn(s) { var p = s.split("-"); return Date.UTC(+p[0], +p[1] - 1, +p[2]) / DAY; }
+  var start = dn(D.range[0]), end = dn(D.range[1]), today = dn(D.today), days = end - start + 1;
+  var root = document.documentElement;
+  var wkoff = (7 - ((new Date(start * DAY).getUTCDay() + 6) % 7)) % 7;  // 첫 월요일까지 일수
+  root.style.setProperty("--days", days);
+  root.style.setProperty("--wkoff", wkoff);
+  function store(k, v) { try { if (v == null) localStorage.removeItem("wbs-gantt-" + k); else localStorage.setItem("wbs-gantt-" + k, JSON.stringify(v)); } catch (e) {} }
+  function load(k) { try { var v = localStorage.getItem("wbs-gantt-" + k); return v == null ? null : JSON.parse(v); } catch (e) { return null; } }
+  function url(id) { return D.base + "/issue/" + encodeURIComponent(id); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function pct(v) { return v == null ? "-" : Math.round(v * 100) + "%"; }
+  function md(n) { var d = new Date(n * DAY); return (d.getUTCMonth() + 1) + "/" + d.getUTCDate(); }
+  function pos(e, s, f) { e.style.left = "calc(var(--dw) * " + (s - start) + ")"; e.style.width = "calc(var(--dw) * " + (f - s + 1) + ")"; return e; }
+  function pbar(v) { var b = el("span", "pbar"), i = el("i"); i.style.width = (v == null ? 0 : Math.round(v * 100)) + "%"; b.appendChild(i); return b; }
+
+  // ── 머리말·KPI·팀별 요약·푸터 (엑셀과 같은 계산 결과)
+  document.getElementById("h-title").textContent = D.meta.root + " " + (D.meta.root_title || "");
+  document.getElementById("h-sub").textContent = "기준일 " + D.today + " · 이슈 " + D.meta.issues + "건 · 하위 집계 " + D.meta.rollups + "행";
+  var K = D.kpi, kpis = document.getElementById("kpis");
+  [["총 이슈", K.total, ""], ["종료", K.done, "취소 제외"], ["진행", K.doing, ""], ["미착수", K.todo, ""],
+   ["취소성 종료", K.cancelled, "Won't fix·Duplicate 등"], ["진척률(취소 제외)", pct(K.progress), "leaf " + K.leaf_done + "/" + K.leaves, 1]]
+    .forEach(function (k) {
+      var box = el("div", "kpi" + (k[3] ? " hero" : ""));
+      box.appendChild(el("div", "v", String(k[1]))); box.appendChild(el("div", "l", k[0]));
+      if (k[2]) box.appendChild(el("div", "d", k[2]));
+      kpis.appendChild(box);
+    });
+  var sum = document.getElementById("sum"), sh = el("tr");
+  ["프로젝트(팀)", "이슈 수", "종료", "└ 취소", "진행", "미착수", "leaf 종료/대상", "진척률(취소 제외)", "일정 없음", "실제 시작 없음"].forEach(function (h) { sh.appendChild(el("th", null, h)); });
+  sum.appendChild(sh);
+  D.summary.forEach(function (s) {
+    var tr = el("tr", s.project === "전체" ? "total" : null);
+    [s.label, s.count, s.done, s.cancelled, s.doing, s.todo, s.leaf_done + "/" + s.leaves].forEach(function (v) { tr.appendChild(el("td", null, String(v))); });
+    var pc = el("td"); pc.appendChild(pbar(s.progress)); pc.appendChild(document.createTextNode(pct(s.progress))); tr.appendChild(pc);
+    tr.appendChild(el("td", null, String(s.no_plan))); tr.appendChild(el("td", null, String(s.no_actual)));
+    sum.appendChild(tr);
+  });
+  var LC = D.link_counts;
+  document.getElementById("foot").textContent = "루트 " + D.meta.root + " · 추출 " + D.meta.extracted + " · 기준일 " + D.today +
+    " · 이슈 " + D.meta.issues + "건 · API 호출 " + D.meta.api_calls + "회 · Depend 트리 안 " + LC.Depend.in_tree + "/밖 " + LC.Depend.external +
+    " · Relates 트리 안 " + LC.Relates.in_tree + "/밖 " + LC.Relates.external;
+
+  // ── 열 정의 (엑셀 WBS 열과 같은 정보)
+  var COLS = [
+    { k: "wbs", t: "WBS", w: 64 }, { k: "id", t: "티켓", w: 92 }, { k: "title", t: "제목", w: 240, min: 120, fixed: 1 },
+    { k: "type", t: "유형", w: 70 }, { k: "team", t: "팀", w: 70 }, { k: "asg", t: "담당자", w: 70 },
+    { k: "state", t: "상태", w: 88 }, { k: "prog", t: "진척률", w: 150 }, { k: "plan", t: "계획", w: 96 },
+    { k: "act", t: "실제", w: 96 }, { k: "spr", t: "Sprints", w: 130 }, { k: "est", t: "예측", w: 70 },
+    { k: "spent", t: "소요 시간", w: 90 }, { k: "sp", t: "SP", w: 44 }, { k: "deps", t: "선행 티켓", w: 140 }];
+  var CORE = ["wbs", "id", "title", "team", "asg", "state", "prog", "plan", "act"], NARROW = ["wbs", "title", "prog"];
+  var vw = window.innerWidth;
+  var shown = load("cols") || (vw >= 1600 ? COLS.map(function (c) { return c.k; }) : vw >= 1100 ? CORE : NARROW);
+  var widths = load("widths") || {};
+  var colStyle = el("style"); document.head.appendChild(colStyle);
+  function colW(c) { return Math.max(c.min || 40, widths[c.k] || c.w); }
+  function applyCols() {
+    var vis = COLS.filter(function (c) { return c.fixed || shown.indexOf(c.k) >= 0; });
+    COLS.forEach(function (c) { root.style.setProperty("--col-" + c.k, colW(c) + "px"); });
+    root.style.setProperty("--cols", vis.map(function (c) { return "var(--col-" + c.k + ")"; }).join(" "));
+    root.style.setProperty("--title-left", vis.some(function (c) { return c.k === "wbs"; }) ? "var(--col-wbs)" : "0px");
+    colStyle.textContent = COLS.filter(function (c) { return vis.indexOf(c) < 0; }).map(function (c) { return ".c-" + c.k + "{display:none}"; }).join("");
+  }
+  applyCols();
+
+  // ── 타임라인 머리 (월 / 주 시작일 / 일)
+  var th = document.getElementById("th"), lines = document.getElementById("lines"), wkEls = [];
+  var d0 = new Date(start * DAY), m = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth(), 1));
+  while (m.getTime() / DAY <= end) {
+    var ms = Math.max(m.getTime() / DAY, start), next = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1));
+    var mLabel = m.getUTCFullYear() + "." + String(m.getUTCMonth() + 1).padStart(2, "0");
+    th.appendChild(pos(el("div", "mon", mLabel), ms, Math.min(next.getTime() / DAY - 1, end)));
+    if (ms > start) { var ml = el("div", "ml"); ml.style.left = "calc(var(--dw) * " + (ms - start) + ")"; lines.appendChild(ml); }
+    m = next;
+  }
+  for (var w = start + wkoff, k = 0; w <= end; w += 7, k++) {
+    var wd = new Date(w * DAY), we = pos(el("div", "wk", md(w)), w, Math.min(w + 6, end));
+    we.dataset.k = k; we.dataset.first = wd.getUTCDate() <= 7 ? "1" : "";
+    th.appendChild(we); wkEls.push(we);
+  }
+  for (var dd = start; dd <= end; dd++) {
+    var dday = new Date(dd * DAY), wdn = dday.getUTCDay();
+    th.appendChild(pos(el("div", "dy" + (wdn === 0 || wdn === 6 ? " we" : ""), String(dday.getUTCDate())), dd, dd));
+  }
+  var tb = document.getElementById("tb");
+  if (today >= start && today <= end) {
+    var tm = el("div", "tmark"); tm.style.left = "calc(var(--dw) * " + (today - start) + ")"; th.appendChild(tm);
+    var tlab = el("div", "tlab" + (end - today < days * 0.08 ? " right" : ""), "오늘 " + md(today)); tlab.style.left = "calc(var(--dw) * " + (today - start) + " + 1px)"; th.appendChild(tlab);
+    var tl = el("div", "tline"); tl.style.left = "calc(var(--dw) * " + (today - start) + ")"; tb.appendChild(tl);
+  }
+
+  // ── 표 머리 (열 폭 드래그: 헤더 오른쪽 경계, 더블클릭 = 기본값)
+  var thead = document.getElementById("thead");
+  COLS.forEach(function (c) {
+    var h = el("div", "thc c-" + c.k, c.t), rz = el("span", "rsz");
+    rz.title = "드래그: 열 폭 · 더블클릭: 기본값";
+    h.appendChild(rz); thead.appendChild(h);
+    rz.addEventListener("pointerdown", function (ev) {
+      ev.preventDefault(); rz.setPointerCapture(ev.pointerId); rz.classList.add("on");
+      var x0 = ev.clientX, w0 = colW(c);
+      function move(e) { widths[c.k] = Math.max(c.min || 40, Math.round(w0 + e.clientX - x0)); root.style.setProperty("--col-" + c.k, widths[c.k] + "px"); }
+      function up() { rz.classList.remove("on"); rz.removeEventListener("pointermove", move); rz.removeEventListener("pointerup", up); store("widths", widths); layout(false); }
+      rz.addEventListener("pointermove", move); rz.addEventListener("pointerup", up);
+    });
+    rz.addEventListener("dblclick", function () { delete widths[c.k]; applyCols(); store("widths", widths); layout(false); });
+  });
+
+  // ── 유형 배지 색 (export_wbs.py TYPE_COLORS가 SoT — 엑셀 '유형' 칸과 같은 표. 위 테마 블록과 같은 선택자로 토큰을 만든다)
+  var TC = D.type_colors, tyL = "", tyD = "", tyCls = "", tyStyle = el("style");
+  Object.keys(TC).forEach(function (k) {
+    tyL += "--ty-" + k + "-bg:" + TC[k].bg + ";--ty-" + k + "-ink:" + TC[k].ink + ";";
+    tyD += "--ty-" + k + "-bg:" + TC[k].bg_dark + ";--ty-" + k + "-ink:" + TC[k].ink_dark + ";";
+    tyCls += ".tybdg.ty-" + k + "{background:var(--ty-" + k + "-bg);color:var(--ty-" + k + "-ink)}";
+  });
+  tyStyle.textContent = ":root{" + tyL + "}@media (prefers-color-scheme: dark){:root:not([data-theme=\"light\"]){" + tyD + "}}" +
+    ":root[data-theme=\"dark\"]{" + tyD + "}" + tyCls;
+  document.head.appendChild(tyStyle);
+
+  // ── 행 (표·타임라인 같은 순서, 같은 높이)
+  var tbody = document.getElementById("tbody"), trs = [], grs = [];
+  function bar(g, cls, s, f) { if (s != null && f != null && s <= f) g.appendChild(pos(el("div", "bar " + cls), s, f)); }
+  function cell(tr, k, content, cls) {
+    var c = el("div", "td c-" + k + (cls ? " " + cls : ""));
+    if (content instanceof Node) c.appendChild(content); else c.appendChild(el("span", "tx", content == null || content === "" ? "-" : String(content)));
+    tr.appendChild(c); return c;
+  }
+  rows.forEach(function (r) {
+    var lv = "lv" + Math.min(r.lv, 3), cancel = r.b === "취소" ? " cancel" : "";
+    var tr = el("div", "tr " + lv + cancel), g = el("div", "gr " + lv + cancel);
+    tr.dataset.i = g.dataset.i = r.i;
+    cell(tr, "wbs", r.wbs);
+    var a = el("a", null, r.id); a.href = url(r.id); a.target = "_blank"; a.rel = "noopener"; cell(tr, "id", a);
+    var t = cell(tr, "title", el("span", "guides"));
+    t.firstChild.style.width = ((r.lv - 1) * 16) + "px";
+    if (r.kids.length) { var cb = el("button", "caret", "▸"); cb.type = "button"; cb.setAttribute("aria-label", "펼치기/접기"); t.appendChild(cb); r.caret = cb; }
+    else t.appendChild(el("span", "caret sp"));
+    t.appendChild(el("span", "tx", r.title));
+    cell(tr, "type", el("span", "tybdg ty-" + r.tc, r.type || "-")); cell(tr, "team", r.team); cell(tr, "asg", r.asg);
+    cell(tr, "state", r.state, r.b === "진행" ? "st-doing" : r.b === "미착수" ? "st-todo" : "");
+    var pg_ = el("span", "tx"); if (r.tot) { pg_.appendChild(pbar(r.prog)); pg_.appendChild(document.createTextNode(pct(r.prog) + " " + r.done + "/" + r.tot)); } else pg_.textContent = "-";
+    cell(tr, "prog", pg_);
+    cell(tr, "plan", r.pl, r.plr ? "ru" : ""); cell(tr, "act", r.al, r.alr ? "ru" : "");
+    cell(tr, "spr", r.spr); cell(tr, "est", r.est); cell(tr, "spent", r.spent); cell(tr, "sp", r.sp);
+    cell(tr, "deps", r.deps.map(function (d) { return d[0] + (d[1] ? "" : "(미종료)"); }).join(", "));
+
+    var ps = r.ps ? dn(r.ps) : null, pe = r.pe ? dn(r.pe) : null, as = r.as ? dn(r.as) : null, ae = r.ae ? dn(r.ae) : null;
+    if (r.rp) bar(g, "ru-plan", dn(r.rp[0]), dn(r.rp[1]));
+    if (ps != null) bar(g, "plan", ps, pe);
+    if (r.ra) bar(g, "ru-act", dn(r.ra[0]), dn(r.ra[1]));
+    if (as != null) {
+      if (ps == null) bar(g, "late", as, ae);
+      else { bar(g, "late", as, Math.min(ae, ps - 1)); bar(g, "act", Math.max(as, ps), Math.min(ae, pe)); bar(g, "late", Math.max(as, pe + 1), ae); }
+    }
+    r.xs = as != null ? as : ps != null ? ps : r.ra ? dn(r.ra[0]) : r.rp ? dn(r.rp[0]) : null;
+    r.xe = ae != null ? ae : pe != null ? pe : r.ra ? dn(r.ra[1]) : r.rp ? dn(r.rp[1]) : null;
+    r.barDays = as != null ? ae - as + 1 : ps != null ? pe - ps + 1 : 0;
+    var tail = el("div", "tail");
+    tail.style.left = r.xe != null ? "calc(var(--dw) * " + (r.xe - start + 1) + " + 3px)" : "3px";
+    if (ae != null || pe != null) {
+      var lab = el("span", "el", md(ae != null ? ae : pe));
+      if (r.late) { var b = el("b", null, " +" + r.late + "d"); lab.appendChild(b); }
+      tail.appendChild(lab);
+    }
+    r.ext.forEach(function (x) {
+      var bd = el("a", "bdg k-" + x[2], x[0] + " " + x[1]); bd.href = url(x[1]); bd.target = "_blank"; bd.rel = "noopener";
+      bd.title = (x[2] === "d" ? "Depend" : "Relates") + " — 트리 밖 이슈"; tail.appendChild(bd);
+    });
+    g.appendChild(tail);
+    tbody.appendChild(tr); tb.appendChild(g); trs.push(tr); grs.push(g);
+  });
+
+  // ── 필터·펼침
+  var expanded = {};
+  function setDefault() { expanded = {}; rows.forEach(function (r) { if (r.exp) expanded[r.id] = true; }); }
+  setDefault();
+  var st = { team: "", buckets: { "종료": 1, "진행": 1, "미착수": 1, "취소": 1 }, hideCancel: true, q: "", chip: null };
+  var checkSets = {}, checkByKey = {};
+  D.checks.forEach(function (c) { var s = {}; c.items.forEach(function (it) { s[it[0]] = 1; }); checkSets[c.key] = s; checkByKey[c.key] = c; });
+  function match(r) {
+    if (st.team && r.proj !== st.team) return false;
+    if (!st.buckets[r.b]) return false;
+    if (st.hideCancel && r.b === "취소") return false;
+    if (st.q && (r.id + " " + r.title).toLowerCase().indexOf(st.q) < 0) return false;
+    if (st.chip && !checkSets[st.chip][r.id]) return false;
+    return true;
+  }
+  function isHidden(r) { return trs[r.i].hidden; }
+  function refresh(reveal) {
+    var mt = [], has = [], k, r, nMatch = 0, nShow = 0;
+    for (k = rows.length - 1; k >= 0; k--) { r = rows[k]; mt[k] = match(r); has[k] = mt[k] || r.kids.some(function (c) { return has[c.i]; }); }
+    if (reveal) rows.forEach(function (r) { if (mt[r.i]) for (var p = byId[r.par]; p; p = byId[p.par]) expanded[p.id] = true; });
+    rows.forEach(function (r) {
+      var vis = has[r.i];
+      for (var p = byId[r.par]; vis && p; p = byId[p.par]) if (!expanded[p.id]) vis = false;
+      [trs[r.i], grs[r.i]].forEach(function (e) { e.hidden = !vis; e.classList.toggle("ctx", vis && !mt[r.i]); });
+      trs[r.i].classList.toggle("hit", !!st.chip && mt[r.i]);
+      if (r.caret) { r.caret.textContent = expanded[r.id] ? "▾" : "▸"; r.caret.setAttribute("aria-expanded", expanded[r.id] ? "true" : "false"); }
+      if (mt[r.i]) nMatch++;
+      if (vis) nShow++;
+    });
+    document.getElementById("f-count").textContent = "조건 일치 " + nMatch + "건 · 표시 " + nShow + "행" + (st.hideCancel ? " · 취소 " + D.kpi.cancelled + "건 숨김" : "");
+    draw();
+  }
+  function countMatches() { return rows.filter(match).length; }
+  var team = document.getElementById("f-team");
+  team.appendChild(new Option("팀 전체", ""));
+  D.teams.forEach(function (t) { team.appendChild(new Option(t.team + " (" + t.proj + ") " + t.count, t.proj)); });
+  team.addEventListener("change", function () { st.team = team.value; refresh(countMatches() <= 80); });
+  var fb = document.getElementById("f-bucket");
+  ["종료", "진행", "미착수", "취소"].forEach(function (b) {
+    var c = el("button", "chip", b); c.type = "button"; c.setAttribute("aria-pressed", "true");
+    c.addEventListener("click", function () {
+      st.buckets[b] = st.buckets[b] ? 0 : 1;
+      c.setAttribute("aria-pressed", st.buckets[b] ? "true" : "false"); c.classList.toggle("off", !st.buckets[b]);
+      refresh(countMatches() <= 80);
+    });
+    fb.appendChild(c);
+  });
+  var hc = document.getElementById("f-hidecancel");
+  hc.addEventListener("change", function () { st.hideCancel = hc.checked; refresh(false); });
+  var q = document.getElementById("f-q");
+  q.addEventListener("input", function () { st.q = q.value.trim().toLowerCase(); refresh(!!st.q); });
+  document.getElementById("x-all").addEventListener("click", function () { rows.forEach(function (r) { if (r.kids.length) expanded[r.id] = true; }); refresh(false); });
+  document.getElementById("x-feature").addEventListener("click", function () { setDefault(); refresh(false); });
+  document.getElementById("x-none").addEventListener("click", function () { expanded = {}; refresh(false); });
+
+  // ── 점검 칩 + 티켓 목록 (엑셀 '점검' 시트와 같은 결과)
+  var chipsBox = document.getElementById("chips"), listBox = document.getElementById("checklist"), chipEls = [];
+  function renderList(c) {
+    listBox.textContent = "";
+    if (!c) { listBox.hidden = true; return; }
+    listBox.appendChild(el("div", "rule", c.title + " — " + c.rule + (c.note ? " (" + c.note + ")" : "")));
+    var t = el("table"), h = el("tr");
+    ["티켓", "제목", "팀", "사유"].forEach(function (x) { h.appendChild(el("th", null, x)); }); t.appendChild(h);
+    c.items.forEach(function (it) {
+      var r = byId[it[0]], tr = el("tr"), td = el("td"), a = el("a", null, it[0]);
+      a.href = url(it[0]); a.target = "_blank"; a.rel = "noopener"; td.appendChild(a); tr.appendChild(td);
+      tr.appendChild(el("td", "t", r ? r.title : "")); tr.appendChild(el("td", null, r ? r.team : "")); tr.appendChild(el("td", null, it[1] || ""));
+      t.appendChild(tr);
+    });
+    listBox.appendChild(t); listBox.hidden = false;
+  }
+  D.checks.forEach(function (c) {
+    if (!c.items.length && D.pinned.indexOf(c.key) < 0) return;
+    var b = el("button", "chip" + (c.items.length ? "" : " zero"), c.title); b.type = "button"; b.setAttribute("aria-pressed", "false");
+    b.title = c.rule + (c.note ? " — " + c.note : "");
+    b.appendChild(el("b", null, String(c.items.length)));
+    b.addEventListener("click", function () {
+      st.chip = st.chip === c.key ? null : c.key;
+      chipEls.forEach(function (x) { x.setAttribute("aria-pressed", x === b && st.chip ? "true" : "false"); });
+      renderList(st.chip ? c : null);
+      refresh(!!st.chip);
+    });
+    chipEls.push(b); chipsBox.appendChild(b);
+  });
+
+  // ── 열 선택기
+  var colmenu = document.getElementById("colmenu");
+  COLS.forEach(function (c) {
+    var lab = el("label"), cb = el("input"); cb.type = "checkbox";
+    cb.checked = !!c.fixed || shown.indexOf(c.k) >= 0; cb.disabled = !!c.fixed;
+    cb.addEventListener("change", function () {
+      shown = COLS.filter(function (x) { return x.fixed || (x === c ? cb.checked : shown.indexOf(x.k) >= 0); }).map(function (x) { return x.k; });
+      store("cols", shown); applyCols(); layout(false);
+    });
+    lab.appendChild(cb); lab.appendChild(document.createTextNode(" " + c.t)); colmenu.appendChild(lab);
+  });
+
+  // ── 연결선 (Depend 실선·Relates 점선, 접힌 끝은 보이는 조상으로)
+  var showDep = true, showRel = false, svg = document.getElementById("svg"), gPaths = document.getElementById("paths");
+  var linkctl = document.getElementById("linkctl");
+  [["Depend", true], ["Relates", false]].forEach(function (x) {
+    var b = el("button", "chip", x[0]); b.type = "button"; b.setAttribute("aria-pressed", x[1] ? "true" : "false");
+    b.addEventListener("click", function () {
+      if (x[0] === "Depend") showDep = !showDep; else showRel = !showRel;
+      var on = x[0] === "Depend" ? showDep : showRel;
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      root.classList.toggle("hide-dep", !showDep); root.classList.toggle("show-rel", showRel);
+      draw();
+    });
+    linkctl.appendChild(b);
+  });
+  var dw = 2, hoverId = null;
+  function anchor(r) { while (r && isHidden(r)) r = byId[r.par]; return r; }
+  function draw() {
+    clearHighlight();
+    gPaths.textContent = "";
+    svg.setAttribute("width", Math.ceil(days * dw)); svg.setAttribute("height", tb.offsetHeight);
+    D.links.forEach(function (L) {
+      if ((L.k === "d" && !showDep) || (L.k === "r" && !showRel)) return;
+      var a = byId[L.f], b = byId[L.t], A = anchor(a), B = anchor(b);
+      if (!A || !B || A === B || A.xe == null || B.xs == null) return;
+      var x1 = (A.xe - start + 1) * dw, x2 = (B.xs - start) * dw;
+      var y1 = grs[A.i].offsetTop + grs[A.i].offsetHeight / 2, y2 = grs[B.i].offsetTop + grs[B.i].offsetHeight / 2;
+      var xm = x1 + 8, d;
+      if (x2 - 6 >= xm) d = "M" + x1 + " " + y1 + "H" + xm + "V" + y2 + "H" + x2;
+      else { var ym = y2 + (y2 > y1 ? -10 : 10); d = "M" + x1 + " " + y1 + "H" + xm + "V" + ym + "H" + (x2 - 8) + "V" + y2 + "H" + x2; }
+      var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p.setAttribute("d", d);
+      p.setAttribute("class", L.k + (L.v ? " v" : "") + (A !== a || B !== b ? " dim" : ""));
+      if (L.k === "d") p.setAttribute("marker-end", L.v ? "url(#ahv)" : "url(#ah)");
+      p.dataset.f = L.f; p.dataset.t = L.t;
+      gPaths.appendChild(p);
+    });
+    if (hoverId) highlight(hoverId);
+  }
+  function highlight(id) {
+    var any = false;
+    Array.prototype.forEach.call(gPaths.childNodes, function (p) {
+      var on = p.dataset.f === id || p.dataset.t === id; p.classList.toggle("hl", on);
+      if (on) { any = true; var o = byId[p.dataset.f === id ? p.dataset.t : p.dataset.f], oa = anchor(o); if (oa) { trs[oa.i].classList.add("rel"); grs[oa.i].classList.add("rel"); } }
+    });
+    svg.classList.toggle("focus", any);
+  }
+  function clearHighlight() {
+    svg.classList.remove("focus");
+    Array.prototype.forEach.call(gPaths.childNodes, function (p) { p.classList.remove("hl"); });
+    document.querySelectorAll(".rel").forEach(function (e) { e.classList.remove("rel"); });
+  }
+
+  // ── 툴팁·호버·클릭
+  var tip = document.getElementById("tip"), canHover = window.matchMedia("(hover: hover)").matches;
+  function fill(r, withLink) {
+    tip.textContent = "";
+    tip.appendChild(el("h3", null, r.id + " " + r.title));
+    var dl = el("dl");
+    function add(k, v) { if (v == null || v === "") return; dl.appendChild(el("dt", null, k)); dl.appendChild(el("dd", null, String(v))); }
+    add("WBS", r.wbs); add("유형", r.type); add("팀", r.team + " (" + r.proj + ")"); add("담당자", r.asg); add("상태", r.state + " · " + r.b);
+    add("Sprints", r.spr || "없음");
+    add("계획", r.ps ? r.ps + " ~ " + r.pe : "없음");
+    add("실제", r.s0 || r.s1 ? (r.s0 || "시작 이력 없음") + " ~ " + (r.s1 || (r.ongoing ? "진행 중(오늘까지)" : "-")) : "없음");
+    if (r.late) add("지연", "계획 종료 대비 +" + r.late + "일");
+    if (r.rp) add("하위 집계 계획", r.rp[0] + " ~ " + r.rp[1]);
+    if (r.ra) add("하위 집계 실제", r.ra[0] + " ~ " + r.ra[1]);
+    add("진척률", r.tot ? pct(r.prog) + " (leaf " + r.done + "/" + r.tot + ", 취소 제외)" : "-");
+    add("예측", r.est); add("소요 시간", r.spent); add("SP", r.sp);
+    if (r.deps.length) add("선행", r.deps.map(function (d) { return d[0] + (d[1] ? "" : "(미종료)"); }).join(", "));
+    if (r.ext.length) add("트리 밖 연결", r.ext.map(function (x) { return x[0] + " " + x[1]; }).join(", "));
+    tip.appendChild(dl);
+    if (withLink) { var a = el("a", null, "YouTrack에서 열기"); a.href = url(r.id); a.target = "_blank"; a.rel = "noopener"; tip.appendChild(a); }
+  }
+  function place(x, y) {
+    tip.hidden = false;
+    var w = tip.offsetWidth, h = tip.offsetHeight, left = x + 14, top = y + 14;
+    if (left + w > window.innerWidth - 8) left = Math.max(8, x - w - 14);
+    if (top + h > window.innerHeight - 8) top = Math.max(8, y - h - 14);
+    tip.style.left = left + "px"; tip.style.top = top + "px";
+  }
+  function rowOf(t) { var e = t.closest ? t.closest("[data-i]") : null; return e ? rows[+e.dataset.i] : null; }
+  function setHover(r) {
+    if (hoverId === (r && r.id)) return;
+    if (hoverId) { trs[byId[hoverId].i].classList.remove("hov"); grs[byId[hoverId].i].classList.remove("hov"); clearHighlight(); }
+    hoverId = r ? r.id : null;
+    if (r) { trs[r.i].classList.add("hov"); grs[r.i].classList.add("hov"); highlight(r.id); }
+  }
+  [document.getElementById("tbody"), tb].forEach(function (box) {
+    box.addEventListener("mousemove", function (ev) {
+      if (!canHover || tip.classList.contains("pinned")) return;
+      var r = rowOf(ev.target); setHover(r);
+      if (!r) { tip.hidden = true; return; }
+      if (tip.dataset.id !== r.id) { fill(r, false); tip.dataset.id = r.id; }
+      place(ev.clientX, ev.clientY);
+    });
+    box.addEventListener("mouseleave", function () { setHover(null); if (!tip.classList.contains("pinned")) tip.hidden = true; });
+    box.addEventListener("click", function (ev) {
+      var r = rowOf(ev.target); if (!r) return;
+      if (ev.target.closest(".caret")) { if (r.kids.length) { expanded[r.id] = !expanded[r.id]; refresh(false); } return; }
+      if (ev.target.closest("a")) return;
+      if (canHover) { window.open(url(r.id), "_blank", "noopener"); return; }
+      fill(r, true); tip.dataset.id = r.id; tip.classList.add("pinned"); place(ev.clientX, ev.clientY); ev.stopPropagation();
+    });
+  });
+  document.addEventListener("click", function (ev) {
+    if (tip.classList.contains("pinned") && !tip.contains(ev.target)) { tip.classList.remove("pinned"); tip.hidden = true; }
+  });
+
+  // ── 분할선·폭 맞춤·확대·세로 맞춤·스크롤 동기화
+  var split = document.getElementById("split"), pt = document.getElementById("pt"), pg = document.getElementById("pg");
+  var divider = document.getElementById("divider"), topEl = document.getElementById("top"), foot = document.getElementById("foot");
+  var ratio = load("ratio"), zoom = "fit", MIN_DW = 2, ZOOM_DW = { week: 8, day: 24 };
+  function defaultRatio() { var w = window.innerWidth; return w >= 1600 ? 0.45 : w >= 1100 ? 0.40 : 0.45; }
+  function applySplit() {
+    var W = split.clientWidth, tw = Math.round(Math.max(200, Math.min(W * (ratio || defaultRatio()), W - 240)));
+    root.style.setProperty("--tw", tw + "px");
+  }
+  function fitDw() { return Math.max(MIN_DW, Math.floor((pg.clientWidth - 1) / days * 100) / 100); }
+  function axisLabels() {
+    var weekPx = 7 * dw, need = 30, step = weekPx >= need ? 1 : weekPx * 2 >= need ? 2 : 0;
+    wkEls.forEach(function (e) { var k = +e.dataset.k; e.classList.toggle("hide", !(step === 1 || (step === 2 && k % 2 === 0) || (step === 0 && e.dataset.first))); });
+    rows.forEach(function (r) { grs[r.i].classList.toggle("nolab", r.barDays * dw < 22); });
+  }
+  function layout(scroll) {
+    root.style.setProperty("--top-h", topEl.offsetHeight + "px");
+    root.style.setProperty("--foot-h", foot.offsetHeight + "px");
+    applySplit();
+    dw = zoom === "fit" ? fitDw() : ZOOM_DW[zoom];
+    root.style.setProperty("--dw", dw + "px");
+    root.classList.toggle("zoom-day", zoom === "day");
+    axisLabels(); draw();
+    if (scroll) pg.scrollLeft = zoom === "fit" || today < start || today > end ? 0 : Math.max(0, (today - start) * dw - pg.clientWidth * 0.6);
+  }
+  var zoomBox = document.getElementById("zoom"), zoomEls = {};
+  [["fit", "맞춤"], ["week", "주"], ["day", "일"]].forEach(function (z) {
+    var b = el("button", "chip", z[1]); b.type = "button"; b.setAttribute("aria-pressed", z[0] === zoom ? "true" : "false");
+    b.addEventListener("click", function () {
+      zoom = z[0];
+      Object.keys(zoomEls).forEach(function (k) { zoomEls[k].setAttribute("aria-pressed", k === zoom ? "true" : "false"); });
+      layout(true);
+    });
+    zoomEls[z[0]] = b; zoomBox.appendChild(b);
+  });
+  divider.addEventListener("pointerdown", function (ev) {
+    ev.preventDefault(); divider.setPointerCapture(ev.pointerId); divider.classList.add("on");
+    var left = split.getBoundingClientRect().left;
+    function move(e) { ratio = Math.max(0.15, Math.min((e.clientX - left) / split.clientWidth, 0.85)); layout(false); }
+    function up() { divider.classList.remove("on"); divider.removeEventListener("pointermove", move); divider.removeEventListener("pointerup", up); store("ratio", ratio); }
+    divider.addEventListener("pointermove", move); divider.addEventListener("pointerup", up);
+  });
+  divider.addEventListener("dblclick", function () { ratio = null; store("ratio", null); layout(false); });
+  divider.addEventListener("keydown", function (ev) {
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+    ratio = Math.max(0.15, Math.min((ratio || defaultRatio()) + (ev.key === "ArrowLeft" ? -0.02 : 0.02), 0.85));
+    store("ratio", ratio); layout(false); ev.preventDefault();
+  });
+  function syncScroll(a, b) { a.addEventListener("scroll", function () { if (Math.abs(b.scrollTop - a.scrollTop) > 1) b.scrollTop = a.scrollTop; }, { passive: true }); }
+  syncScroll(pt, pg); syncScroll(pg, pt);
+  var resizeTimer = null;
+  function scheduleLayout() { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { layout(false); }, 80); }
+  if (window.ResizeObserver) { var ro = new ResizeObserver(scheduleLayout); ro.observe(split); ro.observe(topEl); }
+  else window.addEventListener("resize", scheduleLayout);
+
+  // ── 테마
+  var themes = ["auto", "light", "dark"], names = { auto: "자동", light: "밝게", dark: "어둡게" };
+  var themeBtn = document.getElementById("theme"), cur = "auto";
+  function applyTheme(t) { cur = t; if (t === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", t); themeBtn.textContent = "테마: " + names[t]; }
+  var savedTheme = load("theme"); if (themes.indexOf(savedTheme) >= 0) applyTheme(savedTheme);
+  themeBtn.addEventListener("click", function () { applyTheme(themes[(themes.indexOf(cur) + 1) % themes.length]); store("theme", cur); });
+
+  refresh(false);
+  layout(true);
+})();
+</script>
+</body>
+</html>
