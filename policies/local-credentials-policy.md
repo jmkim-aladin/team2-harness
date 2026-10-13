@@ -91,6 +91,7 @@ unset PW
 |------------------|---------|------|------|
 | `cool-dev` | `{계정}` | `rds-cluster-cool-dev.cleuiesc8bqi.ap-northeast-2.rds.amazonaws.com` | 공유 MSSQL dev. DB: `WebCatalog`, `ToBe`, `Community`, `WebLog`, `WebMarket` (tobe/max/shopping/blog 공유) |
 | `lego-dev` | `{계정}` | (Lego 링크드 서버 dev — `Lego.WebStat` 등) | 통계/로그 계열. host는 본인 등록값 |
+| `aasm-dev` | `{계정}` | rds-52-web-common-contents-dev.cluster-cv2ku20yeh9n.ap-northeast-2.rds.amazonaws.com | aasm postgresql dev DB |
 
 클라이언트는 go-`sqlcmd`(`/opt/homebrew/bin/sqlcmd`). tools18 미설치 시 `-C`(서버 인증서 신뢰) 필요.
 
