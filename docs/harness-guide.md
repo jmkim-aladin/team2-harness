@@ -241,7 +241,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 
 **상황당 동사 하나** — 어떤 업무든 아래 표에서 상황을 찾으면 진입 동사(`ad:*`)가 나온다. 대부분 모델 호출이라 요청에 맞으면 에이전트가 스스로 부르고, 이 절은 사람이 전체를 보는 지도다. 층 설계(동사/엔진/자료)는 [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §구조.
 
-사용자 호출 전용(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:code-review-self`, `/ad:implement`, `/ad:plan-run`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`.
+사용자 호출 전용(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:code-review-self`, `/ad:implement`, `/ad:plan-run`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`, `/ad:ticket-schedule`.
 
 ### 1. 개발 티켓 (메인 플로우)
 
@@ -287,9 +287,9 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 
 | 주기 | 동사 |
 |---|---|
-| 월말 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-planned` |
+| 월말 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-planned` → `/ad:ticket-schedule {다음 달}`(계획 일정 초안) |
 | 월별 정적 점검 | [Fortify SSC FPR 일괄 등록 런북](./static-scan-runbook.md#월별-fpr-일괄-등록) — `scripts/upload-fortify-fprs.py --month YYYYMM` dry-run 확인 후 `--apply`; 대상 버전이 이미 있으면 전체 skip |
-| 주간 | `/ad:weekly-report` |
+| 주간 | `/ad:ticket-schedule`(월요일 오전, 팀장 취합 전 계획 일정 채움) → `/ad:weekly-report` |
 | 수시 | `/ad:okr`, `/ad:service-activity`, `/ad:granola-sync`, `/ad:wbs`(WBS·간트 엑셀/HTML 추출) |
 
 ### 5. 지식·문서 작업
@@ -406,6 +406,7 @@ PR 생성 (체크리스트 포함)
 | 스킬 | 설명 | 상태 |
 |------|------|------|
 | `/ad:ticket` | YouTrack 티켓 생성 (5W1H) | 구현됨 |
+| `/ad:ticket-schedule` | planned 티켓의 계획 일정(시작예정일·완료목표일)을 한 건씩 확인받아 코멘트로 일괄 입력 | 구현됨 |
 | `/ad:plan` | grill 결과를 vault 다세션 계획·진행 원장으로 합성 | 구현됨 |
 | `/ad:plan-run` | vault 계획의 internal milestone 하나를 실행하고 진행·근거 기록 | 구현됨 |
 | `/ad:eng-review` | 구현 전 계획·설계 검증 (스코프 챌린지 → 아키텍처·품질·테스트·성능 → 교차 모델 의견) | 구현됨 |

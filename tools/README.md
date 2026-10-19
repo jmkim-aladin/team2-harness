@@ -766,3 +766,21 @@ python3 tools/export_wbs.py DEV2-5237 --out ~/Downloads/wbs.xlsx --gantt-unit we
 - 상위 행은 자기 일정이 없거나 하위가 더 넓으면 하위 범위를 빗금(rollup)으로 표시한다
 - '유형' 칸(엑셀 WBS 시트 채움·HTML 표 배지)은 `TYPE_COLORS` 한 표로 칠한다 — Epic 보라·Feature 청록·Task 회색·Bug 빨강, 그 밖·빈 값은 중립 회색
 - 산출물은 업무 데이터라 repo 밖에 쓴다
+
+## ticket_schedule.py — 계획 항목 일정 점검·일정 코멘트 일괄 작성
+
+`/ad:ticket-schedule` 스킬의 결정적 층이다. `scan`은 `tag: {YYMM}-planned Type: Feature State: Open, {In Progress}` Feature와 진행중 Feature의 미해결 하위 Task를 모아 항목별 계획 일정(Open → `시작예정일`, In Progress → `완료목표일`)과 status를 JSON으로 낸다. `apply`는 사용자가 확정한 계획 JSON의 각 항목을 검증하고 상태를 다시 조회한 뒤 표준 코멘트 한 줄을 단다. 날짜 제안과 사용자 확인은 스킬이 맡고, 분류와 쓰기는 이 도구가 맡는다. 토큰은 `YOUTRACK_TOKEN` 또는 `cred.py get youtrack-token`에서 받아 헤더에만 쓴다.
+
+```bash
+python3 tools/ticket_schedule.py scan --month 2610                                   # stdout JSON
+python3 tools/ticket_schedule.py scan --month 2610 --assignee jmkim heum2 --today 2026-10-19 --out /tmp/scan.json
+python3 tools/ticket_schedule.py apply --plan /tmp/plan.json --dry-run               # POST 없이 쓸 본문만
+python3 tools/ticket_schedule.py apply --plan /tmp/plan.json                         # {"entries":[{"id","kind","date"}]}
+```
+
+- status: `ok`(날짜 ≥ 기준일) / `overdue`(날짜 < 기준일, 상태 그대로) / `unparsed`(필요 라벨은 없지만 날짜처럼 보이는 코멘트, 반대 kind 라벨만 있는 경우 포함) / `unscheduled` — 추정값(월말·생성일)으로 채우지 않는다
+- 라벨: 코멘트 어느 줄이든 `{라벨}: {날짜}`. 시작 `시작예정일`·레거시 `예상 시작일`·`예상 시작 일자`·`예상시작일`, 완료 `완료목표일`·레거시 `예상 종료일`·`예상 완료일`. 같은 kind는 가장 최근 코멘트가 이긴다
+- 날짜는 `YYYY-MM-DD`와 `M월 D일`만 인정한다. `M월 D일` 연도는 대상 월 연도이고, 6개월 넘게 떨어지면 ±1년 보정한다
+- `--assignee`는 하위 확장 뒤 항목 단위(Feature·Task)로 login을 거른다. 정렬은 담당자 → Feature → 그 하위 Task
+- apply 결과 `posted` / `skipped`(`state_changed`: 현재 상태의 kind가 계획과 다름, `already_set`: 같은 날짜가 이미 최신 라벨) / `error`(입력 검증·조회·POST 실패). POST는 재시도하지 않는다 — 중복 코멘트를 막는다
+- scan `--out`은 티켓 코멘트를 담은 업무 데이터라 repo 밖 경로만 받는다

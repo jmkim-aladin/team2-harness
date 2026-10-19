@@ -29,7 +29,7 @@
 
 - **description이 라우팅의 유일한 자리다.** CLAUDE.md·AGENTS.md에 라우팅 목록을 병행하지 않는다 — 같은 일을 두 곳에서 하면 한쪽이 반드시 낡고, 상주 비용을 두 번 낸다. 라우팅 블록(약 350 tok)을 걷고 description(약 135 tok)만 남기면 자동 호출을 유지하면서도 가벼워진다
 - **모델 호출 description은 트리거 문구가 본체**: 유도 단어를 앞세우고, 트리거 브랜치당 한 문구만 (동의어 나열 = 중복), 본문에 이미 있는 정체성 설명은 넣지 않는다. 길이는 한 줄
-- **사용자 호출 전용은 사이드이펙트 스킬에 한정**한다 — 게시·배포·dispatch처럼 시점을 사람이 정해야 하는 것. 현재 8종: `code-review`(GitHub 코멘트 게시), `code-review-self`(자기 PR 리뷰 게시·반영 push 위임), `work-board`(Hermes dispatch), `tldr`, `explain`, `eli5`, `eli5-html`, `eli5-onboard`. 뒤 셋은 사이드이펙트가 아니라 **설명 형식이 취향**이라 사람이 시점을 정한다 — 근거: 2026-09-01 도입 시 사용자 지정. frontmatter에 `disable-model-invocation: true`, description은 사람이 읽는 한 줄 요약
+- **사용자 호출 전용은 사이드이펙트 스킬에 한정**한다 — 게시·배포·dispatch처럼 시점을 사람이 정해야 하는 것. 현재 9종: `code-review`(GitHub 코멘트 게시), `code-review-self`(자기 PR 리뷰 게시·반영 push 위임), `work-board`(Hermes dispatch), `ticket-schedule`(티켓 코멘트 일괄 작성), `tldr`, `explain`, `eli5`, `eli5-html`, `eli5-onboard`. 뒤 셋은 사이드이펙트가 아니라 **설명 형식이 취향**이라 사람이 시점을 정한다 — 근거: 2026-09-01 도입 시 사용자 지정. frontmatter에 `disable-model-invocation: true`, description은 사람이 읽는 한 줄 요약
 - 사용자 호출 전용으로 만들면 **다른 스킬도 그 스킬을 부를 수 없다** (description이 모델 시야에서 빠지므로). 재사용될 규율이라면 사용자 호출로 만들지 않는다
 - 모델 호출로 만들면 "제때 호출되는가"까지 검증 대상이 된다. 감사에서 호출 0회가 이어지면 트리거 문구를 재작성하거나 사용자 호출로 강등한다
 - 인지 부하는 **flow 지도**([docs/harness-guide.md](../docs/harness-guide.md) §작업 플로우)가 감당한다. 스킬을 추가·개명·삭제하면 지도도 같은 PR에서 갱신한다 — **갱신하지 않은 지도는 거짓말을 한다**
