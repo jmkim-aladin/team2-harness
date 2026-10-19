@@ -257,7 +257,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
 | 설계 검증 (선택) | `/ad:eng-review` | 스코프 챌린지 + 아키텍처·코드 품질·테스트·성능 이슈 판정 — 1일 이상·경계 변경 시 |
 | 구현 | `/ad:implement` | vendored `implement`(내부 `tdd`) — seam 합의, red→green |
-| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정. 자기 PR은 `/ad:code-review-self` — 별도 리뷰어 에이전트 + 반영·재리뷰 루프 |
+| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 + 구조 재점검(비차단, 시니어 관점). 자기 PR은 `/ad:code-review-self` — 별도 리뷰어 에이전트 + 반영·재리뷰 루프 |
 | 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
 
 규모별: 1시간 이내(오타·설정) 바로 처리 / 반나절(버그) 준비→구현→리뷰 / 1일 이상 전체.
