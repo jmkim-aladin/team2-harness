@@ -88,9 +88,10 @@ python3 tools/lint_harness_rules.py --check    # 베이스라인 대비 증가�
 
 - **YouTrack**: `https://aladincommunication.youtrack.cloud` — REST API(`$YOUTRACK_TOKEN`)만 사용. MCP 미사용 — 토큰과 쓰기 권한을 `curl` 한 경로로 통제하기 위해
 - **GitHub**: `gh` CLI로 PR·이슈 조회. Org는 `AladinCommunication`, 개인 계정은 `jmkim-aladin`
-- **DB**: DB 관련 MCP 도구는 사용하지 않는다. dev RDS `sqlcmd`는 read-only 조회만 허용 — 훅이 차단한다. 에이전트에 DB 쓰기 경로를 주지 않는다
+- **DB**: DB MCP 대신 등록된 도구 경로를 사용한다. dev는 [로컬 자격증명 정책](./policies/local-credentials-policy.md)의 SELECT·INSERT·조건부 UPDATE/DELETE 사전 동의 범위를 따른다. staging은 읽기만 사전 동의, 개발·staging DDL/SP는 별도 승인. 운영은 [운영 DB 접근 정책](./policies/production-db-access-policy.md)의 개통·작업 승인 후 읽기만 허용하며 SP 생성·변경·삭제는 금지한다 — 환경별 부하·데이터 노출·변경 위험을 분리한다
 - **공통 서비스 영향**: 로그인·결제·정산·구독 등이 걸리면 [policies/common-service-policy.md](./policies/common-service-policy.md) + [catalog/common-services/registry.yaml](./catalog/common-services/registry.yaml) 확인
 - **검색 서비스 명칭**: 공식 표기는 `ALICE(알리스)`. 검색 API·색인·OpenSearch 경계는 [catalog/common-services/alice.yaml](./catalog/common-services/alice.yaml) 확인
+- **운영 SQL 실행 승인**: 매 실행마다 SQL 전문·대상·결과 범위·최대 60초 이내 실행 시간을 제시하고 사용자의 명시 승인을 받는다. 승인 없이는 조회하지 않는다. 모든 에이전트가 전역 동시 1개 슬롯과 중단 상태를 공유한다 — 사용자 승인과 실행 SQL을 일치시키고 동시 부하를 막는다
 
 ## GBrain 공유 brain
 

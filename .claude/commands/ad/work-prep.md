@@ -195,7 +195,7 @@ team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-tick
 
 요약:
 
-- `SELECT`/스키마 조회만 자동 허용 (dev/staging 읽기는 사전 동의 범위 — Keychain credential 사용 후 unset). 쓰기·prod 전환은 "사용자 확인 게이트" 참조.
+- dev/staging의 `SELECT`/스키마 조회와 작업에 필요한 dev `INSERT/UPDATE/DELETE`는 [로컬 자격증명 정책](../../../policies/local-credentials-policy.md)의 사전 동의 범위에서 실행한다. 개발 DML은 작업당 기본 100행 이하·대상 조건·사전/사후 확인·복구 방법을 확보한다. 범위 밖 변경·prod 전환은 "사용자 확인 게이트" 참조.
 - 검증은 작은 모수·짧은 기간으로 시작하고, 결과는 스키마/카운트/대표 패턴/판단만 노트에 남긴다. SQL 전문은 티켓 노트 `검증 SQL` 코드블록에 embed — 별도 `.sql` 사이드카 금지, data-requests-dev2 등록은 그 다음.
 - 만권당 CS 구독취소/환불 사용 여부 확인은 vault `wiki/services/max/analysis/subscription-usage-check-sql.md` 템플릿 우선.
 
@@ -217,9 +217,9 @@ team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-tick
    - 판단 요약의 `다음 행동`을 `없음` 또는 `후속 후보`로 바꾼다.
    - `미확정 질문`은 `종료 시점 결정`으로 바꾸거나, 남은 항목을 `(후속 후보)`로 분리한다.
    - `Actions`에서 실제 완료된 항목만 `[x]`로 바꾸고, 별도 개발/개선은 `[ ] (후속 후보)`로 남긴다.
-   - `완료 기록`에 `{오늘}: 사용자 안내/결과 전달 및 티켓 종료 반영. YouTrack API/KB/git 변경 없음.`을 추가한다.
+   - `완료 기록`에 `{오늘}: 사용자 안내/결과 전달 및 로컬 티켓 종료 반영.`을 추가한다. 외부 변경 유무는 실제 수행 내역에 맞춰 기록하고, 개발 DML을 수행했다면 대상·종류·건수·복구 방법 기록을 참조한다.
 5. `python3 tools/lint_vault.py --vault "$LOCAL_WIKI_PATH" --files "wiki/processes/tickets/dev2-{nnnn}.md"`를 실행해 검증한다.
-6. 사용자에게 위키 파일, 변경 상태, lint 결과, 수행하지 않은 외부 변경(YouTrack/KB/git/DB)을 짧게 보고한다.
+6. 사용자에게 위키 파일, 변경 상태, lint 결과와 실제 외부 변경 내역을 짧게 보고한다. 이 종료 반영 단계의 작업과 앞서 수행한 개발 DML을 구분한다 — 수행한 DB 변경이 없었다고 잘못 기록하는 일을 막는다.
 
 ## 사용자 확인 게이트
 
@@ -230,16 +230,17 @@ team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-tick
 - 위키 노트 **종료 반영**: 사용자가 티켓 종료/완료/마감/닫힘을 요청하거나 완료 사실을 보고하면 §12 기준으로 `ticket_status: done`과 종료 기록을 바로 반영
 - Daily 아젠다 **추가**: 추가할 한 줄을 출력한 뒤 바로 추가 (idempotent — 중복 시 스킵)
 - **cmux/herdr 작업 라벨 변경**: `team2-agent herdr label`을 그대로 실행 (§9). 외부 환경 판정·스킵은 명령이 알아서 하므로 사전 확인이 필요 없다
+- **개발 DB 조회·DML**: §11과 로컬 자격증명 정책의 사전 동의 범위에서 진행한다 — 테스트 데이터 준비·수정·정리의 반복 확인 비용을 줄인다
 
 **확인 필수 항목**:
 
-- **dev DB 쓰기 쿼리**(`INSERT/UPDATE/DELETE/DDL`): SQL 전문 + 영향 row + 롤백 계획 후 확인 (§11)
-- 운영(prod) DB 조회/변경: 본 스킬에서 직접 수행 금지 — [data-request-policy.md](../../../policies/data-request-policy.md) 절차
+- **개발 사전 동의 범위 밖 변경, staging 변경, DDL/SP/권한 변경**: SQL 전문(민감값은 보호 경로) + 영향 row + 복구 방법 후 확인 (§11) — 대량 변경·스키마 변경의 영향을 검토한다
+- 운영(prod) DB 조회: [운영 DB 접근 정책](../../../policies/production-db-access-policy.md)의 개통·작업 승인 후 전용 경로에서만 수행한다. 현재 미개통이다. 운영 변경은 기존 DB 변경 절차, 데이터 추출은 [data-request-policy.md](../../../policies/data-request-policy.md)도 따른다 — 조회와 변경·반출 권한을 분리한다
 - 브랜치 생성, git 명령, YouTrack 변경: **하지 않는다** — 제안만
 
-> dev DB **읽기 쿼리**는 사전 동의되어 있어 확인 게이트 없이 실행 ([local-credentials-policy.md](../../../policies/local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의").
+> 환경별 사전 동의 범위는 [local-credentials-policy.md](../../../policies/local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의"·§"개발 DB 데이터 입력·수정·삭제"가 SoT다.
 
-**항상 금지** (확인으로도 해제 불가 — 개인정보·운영 실데이터·DB 쓰기 경로는 사용자 한 사람의 확인으로 풀 수 있는 권한이 아니다):
+**항상 금지** (확인으로도 해제 불가 — 개인정보·운영 실데이터의 저장 경계와 DB MCP 제한을 지키기 위해서다):
 
 - DB 계열 MCP 서버(postgres/mssql/mysql 등) 사용
 - §5 위키 노트 작성에 열거된 본문 저장 금지 항목

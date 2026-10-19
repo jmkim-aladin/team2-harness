@@ -1,0 +1,325 @@
+{
+  "started_at": "2026-10-14T06:53:16.273894+00:00",
+  "host_arch": "arm64",
+  "requested_image": "mcr.microsoft.com/mssql/server:2022-CU24-GDR1-ubuntu-22.04",
+  "checks": [
+    {
+      "name": "dev SELECT",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.174
+    },
+    {
+      "name": "dev INSERT: guard allows",
+      "passed": true
+    },
+    {
+      "name": "dev INSERT: DB executes",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.169
+    },
+    {
+      "name": "dev UPDATE: guard allows",
+      "passed": true
+    },
+    {
+      "name": "dev UPDATE: DB executes",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.17
+    },
+    {
+      "name": "dev UPDATE persisted",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.158
+    },
+    {
+      "name": "dev DELETE: guard allows",
+      "passed": true
+    },
+    {
+      "name": "dev DELETE: DB executes",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.163
+    },
+    {
+      "name": "dev DELETE persisted",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.16
+    },
+    {
+      "name": "dev CREATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        262
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.16
+    },
+    {
+      "name": "dev ALTER denied",
+      "passed": true,
+      "sql_error_codes": [
+        1088
+      ],
+      "exit_code": 16,
+      "duration_seconds": 0.159
+    },
+    {
+      "name": "dev DROP denied",
+      "passed": true,
+      "sql_error_codes": [
+        3701
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.159
+    },
+    {
+      "name": "dev TRUNCATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        1088
+      ],
+      "exit_code": 16,
+      "duration_seconds": 0.168
+    },
+    {
+      "name": "dev EXEC denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.161
+    },
+    {
+      "name": "dev self-grant did not gain ALTER",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.213
+    },
+    {
+      "name": "dev ALTER still denied after self-grant",
+      "passed": true,
+      "sql_error_codes": [
+        1088
+      ],
+      "exit_code": 16,
+      "duration_seconds": 0.225
+    },
+    {
+      "name": "dev cross-DB access denied",
+      "passed": true,
+      "sql_error_codes": [
+        916
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.16
+    },
+    {
+      "name": "staging SELECT",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.176
+    },
+    {
+      "name": "staging INSERT denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.174
+    },
+    {
+      "name": "staging UPDATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.161
+    },
+    {
+      "name": "staging DELETE denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.159
+    },
+    {
+      "name": "prod safe view SELECT",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.177
+    },
+    {
+      "name": "prod raw table denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.18
+    },
+    {
+      "name": "prod sensitive column absent from view",
+      "passed": true,
+      "sql_error_codes": [
+        207
+      ],
+      "exit_code": 16,
+      "duration_seconds": 0.16
+    },
+    {
+      "name": "prod INSERT denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.163
+    },
+    {
+      "name": "prod UPDATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.167
+    },
+    {
+      "name": "prod DELETE denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.168
+    },
+    {
+      "name": "prod EXEC denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.153
+    },
+    {
+      "name": "prod CREATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        262
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.157
+    },
+    {
+      "name": "prod source unchanged",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.163
+    },
+    {
+      "name": "known limit: syntactic guard accepts non-key predicate",
+      "passed": true
+    },
+    {
+      "name": "known limit: dev DML can affect 150 rows (rolled back)",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.181
+    },
+    {
+      "name": "known limit fixture rolled back",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.168
+    },
+    {
+      "name": "lock wait cancelled by LOCK_TIMEOUT",
+      "passed": true,
+      "sql_error_codes": [
+        1222
+      ],
+      "exit_code": 16,
+      "duration_seconds": 1.168
+    },
+    {
+      "name": "lock holder completed",
+      "passed": true
+    },
+    {
+      "name": "lock released and transaction rolled back",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.246
+    },
+    {
+      "name": "cancel account can connect",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.189
+    },
+    {
+      "name": "timeout query observed running on server",
+      "passed": true
+    },
+    {
+      "name": "sqlcmd query timeout",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "timed-out server session ended",
+      "passed": true
+    }
+  ],
+  "observations": [
+    "Dev guard and DML grants do not enforce PK/affected-row/task-total limits. A 150-row update was observed and rolled back.",
+    "This ODBC sqlcmd returned exit code 0 with 'Timeout expired'; automation must inspect timeout diagnostics and server-side completion, not exit status alone.",
+    "sqlcmd timeout/session cleanup passed for WAITFOR; production gateway cancellation, resource limits, concurrent budgets and audits remain untested."
+  ],
+  "production_ready": false,
+  "scope": "isolated SQL Server permissions + local guard; not production gateway",
+  "image_id": "sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905",
+  "image_digests": [
+    "mcr.microsoft.com/mssql/server@sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905"
+  ],
+  "image_arch": "amd64",
+  "server_version": "Microsoft SQL Server 2022 (RTM-CU24-GDR) (KB5083252) - 16.0.4250.1 (X64) \n\tMar 13 2026 00:15:17 \n\tCopyright (C) 2022 Microsoft Corporation\n\tDeveloper Edition (64-bit) on Linux (Ubuntu 22.04.5 LTS) <X64>",
+  "self_grant_attempt": {
+    "exit_code": 0,
+    "diagnostic": "Cannot grant, deny, or revoke permissions to sa, dbo, entity owner, information_schema, sys, or yourself."
+  },
+  "timeout_client": {
+    "exit_code": 0,
+    "duration_seconds": 5.172,
+    "diagnostic": "Timeout expired"
+  },
+  "passed": true,
+  "container_removed": true,
+  "finished_at": "2026-10-14T06:54:00.159769+00:00"
+}

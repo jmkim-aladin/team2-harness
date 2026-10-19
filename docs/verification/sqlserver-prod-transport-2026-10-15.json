@@ -1,0 +1,53 @@
+{
+  "started_at": "2026-10-15T00:28:43.849632+00:00",
+  "host_arch": "arm64",
+  "requested_image": "mcr.microsoft.com/mssql/server:2022-CU24-GDR1-ubuntu-22.04",
+  "checks": [
+    {
+      "name": "production transport exposes reviewed observer SQL",
+      "passed": true
+    },
+    {
+      "name": "production transport reads only the approved result",
+      "passed": true,
+      "output_bytes": 7,
+      "host_tag": "t2q-lab-reviewed"
+    },
+    {
+      "name": "production transport enforces physical output row cap",
+      "passed": true,
+      "failure_reason": "output_rows_exceeded"
+    },
+    {
+      "name": "production transport cancels the owned group and confirms closure",
+      "passed": true,
+      "running": true,
+      "cancel_result": false,
+      "cancelled": true,
+      "closed": true,
+      "process_returncode": 130,
+      "failure_reason": null,
+      "observer_permission": true,
+      "observer_sessions": 0,
+      "observer_probe_error": null
+    },
+    {
+      "name": "observer without DMV permission never confirms closure",
+      "passed": true
+    }
+  ],
+  "observations": [
+    "Production-shaped transport passed against the disposable SQL Server: reviewed host tags, approved stdin batches, physical output caps, owned-process cancellation, and fail-closed DMV observer permission."
+  ],
+  "production_ready": false,
+  "scope": "isolated SQL Server permissions + local guard; not production gateway",
+  "image_id": "sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905",
+  "image_digests": [
+    "mcr.microsoft.com/mssql/server@sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905"
+  ],
+  "image_arch": "amd64",
+  "server_version": "Microsoft SQL Server 2022 (RTM-CU24-GDR) (KB5083252) - 16.0.4250.1 (X64) \n\tMar 13 2026 00:15:17 \n\tCopyright (C) 2022 Microsoft Corporation\n\tDeveloper Edition (64-bit) on Linux (Ubuntu 22.04.5 LTS) <X64>",
+  "passed": true,
+  "container_removed": true,
+  "finished_at": "2026-10-15T00:29:04.674646+00:00"
+}

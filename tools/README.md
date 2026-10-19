@@ -615,6 +615,96 @@ python3 tools/cred.py check          # manifest credentials 선언분 존재 검
 - macOS: `security` CLI — 의존성 0. Windows: `pip install keyring` 1회
 - 필요한 이름 목록은 `harness.manifest.json` `credentials` (값 절대 아님). `setup_harness.py --check`에 포함됨
 
+## db_sqlcmd_guard.py — 개발 SQL 명령 보조 검사
+
+정책: [로컬 자격증명](../policies/local-credentials-policy.md) · [운영 DB 접근](../policies/production-db-access-policy.md).
+
+`.claude/hooks/sqlcmd-readonly.sh`는 기존 연결을 유지하는 진입점이며 Python 표준 라이브러리 검사기를 호출한다. 등록된 dev의 리터럴 `-S/-d/-Q` 한 문장 SELECT를 처리한다. 직접 DML은 전용 실행기로 안내하며 DDL/SP·미등록/운영 호스트·파일/동적 SQL은 거부한다. `tool_input.command`와 `tool_input.cmd` 입력을 지원한다.
+
+```bash
+python3 -m unittest discover -s tools/tests -p 'test_db_*.py'
+```
+
+테스트는 DB·자격증명에 접속하지 않고 훅 JSON 입출력을 검증한다. 이 검사기는 SQL 파서·셸 샌드박스·운영 승인 서비스가 아니다. 스크립트/다른 드라이버의 우회, 실제 런타임 훅 등록, DB 권한·트리거, 서버 쿼리 취소는 별도 검증 대상이다. 현재 계정용 운영 실행기는 아래 `db_prod_client.py` 절을 따른다.
+
+Claude 프로젝트의 기존 `PreToolUse/Bash` 연결은 호환 스크립트를 유지한다. `.codex/hooks.json`의 실제 로드·matcher 발화는 런타임에서 별도로 검증한다. 입력 필드 지원과 JSON 파일 존재만으로 Codex 연결 완료를 주장하지 않는다.
+
+실제 SQL Server 권한 검증은 [Docker 통합 검증](./tests/integration/sqlserver/README.md)을 사용한다. 합성 데이터·임시 계정·공개 포트 없는 일회성 컨테이너에서 개발 DML과 운영 최소 조회 권한, 잠금/쿼리 timeout을 검사하고 컨테이너를 정리한다.
+
+## db_execute.py — 개발 DML 행 수 제한 실행기
+
+등록된 개발 DB의 단순 INSERT/UPDATE/DELETE를 stdin으로 받아 실행한다. SQLCMDPASSWORD는 기존 자격증명 경로에서 환경변수로 전달한다. 예: `python3 tools/db_execute.py --task DEV2-1234 --database WebCatalog --user dev_dml_user < /보호된/경로/change.sql`. 도구는 개발 host를 고정하며 운영 host 옵션은 없다.
+
+실제 영향 행 수가 작업당 남은 100행 예산을 초과하면 트랜잭션 전체를 롤백한다. 동일 작업 ID의 누적 건수·진행 중 상태를 `~/.local/state/team2/db-execution.sqlite3`에 저장한다. 같은 작업은 DB·호출이 달라도 같은 ID를 사용한다. 이유: 분할 실행과 동시 실행에 의한 실수로 한도를 초과하지 않게 한다. 원장에는 SQL 해시만 저장한다.
+
+출력은 JSON이며 `ok=true/status=committed`만 성공이다. timeout·커밋 응답 유실은 `unknown`으로 남겨 후속 실행을 차단한다. 작업 ID 변경이나 원장 삭제로 재시도하지 않는다. 이유: 이미 커밋된 실행을 반복할 수 있다. 실제 반영·세션 상태를 담당자가 대조한 뒤 복구한다. 자동 승인·예산 초기화 기능은 없다.
+
+개발 계정은 대상 테이블 DML과 DB `VIEW DEFINITION` 권한이 필요하다. 활성 트리거·연쇄 FK·temporal 테이블·뷰는 별도 검토 경로로 보낸다. 권한 부여와 실제 훅 등록은 별도 작업이다. 로컬 코드·원장은 수정 가능하므로 운영 보안 경계로 재사용하지 않는다.
+
+## db_query_control.py — 운영 조회 중앙 제어 코어
+
+여러 에이전트·운영 DB가 공유하는 전역 실행 슬롯 1개와 단일 실행 승인을 관리한다. `prepare`의 SQL 전문·owner·대상·timeout·행/바이트 범위를 사용자에게 보여준 뒤 인증된 operator만 `approve`를 호출한다. 승인 없는 요청·payload 변경·승인 재사용은 DB 연결 전에 거부한다. timeout은 최대 60초이며 행·바이트는 실행별 승인 값 또는 명시적 제한 없음이다.
+
+`Supervisor`는 승인 소비→연결 준비→중단 상태와 직렬화한 SQL 전송→실행 감시→서버 종료 확인 순으로 진행한다. 원장 코어의 `Supervisor.stop`은 지속 차단을 사용하며 `resume`이 필요하다. 오류·timeout은 서버 종료 증거가 없을 때 active 슬롯과 차단을 유지하고, 종료 증거와 `active=null`, `phase=idle`이 확인되면 active 슬롯만 정리하며 차단은 유지한다. 현재 계정 Gateway/CLI의 오류 없는 사용자 `stop`만 이 확인 뒤 일시 중단 latch를 자동 해제하지만 기존 승인·재시도는 복원하지 않는다. 오류·timeout, `emergency-stop`, 실행기 재시작 뒤의 차단은 사람의 별도 `resume`과 새 승인이 필요하다.
+
+중앙 서비스가 관리하는 **이미 존재하는 원장**을 대상으로 CLI를 호출한다. 아래 state 경로는 배포 시 관리자가 정할 예시다. 에이전트별 원장으로 분리하거나 유실 원장을 자동 생성하면 전역 잠금이 깨지므로 초기화는 서비스 프로비저닝 때만 한다.
+
+```bash
+python3 tools/db_query_control.py --state /관리영역/query-control.sqlite3 status
+python3 tools/db_query_control.py --state /관리영역/query-control.sqlite3 stop
+```
+
+이 CLI는 차단 접수·상태 확인용이다. `halted=1`만으로 서버 종료가 확인된 것은 아니며 active/phase와 서버 관측을 함께 확인한다. SQL 실행·승인·재개 CLI는 제공하지 않는다. 이유: 상위 서비스의 사용자 인증과 DB transport 없이 로컬 명령으로 운영 권한을 만들 수 없게 한다.
+
+배포 계약: 한 Mac의 모든 에이전트가 동일 원장을 사용한다. 2026-10-15 사용자 선택으로 현재 macOS 계정에서 운영하며 같은 UID의 직접 파일·DB 접근을 OS 권한으로 격리하지 않는다. 여러 호스트의 로컬 복사본이나 공유 네트워크 파일시스템 잠금으로 분산 제어를 주장하지 않는다. backend의 연결 준비·조회·취소·종료 확인은 시간 제한을 지키고, `dispatch`와 `publish`는 짧은 비차단 동작이어야 한다. 결과는 `finish` 승인 후 중단 상태와 직렬화한 작은 청크로만 내보낸다. 불명확한 전송·반환은 자동 반복하지 않는다.
+
+이 모듈은 제어 코어이며 실제 현재 계정용 접속 경로는 아래 실행기를 사용한다. 운영 네트워크·권한·TLS·종료 관찰은 별도 개통 항목이다. [긴급 중단 계약](../docs/production-db-emergency-stop.md).
+
+## db_prod_client.py — 현재 계정용 운영 조회 실행기
+
+상태: 접속 진단·30초 사용자 중단 시험 성공, 일반 운영 조회는 읽기 전용 권한 검증 전(2026-10-15). 중단 시험은 서버 세션 종료(`session_closed=true`)와 `active=null`, `phase=idle`까지 확인했다. 실행은 `sqlcmd`, 자격증명은 현재 사용자의 로그인 키체인을 사용한다. 별도 macOS 서비스 계정을 만들지 않는다. 같은 계정의 모든 에이전트가 `~/Library/Application Support/team2-db` 원장과 `/tmp/team2-db-<uid>/query.sock`을 공유한다. 같은 UID에 대한 변조 방지나 사람과 에이전트의 OS 권한 분리는 제공하지 않는다.
+
+아래는 이후 사용을 위한 명령 설명이며 현재 실행 지시가 아니다. 저장소 루트에서 `python3 tools/db_prod_client.py <명령>`으로 사용한다.
+
+| 명령 | 동작 |
+|---|---|
+| `init` | 소유자 전용 디렉터리·초기 차단 원장·설정·Swift 키체인 helper 준비. DB 접속 없음 |
+| `start` | 로컬 Unix 소켓 실행기 시작. DB 접속 없음. 종료 미확인·오류·`emergency-stop` 차단은 재시작 뒤에도 유지 |
+| `status` | 차단 여부·활성 실행·phase 표시 |
+| `resume` | `emergency-stop` 또는 종료 미확인·오류·재시작 차단을 사용자 터미널의 `RESUME` 확인 후 해제 |
+| `prepare --target lego-prod --database <DB> --timeout 60 --max-rows 100 --max-bytes 102400` | stdin SQL과 대상·내부 제어 SQL·한도를 묶어 검토 요청 생성. 비밀번호 조회와 DB 접속 없음 |
+| `review <요청ID>` | 승인할 SQL 전문과 조건 표시 |
+| `approve <요청ID>` | 전문 표시 후 사용자 터미널에서 digest 확인 입력 |
+| `execute <요청ID>` | 승인 1회 소비 후 접속·실행·서버 세션 종료 확인·결과 전달 |
+| `stop` | 독립 중단 파일부터 영속화하고 활성 조회를 취소하며 기존 승인 무효화. 오류 없는 사용자 취소에서 서버 종료 확인과 `active=null`, `phase=idle` 뒤 다음 요청 준비를 자동 허용 |
+| `emergency-stop` | 독립 중단 파일부터 영속화하고 활성 조회를 취소하며 기존 승인 무효화. 서버 종료 확인 뒤에도 전체 차단을 유지 |
+| `recovery-prepare` / `recovery-review <요청ID>` | 남은 활성 실행의 종료 확인 SQL과 대상·한도를 준비·표시. DB 접속 없음 |
+| `recovery-approve <요청ID>` / `recovery-execute <요청ID>` | 새 명시 승인 후 종료된 worker의 서버 세션을 관찰. 복구 성공 뒤에도 안전 차단은 유지하며 별도 `resume` 필요 |
+
+채팅에서 사용자가 표시된 전문을 명시 승인한 경우에만 에이전트가 `approve <요청ID> --from-chat-digest <전체digest>`로 응답을 전달한다. 이 옵션 자체가 사용자의 승인을 증명하지는 않으며 에이전트의 자가 승인에 사용할 수 없다. SQL·대상·프로파일·한도 변경, 실패·재시도에는 새 승인이 필요하다. 준비 요청은 30분 유효하고 실행은 최대 60초, 모든 대상 합계 동시 1개다.
+
+실행기 장애 후 active가 남으면 원장을 지우거나 강제 초기화하지 않는다. 복구도 observer SQL 전문·대상·시간·결과 범위를 새로 승인받는다. 기록된 worker는 PID·생성 시각으로 종료를 증명한다. 시작 실패로 worker 기록이 없으면 원 실행기의 PID·생성 시각을 대조해 종료를 두 번 확인하고, 그 사이 watchdog 유예 5초를 둔다. 이후 현재 UID의 모든 sqlcmd 프로세스가 없음을 Mac의 고정 ps 명령으로 입증해야 서버 관찰을 시작할 수 있다. 파싱 오류·불완전한 목록·조회 실패는 거부하며 서버 관찰 후에도 로컬 부재를 재확인한다. 로컬 증거와 서버 세션 0건 확인이 모두 있어야 슬롯을 정리한다. 복구 성공 뒤에도 종료 미확인·오류·재시작 안전 차단은 유지하며 사용자의 별도 `resume`과 새로운 조회 승인이 필요하다. 일반 `stop`의 확인된 idle 경로만 자동으로 다음 요청을 받는다. 재개 확인 이후 들어온 새 중단 요청은 우선한다.
+
+기본 설정은 `read_only_verified=false`로 `SELECT 1 AS connection_ok;`, 고정 10초 세션 확인 진단(`SESSION_VISIBILITY_PROBE_SQL`), 고정 30초 중단 시험(`SESSION_STOP_PROBE_SQL`)만 준비할 수 있다. 대기 진단은 지정된 시간 뒤 자기 세션 ID·프로그램명만 반환하며 매 실행 전문 승인·시간 상한·전역 슬롯·중단·종료 확인 규칙을 그대로 따른다. 실제 DB의 읽기 전용 권한·SP 변경/실행 거부·격리 설정을 확인한 뒤 개통한다. 종료 관찰에는 동일 계정이 서버 세션을 빠짐없이 볼 수 있는 DMV 권한이 필요하며 권한 부족이나 관찰 실패 시 종료를 확정하지 않고 차단한다. 에이전트가 DB 권한을 자동 확대하지 않는다.
+
+실패 응답의 `diagnostics`와 감사 원장의 `execution_failed`에는 실행 ID, 실패 단계(`journal`·`credentials`·`startup`·`query`·`observer`), 허용된 오류 코드, 확인 가능한 OS errno·프로세스 종료 코드를 남긴다. TLS·로그인·DB 접근·권한·timeout·연결 거부·DNS·sqlcmd 옵션 오류는 출력에서 인식한 고정 설명으로 제공한다. 이 분류는 클라이언트 출력의 단서이며 근본 원인의 확정은 아니다. 최초 실행 실패와 종료 관찰 실패를 따로 보존한다.
+
+`db_prod_diagnostics.py`는 stdout·stderr를 합쳐 단계당 최대 8 KiB만 메모리에 수집한다. 알려진 SQL 오류 번호와 고정 설명만 응답·감사 로그로 내보내며 주소·계정·비밀번호·SQL·결과가 섞일 수 있는 오류 원문은 저장하지 않는다. 모르는 메시지는 원문 비공개와 잘림 여부를 표시한다. 조회 결과 stdout은 진단 수집에서 제외한다. 이전 실패의 상세 오류는 복원할 수 없다. 진단 보완은 로컬 합성 테스트로 검증하고 사용자 재시도 요청에 따라 실행기에 반영했다. 복구 준비에서 발견한 정상 SQL 줄바꿈 거부도 수정했으며, 접속 진단과 30초 중단 시험에서 종료 확인 및 슬롯 자동 정리를 검증했다. 일반 운영 조회는 읽기 전용 권한 검증 후 별도 개통한다.
+
+2026-10-15 사용자 요청으로 `--max-rows`와 `--max-bytes`는 기본 unlimited이며 기존 8 MiB 누적 결과 제한도 제거했다. 기본 조회 한도는 실행 시간뿐이다. 결과는 메모리에서 최대 60초 보관하고 2 KiB씩 전달한 뒤 전체 길이·해시를 검증하여 표시한다. 전송 청크 크기는 결과 총량 제한이 아니다. 중단·실패 시 미반환 결과는 폐기한다. 자동 비정상 종료 확인 SQL은 사용자 요청으로 승인 화면에서 반복 표시하지 않으며 조건부 실행과 digest 연결을 유지한다. 키체인 값·SQL 원문·원본 결과는 감사 원장에 저장하지 않는다.
+
+`db_prod_profiles.py`·`db_prod_keychain.swift`는 정확한 UTF-8 JSON과 키체인 값을 파이프로 읽는다. `db_prod_transport.py`는 사용자 승인에 따라 `-N true -C`로 TLS 암호화를 필수 적용하고 서버 인증서 검증을 생략하는 sqlcmd 자식 프로세스, `db_prod_watchdog.py`는 독립 중단·heartbeat 감시를 맡는다. `Ctrl+C`나 프로세스 종료만으로 서버 종료를 확정하지 않는다. 현재 Mac의 sqlcmd와 운영 서버 조합은 접속 진단·30초 중단 시험에서 TLS 접속과 세션 종료 확인까지 성공했으며, 일반 조회 권한 검증은 남아 있다.
+
+Go sqlcmd v1.10의 `-X1`은 인증 환경변수도 차단하므로 사용하지 않는다. 대신 자식 환경을 고정된 PATH·격리 HOME·locale과 접속 변수 세 개로 구성해 SQLCMDINI·사용자 설정·다른 비밀값 상속을 제거하고, 변수 확장과 sqlcmd 제어 구문을 차단한다. 근거: [Go sqlcmd v1.10 실행 코드](https://github.com/microsoft/go-sqlcmd/blob/v1.10.0/cmd/sqlcmd/sqlcmd.go), [sqlcmd 제어 명령](https://learn.microsoft.com/en-us/sql/tools/sqlcmd/sqlcmd-commands).
+
+2026-10-15 로컬 Go 클라이언트 재현에서 종료 관찰의 추가 빈 줄 거부와 마지막 줄바꿈 없는 SQL의 미실행을 확인했다. 소스는 관찰 결과의 끝 빈 줄을 처리하고 고정 `-i /dev/stdin`으로 승인된 SQL 바이트를 그대로 소비하도록 수정했다. Go 결과의 마지막 빈 구분 줄 하나는 행 상한에서 제외하되 빈 데이터 행·전체 바이트는 계속 계산한다. 출력 reader가 종료되지 않으면 결과를 반환하지 않는다. `python3 tools/tests/integration/sqlserver/go_transport.py`는 현재 Mac 클라이언트와 자체 생성한 localhost Docker 서버로 이 경로를 검증한다. 운영 세션 종료 확인은 별도의 30초 사용자 중단 시험에서 확인했으며, 이 로컬 재현은 운영 검증을 대신하지 않는다.
+
+서버에서 세션 제거가 늦어지는 경우는 승인된 observer SQL 한 배치 안에서 200ms 간격으로 최대 16회 확인한다(대기 합계 최대 3초, observer 전체 timeout 5초). 권한이 있고 해당 실행의 세션이 0건이면 기존 완료 경로가 active 슬롯을 자동으로 정리한다. 오류 없는 사용자 `stop`은 이때 `active=null`, `phase=idle`이면 일시 중단을 자동 해제하고 다음 요청을 받는다. `emergency-stop`과 종료 미확인·재시작 차단은 해제하지 않으며, 오류·timeout은 종료를 입증해도 active 슬롯만 정리하고 차단을 유지하므로 `resume`이 필요하다. 한도 안에 종료를 입증하지 못하면 active 슬롯도 유지한다. 별도 연결이나 SQL 재실행으로 재시도하지 않는다. 이미 실패로 확정된 실행은 새 복구 SQL 승인이 필요하다. 재현 및 슬롯 정리·중단 보존 검증은 `python3 tools/tests/integration/sqlserver/go_transport.py --report docs/verification/sqlserver-go-cleanup-2026-10-15.json`으로 실행한다.
+
+`db_prod_build_sqlcmd.py`는 공식 v1.10.0 소스의 ApplicationName 한 줄만 DataGrip으로 바꾸는 macOS arm64 빌드를 준비하며 출처·패치·바이너리 해시를 남긴다. 설치는 수행하지 않는다. 전용 빌드는 완료됐으나 사용자 지시에 따라 설치·연동은 보류하고 기존 Homebrew 클라이언트를 유지한다. 운영 프로그램명이 DataGrip으로 반영된 상태가 아니다. 오류 수정본은 2026-10-15 로컬 실행기 재시작으로 반영했다. DB 접속 없이 기존 active 슬롯·종료 미확인 상태·중단 마커·차단이 보존됐음을 확인했다.
+
+격리 단위 검증: `python3 -m unittest discover -s tools/tests -p 'test_db*.py'`. 일회성 Docker SQL Server 검증: `python3 tools/tests/integration/sqlserver/verify.py --transport-only --report docs/verification/sqlserver-prod-transport-2026-10-15.json`. 이 검증은 합성 계정과 컨테이너의 ODBC sqlcmd를 사용하며 운영 접속 검증을 대신하지 않는다.
+
 ## secret_scan.py — 시크릿 유출 스캔
 
 repo + vault를 자격증명 패턴(YouTrack perm-, AKIA, JWT, gh 토큰, 접속문자열 암호, Bearer, private key)으로 스캔. `/ad:harness-optimize 스택` 모드에 포함. 발견 시 exit 1 — **제거 + 해당 자격증명 재발급**이 원칙.

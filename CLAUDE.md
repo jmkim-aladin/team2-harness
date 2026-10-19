@@ -31,8 +31,9 @@
 - 신규 빌링, 결제, 정산, 구독, 빌링키 기능은 [catalog/common-services/new-billing.yaml](./catalog/common-services/new-billing.yaml)의 뉴빌링 API 경계를 먼저 확인한다. 현재 팀 서비스 active 연동은 없는 상태로 기록한다.
 - Feature ≤ 1주 (필수) / Task ≤ 1일 (필수) — 초과 시 분할. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md)
 - Feature 하위 Task는 개발 / 검증 / 배포·운영 반영으로 분리 — 판정 필수, 해당 시 별도 Task, 해당 없으면 Feature 본문에 사유 기재. 검증은 테스트(내부) / QA(시너지팀) / 테스트→QA 중 선택. 상세: [docs/sprint/ticket-guide.md](./docs/sprint/ticket-guide.md) 2-2항
-- DB/SP 변경 별도 승인, 프로덕션 배포 사람 승인
+- 개발·staging DB 스키마/SP 변경 별도 승인, 프로덕션 배포 사람 승인. 개발 데이터의 INSERT·조건부 UPDATE/DELETE는 [로컬 자격증명 정책](./policies/local-credentials-policy.md)의 사전 동의 예외를 따른다. 운영 에이전트 경로는 [운영 DB 접근 정책](./policies/production-db-access-policy.md)의 승인된 읽기만 허용하며 SP 생성·변경·삭제는 금지한다 — 환경별 위험을 분리한다
 - 신규 백엔드 Kotlin + Spring Boot, 신규 .NET 금지, SP 직접 호출 금지 — 근거·예외 승인 경로: [engineering-policy.md](./policies/engineering-policy.md) §기술 스택 원칙
+- 운영 SQL은 전문·대상·결과 범위·최대 60초 이내 실행 시간을 매번 제시하고 사용자 명시 승인 후 실행한다. 전역 동시 실행은 1개이며 승인 없이는 조회하지 않는다 — 사용자 승인 범위와 실제 실행을 일치시킨다
 - 신규 앱 도메인: 내부 `{app}.internal.{service}[.{env}].aladin.co.kr` (Internal ALB) / 외부 `api.{service}[.{env}].aladin.co.kr/{app}` (API G/W, path strip). 앱 base-path·절대 URL·쿠키 인증 금지. 상세: [policies/internal-domain-policy.md](./policies/internal-domain-policy.md)
 - 운영 데이터 추출 SQL은 [`AladinCommunication/data-requests-dev2`](https://github.com/AladinCommunication/data-requests-dev2)에서 관리 (하네스 `docs/`에 신규 작성 금지). 상세: [policies/data-request-policy.md](./policies/data-request-policy.md)
 

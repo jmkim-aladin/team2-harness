@@ -1,0 +1,873 @@
+{
+  "started_at": "2026-10-14T08:01:17.546222+00:00",
+  "host_arch": "arm64",
+  "requested_image": "mcr.microsoft.com/mssql/server:2022-CU24-GDR1-ubuntu-22.04",
+  "checks": [
+    {
+      "name": "dev SELECT",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.17
+    },
+    {
+      "name": "dev INSERT: raw sqlcmd blocked",
+      "passed": true
+    },
+    {
+      "name": "dev INSERT: bounded DB commit",
+      "passed": true,
+      "result": {
+        "ok": true,
+        "status": "committed",
+        "run_id": "8c671d9920e0aa1e33523ce5b660ef12",
+        "rows": 1,
+        "remaining_rows": 99
+      }
+    },
+    {
+      "name": "dev UPDATE: raw sqlcmd blocked",
+      "passed": true
+    },
+    {
+      "name": "dev UPDATE: bounded DB commit",
+      "passed": true,
+      "result": {
+        "ok": true,
+        "status": "committed",
+        "run_id": "2b3ecd827efaa47ef1b459b30a14a9b0",
+        "rows": 1,
+        "remaining_rows": 98
+      }
+    },
+    {
+      "name": "dev UPDATE persisted",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.2
+    },
+    {
+      "name": "dev DELETE: raw sqlcmd blocked",
+      "passed": true
+    },
+    {
+      "name": "dev DELETE: bounded DB commit",
+      "passed": true,
+      "result": {
+        "ok": true,
+        "status": "committed",
+        "run_id": "775be87f908a19cf497479f9645ddbe6",
+        "rows": 1,
+        "remaining_rows": 97
+      }
+    },
+    {
+      "name": "dev DELETE persisted",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.239
+    },
+    {
+      "name": "dev CREATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        262
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.177
+    },
+    {
+      "name": "dev ALTER denied",
+      "passed": true,
+      "sql_error_codes": [
+        1088
+      ],
+      "exit_code": 16,
+      "duration_seconds": 0.185
+    },
+    {
+      "name": "dev DROP denied",
+      "passed": true,
+      "sql_error_codes": [
+        3701
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.163
+    },
+    {
+      "name": "dev TRUNCATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        1088
+      ],
+      "exit_code": 16,
+      "duration_seconds": 0.168
+    },
+    {
+      "name": "dev EXEC denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.179
+    },
+    {
+      "name": "dev self-grant did not gain ALTER",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.188
+    },
+    {
+      "name": "dev ALTER still denied after self-grant",
+      "passed": true,
+      "sql_error_codes": [
+        1088
+      ],
+      "exit_code": 16,
+      "duration_seconds": 0.19
+    },
+    {
+      "name": "dev cross-DB access denied",
+      "passed": true,
+      "sql_error_codes": [
+        916
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.202
+    },
+    {
+      "name": "dev metadata grant exposes procedure definition",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.186
+    },
+    {
+      "name": "staging SELECT",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.236
+    },
+    {
+      "name": "staging INSERT denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.259
+    },
+    {
+      "name": "staging UPDATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.246
+    },
+    {
+      "name": "staging DELETE denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.201
+    },
+    {
+      "name": "prod safe view SELECT",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.396
+    },
+    {
+      "name": "prod raw table denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.294
+    },
+    {
+      "name": "prod sensitive column absent from view",
+      "passed": true,
+      "sql_error_codes": [
+        207
+      ],
+      "exit_code": 16,
+      "duration_seconds": 0.192
+    },
+    {
+      "name": "prod INSERT denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.228
+    },
+    {
+      "name": "prod UPDATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.29
+    },
+    {
+      "name": "prod DELETE denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.237
+    },
+    {
+      "name": "prod EXEC denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.208
+    },
+    {
+      "name": "prod CREATE denied",
+      "passed": true,
+      "sql_error_codes": [
+        262
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.227
+    },
+    {
+      "name": "prod CREATE PROCEDURE denied",
+      "passed": true,
+      "sql_error_codes": [
+        262
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.205
+    },
+    {
+      "name": "prod ALTER PROCEDURE denied",
+      "passed": true,
+      "sql_error_codes": [
+        3701
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.181
+    },
+    {
+      "name": "prod CREATE OR ALTER PROCEDURE denied",
+      "passed": true,
+      "sql_error_codes": [
+        3701
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.182
+    },
+    {
+      "name": "prod DROP PROCEDURE denied",
+      "passed": true,
+      "sql_error_codes": [
+        3701
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.186
+    },
+    {
+      "name": "prod procedure definition unchanged",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.172
+    },
+    {
+      "name": "prod procedure definition not visible",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.176
+    },
+    {
+      "name": "prod source unchanged",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.175
+    },
+    {
+      "name": "executor rolls back 150-row UPDATE",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "rolled_back",
+        "run_id": "ccca9e12511810056291f7c76574b54f",
+        "error": "database_rejected",
+        "sql_error_codes": [
+          51001
+        ]
+      }
+    },
+    {
+      "name": "over-limit UPDATE leaves zero changed rows",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.173
+    },
+    {
+      "name": "task budget: first 60 rows committed",
+      "passed": true,
+      "result": {
+        "ok": true,
+        "status": "committed",
+        "run_id": "5dea1eacccde1216ff277dd66caa21e4",
+        "rows": 60,
+        "remaining_rows": 40
+      }
+    },
+    {
+      "name": "task budget: subsequent 50 rows rolled back",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "rolled_back",
+        "run_id": "5dcc9e14b4fd9e9d7998e43b6fda2a87",
+        "error": "database_rejected",
+        "sql_error_codes": [
+          51001
+        ]
+      }
+    },
+    {
+      "name": "task budget: overflow left no changes",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.186
+    },
+    {
+      "name": "task budget: exactly 100 cumulative rows",
+      "passed": true,
+      "result": {
+        "ok": true,
+        "status": "committed",
+        "run_id": "24b209faada8b2eeab43d4d52b845377",
+        "rows": 40,
+        "remaining_rows": 0
+      }
+    },
+    {
+      "name": "task budget: further execution blocked",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "blocked",
+        "error": "Task row budget exhausted"
+      }
+    },
+    {
+      "name": "task budget: exactly 100 rows persisted",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.162
+    },
+    {
+      "name": "executor treats timeout as failure",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "unknown",
+        "run_id": "46864e5f5579f369d40cca3e975c0b79",
+        "error": "timeout",
+        "session_cleanup_confirmed": true
+      }
+    },
+    {
+      "name": "executor confirms timed-out session lock released",
+      "passed": true
+    },
+    {
+      "name": "timed-out DML rolled back",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.219
+    },
+    {
+      "name": "uncertain timeout blocks replay",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "blocked",
+        "error": "Task has an unresolved or concurrent execution; reconcile before continuing"
+      }
+    },
+    {
+      "name": "lost commit receipt is not success",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "unknown",
+        "run_id": "a7fbc56d97582348bab15ecda197fe5a",
+        "error": "missing_or_invalid_commit_receipt",
+        "session_cleanup_confirmed": false
+      }
+    },
+    {
+      "name": "lost reply fixture actually committed",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.253
+    },
+    {
+      "name": "lost commit receipt blocks replay",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "blocked",
+        "error": "Task has an unresolved or concurrent execution; reconcile before continuing"
+      }
+    },
+    {
+      "name": "postcommit error is uncertain, not rolled back",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "unknown",
+        "run_id": "0cc0dd3f06ca5a27bb75a78c15753655",
+        "error": "missing_or_invalid_commit_receipt",
+        "session_cleanup_confirmed": true
+      }
+    },
+    {
+      "name": "postcommit fault actually committed",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.211
+    },
+    {
+      "name": "postcommit error blocks replay",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "blocked",
+        "error": "Task has an unresolved or concurrent execution; reconcile before continuing"
+      }
+    },
+    {
+      "name": "enabled trigger rejected before DML",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "rolled_back",
+        "run_id": "b6441cb4504b0d54205e769930905ef8",
+        "error": "database_rejected",
+        "sql_error_codes": [
+          51007
+        ]
+      }
+    },
+    {
+      "name": "trigger side effect did not execute",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.189
+    },
+    {
+      "name": "executor holds table lock before metadata check",
+      "passed": true,
+      "execution_result": null
+    },
+    {
+      "name": "concurrent trigger DDL blocked before DML",
+      "passed": true,
+      "sql_error_codes": [
+        1222
+      ],
+      "exit_code": 16,
+      "duration_seconds": 1.329
+    },
+    {
+      "name": "DML commits after concurrent DDL was rejected",
+      "passed": true,
+      "result": {
+        "ok": true,
+        "status": "committed",
+        "run_id": "25ed895599c7f8ca522532e68bdf6d0f",
+        "rows": 1,
+        "remaining_rows": 99
+      }
+    },
+    {
+      "name": "concurrent DDL caused no side effect",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.181
+    },
+    {
+      "name": "lock wait cancelled by LOCK_TIMEOUT",
+      "passed": true,
+      "sql_error_codes": [
+        1222
+      ],
+      "exit_code": 16,
+      "duration_seconds": 1.173
+    },
+    {
+      "name": "lock holder completed",
+      "passed": true
+    },
+    {
+      "name": "lock released and transaction rolled back",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.179
+    },
+    {
+      "name": "cancel account can connect",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.168
+    },
+    {
+      "name": "timeout query observed running on server",
+      "passed": true
+    },
+    {
+      "name": "sqlcmd query timeout",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "timed-out server session ended",
+      "passed": true
+    },
+    {
+      "name": "isolation reader write denied",
+      "passed": true,
+      "sql_error_codes": [
+        229
+      ],
+      "exit_code": 14,
+      "duration_seconds": 0.172
+    },
+    {
+      "name": "NOLOCK reads uncommitted value",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.16
+    },
+    {
+      "name": "NOLOCK reader does not wait for row lock",
+      "passed": true,
+      "duration_seconds": 0.16
+    },
+    {
+      "name": "READ COMMITTED blocks with RCSI off",
+      "passed": true,
+      "sql_error_codes": [
+        1222
+      ],
+      "exit_code": 16,
+      "duration_seconds": 1.164
+    },
+    {
+      "name": "row writer completed and rolled back",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "row value restored after rollback",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.194
+    },
+    {
+      "name": "RCSI enabled for isolation fixture",
+      "passed": true
+    },
+    {
+      "name": "RCSI READ COMMITTED reads last committed value",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.222
+    },
+    {
+      "name": "RCSI READ COMMITTED does not wait for row lock",
+      "passed": true,
+      "duration_seconds": 0.222
+    },
+    {
+      "name": "RCSI row writer completed and rolled back",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "NOLOCK still blocks on Sch-M",
+      "passed": true,
+      "sql_error_codes": [
+        1222
+      ],
+      "exit_code": 16,
+      "duration_seconds": 1.175
+    },
+    {
+      "name": "Sch-M writer completed and rolled back",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "Sch-M DDL rolled back",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.375
+    },
+    {
+      "name": "coordinator starts halted",
+      "passed": true
+    },
+    {
+      "name": "operator explicitly arms coordinator after server check",
+      "passed": true
+    },
+    {
+      "name": "unapproved SQL never opens DB connection",
+      "passed": true
+    },
+    {
+      "name": "approved first agent dispatches",
+      "passed": true
+    },
+    {
+      "name": "other agent and DB share the global slot",
+      "passed": true
+    },
+    {
+      "name": "independent stop CLI persists halt",
+      "passed": true
+    },
+    {
+      "name": "manual stop cancels and confirms SQL Server session gone",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "stopped",
+        "run_id": "2dc7580290fa097effa7ba277fdada6c",
+        "session_closed": true,
+        "reason": "operator_stop"
+      }
+    },
+    {
+      "name": "new supervisor preserves halt",
+      "passed": true
+    },
+    {
+      "name": "operator resumes only after confirmed close",
+      "passed": true
+    },
+    {
+      "name": "old approval invalid after stop and resume",
+      "passed": true
+    },
+    {
+      "name": "fresh approval completes with confirmed close",
+      "passed": true,
+      "result": {
+        "ok": true,
+        "status": "completed",
+        "run_id": "b8fbbf084607580ed50ea5247379f620",
+        "session_closed": true
+      }
+    },
+    {
+      "name": "SQL error cancels and latches global stop",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "stopped",
+        "run_id": "1124d0053dcc02da5ab81c91027e186f",
+        "session_closed": true,
+        "reason": "query_failed"
+      }
+    },
+    {
+      "name": "error cleanup confirmed before slot release",
+      "passed": true
+    },
+    {
+      "name": "operator resumes after SQL error",
+      "passed": true
+    },
+    {
+      "name": "approved timeout cancels and confirms server close",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "stopped",
+        "run_id": "d9041703211d64e1cb752c0cc5bf030d",
+        "session_closed": true,
+        "reason": "timeout"
+      }
+    },
+    {
+      "name": "operator resumes after timeout",
+      "passed": true
+    },
+    {
+      "name": "missing close evidence retains active slot",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "unconfirmed",
+        "run_id": "2c9dd07e06d3a0bd76b7b6c04dcab316",
+        "session_closed": false,
+        "reason": "query_failed"
+      }
+    },
+    {
+      "name": "resume refused while cleanup unconfirmed",
+      "passed": true
+    },
+    {
+      "name": "fresh server evidence reconciles but remains halted",
+      "passed": true
+    },
+    {
+      "name": "reconciled state still requires explicit resume",
+      "passed": true
+    },
+    {
+      "name": "emergency reader can connect before stop",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.157
+    },
+    {
+      "name": "emergency stop observes two active target sessions",
+      "passed": true,
+      "sessions": [
+        75,
+        77
+      ]
+    },
+    {
+      "name": "emergency stop observes unrelated active session",
+      "passed": true
+    },
+    {
+      "name": "emergency stop blocks new login",
+      "passed": true,
+      "exit_code": 1,
+      "diagnostic": "Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : Login failed for user 'lab_cancel'. Reason: The account is disabled.."
+    },
+    {
+      "name": "disabling login alone leaves active sessions",
+      "passed": true
+    },
+    {
+      "name": "reader cannot undo emergency stop",
+      "passed": true,
+      "sql_error_codes": [
+        15151
+      ],
+      "exit_code": 16,
+      "duration_seconds": 0.161
+    },
+    {
+      "name": "emergency stop identifies target connection 75",
+      "passed": true
+    },
+    {
+      "name": "emergency stop identifies target connection 77",
+      "passed": true
+    },
+    {
+      "name": "emergency stop confirms all target sessions gone",
+      "passed": true,
+      "duration_seconds": 1.465
+    },
+    {
+      "name": "emergency stop leaves unrelated query running",
+      "passed": true
+    },
+    {
+      "name": "emergency stop leaves unrelated login usable",
+      "passed": true,
+      "sql_error_codes": [],
+      "exit_code": 0,
+      "duration_seconds": 0.16
+    },
+    {
+      "name": "emergency stop remains disabled on fresh control connection",
+      "passed": true
+    },
+    {
+      "name": "emergency stop still rejects subsequent login",
+      "passed": true,
+      "exit_code": 1,
+      "diagnostic": "Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : Login failed for user 'lab_cancel'. Reason: The account is disabled.."
+    }
+  ],
+  "observations": [
+    "The DML executor rolled back excess rows, enforced a cumulative 100-row local task budget, and blocked replay after timeout or a lost commit acknowledgement. Local state is not a tamper-proof production approval service.",
+    "This ODBC sqlcmd returned exit code 0 with 'Timeout expired'; automation must inspect timeout diagnostics and server-side completion, not exit status alone.",
+    "sqlcmd timeout/session cleanup passed for WAITFOR; production gateway cancellation, resource limits, concurrent budgets and audits remain untested.",
+    "Central coordinator core passed real sqlcmd/SQL Server tests for per-execution approval, cross-agent admission, independent CLI stop, error/timeout cancellation, server close confirmation, persisted halt and explicit operator recovery. This is one trusted shared SQLite store, not deployed multi-host authentication, a production cancellation adapter, or a complete production gateway.",
+    "Emergency-stop DB primitives passed: disable a dedicated login, terminate two active sessions, preserve an unrelated session, and keep new logins blocked. The operator was simulated by lab sa. No production stop UI/API, distributed admission fence, least-privilege control service, or restart/failure-path guarantee was implemented by this fixture."
+  ],
+  "production_ready": false,
+  "scope": "isolated SQL Server permissions + local guard; not production gateway",
+  "image_id": "sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905",
+  "image_digests": [
+    "mcr.microsoft.com/mssql/server@sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905"
+  ],
+  "image_arch": "amd64",
+  "server_version": "Microsoft SQL Server 2022 (RTM-CU24-GDR) (KB5083252) - 16.0.4250.1 (X64) \n\tMar 13 2026 00:15:17 \n\tCopyright (C) 2022 Microsoft Corporation\n\tDeveloper Edition (64-bit) on Linux (Ubuntu 22.04.5 LTS) <X64>",
+  "self_grant_attempt": {
+    "exit_code": 0,
+    "diagnostic": "Cannot grant, deny, or revoke permissions to sa, dbo, entity owner, information_schema, sys, or yourself."
+  },
+  "bounded_timeout_diagnostics": [
+    {
+      "exit_code": 0,
+      "output": "TEAM2_46864e5f5579f369d40cca3e975c0b79_SESSION\nTimeout expired\n"
+    },
+    {
+      "exit_code": 0,
+      "output": "TEAM2_46864e5f5579f369d40cca3e975c0b79_RELEASED\n"
+    }
+  ],
+  "timeout_client": {
+    "exit_code": 0,
+    "duration_seconds": 5.213,
+    "diagnostic": "Timeout expired"
+  },
+  "passed": true,
+  "container_removed": true,
+  "finished_at": "2026-10-14T08:02:46.053335+00:00"
+}

@@ -1,0 +1,65 @@
+{
+  "started_at": "2026-10-15T03:24:07.021850+00:00",
+  "host_arch": "arm64",
+  "requested_image": "mcr.microsoft.com/mssql/server:2022-CU24-GDR1-ubuntu-22.04",
+  "checks": [
+    {
+      "name": "host Go observer accepts real control result",
+      "passed": true
+    },
+    {
+      "name": "host Go worker returns only one approved result row",
+      "passed": true
+    },
+    {
+      "name": "single observer batch waits for delayed session removal",
+      "passed": true
+    },
+    {
+      "name": "delayed session observation launches exactly once",
+      "passed": true
+    },
+    {
+      "name": "delayed closure automatically releases coordinator slot",
+      "passed": true
+    },
+    {
+      "name": "cleanup after stop releases slot but preserves halt and withholds results",
+      "passed": 1
+    },
+    {
+      "name": "independent cancellation proves closure then automatically accepts fresh work",
+      "passed": true
+    },
+    {
+      "name": "cancellation never revives an earlier approval",
+      "passed": true
+    },
+    {
+      "name": "newly approved query runs without a manual resume",
+      "passed": true
+    },
+    {
+      "name": "persistent session is never declared closed",
+      "passed": true
+    },
+    {
+      "name": "persistent session check is bounded",
+      "passed": true
+    },
+    {
+      "name": "failed observation requires new approval, never reconnects",
+      "passed": true
+    }
+  ],
+  "observations": [],
+  "production_ready": false,
+  "scope": "host Go transport and automatic session cleanup on owned loopback SQL Server",
+  "image_id": "sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905",
+  "image_digests": [
+    "mcr.microsoft.com/mssql/server@sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905"
+  ],
+  "image_arch": "amd64",
+  "server_version": "Microsoft SQL Server 2022 (RTM-CU24-GDR) (KB5083252) - 16.0.4250.1 (X64) \n\tMar 13 2026 00:15:17 \n\tCopyright (C) 2022 Microsoft Corporation\n\tDeveloper Edition (64-bit) on Linux (Ubuntu 22.04.5 LTS) <X64>",
+  "container_removed": true
+}

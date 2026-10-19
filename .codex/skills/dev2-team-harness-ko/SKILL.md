@@ -17,7 +17,7 @@ description: "Use when a request needs DEV2/team2 harness context: policies, ser
 ## 참조
 
 - 진입점: `CLAUDE.md`, `AGENTS.md`
-- 정책: `policies/engineering-policy.md`, `branching-strategy.md`, `code-review-policy.md`, `release-policy.md`, `ai-usage-policy.md`, `security-policy.md`, `incident-policy.md`, `team-members.md`, `knowledge-base-policy.md`, `wiki-document-language-and-title-policy.md`, `business-stakeholder-communication-policy.md`, `data-request-policy.md`, `instruction-precedence-policy.md`
+- 정책: `policies/` — 디렉토리가 SoT (`ls policies/`로 조회)
 - 서비스/스프린트/분석: `catalog/{service}.yaml`, `docs/sprint/*.md`, `docs/analysis-guides.md`
 
 ## 용어
@@ -28,15 +28,13 @@ description: "Use when a request needs DEV2/team2 harness context: policies, ser
 
 ## 사업부 커뮤니케이션
 
-- 사업부, 기획, 운영, CS 등 비개발 이해관계자에게 전달할 댓글/선택지/보고 초안은 `policies/business-stakeholder-communication-policy.md`를 먼저 적용한다.
-- 특정 서비스에 국한하지 않고, 서비스별 내부 구현명을 그대로 설명하지 말고 업무 용어로 풀어쓴다. 예: `MaxProduct` → "이용권 상품 관리 구조", `AutoPayment` → "기존 정기결제 구조", `MaxPass` → "이용 권한/이용권 활성화".
-- 내부명, 코드 경로, DB 근거는 사업부용 코멘트가 아니라 로컬 위키의 `내부 근거` 또는 개발 메모에 분리한다.
+- 비개발 이해관계자(사업부·기획·운영·CS)용 댓글·보고 초안은 `policies/business-stakeholder-communication-policy.md`를 먼저 적용한다. 내부 구현명 대신 업무 용어로 쓰고(예: `MaxProduct` → "이용권 상품 관리 구조"), 내부 근거는 로컬 위키에 분리한다.
 
 ## 외부·승인
 
 - YouTrack은 REST API/`curl`만 사용한다 — 토큰·쓰기 권한 통제. 토큰은 출력하지 않는다.
-- GitHub는 `gh`; DB MCP 금지; dev RDS `sqlcmd`는 read-only 조회만 허용한다.
-- 승인 전 자동 실행 금지: YouTrack 티켓/Task/상태/필드, YouTrack KB, YouTrack/KB/git commit/push/merge/PR, DB/SP, 프로덕션 배포.
+- GitHub는 `gh`; DB는 MCP 대신 등록된 도구 경로. dev 조회·DML과 staging 읽기는 `policies/local-credentials-policy.md` 사전 동의 범위, 운영은 `policies/production-db-access-policy.md` 승인 후 읽기만 — 매 실행 전문·범위·60초 이내를 제시해 명시 승인받고 전역 동시 1개 — 환경별 위험을 분리한다.
+- 승인 전 자동 실행 금지: YouTrack 티켓/Task/상태/필드, YouTrack KB, YouTrack/KB/git commit/push/merge/PR, 개발 사전 동의 범위 밖의 DB/SP, 프로덕션 배포. 이유: 외부 상태 변경은 사용자 승인 범위를 따른다.
 - team2 하네스 자체 변경은 DEV2 티켓 없이 가능하다. 서비스 제품 코드는 제외한다. 사용자 명시 지시가 있으면 `[TEAM2]` 커밋/푸시 가능.
 - 로컬 Obsidian vault 티켓 노트 생성·갱신·종료 반영은 확인 없이 가능하다. 이는 YouTrack 상태 변경이 아니다.
 

@@ -14,6 +14,8 @@ YouTrack으로 접수되는 운영 데이터 추출 요청의 SQL과 산출물�
 
 운영 데이터 추출 SQL을 하네스(`team2/docs/`)나 서비스 레포에 새로 만들지 않는다. 단, 도메인 지식 정리(예: 어떤 테이블이 어떤 의미인지)는 Obsidian vault 인벤토리에 남기고, 실제 추출 쿼리는 data-requests-dev2 레포의 티켓 폴더에 둔다.
 
+운영 DB 접속·실행·결과 반출 권한은 [운영 DB 접근 정책](./production-db-access-policy.md)을 따른다. SQL 등록이나 티켓 접수는 실행 승인을 대신하지 않는다. 이유: 요청 관리와 운영 접근의 부하·노출 통제는 별도 책임이다. 민감 원본 결과는 Git 대신 승인된 보호 저장소에 두고 repo에는 SQL·설명·반출 이력만 남긴다.
+
 ## 레포 규칙 (data-requests-dev2)
 
 요약 — 상세는 레포 [README.md](https://github.com/AladinCommunication/data-requests-dev2/blob/main/README.md) 참조.
@@ -74,6 +76,6 @@ YouTrack으로 접수되는 운영 데이터 추출 요청의 SQL과 산출물�
 
 ## 예외
 
-- 데이터 추출과 무관한 일반 분석 SQL, 일회성 디버깅 SQL은 본 정책 대상이 아니다.
+- 데이터 추출과 무관한 일반 분석 SQL, 일회성 디버깅 SQL은 이 저장소 관리 정책 대상이 아니다. 운영 조회라면 [운영 DB 접근 정책](./production-db-access-policy.md)은 그대로 적용한다 — 디버깅도 부하와 데이터 노출을 동반한다.
 - 도메인 지식 인벤토리는 Obsidian vault `wiki/services/{service}/analysis/`에 두고, 추출 쿼리만 data-requests-dev2에 둔다.
 - 본 정책 시행 이전에 하네스 `docs/`에 작성된 추출 SQL은 그대로 두고, 후속 이관은 별도 작업으로 처리한다.

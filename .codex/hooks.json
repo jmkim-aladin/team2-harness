@@ -8,7 +8,7 @@
             "type": "command",
             "command": "bash '/Users/jm/Documents/workspace/team2/.claude/hooks/sqlcmd-readonly.sh'",
             "timeout": 5,
-            "statusMessage": "Checking sqlcmd read-only policy"
+            "statusMessage": "Checking dev DML and production DB access policy"
           }
         ]
       },

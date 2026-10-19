@@ -193,11 +193,11 @@ type_yt: task
 
 vault에 들어온 운영 데이터는 통제를 벗어난다 — 조회 결과는 판단만 남기고 원자료는 남기지 않는다.
 
-1. SQL은 조회 전용이다. `INSERT/UPDATE/DELETE/DDL`은 별도 승인 없이는 작성하거나 실행하지 않는다.
+1. dev/staging 조회와 dev `INSERT/UPDATE/DELETE`는 [로컬 자격증명 정책](../../policies/local-credentials-policy.md)의 사전 동의 범위를 따른다. 개발 DML은 작업당 기본 100행 이하·대상 조건·사전/사후 확인·복구 방법을 확보한다. staging 변경·DDL/SP·범위 밖 변경은 별도 승인 경로로 진행한다 — 검증 데이터 작업과 환경에 영향을 주는 변경을 구분한다.
 2. dev/staging 검증은 작은 모수(`TOP 10`~`100`, 특정 1~3개 그룹, 1일~7일, 빈 임시 테이블 등)로 시작한다.
 3. 운영 식별자(계정, CID, OID 등)는 SQL 파라미터로 명시할 수 있으나 row dump는 저장하지 않는다.
 4. 검증된 SQL은 data-requests-dev2 등록 전에 먼저 티켓 노트 `검증 SQL` 섹션에 저장한다.
 5. 결과 기록은 스키마, 카운트, 대표 패턴, 판단만 남긴다. 운영 실데이터, 개인정보, 결제 row, SP 원문, 시크릿은 저장하지 않는다.
 6. SQL은 길어도 티켓 노트 본문 마크다운 코드블록에 embed한다. 별도 `.sql` 사이드카 파일(`wiki/processes/tickets/dev2-{NNNN}/*.sql`)은 만들지 않는다 — Obsidian에서 안 열리고 링크가 끊긴다 (2026-07-08 사용자 지시). 이 경우 본문 120줄 목표에서 `검증 SQL` 코드블록은 제외한다. 최종 산출 SQL의 SSOT는 여전히 data-requests-dev2다.
 
-dev DB 읽기 쿼리는 [local-credentials-policy.md](../../policies/local-credentials-policy.md)의 사전 동의 범위다. 운영(prod) 조회와 추출은 [data-request-policy.md](../../policies/data-request-policy.md) 절차로 전환한다.
+개발 조회·DML의 사전 동의 범위는 [local-credentials-policy.md](../../policies/local-credentials-policy.md)를 따른다. 운영(prod) 조회는 [운영 DB 접근 정책](../../policies/production-db-access-policy.md)의 개통·작업 승인 경로로 진행하고, 데이터 추출은 [data-request-policy.md](../../policies/data-request-policy.md)도 함께 따른다.

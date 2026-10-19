@@ -37,6 +37,9 @@ SKIP_EXT = {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".xlsx", ".zip", ".dll", ".
 FALSE_POSITIVE = re.compile(r"\$\{?[A-Z_]+|<[^>]+>|\{[^}]+\}|XXXX|퍼미션|예시|example", re.I)
 # 스캔 명령 자기 자신(rg/grep의 패턴 인자)과 정규식 문자클래스는 시크릿이 아니다
 SCAN_COMMAND_LINE = re.compile(r"\brg\b|\bgrep\b|\[\^|re\.compile")
+# `password = request.unlockPassword,`·`password=self._get(...)` 같은 코드 식 — 식별자 체인 뒤에 호출·첨자·인자 구분자가 온다.
+# 실값(`;` 구분 접속문자열, .env 값)은 뒤따르는 구두점이 없어 계속 잡힌다 — tests/test_secret_scan.py
+CODE_EXPRESSION = re.compile(r"=\s*[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\s*[(\[),]")
 
 
 def iter_files(roots):
@@ -73,6 +76,8 @@ def scan(files):
                         if not m:
                             continue
                         if FALSE_POSITIVE.search(m.group(0)) or FALSE_POSITIVE.search(line[:m.start()][-30:]):
+                            continue
+                        if CODE_EXPRESSION.search(m.group(0)):
                             continue
                         masked = m.group(0)[:8] + "…(마스킹)"
                         print(f"  [유출 의심] {path}:{i}  {name}  {masked}")
