@@ -28,7 +28,7 @@
 | 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
 | 설계 검증 (선택) | `/ad:eng-review` | 스코프 챌린지 + 아키텍처·품질·테스트·성능 이슈 판정 — 1일 이상·경계 변경 시 |
 | 구현 | `/ad:implement` | vendored `implement`(내부 `tdd`) — seam 합의, red→green |
-| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정. 자기 PR은 `/ad:code-review-self` — 별도 리뷰어 에이전트 + 반영·재리뷰 루프 |
+| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 + 구조 재점검(비차단, 시니어 관점). 자기 PR은 `/ad:code-review-self` — 별도 리뷰어 에이전트 + 반영·재리뷰 루프 |
 | 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
 
 온램프: 버그 → `diagnosing-bugs`(모델 호출) / 프로토타입 필요 → `prototype` / 대형 안개 과제 → `/wayfinder` / 데이터 추출 → `/ad:data-request` / 월말 → `/ad:sprint-close-check`, `/ad:capacity-plan`
