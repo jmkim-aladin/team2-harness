@@ -22,6 +22,7 @@ Codex는 team2 하네스 command 파일을 source of truth로 읽고 같은 절�
 - `eng-review`: 구현 전 계획·설계 검증 (스코프·아키텍처·코드 품질·테스트·성능)
 - `implement`: YouTrack 5W1H spec 기반 구현
 - `ticket`: 티켓 생성/5W1H
+- `ticket-schedule`: planned 티켓 계획 일정 코멘트 일괄 입력
 - `work-prep`: 작업 준비, 위키 노트
 - `work-close`: YouTrack 티켓 종료 (In Progress → 코멘트 → 소요시간 → Fixed)
 - `work-board`: Hermes board projection
