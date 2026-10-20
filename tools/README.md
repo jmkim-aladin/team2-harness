@@ -325,7 +325,7 @@ Python 3.10+ stdlib.
 
 ## lint_vault.py — vault 5룰 lint (Sub A)
 
-vault 안 md를 5 룰로 검사. pre-commit hook + 정기 sweep 호출 진입점.
+vault 안 md를 5 룰로 검사. 노트 작성 직후(`/ad:new-note`) + 정기 sweep 호출 진입점. vault 커밋 게이트(pre-commit)로는 쓰지 않는다 — Tolaria autogit 커밋이 위반 1건에 조용히 막혀 노트가 쌓인다(2026-10-20).
 
 룰:
 1. frontmatter `type` 필수 + type별 필수 필드
@@ -338,7 +338,7 @@ vault 안 md를 5 룰로 검사. pre-commit hook + 정기 sweep 호출 진입점
 # 전체
 python3 tools/lint_vault.py --vault "$VAULT" --all
 
-# staged diff (pre-commit)
+# 지정 파일 (노트 작성 직후)
 python3 tools/lint_vault.py --vault "$VAULT" --files wiki/foo.md
 ```
 

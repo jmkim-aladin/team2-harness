@@ -78,7 +78,7 @@ type 결정 후 `wiki/guides/frontmatter-spec.md` 기준 필수 필드 자동 �
 6. **dry-run 미리보기** — 사용자에게 `vault/wiki/processes/.../foo.md` 경로·frontmatter·본문 스켈레톤 보여줌
 7. **사용자 confirm** → `Write` 도구로 생성
 8. **lint check** — 즉시 `python3 "$TEAM2_HARNESS_PATH/tools/lint_vault.py" --vault "$LOCAL_WIKI_PATH" --files {new}` 호출, exit 0 확인
-9. **안내** — 생성한 파일 경로와 lint 결과만 surface한다. 앱이나 URI handler를 자동 실행하지 않는다. `git add` + commit 시 pre-commit에서 한 번 더 검증된다.
+9. **안내** — 생성한 파일 경로와 lint 결과만 surface한다. 앱이나 URI handler를 자동 실행하지 않는다. 커밋은 Tolaria autogit이 하고 커밋 시 lint 게이트는 없다 — 위반은 이 단계와 정기 sweep(`tools/vault_sweep.sh`)에서 잡는다.
 
 ## 환경
 

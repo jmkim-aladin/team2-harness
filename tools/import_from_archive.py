@@ -158,7 +158,7 @@ def main():
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dst)
         print(f"copied: {rel_dst}")
-        print("다음 단계: vault에서 `git add` + commit (pre-commit lint 통과해야 함)")
+        print("다음 단계: lint_vault.py --files 로 확인 (커밋은 Tolaria autogit)")
     else:
         print("[dry-run] --apply 추가 시 실 복사")
     return 0

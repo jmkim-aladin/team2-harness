@@ -12,7 +12,7 @@ Usage:
     # 전체 vault lint (정기 sweep)
     python3 tools/lint_vault.py --vault "$VAULT" --all
 
-    # staged diff lint (pre-commit)
+    # 지정 파일 lint (노트 작성 직후)
     python3 tools/lint_vault.py --vault "$VAULT" --files wiki/foo.md wiki/bar.md
 
 Exit:
