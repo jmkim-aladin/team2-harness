@@ -160,6 +160,7 @@ Claude Code의 `/ad:*`는 symlink라 어느 repo에서든 쓸 수 있다. 코드
 
 - vendored [mattpocock/skills](vendor/mattpocock/): `grilling` · `domain-modeling` · `tdd` · `codebase-design` · `diagnosing-bugs` · `prototype` · `research` · `/wayfinder` · `/handoff` · `/wait-what` · `/teach` · `/to-questionnaire` · `wizard` · `resolving-merge-conflicts`. 제외 목록과 팀 오버라이드는 [mattpocock 오버라이드 정책](policies/overrides/mattpocock.md)
 - 팀 자체: `/eli5` · `/eli5-html` · `/eli5-onboard` — 낯선 주제·저장소를 빨리 이해하고 남에게 옮긴다
+- 외부: `aside-browser`(Aside) — 웹 UI 개발·테스트의 기본 브라우저. 규칙은 [memory/claude-base.md](memory/claude-base.md) §브라우저 개발·테스트
 
 **페르소나 리뷰 3종** — 보안 감사 · 테스트 엔지니어 · 데이터 정합성 감사. `/ad:code-review`가 위험 강도 PR에서만 읽는 프롬프트 파일이라 평소 세션의 상주 비용은 0이다([personas.md](docs/code-review/personas.md)).
 

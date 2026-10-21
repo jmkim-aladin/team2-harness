@@ -54,7 +54,7 @@
   },
   "external_skills": {
     "_doc": "외부 스택 존치 선언. keep 밖 항목은 --check 에서 경고, --reset 에서 격리. 판정 근거: docs/skill-audit-baseline.md 3회차.",
-    "claude_keep": [],
+    "claude_keep": ["aside-browser"],
     "claude_unmanaged_links": [
       "computer-use",
       "orchestration"
