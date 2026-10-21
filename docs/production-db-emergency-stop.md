@@ -1,6 +1,6 @@
 # 운영 DB 사용자 긴급 중단
 
-상태: 현재 계정용 실행기·stop/status CLI·취소 transport·watchdog 준비, 사용자 승인으로 lego-prod / EbookCms 일반 조회 개통(2026-10-15). 접속 진단과 30초 중단 시험은 서버 세션 종료 확인(`session_closed=true`) 및 `active=null`, `phase=idle`까지 확인했다. DB 권한 검증 상태는 `read_only_verified=false`로 유지하며, 사용자가 개통한 접속 DB만 `operator_authorized_read_databases`로 별도 허용한다. SQL 전문별 사전 승인은 유지한다. 이유: 사용자가 조회를 시작하게 한 뒤 직접 멈출 수 없는 상태를 피한다. 상위 정책은 [운영 DB 접근 정책](../policies/production-db-access-policy.md)이다.
+상태: 현재 계정용 실행기·stop/status CLI·취소 transport·watchdog 준비, 사용자 승인으로 lego-prod / EbookCms(2026-10-15), cool-prod / WebCatalog(2026-10-20)·B2B(2026-10-21) 일반 조회 개통. 접속 진단과 30초 중단 시험은 서버 세션 종료 확인(`session_closed=true`) 및 `active=null`, `phase=idle`까지 확인했다. DB 권한 검증 상태는 `read_only_verified=false`로 유지하며, 사용자가 개통한 접속 DB만 `operator_authorized_read_databases`로 별도 허용한다. SQL 전문별 사전 승인은 유지한다. 이유: 사용자가 조회를 시작하게 한 뒤 직접 멈출 수 없는 상태를 피한다. 상위 정책은 [운영 DB 접근 정책](../policies/production-db-access-policy.md)이다.
 
 ## 사용자가 받는 기능
 
