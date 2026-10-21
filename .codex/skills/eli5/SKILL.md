@@ -34,7 +34,7 @@ disable-model-invocation: true
 | 낯선 저장소에 처음 투입된 사람의 학습 경로 | `eli5-onboard` |
 | 방금 내가 한 설명이 안 통했다 | `/wait-what` — 팀 용어집 어휘로 재피치 |
 | 코드 변경·분석 결과 설명서(근거·퀴즈·파일 산출) | `/ad:explain` |
-| 저장소 아키텍처 한 장 | `/ad:tldr` |
+| 저장소 아키텍처 한 장 | `/ad:explain --tldr` |
 
 ## 대상 잡기
 

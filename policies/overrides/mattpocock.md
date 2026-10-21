@@ -9,7 +9,7 @@
 
 | 스킬 | 이유 | 팀 대체 |
 |---|---|---|
-| `code-review` | 팀 것이 더 성숙 (범위 한정·게시 규격·교차검증) | `/ad:code-review` |
+| `code-review` | 팀 것이 더 성숙 (범위 한정·게시 규격·교차 모델 리뷰) | `/ad:code-review` |
 | `to-spec` / `to-tickets` | spec은 YouTrack 5W1H, 분할은 팀 규칙 | `/ad:ticket` |
 | `setup-matt-pocock-skills` | CLAUDE.md를 직접 편집 — 팀 SoT 체계와 충돌 | `docs/agents/*.md` 직접 작성 (완료) |
 | `triage` | 팀 접수 흐름과 라벨 체계 상이 | `/ad:work-prep` |
@@ -23,14 +23,15 @@ superpowers 대체: `brainstorming` → `/ad:grill`, `systematic-debugging` → 
 
 ## 오버라이드 규칙
 
-- **커밋·푸시 사용자 확인** (INVARIANT) — `implement`가 "commit your work"라 해도 커밋 전 확인. 형식 `[{이슈ID}] 작업 내용`, AI footer 금지
-- **spec의 거처** — YouTrack Feature 본문(5W1H). 별도 spec 파일 생성 금지
+- **커밋·푸시 사용자 확인** (INVARIANT) — `implement`가 "commit your work"라 해도 커밋 전 확인. 슬라이스 단위로 제안한다. 형식 `[{이슈ID}] 작업 내용`, AI footer 금지
+- **spec의 거처** — spec·완료 조건의 SoT는 YouTrack 티켓 본문(5W1H)이고, 노트 `## 구현 계획`은 그 완료 조건을 관찰 가능하게 구체화한 **실행 계획**이다. 별도 spec 파일 생성 금지 — 완료 조건의 SoT가 둘이면 판정 기준이 갈린다
 - **도메인 문서 위치** — [docs/agents/domain.md](../../docs/agents/domain.md). repo 루트 CONTEXT.md 생성 금지
 - **이슈 트래커** — [docs/agents/issue-tracker.md](../../docs/agents/issue-tracker.md)
 - **리뷰** — `implement` 마감 리뷰는 `/ad:code-review` (사용자 호출 — 게시 시점은 사람이 정한다). 내장 `/code-review`가 이름을 선점하므로 주의
 - **research 산출물** — [knowledge-base-policy.md](../knowledge-base-policy.md) 결정 트리 적용 (vault/repo 판정)
 - **smart zone 상수** — 원본의 ~150k·"세션당 티켓 1개"는 구모델 기준 보수치. 규율은 지키되 수치는 참고치
 - **수직 슬라이스** — 개발 Task 내부 분할에만. 팀 단계 분리(개발/검증/배포)가 우선
+- **구현 계획의 거처·실행 단위** — 슬라이스·seam·검증 명령은 vault 티켓 노트 `## 구현 계획`(`/ad:work-prep`이 생성)에 둔다. `/ad:implement`는 한 번 호출에 슬라이스 하나를 실행하고 멈춘다 — upstream은 전체를 한 번에 구현·커밋하지만, 팀은 슬라이스마다 사람이 다음을 정한다. 근거: 2026-10-21 사용자 결정
 
 ## 디버깅 — 반복 실패의 공통 전제
 

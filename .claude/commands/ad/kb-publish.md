@@ -1,5 +1,5 @@
 ---
-description: 사용자가 문서를 YouTrack KB에 등록하거나 초안으로 올려 달라고 요청할 때 적용한다.
+description: '[상시·지식] KB 등록 — 문서를 YouTrack KB에 등록하거나 초안으로 올려 달라는 요청에'
 ---
 
 # YouTrack KB 등록

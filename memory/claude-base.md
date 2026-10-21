@@ -17,23 +17,18 @@
 
 ## 작업 플로우
 
-```
-정렬 → 스펙+분할 → 착수 준비 → (설계 검증) → 구현 → 리뷰 → 종료
-```
+<!-- canonical:workflow-summary targets=AGENTS.md,.codex/skills/dev2-ad-commands-ko/SKILL.md -->
+4그룹 — 떠올릴 단서는 "지금 티켓 기준 어디냐". 그룹 허브를 먼저 부르면 나머지를 안내한다. 지도 SoT(상황별 동사·강도·단계별 도구 명칭): `docs/harness-guide.md` §작업 플로우.
 
-| 단계 | 명령 | 하는 일 |
+| 그룹 | 기억 단서 | 허브 → 흐름 |
 |---|---|---|
-| 정렬 | `/ad:grill` | `grilling`+`domain-modeling` — frontier 라운드, 용어집·결정 기록 |
-| 스펙+분할 | `/ad:ticket` | 5W1H Feature 발행 → Task 분할 |
-| 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
-| 설계 검증 (선택) | `/ad:eng-review` | 스코프 챌린지 + 아키텍처·품질·테스트·성능 이슈 판정 — 1일 이상·경계 변경 시 |
-| 구현 | `/ad:implement` | vendored `implement`(내부 `tdd`) — seam 합의, red→green |
-| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 + 구조 재점검(비차단, 시니어 관점). 자기 PR은 `/ad:code-review-self` — 별도 리뷰어 에이전트 + 반영·재리뷰 루프 |
-| 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
+| 구상 (티켓 전) | 아직 티켓이 없다 | `/ad:plan` · `/ad:grill` — 과제 크기 판정: 세션 하나 `/ad:grill` / 다세션 `/ad:plan`→`/ad:plan-run` / 세션을 넘는 안개 `/wayfinder` |
+| 개발 (티켓 하나) | 티켓 하나를 끝낸다 | `/ad:work-prep`(강도 판정 + 구현 계획, "다음 단계" 지목) — `/ad:ticket → /ad:work-prep → (/ad:eng-review) → /ad:implement → /ad:code-review(-self) → /ad:work-close`. 구현 중 `tdd`·`diagnosing-bugs` |
+| 주기 (팀 운영) | 달력 | 주간 `/ad:ticket-schedule`·`/ad:weekly-report` / 월말 `/ad:sprint-close-check`·`/ad:capacity-plan` |
+| 상시 (언제든) | 상황 | 지식 `/ad:new-note` / 이해 `/wait-what` / 협업 `/ad:orchestration`·`/handoff` / 운영 DB `/ad:data-request` / 하네스 `/ad:harness-optimize` |
 
-온램프: 버그 → `diagnosing-bugs`(모델 호출) / 프로토타입 필요 → `prototype` / 대형 안개 과제 → `/wayfinder` / 데이터 추출 → `/ad:data-request` / 월말 → `/ad:sprint-close-check`, `/ad:capacity-plan`
-
-규모별: 1시간 이내(오타·설정) 바로 처리 / 반나절(버그) 준비→구현→리뷰 / 1일 이상 전체 플로우.
+강도: 가벼움(1시간·설정) 바로 수정 / 보통(반나절·버그) 구현 계획 → `tdd` / 무거움(Task 여럿·모호·경계 변경) 전체 플로우 + 설계 검증 / 위험(운영 데이터·결제·인증·개인정보·공유 DB 스키마·비가역 — 크기 무관) 무거움 + 반증 검토·페르소나 리뷰·롤백 트리거. `/ad:implement`는 슬라이스 하나를 red→green 후 노트 체크하고 멈춘다.
+<!-- /canonical:workflow-summary -->
 
 ### 단계 경계
 

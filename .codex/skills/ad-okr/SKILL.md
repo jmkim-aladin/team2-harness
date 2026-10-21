@@ -1,6 +1,6 @@
 ---
 name: ad-okr
-description: "Use when the user invokes $ad-okr, ad okr, /ad:okr, or asks to read, draft, or update DEV2 OKRs."
+description: "[주기·수시] Use when the user invokes $ad-okr, ad okr, /ad:okr, or asks to read, draft, or update DEV2 OKRs."
 ---
 
 # `$ad-okr`

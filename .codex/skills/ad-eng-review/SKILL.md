@@ -1,6 +1,6 @@
 ---
 name: ad-eng-review
-description: "Use when the user invokes $ad-eng-review, /ad:eng-review, or asks for an engineering review of a plan or design before implementation."
+description: "[개발·설계 검증] Use when the user invokes $ad-eng-review, /ad:eng-review, or asks for an engineering review of a plan or design before implementation — including a ticket note's implementation plan or a vault plan, and a doubt review of irreversible decisions at risk strength."
 ---
 
 # `$ad-eng-review`

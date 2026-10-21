@@ -1,5 +1,5 @@
 ---
-description: 가용 맨데이·velocity 기반 capacity plan, SP 초과 판정
+description: '[주기·월말] capacity plan — 가용 맨데이·velocity 기준 SP 초과 판정'
 ---
 
 # 가용 용량 분석 (capacity plan)

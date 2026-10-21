@@ -1,5 +1,5 @@
 ---
-description: 현재 Mac 계정의 운영 DB 조회를 취소하고 종료 확인 상태를 점검
+description: '[상시·운영 DB] 현재 Mac 계정의 운영 DB 조회 취소·종료 확인'
 ---
 
 # 운영 DB 조회 취소

@@ -40,8 +40,9 @@ class ArchitectureAnalysisSkillTest(unittest.TestCase):
         self.assertIn('display_name: "DEV2 아키텍처 분석"', metadata)
 
     def test_team2_routing_mentions_new_command(self):
+        # Codex 자연어 라우팅은 alias description이 맡는다 — dev2-ad-commands-ko는 매핑 목록 대신 작업 플로우 요약을 싣는다 (2026-10-21)
         routing_files = (
-            ROOT / ".codex/skills/dev2-ad-commands-ko/SKILL.md",
+            ROOT / ".codex/skills/ad-architecture-analysis/SKILL.md",
             ROOT / "docs/harness-guide.md",
             ROOT / "scripts/setup.sh",
         )

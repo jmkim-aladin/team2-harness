@@ -1,6 +1,6 @@
 ---
 name: ad-data-request
-description: "Use when the user invokes $ad-data-request, ad data request, /ad:data-request, asks to prepare a DEV2 operational data extraction request, or asks to register operational SQL such as a max subscription payment actual-usage check."
+description: "[상시·운영 DB] Use when the user invokes $ad-data-request, ad data request, /ad:data-request, asks to prepare a DEV2 operational data extraction request, or asks to register operational SQL such as a max subscription payment actual-usage check."
 ---
 
 # `$ad-data-request`

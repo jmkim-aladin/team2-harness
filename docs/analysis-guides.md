@@ -20,6 +20,14 @@
 | [레거시 현대화/DB 분리 분석 기준](./legacy-modernization-db-separation-analysis-guide.md) | 레거시 서비스의 현대화 트랙 결정과 DB 분리 가능성 분석 |
 | [DB 이관/CDC 진단 기준](./db-migration-cdc-assessment-guide.md) | DB 이관 또는 CDC 도입 시 진단 기준 |
 
+## 외부 스킬·도구 도입 검토
+
+| 문서 | 용도 |
+|------|------|
+| [외부 스킬 팩 3종 통합 판정](./skill-packs-adoption-review.md) | Pocock·pstack·Osmani 비교, 강도별 흡수 항목·미도입 사유·후속 후보 |
+| [pstack 스킬·컨셉 적용 검토](./pstack-harness-adoption-review.md) | pstack 50개 스킬·컨셉 전수 판정 |
+| [OpenHands 도입 검토](./openhands-adoption-review.md) | OpenHands 설치·보안·실험 조건 |
+
 ## 위키/문서 운영
 
 | 가이드 | 용도 |

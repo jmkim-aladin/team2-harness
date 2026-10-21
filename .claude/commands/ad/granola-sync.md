@@ -1,5 +1,5 @@
 ---
-description: Granola 회의록 동기화
+description: '[주기·수시] Granola 회의록 동기화'
 ---
 
 # Granola 회의록 동기화

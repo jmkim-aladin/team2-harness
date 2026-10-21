@@ -1,6 +1,6 @@
 ---
 name: ad-architecture-analysis
-description: "Use when the user invokes $ad-architecture-analysis, ad architecture analysis, /ad:architecture-analysis, or asks for a DEV2 repository-wide architecture, Clean Architecture, Hexagonal, DDD, naming, reliability, or documentation-drift analysis."
+description: "[상시·지식] Use when the user invokes $ad-architecture-analysis, ad architecture analysis, /ad:architecture-analysis, or asks for a DEV2 repository-wide architecture, Clean Architecture, Hexagonal, DDD, naming, reliability, or documentation-drift analysis."
 ---
 
 # `$ad-architecture-analysis`

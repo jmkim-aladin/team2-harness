@@ -284,7 +284,7 @@ LOCAL_WIKI_PATH="${LOCAL_WIKI_PATH:-/Users/jm/Library/Mobile Documents/iCloud~md
 python3 "$TEAM2_HARNESS_PATH/tools/generate_decision_board.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
 
-Claude Code와 Codex에서는 공통으로 `/ad:work-board apply` 또는 `$ad-work-board apply`를 사용한다.
+Claude Code와 Codex 공통 진입점은 `python3 "$TEAM2_HARNESS_PATH/tools/run_work_board.py" --vault "$LOCAL_WIKI_PATH" --apply`(또는 `team2-agent board`)다. `work-board` 스킬은 2026-10-21 걷었다.
 
 출력:
 

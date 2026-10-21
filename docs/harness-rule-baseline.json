@@ -54,14 +54,6 @@
       "path": ".claude/commands/ad/plan.md",
       "rule": "R4"
     },
-    "111c04020130f3cc": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "실행 절차",
-      "heading": "Work Board Projection > 실행 절차",
-      "path": ".claude/commands/ad/work-board.md",
-      "rule": "R4"
-    },
     "121425a16ce1907a": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -142,14 +134,6 @@
       "path": "docs/sprint/ticket-guide.md",
       "rule": "R1a"
     },
-    "3752c8263982a9aa": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "dispatch request JSON을 원장처럼 수동 수정하지 않는다.",
-      "heading": "Work Board Projection > 금지",
-      "path": ".claude/commands/ad/work-board.md",
-      "rule": "R1a"
-    },
     "38f6d1488b5388ce": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -157,14 +141,6 @@
       "heading": "Velocity 측정 및 활용 가이드 > 4. Velocity 활용 — 다음 달 계획 수립",
       "path": "docs/sprint/velocity-guide.md",
       "rule": "R4"
-    },
-    "39b6f3539dcfb1b9": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "Discord API, webhook, bot token은 직접 사용하지 않는다. Hermes가 기존 Discord bot 통합을 담당한다.",
-      "heading": "`$ad-work-board` > 절차",
-      "path": ".codex/skills/ad-work-board/SKILL.md",
-      "rule": "R1a"
     },
     "3cee730edbb95fd1": {
       "acceptance_id": "2026-09-16-1",
@@ -430,14 +406,6 @@
       "path": ".codex/skills/dev2-ad-commands-ko/SKILL.md",
       "rule": "R1a"
     },
-    "879cc24401eb4e17": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "미지정: services 필수, period 기본 = `지난주`",
-      "heading": "서비스 작업 활동 조회 > 사용법",
-      "path": ".claude/commands/ad/service-activity.md",
-      "rule": "R1a"
-    },
     "8f654f7b65c3754e": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -510,14 +478,6 @@
       "path": ".codex/skills/eli5-onboard/SKILL.md",
       "rule": "R1a"
     },
-    "aad47c6aee614984": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "1. 인자 파싱",
-      "heading": "주간 계획 스냅샷 작성 > 실행 지침 > 1. 인자 파싱",
-      "path": ".claude/commands/ad/weekly-planned.md",
-      "rule": "R4"
-    },
     "ac39a2ac5da7fae1": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -565,14 +525,6 @@
       "heading": "YouTrack 지식베이스(KB·기술자료) 문서 조회 > 실행 지침",
       "path": ".claude/commands/ad/team2-kb-read.md",
       "rule": "R4"
-    },
-    "cc24aaa1b69658a8": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "YouTrack, KB, git, DB, 배포 변경은 수행하지 않는다.",
-      "heading": "`$ad-work-board` > 절차",
-      "path": ".codex/skills/ad-work-board/SKILL.md",
-      "rule": "R1a"
     },
     "cd41dace5a4010f2": {
       "acceptance_id": "2026-09-16-1",
@@ -670,14 +622,6 @@
       "path": "templates/membership-coupon-recurrence-prevention-monthly-report.md",
       "rule": "R1a"
     },
-    "f91d229b0e6adc22": {
-      "acceptance_id": "2026-09-16-1",
-      "count": 1,
-      "excerpt": "절차",
-      "heading": "TL;DR 핵심 문서 생성 > 절차",
-      "path": ".claude/commands/ad/tldr.md",
-      "rule": "R4"
-    },
     "fb88ed406a230780": {
       "acceptance_id": "2026-09-16-1",
       "count": 1,
@@ -703,13 +647,9 @@
     ".claude/commands/ad/kb-publish.md::YouTrack KB 등록 > 2. 등록할 본문의 링크를 정리한다": true,
     ".claude/commands/ad/okr.md::OKR 조회 및 작성": true,
     ".claude/commands/ad/okr.md::OKR 조회 및 작성 > 실행 지침": true,
-    ".claude/commands/ad/service-activity.md::서비스 작업 활동 조회": true,
     ".claude/commands/ad/ticket.md::YouTrack 티켓 생성": true,
     ".claude/commands/ad/ticket.md::YouTrack 티켓 생성 > 본문 작성 규칙 (필수)": true,
     ".claude/commands/ad/ticket.md::YouTrack 티켓 생성 > 본문 작성 규칙 (필수) > 본문": true,
-    ".claude/commands/ad/tldr.md::TL;DR 핵심 문서 생성": true,
-    ".claude/commands/ad/weekly-planned.md::주간 계획 스냅샷 작성": true,
-    ".claude/commands/ad/weekly-planned.md::주간 계획 스냅샷 작성 > 실행 지침": true,
     ".claude/commands/ad/weekly-report.md::주간업무 보고서 작성": true,
     ".claude/commands/ad/work-close.md::작업 종료 (Work Close)": true,
     ".claude/commands/ad/work-close.md::작업 종료 (Work Close) > 실행 지침": true,

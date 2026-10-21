@@ -26,7 +26,8 @@ PATTERNS = [
     ("AWS Access Key", re.compile(r"AKIA[0-9A-Z]{16}")),
     ("JWT", re.compile(r"eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}")),
     ("GitHub 토큰", re.compile(r"gh[pousr]_[A-Za-z0-9]{30,}")),
-    ("접속문자열 암호", re.compile(r"(?i)(password|pwd)\s*=\s*[^\s;'\"<{$][^\s;'\"]{7,}")),
+    # 값 6자 하한 — `abc123` 길이의 짧은 실값도 잡는다. 2026-10-21 repo+vault 실측: 8→6 하향으로 repo 오탐 0건, vault 실값 후보 1건 추가 검출
+    ("접속문자열 암호", re.compile(r"(?i)(password|pwd)\s*=\s*[^\s;'\"<{$][^\s;'\"]{5,}")),
     ("Bearer 실값", re.compile(r"Bearer\s+[A-Za-z0-9+/=._-]{30,}")),
     ("private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
 ]
@@ -40,6 +41,16 @@ SCAN_COMMAND_LINE = re.compile(r"\brg\b|\bgrep\b|\[\^|re\.compile")
 # `password = request.unlockPassword,`·`password=self._get(...)` 같은 코드 식 — 식별자 체인 뒤에 호출·첨자·인자 구분자가 온다.
 # 실값(`;` 구분 접속문자열, .env 값)은 뒤따르는 구두점이 없어 계속 잡힌다 — tests/test_secret_scan.py
 CODE_EXPRESSION = re.compile(r"=\s*[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\s*[(\[),]")
+# `UPDATE … SET PWD=@Password WHERE …` 처럼 값이 SQL 변수(@이름)인 문장 — 비밀번호가 아니라 SP 파라미터다.
+# 접속문자열(`Server=…;Pwd=@…;`)은 SQL 문맥이 아니므로 계속 잡는다 — 2026-10-21 vault SP 분석 노트 오탐 1건
+SQL_VARIABLE = re.compile(r"=\s*@[A-Za-z_]\w*[`),]*$")
+SQL_CONTEXT = re.compile(r"\b(UPDATE|SET|DECLARE|INSERT|VALUES|WHERE|SELECT|EXEC|PROCEDURE)\b", re.I)
+CONNECTION_STRING = re.compile(r"\b(server|data source|user id|uid|initial catalog)\s*=", re.I)
+
+
+def is_sql_variable(value, line):
+    return bool(SQL_VARIABLE.search(value) and SQL_CONTEXT.search(line)
+                and not CONNECTION_STRING.search(line))
 
 
 def iter_files(roots):
@@ -77,7 +88,7 @@ def scan(files):
                             continue
                         if FALSE_POSITIVE.search(m.group(0)) or FALSE_POSITIVE.search(line[:m.start()][-30:]):
                             continue
-                        if CODE_EXPRESSION.search(m.group(0)):
+                        if CODE_EXPRESSION.search(m.group(0)) or is_sql_variable(m.group(0), line):
                             continue
                         masked = m.group(0)[:8] + "…(마스킹)"
                         print(f"  [유출 의심] {path}:{i}  {name}  {masked}")

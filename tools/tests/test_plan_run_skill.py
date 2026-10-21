@@ -1,3 +1,4 @@
+import re
 import unittest
 from pathlib import Path
 
@@ -53,8 +54,8 @@ class PlanRunSkillTest(unittest.TestCase):
                 "/ad:plan-run",
             ),
             ROOT / ".codex/skills/dev2-ad-commands-ko/SKILL.md": ("plan-run",),
-            ROOT / "AGENTS.md": ("ad-plan-run", "사용자 호출 전용 6종"),
-            ROOT / "CLAUDE.md": ("ad:plan-run", "사용자 호출 전용 6종"),
+            ROOT / "AGENTS.md": ("ad:plan-run",),
+            ROOT / "CLAUDE.md": ("ad:plan-run",),
             ROOT / "docs/harness-guide.md": ("/ad:plan-run", "internal milestone"),
             ROOT / "skills/README.md": ("ad:plan-run",),
         }
@@ -64,6 +65,34 @@ class PlanRunSkillTest(unittest.TestCase):
                 text = path.read_text(encoding="utf-8")
                 for phrase in phrases:
                     self.assertIn(phrase, text)
+
+
+class UserOnlyListTest(unittest.TestCase):
+    """사용자 호출 전용 목록 — SoT는 command frontmatter, 문서 사본은 개수·이름이 같아야 한다."""
+
+    LIST_BLOCK = re.compile(
+        r"<!-- (?:canonical|generated):user-only[^>]*-->\n(.*?)\n<!-- /(?:canonical|generated):user-only -->",
+        re.S,
+    )
+
+    def frontmatter_user_only(self):
+        names = set()
+        for path in (ROOT / ".claude/commands/ad").glob("*.md"):
+            head = path.read_text(encoding="utf-8").split("---")[1]
+            if re.search(r"^disable-model-invocation:\s*true\s*$", head, re.M):
+                names.add(path.stem)
+        return names
+
+    def test_listed_skills_match_frontmatter(self):
+        expected = self.frontmatter_user_only()
+        self.assertIn("plan-run", expected)
+        for relative in ("policies/skill-authoring-principles.md", "CLAUDE.md", "AGENTS.md"):
+            with self.subTest(path=relative):
+                match = self.LIST_BLOCK.search((ROOT / relative).read_text(encoding="utf-8"))
+                self.assertIsNotNone(match, "user-only 블록 없음")
+                block = match.group(1)
+                self.assertIn(f"사용자 호출 전용 {len(expected)}종", block)
+                self.assertEqual(set(re.findall(r"/ad:([a-z0-9-]+)", block)), expected)
 
 
 if __name__ == "__main__":

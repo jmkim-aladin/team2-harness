@@ -1,6 +1,6 @@
 ---
 name: ad-code-review
-description: "Use when the user invokes $ad-code-review, ad code review, /ad:code-review, or asks for a DEV2 GitHub PR code review."
+description: "[개발·리뷰] Use when the user invokes $ad-code-review, ad code review, /ad:code-review, or asks for a DEV2 GitHub PR code review, including persona review and blast-radius checks for risk-strength changes."
 ---
 
 # `$ad-code-review`
@@ -12,7 +12,7 @@ description: "Use when the user invokes $ad-code-review, ad code review, /ad:cod
 1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`로 기준 경로를 잡는다.
 2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/code-review.md`를 먼저 읽고 그 절차·판정 기준을 따른다 — 절차는 SoT 한 곳에만 둔다. 여기 복제하면 한쪽이 낡는다.
 3. 상세 참조(`docs/code-review/*.md`)는 command 파일의 «조건부 참조» 표가 정한 조건에서만 읽는다. GitHub 조회는 `gh` CLI를 우선 사용한다.
-4. 교차 모델 검증에서 Codex 호스트의 상대 모델은 Claude Code다 — 자기 자신을 검증하지 않는다. 실행 명령은 command 파일의 교차 모델 참조를 따른다.
+4. 교차 모델 리뷰에서 Codex 호스트의 상대 모델은 Claude Code다 — 자기 자신을 검증하지 않는다. 실행 명령은 command 파일의 교차 모델 참조를 따른다.
 5. 리뷰 코멘트 등록, 승인, 머지, 상태 변경은 사용자 승인 후 실행한다.
 
 ## 최우선 규칙

@@ -1,12 +1,12 @@
 ---
-description: 설명서 생성 (코드 변경·분석 결과를 배경→직관→본체→퀴즈로)
+description: '[상시·지식] 설명서 — 코드 변경·분석 결과를 배경→직관→본체→퀴즈로, --tldr는 아키텍처 one-pager'
 disable-model-invocation: true
 ---
 
 # 설명서 생성
 
 대상을 **모르는 독자**가 읽고 이해하도록 설명서를 만든다. 코드 변경이든, 방금 끝낸 분석이든 같다.
-판정하지 않는다 — 승인·finding·우선순위는 `/ad:code-review`의 몫이다. 시스템 정체를 그리는 것도 아니다 — 그건 `/ad:tldr`이다.
+판정하지 않는다 — 승인·finding·우선순위는 `/ad:code-review`의 몫이다. 시스템 정체(아키텍처 한 장)는 `tldr` 모드가 맡는다 — 고도가 달라 섹션 규격을 따로 둔다.
 
 원안: Geoffrey Litt "explain-diff" 프롬프트 (배경·직관·코드·퀴즈 4단). 팀 규칙(한국어 md + mermaid, 마스킹, 인수인계)에 맞춰 번안하고 **남은 위험** 섹션을 추가했다.
 
@@ -21,6 +21,7 @@ disable-model-invocation: true
 /ad:explain --reader <리뷰어|신규합류자|기획·QA>
 /ad:explain --html                       # md + 공유용 HTML 리더
 /ad:explain --out <path>
+/ad:explain --tldr [<repo-path-or-name>] [--keep]  # 저장소 아키텍처 one-pager (구 tldr 스킬)
 ```
 
 ## 모드
@@ -29,8 +30,9 @@ disable-model-invocation: true
 |---|---|---|
 | `diff` | PR, 브랜치, 커밋 범위, 워킹트리 변경 | `무엇이 바뀌었나` |
 | `analysis` | 조사 결과, 설계 판단, 레거시 구조 파악, DB 이관 검토, 장애 원인 | `무엇을 알아냈나` |
+| `tldr` | 저장소·프로젝트 하나의 아키텍처 개요 (처음 보는 사람용 한 장) | — 별도 규격 |
 
-인자가 git 참조·PR URL이면 `diff`, 아니면 `analysis`. 인자가 없으면 현재 세션에서 직전에 다룬 대상을 `analysis`로 잡고 **한 줄로 확인받은 뒤** 진행한다.
+`--tldr`이면 `tldr` — 산출 위치·절차·섹션 규격은 [docs/explain/tldr.md](../../../docs/explain/tldr.md)를 읽고 따른다. 아래 절차·섹션 규격·퀴즈는 `diff`·`analysis` 전용이고, §문체와 금지는 세 모드 공통이다. 그 외 인자가 git 참조·PR URL이면 `diff`, 아니면 `analysis`. 인자가 없으면 현재 세션에서 직전에 다룬 대상을 `analysis`로 잡고 **한 줄로 확인받은 뒤** 진행한다.
 
 ## 산출 위치
 

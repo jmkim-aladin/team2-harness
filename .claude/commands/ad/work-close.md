@@ -1,5 +1,5 @@
 ---
-description: 작업 종료 — Fixed 처리, 소요시간(work item) 입력 후 티켓 닫기
+description: '[개발·종료] 작업 종료 — 소요시간(work item) 입력 후 Fixed로 티켓 닫기'
 ---
 
 # 작업 종료 (Work Close)
@@ -66,6 +66,18 @@ Feature 자체에는 코멘트·work item을 넣지 않는다 — 소요시간·
 
 완료 기준: 티켓별 처리 분류(종료 대상 / skip / 제외 / Feature 중단) 확정.
 
+### 2.5 완료 조건 대조 (티켓 노트 구현 계획)
+
+종료 대상 Task마다 티켓 노트 `$LOCAL_WIKI_PATH/wiki/processes/tickets/dev2-{nnnn}.md`의 `## 구현 계획`을 읽고, [DoD 체크리스트](../../../templates/dod-checklist.md)의 검증 증거를 그 완료 조건(AC)에 잇는다. 형식: [work-prep-note-template.md](../../../docs/sprint/work-prep-note-template.md) §구현 계획 기준.
+
+- 미체크 슬라이스나 증거가 연결되지 않은 AC가 있으면 4단계 실행 계획에 `미완료: S3, AC2`로 올린다. 종료를 계속할지는 사용자가 정한다 — 완료 조건 없이 닫힌 Task는 다음 사람이 어디까지 됐는지 알 수 없다
+- 강도가 위험이면 PR 본문(`gh pr view`)에 롤백 트리거(되돌릴 관찰 신호·임계값)가 있는지 확인하고, 없으면 같은 줄에 올린다 — 비가역 변경은 배포 뒤에 되돌릴 기준을 정하면 늦다. 롤백 SQL·절차는 배포 승인 흐름([release-policy](../../../policies/release-policy.md) §롤백 기준) 몫이라 여기서 요구하지 않는다
+- 노트나 구현 계획이 없으면 `구현 계획: 생략 — {사유}`
+
+근거: 2026-10-21 3팩 비교 검토 — Osmani shipping(롤백 트리거)·DoD를 완료 조건에 연결.
+
+완료 기준: 대상 Task별 `구현 계획: 완료 / 미완료 {목록} / 생략` 확정.
+
 ### 3. 공통 질문 (실행당 1회)
 
 종료 대상 Task가 있으면 **한 번만** 질문한다:
@@ -88,6 +100,7 @@ Feature 자체에는 코멘트·work item을 넣지 않는다 — 소요시간·
 
 ### [DEV2-1234](…) {summary} — Task, SP 3
 - 상태: Open → In Progress → Fixed
+- 구현 계획: 완료 (S1~S3, AC 3/3) | 미완료 S3, AC2 | 생략 — {사유} (위험이면 + 롤백 트리거: 있음/없음)
 - work items: 2026-08-04 4h / 2026-08-05 4h / 2026-08-06 4h
 - 코멘트 초안:
   > {전문}

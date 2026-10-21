@@ -1,6 +1,6 @@
 ---
 name: ad-db-stop
-description: "Stop all production DB queries managed by the current Mac user's team2 executor. Use for $ad-db-stop, /ad:db-stop, or an explicit request to stop/cancel running production DB queries."
+description: "[상시·운영 DB] Stop all production DB queries managed by the current Mac user's team2 executor. Use for $ad-db-stop, /ad:db-stop, or an explicit request to stop/cancel running production DB queries."
 ---
 
 # 운영 DB 조회 취소

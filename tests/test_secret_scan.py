@@ -1,4 +1,4 @@
-"""secret_scan — 코드 식은 통과, 실값은 계속 잡는다."""
+"""secret_scan — 코드 식·SQL 변수는 통과, 실값은 계속 잡는다."""
 import contextlib
 import io
 import sys
@@ -31,12 +31,24 @@ class SecretScanTests(unittest.TestCase):
             with self.subTest(line=line):
                 self.assertEqual(hits_for(line + "\n"), 0)
 
+    def test_sql_variable_values_are_not_secrets(self) -> None:
+        # SP 분석 노트의 SQL 문 — 값이 @파라미터다 (2026-10-21 vault 오탐)
+        for line in (
+            "UPDATE TOP(1) Customer SET PW" + "D=@NewPassword WHERE CustKey=@CustKey",
+            "`UPDATE dbo.Member SET Pass" + "word = @PasswordHash, UpdatedAt = GETDATE()`",
+            "    SET pw" + "d = @Password",
+        ):
+            with self.subTest(line=line):
+                self.assertEqual(hits_for(line + "\n"), 0)
+
     def test_literal_passwords_are_still_detected(self) -> None:
-        # 키 이름을 쪼개 둔다 — 이 파일 자체가 staged 스캔에 걸리지 않게
+        # 키 이름을 쪼개 둔다 — 이 파일 자체가 staged 스캔에 걸리지 않게. 값은 모두 가짜다
         for line in (
             "Server=db;User Id=sa;Pass" + "word=Secret2026;",
             "DB_PASS" + "WORD=abc.def.ghi",
             "pw" + "d=Hunter2Hunter2",
+            "PW" + "D=abc123;",
+            "Server=db;Uid=sa;PW" + "D=@bc12345;",
         ):
             with self.subTest(line=line):
                 self.assertEqual(hits_for(line + "\n"), 1)

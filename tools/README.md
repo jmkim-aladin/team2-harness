@@ -705,6 +705,29 @@ Go sqlcmd v1.10의 `-X1`은 인증 환경변수도 차단하므로 사용하지 
 
 격리 단위 검증: `python3 -m unittest discover -s tools/tests -p 'test_db*.py'`. 일회성 Docker SQL Server 검증: `python3 tools/tests/integration/sqlserver/verify.py --transport-only --report docs/verification/sqlserver-prod-transport-2026-10-15.json`. 이 검증은 합성 계정과 컨테이너의 ODBC sqlcmd를 사용하며 운영 접속 검증을 대신하지 않는다.
 
+## gate_loosening_scan.py — 완화 신호 스캔
+
+unified diff에서 검증 기준을 낮추는 변경을 범주별 `파일:줄`로 뽑아 리뷰 미리보기용 markdown으로 낸다. `/ad:code-review` 1단계 사전 스캔(서비스 코드 PR, DB 스크립트·SP PR 제외). 기준 강화는 조용히, 완화는 드러낸다 — 판정이 아니라 신호라 사유가 있으면 리뷰어가 넘긴다.
+
+```bash
+python3 tools/gate_loosening_scan.py --diff {스크래치}/pr{N}.diff        # 저장한 PR diff
+python3 tools/gate_loosening_scan.py origin/develop...HEAD -C ~/work/svc  # git 범위 (... = merge-base 기준)
+gh pr diff 123 --repo o/r | python3 tools/gate_loosening_scan.py         # stdin
+```
+
+| 범주 | 잡는 것 |
+|---|---|
+| 임계값 하향 | 검사 설정 파일(빌드·lint·커버리지·CI)의 수치가 느슨한 쪽으로 이동(Kover `minValue` 포함), lint 심각도 하향(ESLint 숫자 `2`→`1`/`0` 포함), `TreatWarningsAsErrors`류 해제, `continue-on-error`류 추가, 검사 설정 파일(CI 워크플로·detekt·ktlint·eslint·jest·jacoco/kover·`.editorconfig` 등) 삭제 |
+| 테스트 약화 | `@Disabled`·`@Ignore`(FQN 포함)·`[Ignore]`·`[Explicit]`·`[Fact(Skip=)]`·TestNG `@Test(enabled = false)`·`.skip`·`xit`·`.only`·`-x test`, 테스트 파일 삭제, 남은 테스트 파일의 assert/verify 순감(`Assert.Throws<Foo>(` 같은 제네릭 포함) |
+| 체커 침묵 | `@Suppress`·`ktlint-disable`·`#pragma warning disable`·`<NoWarn>`·`eslint-disable`·`@ts-ignore`·`nosemgrep`·`gitleaks:allow`·`istanbul ignore` 등 |
+| 미완성 | `TODO(`·`NotImplementedError`·`NotImplementedException`·빈 catch/except |
+| 예외 추가 | baseline·allowlist·suppression·`*ignore` 파일에 추가된 항목 |
+
+- 종료 코드: 0 스캔 완료(발견 유무 무관) / 2 입력 오류(빈 diff·git 실패·diff 형식 아님). 빈 diff를 0건으로 보고하지 않는다 — rtk가 본문을 버린 diff 위에서 "완화 0건"이 나오면 안 본 것과 구분되지 않는다(2026-08-10 PR #27 diff 본문 유실 사고). 리뷰 미리보기는 exit 2를 `완화 신호: 스캔 실패 — {stderr 요지}`로 적는다
+- diff 줄 경계는 `\n`만 쓴다 — `splitlines()`는 내용 속 `\x0c`·`\x85`·`\u2028`에서도 끊어 hunk 줄 수가 어긋난다
+- 문서(`.md`·`.txt` 등)는 보지 않는다. 임계값 하향은 검사 설정 파일에서만 본다 — `application.yml`의 풀 크기·타임아웃은 게이트가 아니다
+- 못 잡는 것: 남은 파일 안에서 설정 키·블록 자체를 지운 검사 완화(커버리지 규칙 블록 삭제), CI 단계 삭제, 단위가 바뀐 예산(`500kb`→`1mb`), `package.json` `eslintConfig` 안의 ESLint 숫자 심각도(`.eslintrc*`·`eslint.config.*`만 본다). 테스트: `tests/test_gate_loosening_scan.py`
+
 ## secret_scan.py — 시크릿 유출 스캔
 
 repo + vault를 자격증명 패턴(YouTrack perm-, AKIA, JWT, gh 토큰, 접속문자열 암호, Bearer, private key)으로 스캔. `/ad:harness-optimize 스택` 모드에 포함. 발견 시 exit 1 — **제거 + 해당 자격증명 재발급**이 원칙.

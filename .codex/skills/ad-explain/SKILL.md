@@ -1,6 +1,6 @@
 ---
 name: ad-explain
-description: "Use when the user invokes $ad-explain, ad explain, /ad:explain, or asks for an explainer document of a code change, PR, branch, or of an analysis just completed."
+description: "[상시·지식] Use when the user invokes $ad-explain, ad explain, /ad:explain, or asks for an explainer document of a code change, PR, branch, or of an analysis just completed, or (--tldr mode) a one-page TL;DR architecture overview of a repository."
 ---
 
 # `$ad-explain`
@@ -11,7 +11,7 @@ description: "Use when the user invokes $ad-explain, ad explain, /ad:explain, or
 
 1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`.
 2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/explain.md`를 먼저 읽고 그 절차와 섹션 규격을 따른다. 절차는 SoT 한 곳에만 둔다 — 여기 복제하면 한쪽이 낡는다.
-3. 모드를 먼저 정한다 — git 참조·PR URL이면 `diff`, 아니면 `analysis`. 인자가 없으면 직전 세션 대상을 `analysis`로 잡고 한 줄로 확인받는다.
+3. 모드를 먼저 정한다 — `--tldr`이면 `tldr`(SoT가 가리키는 `docs/explain/tldr.md` 규격을 따르고 4~6은 건너뛴다), git 참조·PR URL이면 `diff`, 아니면 `analysis`. 인자가 없으면 직전 세션 대상을 `analysis`로 잡고 한 줄로 확인받는다.
 4. 독자를 한 명 지정해 frontmatter `reader`에 남긴 뒤 배경을 2층으로 쓴다. 소스 순서가 아니라 이해 순서로 묶는다.
 5. 퀴즈 5문항은 편향 체크 4항(보기 길이 차 20자 이내 / 정답 쏠림 금지 / 3연속 금지 / "모두 맞다" 금지)을 통과해야 한다. 렌더러가 강제하므로 위반하면 생성이 실패한다.
 6. 섹션 제목은 규격 그대로 쓴다. md만 만들 때도 `python3 "$TEAM2_HARNESS_PATH/tools/render_explain_report.py" "$NOTE" "$HTML"`를 한 번 돌려 검증한다 (오프라인 공유는 `--no-mermaid`).

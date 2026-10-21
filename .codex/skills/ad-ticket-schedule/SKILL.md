@@ -1,6 +1,6 @@
 ---
 name: ad-ticket-schedule
-description: "Use when the user invokes $ad-ticket-schedule or /ad:ticket-schedule to fill planned-ticket schedule comments (시작예정일·완료목표일) one by one before the weekly report."
+description: "[주기·주간] Use when the user invokes $ad-ticket-schedule or /ad:ticket-schedule to fill planned-ticket schedule comments (시작예정일·완료목표일) one by one before the weekly report."
 ---
 
 # `$ad-ticket-schedule`

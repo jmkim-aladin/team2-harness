@@ -28,8 +28,13 @@
 **팀 표준: `/ad:*`는 모델 호출, 사이드이펙트 스킬만 사용자 호출** (2026-08-08 확정).
 
 - **description이 라우팅의 유일한 자리다.** CLAUDE.md·AGENTS.md에 라우팅 목록을 병행하지 않는다 — 같은 일을 두 곳에서 하면 한쪽이 반드시 낡고, 상주 비용을 두 번 낸다. 라우팅 블록(약 350 tok)을 걷고 description(약 135 tok)만 남기면 자동 호출을 유지하면서도 가벼워진다
-- **모델 호출 description은 트리거 문구가 본체**: 유도 단어를 앞세우고, 트리거 브랜치당 한 문구만 (동의어 나열 = 중복), 본문에 이미 있는 정체성 설명은 넣지 않는다. 길이는 한 줄
-- **사용자 호출 전용은 사이드이펙트 스킬에 한정**한다 — 게시·배포·dispatch처럼 시점을 사람이 정해야 하는 것. 현재 9종: `code-review`(GitHub 코멘트 게시), `code-review-self`(자기 PR 리뷰 게시·반영 push 위임), `work-board`(Hermes dispatch), `ticket-schedule`(티켓 코멘트 일괄 작성), `tldr`, `explain`, `eli5`, `eli5-html`, `eli5-onboard`. 뒤 셋은 사이드이펙트가 아니라 **설명 형식이 취향**이라 사람이 시점을 정한다 — 근거: 2026-09-01 도입 시 사용자 지정. frontmatter에 `disable-model-invocation: true`, description은 사람이 읽는 한 줄 요약
+- **모델 호출 description은 트리거 문구가 본체**: `[그룹·단계]` 태그 바로 뒤에 유도 단어를 앞세우고, 트리거 브랜치당 한 문구만 (동의어 나열 = 중복), 본문에 이미 있는 정체성 설명은 넣지 않는다. 길이는 한 줄
+- **사용자 호출 전용은 사이드이펙트 스킬에 한정**한다 — 게시·배포·dispatch처럼 시점을 사람이 정해야 하는 것. `/ad:*` 목록은 아래 블록 — SoT는 frontmatter `disable-model-invocation: true`, `--sync-generated`로 CLAUDE.md·AGENTS.md에 생성, 대조는 `test_plan_run_skill.py`. `eli5`·`eli5-html`·`eli5-onboard`는 **설명 형식이 취향**이라 사용자 호출. 근거: 2026-09-01 사용자 지정, 2026-10-21 사본 3곳 드리프트
+
+<!-- canonical:user-only targets=CLAUDE.md,AGENTS.md -->
+**사용자 호출 전용 6종**(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:code-review-self`, `/ad:explain`, `/ad:implement`, `/ad:plan-run`, `/ad:ticket-schedule`
+<!-- /canonical:user-only -->
+
 - 사용자 호출 전용으로 만들면 **다른 스킬도 그 스킬을 부를 수 없다** (description이 모델 시야에서 빠지므로). 재사용될 규율이라면 사용자 호출로 만들지 않는다
 - 모델 호출로 만들면 "제때 호출되는가"까지 검증 대상이 된다. 감사에서 호출 0회가 이어지면 트리거 문구를 재작성하거나 사용자 호출로 강등한다
 - 인지 부하는 **flow 지도**([docs/harness-guide.md](../docs/harness-guide.md) §작업 플로우)가 감당한다. 스킬을 추가·개명·삭제하면 지도도 같은 PR에서 갱신한다 — **갱신하지 않은 지도는 거짓말을 한다**
@@ -94,7 +99,7 @@
 
 - 평평한 `ad:*` 하나. 이름은 동사 또는 명사-동사 (`grill`, `ticket`, `work-prep`)
 - 생명주기를 공유하는 동사가 2개 이상이면 **접두 패밀리** (`work-*`, `weekly-*`) — 새 동사가 기존 패밀리에 속하면 접두를 따른다
-- 깊은 네임스페이스(`ad:dev:grill`)는 만들지 않는다 — **분류는 이름이 아니라 상황 지도가 담당**한다. 이름에 박은 그룹은 스킬이 그룹을 옮기는 순간 거짓이 되고, 지도와 이름 두 곳 분류는 라우팅 이중화와 같은 병이다
+- 깊은 네임스페이스(`ad:dev:grill`)는 만들지 않는다 — **분류는 이름이 아니라 상황 지도가 담당**한다. 이름에 박은 그룹은 스킬이 그룹을 옮기는 순간 거짓이 되고, 지도와 이름 두 곳 분류는 라우팅 이중화와 같은 병이다. `/ad:` 메뉴에서 그룹을 보이게 하는 자리는 description 맨 앞 `[그룹·단계]` 태그다 — 지도 주 소속의 사본이라 테스트가 지도와 대조한다([harness-guide.md](../docs/harness-guide.md) §4그룹 요약)
 - 재검토 트리거: 동사 30개 초과 또는 이름 충돌 — 감사에서 재판정
 - 개명은 사용 실적이 비용이다 (code-review 81회 관측) — 개명 제안에는 실적 대비 이득 소명 필수
 
