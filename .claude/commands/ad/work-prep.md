@@ -1,12 +1,12 @@
 ---
-description: 작업 준비 — 티켓번호나 작업 설명으로 위키 노트와 코드 진입점 묶기
+description: '[개발·착수 준비] 작업 준비 — 티켓·작업 설명 → 위키 노트·코드 진입점·강도·구현 계획'
 ---
 
 # 작업 준비 (Work Prep)
 
 YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obsidian 운영 위키에 티켓 노트를 생성·갱신하고 업무를 시작할 컨텍스트를 묶어준다.
 
-> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리).
+> 문서 위치 결정: harness `policies/knowledge-base-policy.md` (repo↔vault 경계) + vault `wiki/guides/document-placement.md` (vault 내부 트리). 결정 트리로 즉시 정하고 매번 묻지 않는다.
 
 ## 인보크 형태
 
@@ -101,7 +101,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 
 탐색 결과가 비면 "후보 미식별" 항목으로 명시 (감추지 않는다). 키워드 후보를 노트에 적어 다음 사이클에서 다시 시도.
 
-기록 밀도는 §5 기준을 따른다 (호출부·콜그래프 출력 전문 금지 포함). 추가: 사람이 운영 서버에서 직접 확인할 조회 SQL은 `검증 SQL` 섹션에 전문으로 남기되, 판단 요약·검증 결과 뒤에 배치해 첫 화면을 밀어내지 않는다.
+기록 밀도는 §5 기준을 따른다 (호출부·콜그래프 출력 전문 금지 포함). 사람이 운영 서버에서 확인할 조회 SQL은 `검증 SQL` 섹션에 전문으로 — 배치는 템플릿 순서가 첫 화면을 지킨다.
 
 ### 4. 위키 노트 경로 결정
 
@@ -121,8 +121,7 @@ YouTrack 티켓번호 또는 자유글 작업 설명을 입력받아, 로컬 Obs
 필수 유지:
 
 - 첫 50줄 안에 문제, 현재 판단, 해결 방향, 다음 행동이 보여야 한다.
-- `status`는 문서 신뢰도, `ticket_status`는 작업 흐름, `decision_status`는 Hermes board 노출 조건으로 분리한다.
-- 사용자 결정/승인/검토/blocked 항목이 남으면 `decision_status`를 `decision-needed | approval-needed | review-needed | blocked` 중 하나로 둔다.
+- 상태 3축(`status`·`ticket_status`·`decision_status`)은 템플릿 §티켓 Frontmatter를 따른다 — 결정이 남으면 `decision_status`로 Hermes board에 노출한다.
 - `비즈니스 로직`은 트리거/정책/예외/영향을 3-5개 bullet로 요약한다.
 - `기술 근거`는 재탐색용 식별자만 남긴다. raw evidence는 티켓 하위 근거 파일이나 별도 분석 노트로 분리한다.
 - 본문에 SP 원문, 운영 실데이터, 시크릿, 개인정보를 저장하지 않는다 — 위키는 팀 공유 사본이고 vault 밖으로 동기화된다 — 한 번 들어가면 회수가 안 된다.
@@ -179,13 +178,15 @@ team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-tick
 | cmux/herdr 라벨 | DEV2-{NNNN} (변경/스킵 — 외부 환경이면 스킵, §9) |
 | 제안 브랜치 | feature/DEV2-{NNNN} (미생성) |
 | 제안 커밋 prefix | [DEV2-{NNNN}] |
+| 강도 | {가벼움/보통/무거움/위험} — {판정 단서} |
+| 구현 계획 | 슬라이스 {N}개 (생성/갱신) / 생략 — {사유} |
 
 ### 관련 KB 후보
 - DEV2-A-… {제목}
 
 ### 다음 단계 (사용자 확인 후 실행)
 1. 브랜치 생성: `git checkout -b feature/DEV2-{NNNN}` (해당 서비스 repo에서)
-2. 위키 노트 보완: 판단 요약 / 비즈니스 로직 / 검증 결과 정리
+2. {강도에 맞는 한 줄 — §11.5}
 3. (자유글 모드인 경우) 티켓 발의: `/ad:ticket`
 ```
 
@@ -198,6 +199,17 @@ team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-tick
 - dev/staging의 `SELECT`/스키마 조회와 작업에 필요한 dev `INSERT/UPDATE/DELETE`는 [로컬 자격증명 정책](../../../policies/local-credentials-policy.md)의 사전 동의 범위에서 실행한다. 개발 DML은 작업당 기본 100행 이하·대상 조건·사전/사후 확인·복구 방법을 확보한다. 범위 밖 변경·prod 전환은 "사용자 확인 게이트" 참조.
 - 검증은 작은 모수·짧은 기간으로 시작하고, 결과는 스키마/카운트/대표 패턴/판단만 노트에 남긴다. SQL 전문은 티켓 노트 `검증 SQL` 코드블록에 embed — 별도 `.sql` 사이드카 금지, data-requests-dev2 등록은 그 다음.
 - 만권당 CS 구독취소/환불 사용 여부 확인은 vault `wiki/services/max/analysis/subscription-usage-check-sql.md` 템플릿 우선.
+
+### 11.5 개발 연결 — 강도 판정 + 구현 계획
+
+work-prep은 개발 그룹의 허브다 — 출력이 다음 동사를 지목해야 중간 단계가 쓰인다. 강도 SoT: [harness-guide.md](../../../docs/harness-guide.md) §작업 플로우 2. 개발. 형식: [템플릿](../../../docs/sprint/work-prep-note-template.md) §구현 계획 기준.
+
+- **강도 판정**: §3 단서(카탈로그·공통 서비스·DB/SP·결제)와 티켓 SP를 재사용한다. 위험 단서가 하나라도 있으면 크기와 무관하게 위험, 애매하면 높은 쪽
+- **구현 계획**: 보통 이상 개발 Task면 노트에 `## 구현 계획`. 검증 명령은 repo·CI·카탈로그에서 찾은 실제 명령만 — 가정한 명령은 첫 슬라이스에서 깨진다. 그 밖은 `판단 요약`에 생략 사유 한 줄
+- **다음 단계**: 가벼움 → 바로 수정 → `/ad:code-review-self` / 보통 → `/clear` → `/ad:implement {ID}` / 무거움·위험 → `/ad:eng-review {ID}` → `/clear` → `/ad:implement {ID}`
+- 완료: 강도 한 줄 + (해당 시) 슬라이스, `판단 요약 > 다음 행동`이 첫 슬라이스
+
+근거: 2026-10-21 사용자 결정 — 개발 Task면 구현 계획 자동 생성.
 
 ### 12. 티켓 종료 모드 (로컬 위키 자동 반영)
 
@@ -216,7 +228,7 @@ team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-tick
 4. 본문을 정리한다.
    - 판단 요약의 `다음 행동`을 `없음` 또는 `후속 후보`로 바꾼다.
    - `미확정 질문`은 `종료 시점 결정`으로 바꾸거나, 남은 항목을 `(후속 후보)`로 분리한다.
-   - `Actions`에서 실제 완료된 항목만 `[x]`로 바꾸고, 별도 개발/개선은 `[ ] (후속 후보)`로 남긴다.
+   - `Actions`·구현 계획 슬라이스에서 실제 완료된 항목만 `[x]`로 바꾸고, 별도 개발/개선은 `[ ] (후속 후보)`로 남긴다.
    - `완료 기록`에 `{오늘}: 사용자 안내/결과 전달 및 로컬 티켓 종료 반영.`을 추가한다. 외부 변경 유무는 실제 수행 내역에 맞춰 기록하고, 개발 DML을 수행했다면 대상·종류·건수·복구 방법 기록을 참조한다.
 5. `python3 tools/lint_vault.py --vault "$LOCAL_WIKI_PATH" --files "wiki/processes/tickets/dev2-{nnnn}.md"`를 실행해 검증한다.
 6. 사용자에게 위키 파일, 변경 상태, lint 결과와 실제 외부 변경 내역을 짧게 보고한다. 이 종료 반영 단계의 작업과 앞서 수행한 개발 DML을 구분한다 — 수행한 DB 변경이 없었다고 잘못 기록하는 일을 막는다.
@@ -245,10 +257,6 @@ team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-tick
 - DB 계열 MCP 서버(postgres/mssql/mysql 등) 사용
 - §5 위키 노트 작성에 열거된 본문 저장 금지 항목
 - vault의 `<!-- GENERATED:START -->` ~ `<!-- GENERATED:END -->` 외부 영역 자동 갱신
-
-## 문서 위치 결정
-
-작업 중 생성하는 노트·산출물은 [policies/knowledge-base-policy.md](../../../policies/knowledge-base-policy.md)의 결정 트리에 따라 즉시 위치를 결정한다. 매번 사용자에게 묻지 않는다.
 
 ## 사전 분석 (auto-prep) 활용
 

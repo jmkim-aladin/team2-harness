@@ -20,9 +20,11 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 
 요청이 스킬에 맞으면 다른 도구보다 먼저 호출한다. 판단 근거는 각 스킬의 `description`이며, 이 파일에 라우팅 목록을 따로 두지 않는다 — 같은 일을 두 곳에서 하면 한쪽이 반드시 낡는다.
 
-**사용자 호출 전용 7종**(사이드이펙트): `$ad-code-review`, `$ad-work-board`, `$ad-tldr`, `$ad-explain`, `$ad-implement`, `$ad-plan-run`, `$ad-ticket-schedule`.
+<!-- generated:user-only source=policies/skill-authoring-principles.md -->
+**사용자 호출 전용 6종**(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:code-review-self`, `/ad:explain`, `/ad:implement`, `/ad:plan-run`, `/ad:ticket-schedule`
+<!-- /generated:user-only -->
 
-어떤 스킬을 언제 부르는지의 지도는 [docs/harness-guide.md](./docs/harness-guide.md) §작업 플로우.
+어떤 스킬을 언제 부르는지의 지도는 [docs/harness-guide.md](./docs/harness-guide.md) §작업 플로우, 요약은 아래 §작업 플로우.
 
 절차의 SoT는 `.claude/commands/ad/{name}.md` 하나다. `.codex/skills/ad-{name}/`은 SoT를 런타임에 읽는 얇은 alias이므로 `$ad-*` 호출 시 해당 command 문서를 먼저 읽고 같은 절차로 수행한다.
 
@@ -35,6 +37,23 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 ## 도구 대응
 
 `/ad:*` SoT와 vendored 스킬 본문은 Claude Code 도구명을 사용하므로 Codex에서는 이렇게 읽는다: `Bash`→`exec_command`, `Read`→`sed`/`rg`/`cat`, `Write`·`Edit`→`apply_patch`, `Grep`·`Glob`→`rg`/`find`, `Agent`→가능하면 multi-agent, `AskUserQuestion`→짧은 직접 질문.
+
+## 작업 플로우
+
+> SoT: [memory/claude-base.md](./memory/claude-base.md) §작업 플로우 — Claude 전역 메모리로만 가므로 Codex용으로 아래 블록을 **생성**한다. 직접 고치지 말고 SoT를 고친 뒤 `python3 tools/lint_harness_rules.py --sync-generated`. `/ad:{name}`은 `$ad-{name}`으로 읽는다.
+
+<!-- generated:workflow-summary source=memory/claude-base.md -->
+4그룹 — 떠올릴 단서는 "지금 티켓 기준 어디냐". 그룹 허브를 먼저 부르면 나머지를 안내한다. 지도 SoT(상황별 동사·강도·단계별 도구 명칭): `docs/harness-guide.md` §작업 플로우.
+
+| 그룹 | 기억 단서 | 허브 → 흐름 |
+|---|---|---|
+| 구상 (티켓 전) | 아직 티켓이 없다 | `/ad:plan` · `/ad:grill` — 과제 크기 판정: 세션 하나 `/ad:grill` / 다세션 `/ad:plan`→`/ad:plan-run` / 세션을 넘는 안개 `/wayfinder` |
+| 개발 (티켓 하나) | 티켓 하나를 끝낸다 | `/ad:work-prep`(강도 판정 + 구현 계획, "다음 단계" 지목) — `/ad:ticket → /ad:work-prep → (/ad:eng-review) → /ad:implement → /ad:code-review(-self) → /ad:work-close`. 구현 중 `tdd`·`diagnosing-bugs` |
+| 주기 (팀 운영) | 달력 | 주간 `/ad:ticket-schedule`·`/ad:weekly-report` / 월말 `/ad:sprint-close-check`·`/ad:capacity-plan` |
+| 상시 (언제든) | 상황 | 지식 `/ad:new-note` / 이해 `/wait-what` / 협업 `/ad:orchestration`·`/handoff` / 운영 DB `/ad:data-request` / 하네스 `/ad:harness-optimize` |
+
+강도: 가벼움(1시간·설정) 바로 수정 / 보통(반나절·버그) 구현 계획 → `tdd` / 무거움(Task 여럿·모호·경계 변경) 전체 플로우 + 설계 검증 / 위험(운영 데이터·결제·인증·개인정보·공유 DB 스키마·비가역 — 크기 무관) 무거움 + 반증 검토·페르소나 리뷰·롤백 트리거. `/ad:implement`는 슬라이스 하나를 red→green 후 노트 체크하고 멈춘다.
+<!-- /generated:workflow-summary -->
 
 ## 세션 컨텍스트 규율
 

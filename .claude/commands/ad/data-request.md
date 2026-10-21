@@ -1,5 +1,5 @@
 ---
-description: 운영 데이터 추출 요청 SQL 등록 (data-requests-dev2)
+description: '[상시·운영 DB] 운영 데이터 추출 요청 SQL 등록 (data-requests-dev2)'
 ---
 
 # 운영 데이터 추출 요청 SQL 등록

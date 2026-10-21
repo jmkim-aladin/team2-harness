@@ -1,5 +1,5 @@
 ---
-description: YouTrack 티켓 생성 — DEV2 티켓, 5W1H 작성, Task 분할
+description: '[개발·스펙+분할] YouTrack DEV2 티켓 생성 — 5W1H 작성, Task 분할'
 ---
 
 # YouTrack 티켓 생성

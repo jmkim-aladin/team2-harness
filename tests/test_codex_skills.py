@@ -32,22 +32,21 @@ class CodexSkillTests(unittest.TestCase):
     def test_frequently_loaded_dev2_skills_stay_compact(self) -> None:
         limits = {
             ".codex/skills/dev2-team-harness-ko/SKILL.md": 300,
-            ".codex/skills/dev2-ad-commands-ko/SKILL.md": 320,
+            # 매핑 목록 대신 memory/claude-base.md 생성 블록(작업 플로우 요약, 약 175단어)을 싣는다 — 2026-10-21 Codex 패리티
+            ".codex/skills/dev2-ad-commands-ko/SKILL.md": 380,
             ".codex/skills/ad-work-prep/SKILL.md": 160,
-            ".codex/skills/ad-work-board/SKILL.md": 140,
         }
 
         for relative, limit in limits.items():
             text = (ROOT / relative).read_text()
             with self.subTest(skill=relative):
                 self.assertLessEqual(word_count(text), limit)
-                self.assertIn("description: \"Use when", text)
+                self.assertRegex(text, r'description: "(\[[^\]]+\] )?Use when')
 
     def test_dev2_skills_keep_non_negotiable_contracts(self) -> None:
         harness_skill = (ROOT / ".codex/skills/dev2-team-harness-ko/SKILL.md").read_text()
         ad_commands_skill = (ROOT / ".codex/skills/dev2-ad-commands-ko/SKILL.md").read_text()
         work_prep_skill = (ROOT / ".codex/skills/ad-work-prep/SKILL.md").read_text()
-        work_board_skill = (ROOT / ".codex/skills/ad-work-board/SKILL.md").read_text()
 
         for phrase in (
             "$TEAM2_HARNESS_PATH",
@@ -62,7 +61,23 @@ class CodexSkillTests(unittest.TestCase):
         self.assertIn("command 파일을 source of truth", ad_commands_skill)
         self.assertIn("토큰은 출력하지 않는다", ad_commands_skill)
         self.assertIn("위키 노트 생성·갱신·종료 반영", work_prep_skill)
-        self.assertIn("Discord API, webhook, bot token은 직접 사용하지 않는다", work_board_skill)
+
+    CLAUDE_TAG = re.compile(r"^description: '(\[[^\]]+\]) ", re.M)
+    CODEX_TAG = re.compile(r'^description: "(\[[^\]]+\]) ', re.M)
+
+    def test_codex_alias_parity_with_claude_commands(self) -> None:
+        """`/ad:{name}` ↔ `$ad-{name}` 1:1, 메뉴 태그 `[그룹·단계]`도 같다 — 한쪽만 바뀌면 실패한다."""
+        commands = {p.stem: p for p in (ROOT / ".claude/commands/ad").glob("*.md")}
+        aliases = {p.name[3:]: p / "SKILL.md" for p in (ROOT / ".codex/skills").glob("ad-*") if p.is_dir()}
+        self.assertTrue(commands)
+        self.assertEqual(sorted(commands), sorted(aliases))
+        for name, command in sorted(commands.items()):
+            with self.subTest(skill=name):
+                claude_tag = self.CLAUDE_TAG.search(command.read_text(encoding="utf-8"))
+                codex_tag = self.CODEX_TAG.search(aliases[name].read_text(encoding="utf-8"))
+                self.assertIsNotNone(claude_tag)
+                self.assertIsNotNone(codex_tag)
+                self.assertEqual(claude_tag.group(1), codex_tag.group(1))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 ---
 name: ad-grill
-description: "Use when the user invokes $ad-grill, /ad:grill, or wants an alignment interview before building an idea, feature, or design."
+description: "[구상·정렬] Use when the user invokes $ad-grill, /ad:grill, or wants an alignment interview before building an idea, feature, or design."
 ---
 
 # `$ad-grill`

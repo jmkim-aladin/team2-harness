@@ -1,5 +1,5 @@
 ---
-description: 계획 실행 — vault 계획의 internal milestone 하나를 실행하고 진행·근거를 기록
+description: '[구상·계획 실행] vault 계획의 internal milestone 하나를 실행하고 진행·근거 기록'
 disable-model-invocation: true
 ---
 

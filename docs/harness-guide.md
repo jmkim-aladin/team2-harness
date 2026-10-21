@@ -125,7 +125,7 @@ python3 "$TEAM2_HARNESS_PATH/tools/generate_decision_board.py" --vault "$LOCAL_W
 python3 "$TEAM2_HARNESS_PATH/tools/generate_discord_orchestrator_payload.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
 
-Claude Code와 Codex에서는 위 두 명령 대신 공통 진입점 `/ad:work-board` 또는 `$ad-work-board`를 사용한다.
+두 명령을 한 번에 돌리는 공통 진입점은 아래 도구다. 스킬이 아니라 도구 명령이다 — 2026-10-21 `work-board` 스킬을 걷고(90일 사용 0회) 도구·Hermes 경로만 남겼다. 컴퓨터 앞 control pane에서는 `team2-agent board`·`team2-agent cockpit`을 쓴다.
 
 ```bash
 python3 "$TEAM2_HARNESS_PATH/tools/run_work_board.py" --vault "$LOCAL_WIKI_PATH" --apply
@@ -239,90 +239,134 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 
 ## 작업 플로우 — 업무 상황 지도
 
-**상황당 동사 하나** — 어떤 업무든 아래 표에서 상황을 찾으면 진입 동사(`ad:*`)가 나온다. 대부분 모델 호출이라 요청에 맞으면 에이전트가 스스로 부르고, 이 절은 사람이 전체를 보는 지도다. 층 설계(동사/엔진/자료)는 [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §구조.
+**상황당 동사 하나** — 어떤 업무든 아래 지도에서 상황을 찾으면 진입 동사(`ad:*`)가 나온다. 대부분 모델 호출이라 요청에 맞으면 에이전트가 스스로 부르고, 이 절은 사람이 전체를 보는 지도다. 층 설계(동사/엔진/자료)는 [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §구조.
 
-사용자 호출 전용(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:code-review-self`, `/ad:implement`, `/ad:plan-run`, `/ad:work-board`, `/ad:tldr`, `/ad:explain`, `/ad:ticket-schedule`.
+사용자 호출 전용(사이드이펙트, 사람이 시점 결정) 목록은 [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §1 — frontmatter `disable-model-invocation: true`가 SoT이고, 그 절의 블록이 `CLAUDE.md`·`AGENTS.md`에 생성된다. 사본을 여기 두지 않는다 — 세 곳 사본이 드리프트 원인이었다(2026-10-21 감사).
 
-### 1. 개발 티켓 (메인 플로우)
+### 4그룹 요약
 
-```
-/ad:grill → /ad:ticket → /ad:work-prep → (/ad:eng-review) → /ad:implement → /ad:code-review → /ad:work-close
-  정렬        스펙+분할      착수 준비        설계 검증           구현(tdd)       리뷰            종료
-```
+그룹 이름은 시간 축이다 — 떠올릴 단서는 "지금 티켓 기준 어디냐" 하나다. 그룹의 허브를 먼저 부르면 허브가 나머지를 안내한다.
 
-| 단계 | 동사 | 엔진 |
+| 그룹 | 기억 단서 | 허브 동사 |
 |---|---|---|
-| 정렬 | `/ad:grill` | `grilling` + `domain-modeling` — frontier 라운드, 용어집·결정 기록 |
-| 스펙+분할 | `/ad:ticket` | 5W1H 합성 + Task 분할 (YouTrack) |
-| 착수 준비 | `/ad:work-prep` | 위키 노트 + 코드 진입점 + 컨텍스트 묶기 |
-| 설계 검증 (선택) | `/ad:eng-review` | 스코프 챌린지 + 아키텍처·코드 품질·테스트·성능 이슈 판정 — 1일 이상·경계 변경 시 |
-| 구현 | `/ad:implement` | vendored `implement`(내부 `tdd`) — seam 합의, red→green |
-| 리뷰 | `/ad:code-review` | 기준축·스펙축 분리 판정 + 구조 재점검(비차단, 시니어 관점). 자기 PR은 `/ad:code-review-self` — 별도 리뷰어 에이전트 + 반영·재리뷰 루프 |
-| 종료 | `/ad:work-close` | 소요시간 기록 + 티켓 종료 |
+| 1. 구상 (티켓 전) | 아직 티켓이 없다 — 무엇을 만들지 정한다 | `/ad:plan` · `/ad:grill` |
+| 2. 개발 (티켓 하나) | 티켓 하나를 끝까지 민다 | `/ad:work-prep` — 출력 "다음 단계"가 강도에 따라 `/ad:eng-review`·`/ad:implement`·`/ad:code-review-self`를 지목 |
+| 3. 주기 (팀 운영) | 달력이 부른다 — 주간·월말 | 달력 |
+| 4. 상시 (언제든) | 티켓과 무관하게 상황이 부른다 — 지식·이해·협업·운영 DB·하네스 | 상황 |
 
-규모별: 1시간 이내(오타·설정) 바로 처리 / 반나절(버그) 준비→구현→리뷰 / 1일 이상 전체.
+표기 규칙: 스킬은 **주 소속 1곳**에서만 설명(무엇·언제)하고, 그 행의 `다른 곳에서도` 열에 교차 사용을 적는다. 다른 그룹·단계에는 `→ /ad:x (주 소속: 그룹·단계)` 참조로만 등장한다 — 설명을 복제하면 한쪽이 낡는다. 이름은 바꾸지 않는다([skill-authoring-principles.md](../policies/skill-authoring-principles.md) §동사층 네이밍 규칙). `/ad:` 메뉴에서 그룹이 보이도록 command `description` 맨 앞에 주 소속을 `[그룹·단계]` 태그로 옮겨 적는다 — 주 소속을 옮기면 태그도 같은 PR에서 고친다(`tests/test_work_prep_command_docs.py`가 태그 그룹과 지도 절을 대조).
 
-### 2. 서비스 구상·설계 (신규 서비스, 대형 기능)
+근거: 2026-10-21 사용자 요청 — 지도·스킬 목록·claude-base 세 곳의 분류가 달라 파편화. 60일 사용 실측: work-prep 171·code-review 135·plan 104회 vs eng-review 0·implement 1회 — 허브가 다음 단계를 안내해야 중간 단계가 쓰인다. 스킬은 여러 단계에 걸치므로 분류는 이름이 아니라 지도의 주 소속+참조로 표현한다.
 
-| 상황 | 동사·엔진 |
-|---|---|
-| 아이디어를 세션 안에서 정리 가능 | `/ad:grill` → 메인 플로우 합류 |
-| 다세션 계획·미성숙 구상을 위키에 | `/ad:plan` — grill 결과를 계획·진행 원장으로 합성 |
-| 티켓 없는 내부 계획의 다음 단계 실행 | `/ad:plan-run` — internal milestone 하나를 TDD로 실행하고 status·evidence 기록 |
-| 세션보다 큰 안개 과제 | `/wayfinder` — 결정 티켓 지도, 길이 보이면 `/ad:ticket`으로 합류 |
-| 설계 질문을 코드로 답해야 | `prototype` (모델 호출) |
-| 문서·API 조사 위임 | `research` (모델 호출, 백그라운드) |
-| 기존 저장소 아키텍처 분석 | `/ad:architecture-analysis` |
-| 구현 전 계획·설계 검증 | `/ad:eng-review` |
-| 다른 조직에 결정 질문 | `/to-questionnaire` |
+### 1. 구상 (티켓 전)
 
-### 3. 버그·장애
+```
+과제 크기 판정 ┬ 세션 하나에 담김 ─────────────── /ad:grill ──→ /ad:ticket (개발 합류)
+               ├ 다세션 계획·미성숙 구상 ───────── /ad:plan ───→ /ad:plan-run (티켓 없는 내부 단계)
+               └ 미결 결정 여럿·세션을 넘는 안개 ─ /wayfinder ─→ 길이 보이면 /ad:ticket
+```
 
-| 상황 | 동사·엔진 |
-|---|---|
-| 어려운 버그·성능 회귀·근본 원인 조사 | `diagnosing-bugs` (모델 호출 — "고장났다" 신호에 자동) |
-| 장애 대응 절차 | [policies/incident-response.md](../policies/incident-response.md) |
+| 상황 (신호) | 동사·엔진 | 다른 곳에서도 |
+|---|---|---|
+| 아이디어를 세션 안에서 정리 가능 | `/ad:grill` — `grilling` + `domain-modeling`, frontier 라운드·용어집·결정 기록 → `/ad:ticket`으로 개발 합류 | 개발 — 구현 중 신호 "티켓 전제 깨짐"으로 재진입 |
+| 다세션 계획·미성숙 구상을 위키에 | `/ad:plan` — grill 결과를 계획·진행 원장으로 합성 | 개발 — 다세션 개발의 진행 원장 |
+| 티켓 없는 내부 계획의 다음 단계 실행 | `/ad:plan-run` — internal milestone 하나를 TDD로 실행하고 status·evidence 기록 | — |
+| 미결 결정이 여럿이고 세션을 넘는 안개 과제 | `/wayfinder` — wayfinder 맵(YouTrack 결정 티켓 지도)을 프런티어에서 하나씩 풀고, 길이 보이면 `/ad:ticket`으로 합류. 매핑: [issue-tracker.md](./agents/issue-tracker.md) §Wayfinding operations | — |
+| 설계 질문을 코드로 답해야 | `prototype` (모델 호출) | — |
+| 문서·API 1차 자료 조사 위임 | `research` (모델 호출, 백그라운드) | — |
+| 다른 조직에 결정 질문 | `/to-questionnaire` | — |
+| 용어·결정을 기록해야 | `domain-modeling` (모델 호출) | — |
+| 계획 노트를 구현 전에 검증 | → `/ad:eng-review` (주 소속: 개발·설계 검증) | |
 
-### 4. 스프린트·팀 운영 (주기 업무)
+### 2. 개발 (티켓 하나)
+
+```
+/ad:ticket → /ad:work-prep → (/ad:eng-review) → /ad:implement ×슬라이스 → /ad:code-review(-self) → /ad:work-close
+ 스펙+분할     착수 준비         설계 검증           구현                      리뷰                      종료
+                  │
+                  └ 강도 판정 ┬ 가벼움  바로 수정 → 직접 확인 → 리뷰
+                              ├ 보통    구현 계획(슬라이스 1~2) → 슬라이스 실행 → 리뷰
+                              ├ 무거움  구현 계획 → 설계 검증 → 슬라이스마다 검증 명령 → 리뷰
+                              └ 위험    무거움 + 반증 검토 → 페르소나 리뷰·안전 가정 입증 → 롤백 트리거
+
+구현 중 엔진: tdd · codebase-design · diagnosing-bugs (막히면 경쟁 가설 조사)
+```
+
+`/ad:work-prep`이 허브다. 강도를 판정하고, 개발 Task면 티켓 노트에 구현 계획을 쓰고, 출력 "다음 단계"로 다음 동사를 지목한다. `/ad:implement`는 한 번 호출에 슬라이스 하나를 실행하고 노트를 체크한 뒤 멈춘다 — 다음 슬라이스는 사람이 지시한다.
+
+#### 강도 (ceremony level)
+
+절차의 무게는 걸린 위험에 맞춘다. 시간 축으로 고르고, 위험 축 단서가 하나라도 있으면 크기와 무관하게 위험이다.
+
+| 강도 | 기준 | 절차 |
+|---|---|---|
+| 가벼움 | 1시간 이내 · 설정 · 문구 | 바로 수정, 직접 확인. 구현 계획 생략 |
+| 보통 | 반나절 · 버그 · 작은 기능 | (필요 시 짧은 정렬) → 구현 계획(슬라이스 1~2) → `tdd` → 기본 리뷰 |
+| 무거움 | Task 여럿(Feature 단위) · 모호 · 경계 변경 — Task ≤1일이라 크기는 Task 묶음으로 본다 | 전체 플로우, 슬라이스마다 검증 명령, 설계 검증 |
+| 위험 | 운영 데이터 · 결제 · 인증 · 개인정보 · 공유 DB 스키마 · 비가역 — **크기와 무관** | 무거움 + 비가역 결정의 반증 검토 + 리뷰에서 페르소나 리뷰·안전 가정 입증 + 롤백 트리거 |
+
+- 판정은 `/ad:work-prep`이 자기 §3(서비스 추정)에서 모은 단서(카탈로그·공통 서비스·DB/SP·결제)로 한다. 애매하면 높은 쪽 — 낮게 잡은 위험은 리뷰에서야 드러난다
+- 근거: 2026-10-21 3팩(mattpocock/skills·cursor pstack·addyosmani/agent-skills) 비교 검토 — 절차의 무게는 걸린 위험에 맞춘다. 팀원이 개발 도중 "지금 이걸 쓸 때"라는 신호를 못 받던 문제를 강도와 구현 계획으로 푼다
+
+#### 단계별 도구 명칭
+
+층 규칙은 [skill-authoring-principles.md](../policies/skill-authoring-principles.md) §구조 3층 — 동사·엔진 이름은 바꾸지 않고, 3팩에서 가져와 붙인 것은 자료층 **보조 장치**로 부른다. 원어 leading word는 이 표의 첫 등장에만 병기한다. 이 표가 명칭 SoT다.
+
+| 단계 | 동사 | 엔진 (이름 불변) | 보조 장치 | 쓰는 신호 · 적용 강도 | 다른 곳에서도 |
+|---|---|---|---|---|---|
+| 정렬 | → `/ad:grill` · `/ad:plan` (주 소속: 구상) | → `grilling` · `domain-modeling` · `wayfinder` (주 소속: 구상) | 과제 크기 판정 | 보통 이상(보통은 짧게). 신호는 §1 구상 | |
+| 스펙+분할 | `/ad:ticket` — 5W1H Feature 발행 → Task 분할 | — | — | 전 강도 | 구상 — grill·wayfinder 뒤 합류 |
+| 착수 준비 | `/ad:work-prep` — 위키 노트 + 코드 진입점 + 강도 판정 + 구현 계획, "다음 단계" 지목 | — | 강도 판정(ceremony level) · 근거 등급(사실·추론·미확인) · 구현 계획(implementation plan) = 완료 조건(acceptance criteria) · 검증 명령(verification command) · 경계(boundaries — 그냥 진행/먼저 확인/손대지 않음) · 슬라이스(vertical slice) · 구현 중 신호(in-flight signals) | 강도 판정은 전 강도. 구현 계획은 보통 이상 개발 Task. 근거 등급은 레거시 설계 의도·과거 결정을 조사할 때 | 종료 — 위키 노트 종료 반영(`/ad:work-prep DEV2-XXXX 종료`) |
+| 설계 검증 | `/ad:eng-review` — 스코프 챌린지 + 아키텍처·품질·테스트·성능 판정 | — | 멱등키 계약(idempotency key contract) · Expand/Contract · 성능 판정 규칙 · 시도 기록(attempt ledger) · 사용 예 선행 설계(usage-first design) · 반증 검토(doubt review) | 무거움 이상. 결제·쿠폰·지급 → 멱등키 계약 / 스키마 rename·drop → Expand/Contract / 최적화 → 성능 판정 규칙·시도 기록 / 새 API·시그니처 → 사용 예 선행 설계 / 위험의 비가역 결정 → 반증 검토, 검토자는 → `/ad:orchestration` Codex peer (주 소속: 상시·협업) — 다른 벤더로는 완료 조건·슬라이스·코드만 보낸다([교차 모델 리뷰 데이터 경계](./code-review/cross-model.md)) | 구상 — `/ad:plan` 계획 노트 검증 |
+| 구현 | `/ad:implement` — 구현 계획의 슬라이스 하나 | `implement` · `tdd` · `codebase-design` | 슬라이스 실행(one slice at a time) · 범위 밖 기록 | 보통 이상. 한 번 호출에 슬라이스 하나, 범위 밖 문제는 `진행 메모`에 기록만. 모듈 경계·seam이 애매하면 `codebase-design`. 오래 걸리고 중간 조향이 필요한 위임 → `/ad:orchestration` (주 소속: 상시·협업) | `tdd`: 구상 — `/ad:plan-run` 내부 실행 |
+| 리뷰 | `/ad:code-review` — 기준축·스펙축 분리 + 구조 재점검(비차단). `/ad:code-review-self` — 자기 PR, 별도 리뷰어 + 반영·재리뷰 루프(리뷰어 pane → `/ad:orchestration`) | — | 완화 신호 스캔(gate loosening scan) · 교차 모델 리뷰 · 페르소나 리뷰(보안 감사/테스트 엔지니어/데이터 정합성 감사) · 안전 가정 입증(blast radius) · SP 중복 호출 판정 | 전 강도. 완화 신호 스캔은 서비스 코드 PR / SP 중복 호출 판정은 DB 스크립트·SP PR / 페르소나 리뷰·안전 가정 입증은 위험 | `/ad:code-review`: 릴리스 묶음 리뷰([release-bundle.md](./code-review/release-bundle.md)) |
+| 종료 | `/ad:work-close` — 소요시간 기록 + Fixed | — | DoD 체크리스트 · 롤백 트리거 | 전 강도. 롤백 트리거는 위험 | — |
+| 디버깅 (온램프) | — | `diagnosing-bugs` (모델 호출) | 경쟁 가설 조사(competing hypotheses) | "고장났다"·근본 원인 → 자동 호출. 재현이 안 되거나 막히면 경쟁 가설 조사 — 가설마다 독립 에이전트로 병렬 조사하고 반증된 가설부터 지운다, → `/ad:orchestration` (주 소속: 상시·협업) | 설계 검증 — 성능 회귀 |
+| 공통 게이트 | — | — | 승인 응답 판별 | 커밋·푸시·티켓·KB 승인 질문에 포괄 위임("알아서")만 돌아오면 승인이 아니다 | 모든 그룹의 사용자 확인 게이트 |
+
+금지 동의어 — 신호 카드→구현 중 신호 / 수락 기준·인수 조건→완료 조건 / doubt-driven·의심 검토→반증 검토 / 핵심 가정 실행 입증→안전 가정 입증 / 게이트 완화 감지·floor guard→완화 신호 스캔 / 교차 모델 검증·교차검증→교차 모델 리뷰 / 레벨·등급→강도 / 결정 지도·안개 지도→wayfinder 맵. `강도`는 작업 절차의 무게다 — 지시문의 [지시 강도](../policies/instruction-precedence-policy.md)(invariant~example)와 다르다.
+
+보조 장치 SoT와 출처 팩 (Pocock = mattpocock/skills, pstack = cursor pstack, Osmani = addyosmani/agent-skills). 원본 스킬 링크·채택 판정은 [skill-packs-adoption-review.md](./skill-packs-adoption-review.md):
+
+- 착수 준비 → [work-prep-note-template.md](./sprint/work-prep-note-template.md) §구현 계획 기준·§본문 템플릿 — Osmani planning·spec(완료 조건·경계·위험 먼저), pstack create-verification(실제 실행 검증 명령, 빌드 통과는 증거 아님), pstack why(근거 등급)
+- 설계 검증 → [review-sections.md](./eng-review/review-sections.md) · [doubt-review.md](./eng-review/doubt-review.md) — Osmani(멱등키 계약·Expand/Contract·성능 판정 규칙·시도 기록·반증 검토), pstack architect(사용 예 선행 설계·비싼 결정만 대안 비교)
+- 구현 → [implement.md](../.claude/commands/ad/implement.md) — Osmani incremental
+- 리뷰 → [code-review-policy.md](../policies/code-review-policy.md) · [personas.md](./code-review/personas.md) · [cross-model.md](./code-review/cross-model.md) — Osmani(완화 신호 스캔·페르소나 리뷰·SP 중복 호출 판정), pstack blast-radius(안전 가정 입증)
+- 종료 → [dod-checklist.md](../templates/dod-checklist.md) · [work-close.md](../.claude/commands/ad/work-close.md) — Osmani shipping(롤백 트리거)
+- 디버깅 → `diagnosing-bugs` + `/ad:orchestration` — pstack arena/swarm 컨셉
+- 공통 게이트 → [instruction-precedence-policy.md](../policies/instruction-precedence-policy.md) §승인 응답 판별 — Osmani
+
+### 3. 주기 (팀 운영)
 
 | 주기 | 동사 |
 |---|---|
-| 월말 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-planned` → `/ad:ticket-schedule {다음 달}`(계획 일정 초안) |
+| 주간 | `/ad:ticket-schedule`(월요일 오전, 팀장 취합 전 계획 일정 채움) → `/ad:weekly-report` (`planned` 모드 = planned 태그 트리 스냅샷을 위키 meetings에) |
+| 월말 | `/ad:sprint-close-check` → `/ad:capacity-plan` → `/ad:weekly-report planned` → `/ad:ticket-schedule {다음 달}`(계획 일정 초안). 뒤 둘은 주간 행이 주 소속 |
 | 월별 정적 점검 | [Fortify SSC FPR 일괄 등록 런북](./static-scan-runbook.md#월별-fpr-일괄-등록) — `scripts/upload-fortify-fprs.py --month YYYYMM` dry-run 확인 후 `--apply`; 대상 버전이 이미 있으면 전체 skip |
-| 주간 | `/ad:ticket-schedule`(월요일 오전, 팀장 취합 전 계획 일정 채움) → `/ad:weekly-report` |
-| 수시 | `/ad:okr`, `/ad:service-activity`, `/ad:granola-sync`, `/ad:wbs`(WBS·간트 엑셀/HTML 추출) |
+| 수시 | `/ad:okr`, `/ad:wbs`(WBS·간트 엑셀/HTML 추출), `/ad:granola-sync`. Hermes work board는 스킬이 아니라 도구 명령 — `team2-agent board` 또는 `tools/run_work_board.py --apply`([운영 지식 위키 탐색](#운영-지식-위키-탐색과-graphify-sidecar)) |
 
-### 5. 지식·문서 작업
+### 4. 상시 (언제든)
 
-| 상황 | 동사 |
-|---|---|
-| 신규 위키 노트 | `/ad:new-note` (배치는 [knowledge-base-policy.md](../policies/knowledge-base-policy.md) 결정 트리) |
-| KB 조회 | `/ad:team2-kb-read` |
-| KB 등록·초안 게시 | `/ad:kb-publish` — 등록할 때 로컬 전용 내용 제외·링크 변환·저장 확인 |
-| 아키텍처 한 장 요약 | `/ad:tldr` |
-| 변경 설명서 | `/ad:explain` |
-| 낯선 주제·용어·에러를 빨리 정확히 이해하고 남에게 옮기기 | `/eli5` — 구체 사례 + ASCII 그림 + 옮겨 말하기 대본, 터미널 |
-| 같은 설명을 남에게 보낼 한 장으로 | `/eli5-html` — 자족 HTML 1개 |
-| 낯선 저장소에 처음 투입 | `/eli5-onboard` — 30분 안에 1분 설명 가능 → 업무→용어→흐름→구조 순 단계별 커리큘럼 |
-| 방금 설명이 이해 안 될 때 재설명 | `/wait-what` — 팀 용어집 어휘로 재피치 |
-| 새 기술·개념 다세션 학습 | `/teach` — 현재 디렉토리를 학습 워크스페이스로 |
-
-### 6. 데이터 요청
-
-운영 데이터 추출 SQL → `/ad:data-request` (data-requests-dev2 등록)
-
-### 7. 협업·세션 이동
-
-| 상황 | 동사 |
-|---|---|
-| 다른 에이전트와 협업 (Herdr) | `/ad:orchestration` |
-| Hermes work board | `/ad:work-board` |
-| 새 하네스·디렉토리·동료에게 인계 | `/handoff` |
-| 사람만 할 수 있는 절차 (자격증명·대시보드) | `wizard` (모델 호출) |
-
-### 8. 하네스 유지보수
-
-`/ad:harness-optimize` — 스킬·제약·스택·동기화 모드. 주기는 [harness-governance-policy.md](../policies/harness-governance-policy.md).
+| 분류 | 상황 (신호) | 동사·엔진 | 다른 곳에서도 |
+|---|---|---|---|
+| 지식 | 신규 위키 노트 | `/ad:new-note` (배치는 [knowledge-base-policy.md](../policies/knowledge-base-policy.md) 결정 트리) | — |
+| 지식 | KB 조회 | `/ad:team2-kb-read` | — |
+| 지식 | KB 등록·초안 게시 | `/ad:kb-publish` — 등록할 때 로컬 전용 내용 제외·링크 변환·저장 확인 | — |
+| 지식 | 변경·분석 설명서, 아키텍처 한 장 요약 | `/ad:explain` — 변경·분석은 배경→직관→본체→퀴즈, `--tldr`은 아키텍처 one-pager | — |
+| 지식 | 기존 저장소 아키텍처 분석 | `/ad:architecture-analysis` | — |
+| 이해 | 낯선 주제·용어·에러를 빨리 정확히 이해하고 남에게 옮기기 | `/eli5` — 구체 사례 + ASCII 그림 + 옮겨 말하기 대본, 터미널 | — |
+| 이해 | 같은 설명을 남에게 보낼 한 장으로 | `/eli5-html` — 자족 HTML 1개 | — |
+| 이해 | 낯선 저장소에 처음 투입 | `/eli5-onboard` — 30분 안에 1분 설명 가능 → 업무→용어→흐름→구조 순 단계별 커리큘럼 | — |
+| 이해 | 방금 설명이 이해 안 될 때 재설명 | `/wait-what` — 팀 용어집 어휘로 재피치 | — |
+| 이해 | 새 기술·개념 다세션 학습 | `/teach` — 현재 디렉토리를 학습 워크스페이스로 | — |
+| 협업 | 다른 에이전트와 협업 (Herdr) | `/ad:orchestration` | 개발 — `HERDR_ENV=1`이면 필요할 때 자동 사용, 아니면 서브에이전트로 대체: 설계 검증(위험) 반증 검토를 다른 벤더 peer(Codex)의 fresh context로(완료 조건·슬라이스·코드만 전송 — 교차 모델 리뷰와 같은 데이터 경계) / 디버깅 `diagnosing-bugs`가 막히면 경쟁 가설 조사를 가설별 peer 병렬로 / 리뷰 `/ad:code-review-self` 리뷰어 pane / 구현 중 오래 걸리고 중간 조향이 필요한 위임. 슬라이스 구현은 하나씩 — 병렬 슬라이스는 사용자 지시가 있을 때만 |
+| 협업 | 새 하네스·디렉토리·동료에게 인계 | `/handoff` | 단계 경계 — 세션·사람 이동 |
+| 협업 | 사람만 할 수 있는 절차 (자격증명·대시보드) | `wizard` (모델 호출) | — |
+| 협업 | merge·rebase 충돌 | `resolving-merge-conflicts` (모델 호출) | — |
+| 운영 DB | 운영 데이터 추출 SQL | `/ad:data-request` (data-requests-dev2 등록) | 개발·착수 준비 — work-prep 검증 SQL을 노트에 남긴 뒤 등록 |
+| 운영 DB | 운영 DB 조회 취소·종료 확인 | `/ad:db-stop` | — |
+| 운영 DB | 장애 대응 절차 | [policies/incident-response.md](../policies/incident-response.md) | — |
+| 하네스 | 스킬·제약·스택·동기화 점검 | `/ad:harness-optimize` — 주기는 [harness-governance-policy.md](../policies/harness-governance-policy.md). 에이전트가 실수하면 스킬·지도를 고친다 — 사람이 같은 실수를 매번 잡는 대신 다음 세션이 덜 틀린다 | 주기 — 스프린트 마감 주간 감사 |
 
 ### 단계 경계
 
@@ -397,38 +441,10 @@ PR 생성 (체크리스트 포함)
 
 - 스프린트 마감 주간 1회 `/ad:harness-optimize` (`스킬`+`제약` 모드), 결과는 [skill-audit-baseline.md](./skill-audit-baseline.md)에 회차 기록
 - 실수 발생 시 즉시 보강 (ai-usage-policy §하네스 개선 루프)
-- 에이전트는 제안까지 — 강도 하향·등급 변경·스킬 삭제는 사람 판정
+- 에이전트는 제안까지 — 지시 강도 하향·등급 변경·스킬 삭제는 사람 판정
 
 ## 스킬 목록
 
-### ad: (공통 업무)
+분류는 §작업 플로우의 4그룹 하나뿐이다 — 분류 체계가 두 개면 파편화가 재발한다. 존재 여부는 디렉토리가 SoT(`ls .claude/commands/ad/`, Codex alias `ls .codex/skills/`)이고, 한 줄 설명은 각 command 파일 frontmatter `description`이다.
 
-| 스킬 | 설명 | 상태 |
-|------|------|------|
-| `/ad:ticket` | YouTrack 티켓 생성 (5W1H) | 구현됨 |
-| `/ad:ticket-schedule` | planned 티켓의 계획 일정(시작예정일·완료목표일)을 한 건씩 확인받아 코멘트로 일괄 입력 | 구현됨 |
-| `/ad:plan` | grill 결과를 vault 다세션 계획·진행 원장으로 합성 | 구현됨 |
-| `/ad:plan-run` | vault 계획의 internal milestone 하나를 실행하고 진행·근거 기록 | 구현됨 |
-| `/ad:eng-review` | 구현 전 계획·설계 검증 (스코프 챌린지 → 아키텍처·품질·테스트·성능 → 교차 모델 의견) | 구현됨 |
-| `/ad:work-board` | Hermes work board projection + dispatch request 갱신 | 구현됨 |
-| `/ad:ticket-split` | 2일 초과 이슈 분할 | 미구현 |
-| `/ad:time-log` | 소요시간 기록 | 미구현 |
-| `/ad:code-review` | GitHub PR 코드 리뷰 (이해 패스 → 팀 체크리스트 판정 → 교차 모델 검증 → 승인 조건 게이트) | 구현됨 |
-| `/ad:code-review-self` | 자기 PR 셀프 리뷰 — Herdr 리뷰어 peer가 `/ad:code-review`, 작성 세션이 PR 코멘트로 상태를 읽어 반영·답글·재리뷰를 `리뷰 완료`까지. `HERDR_ENV=1` 필요 | 구현됨 |
-| `/ad:tldr` | 저장소·프로젝트 한 페이지 아키텍처 개요(TL;DR) 작성 | 구현됨 |
-| `/ad:explain` | 코드 변경·분석 결과 설명서 (배경→직관→본체→퀴즈, md + HTML) | 구현됨 |
-| `/ad:orchestration` | Herdr pane peer-agent 협업 (핑퐁, 병렬 fan-out, 형제 pane 명령). `HERDR_ENV=1` 필요 | 구현됨 |
-| `/ad:status-update` | 티켓 상태 전환 | 미구현 |
-| `/ad:daily-report` | 일일 작업 요약 | 미구현 |
-| `/ad:sprint-plan` | 스프린트 계획 보조 | 미구현 |
-
-### ad:team2 (팀 운영)
-
-| 스킬 | 설명 | 상태 |
-|------|------|------|
-| `/ad:team2-kb-read` | YouTrack KB 문서 조회/검색 | 구현됨 |
-| `/ad:kb-publish` | YouTrack KB 등록 시 게시 범위·링크·저장 결과 확인 | 구현됨 |
-| `/ad:team2-onboard` | 신규 서비스 하네스 생성 | 미구현 |
-| `/ad:team2-catalog` | 서비스 카탈로그 조회/갱신 | 미구현 |
-| `/ad:team2-harness-check` | 서비스 하네스 완성도 점검 | 미구현 |
-| `/ad:team2-members` | 팀원/담당 서비스 조회 | 미구현 |
+미구현 후보(수요가 생기면 재검토): `/ad:ticket-split`(2일 초과 이슈 분할) · `/ad:time-log`(소요시간 기록 — 현재 `/ad:work-close`가 담당) · `/ad:status-update`(티켓 상태 전환) · `/ad:daily-report`(일일 작업 요약) · `/ad:sprint-plan`(스프린트 계획 보조) · `/ad:team2-onboard`(신규 서비스 하네스 생성) · `/ad:team2-catalog`(서비스 카탈로그 조회/갱신) · `/ad:team2-harness-check`(서비스 하네스 완성도 점검) · `/ad:team2-members`(팀원/담당 서비스 조회)

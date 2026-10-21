@@ -1,5 +1,5 @@
 ---
-description: OKR 조회 및 작성
+description: '[주기·수시] OKR 조회·작성'
 ---
 
 # OKR 조회 및 작성

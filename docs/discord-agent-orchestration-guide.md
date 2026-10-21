@@ -129,14 +129,11 @@ Hermes가 기존 Discord bot으로 처리할 dispatch request는 read-only로 �
 python3 "$TEAM2_HARNESS_PATH/tools/generate_discord_orchestrator_payload.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
 
-Claude Code와 Codex 공통 명령은 아래를 사용한다.
+Claude Code와 Codex 공통 명령은 아래 도구다 (`work-board` 스킬은 2026-10-21 걷었다).
 
 ```bash
-/ad:work-board apply
-$ad-work-board apply
+python3 "$TEAM2_HARNESS_PATH/tools/run_work_board.py" --vault "$LOCAL_WIKI_PATH" --apply
 ```
-
-두 명령은 모두 team2 하네스의 `tools/run_work_board.py`를 실행한다.
 
 dispatch request 구조:
 

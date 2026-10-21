@@ -8,6 +8,7 @@
 | §3~4 | Task 관리·항목 표기 |
 | §4-B | 보고 포맷 개편 (2026-07~) — 예시 포함 |
 | §5 | 템플릿 |
+| §6 | 계획 스냅샷 (`/ad:weekly-report planned`) |
 
 
 > 출처: [YouTrack KB DEV2-A-692](https://aladincommunication.youtrack.cloud/articles/DEV2-A-692/7KO86rCE7JeF66y0)
@@ -448,3 +449,22 @@ KB 트리가 원장이고 보고서는 그 투영이다 — 보고서 쪽에서 
 * **{소제목}**
   : {내용}
 ```
+
+## 6. 계획 스냅샷 (`/ad:weekly-report planned`)
+
+`{YYMM}-planned` 태그 트리(Epic→Feature→Task)를 위키 meetings에 주간 진행 현황으로 남긴다. 로컬 위키만 쓰고 YouTrack·KB는 읽기만 한다 — 조회 모드라 부작용이 없어야 반복 실행이 안전하다. 근거: 2026-10-21 `weekly-planned` 스킬을 weekly-report 모드로 흡수(90일 사용 0회, 초안 모드와 수집 경로 중복).
+
+기본 순서다 — 요청에 맞게 조정할 수 있다. 사용자 확인 게이트는 유지한다.
+
+1. **인자**: `\d{4}-planned` → 태그(기본: 오늘 기준 `{YY}{MM}-planned`), 나머지 이름 → [team-members](../../policies/team-members.md) 매핑. 기본 담당자 김정민(jmkim)·조은흠(heum2)
+2. **수집**: 담당자별 `tag: {tag} Assignee: {ytId}` 질의를 `$top=20`·`$skip` 페이지네이션으로 끝까지 받는다(`fields=idReadable,summary,resolved,customFields(name,value(name,login))`, 호출 규약은 [youtrack/api-guide.md](../../youtrack/api-guide.md)). 각 티켓의 `parentIssue`로 Epic→Feature→Task 트리를 만들고, 태그 없는 부모는 "참조 부모"로 표기한다. 같은 부모는 한 번만 조회(캐시)
+3. **일정**: 코멘트 "예상 시작 일자"/"시작일 변경" → `resolvedAt`(완료) → 비움 순. 형식은 §4.4. 근거: YouTrack 일정 커스텀 필드 반환 비일관 실측
+4. **본문**: 섹션은 `## 백로그 항목`·`## 계획 항목`·`## 진행중 항목`·`## 완료된 항목`·`## 이슈사항`·`## 기타`(bold 없음). 배치 — 완료→완료된, 진행 중 Task 1개 이상→진행중, 전부 예정·Open→계획, Feature 자체 Backlog·장기 보류→백로그. 진행중 Feature가 7일을 넘으면 기간 초과 경고(command §Feature 기간 초과 경고). 다중 담당자는 한 트리로 합치고 `(담당자` 표기로 구분. 이슈사항·기타는 입력이 없으면 `N/A`
+
+   ```
+   - **{Feature 요약} ({일정}, {담당자}** {티켓ID}: {YouTrack 자동 링크용 티켓제목} **{표시용 제목})**
+     : ({상태}) {Task 요약} ({일정}, {담당자} {티켓ID}: {YouTrack 자동 링크용 티켓제목} {표시용 제목})
+   ```
+
+   상태 말머리: `(완료)`, `(진행 중)`, `(예정)`, `(보류)`, `(취소)`, `(재오픈)`
+5. **저장**: `$LOCAL_WIKI_PATH/wiki/processes/meetings/{YYYY-MM-DD}-w{ISO 주차}.md`. frontmatter `type: meeting-note` · `title: YYYY-MM-DD WNN 주간 진행 현황 ({담당자들} {tag})` · `canonical_id: meeting:YYYY-MM-DD-wNN` · `status: active` · `updated_at` · `sources`(담당자별 `youtrack-query: "tag: {tag} Assignee: {ytId}"`). 신규 파일은 사용자 확인 후 만든다. 기존 파일은 경로·섹션별 항목 수 미리보기를 보인 뒤 본문만 갱신하고 frontmatter는 `updated_at` 외 보존한다 — 사람이 보강한 메타데이터를 지키기 위해

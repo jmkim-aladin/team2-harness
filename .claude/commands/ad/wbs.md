@@ -1,5 +1,5 @@
 ---
-description: WBS·간트 추출 — YouTrack 루트 이슈 하위 트리를 엑셀·HTML 간트로. "간트 뽑아줘", "WBS 만들어줘", "프로젝트 진척 현황 엑셀로"
+description: '[주기·수시] WBS·간트 추출 — YouTrack 루트 이슈 하위 트리를 엑셀·HTML로. "간트 뽑아줘", "WBS 만들어줘", "프로젝트 진척 현황 엑셀로"'
 ---
 
 # WBS·간트 추출

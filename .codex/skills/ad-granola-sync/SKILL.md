@@ -1,6 +1,6 @@
 ---
 name: ad-granola-sync
-description: "Use when the user invokes $ad-granola-sync, ad granola sync, /ad:granola-sync, or asks to import, fetch, sync, or Korean-title Granola meeting notes into the DEV2 wiki/Tolaría."
+description: "[주기·수시] Use when the user invokes $ad-granola-sync, ad granola sync, /ad:granola-sync, or asks to import, fetch, sync, or Korean-title Granola meeting notes into the DEV2 wiki/Tolaría."
 ---
 
 # `$ad-granola-sync`

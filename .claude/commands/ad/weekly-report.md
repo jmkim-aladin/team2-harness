@@ -1,5 +1,5 @@
 ---
-description: 주간업무 보고서 작성
+description: '[주기·주간] 주간업무 보고서 작성 — planned 태그 계획 스냅샷 모드 포함'
 ---
 
 # 주간업무 보고서 작성
@@ -20,6 +20,7 @@ YouTrack KB와 티켓 정보를 기반으로 개인별 주간업무 보고서를
 /ad:weekly-report 동기화                    # YouTrack 티켓 상태 기반 자동 동기화
 /ad:weekly-report 초안                      # 옵시디언 vault에 이번주 초안 작성 (KB 미반영)
 /ad:weekly-report 이번주 초안 작성해줘        # 위와 동일 (자연어)
+/ad:weekly-report planned [2605-planned] [이름] # planned 태그 계획 스냅샷 → 위키 meetings
 ```
 
 ## 팀원 매핑
@@ -254,6 +255,11 @@ curl -s -H "$AUTH" \
    - `type`/`year`/`month`/`week_in_month`/`assignee` 는 Tolaria weekly-report 필수 필드(`tools/lint_vault.py`). 본문은 KB(DEV2-A-696) 원본 모양 그대로 — H1·llm-hint 없이 `## **백로그 항목**`부터 시작. 저장 후 `python3 tools/lint_vault.py --vault <vault> --files <경로>` 로 검증
 8. **KB 반영**: §최종본 중복 제거 규칙의 KB 게이트를 따른다 — TODO 섹션에 검토 포인트만 남긴다
 9. **이슈사항/기타** 섹션에 일정 리스크·합류·제외 사유 등 자유 기록
+
+### 7. 계획 스냅샷 모드 (`planned`)
+
+`{YYMM}-planned` 태그 트리를 위키 meetings에 주간 진행 현황으로 저장한다. 절차·양식·저장 규칙은 가이드 §6(SoT)을 읽고 따른다 — 드물게 타는 경로라 본문에서 뗐다. YouTrack·KB는 읽기만 하고, 신규 파일은 사용자 확인 후 만든다.
+*완료 기준*: 저장 경로와 섹션별 항목 수를 보고했다.
 
 ## 담당자별 항목 구분
 

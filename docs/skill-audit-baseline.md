@@ -3,7 +3,41 @@
 기준: [policies/skill-authoring-principles.md](../policies/skill-authoring-principles.md) | 갱신: `/ad:harness-optimize 스킬`·`제약`·`스택`
 통계: `python3 tools/skill_usage_report.py` (팀 스킬) | `python3 tools/harness_context_audit.py` (컨텍스트·외부 스택·훅)
 
-최종 감사일: 2026-09-28 (6회차 — 스택 모드, gstack 제거)
+최종 감사일: 2026-10-21 (7회차 — 3팩 흡수·지도 재편·가지치기)
+
+## 7회차 감사 (2026-10-21) — 3팩 흡수·지도 재편·가지치기
+
+계기: 외부 스킬 팩 3종(Pocock·pstack·Osmani)과 영상 검토의 결론 "스킬이 많으면 컨텍스트가 붓고 오발동한다 — 가지치기". `tools/skill_usage_report.py --days 90` · `tools/harness_context_audit.py` · `tools/lint_harness_rules.py`로 실측.
+
+### 실측
+
+- **사용은 허브에 몰렸다.** 90일 work-prep 171 · code-review 135 · plan 104 · orchestration 71 · work-close 30. eng-review 0 · implement 1 — 허브가 다음 단계를 안내하지 않아 중간 단계가 쓰이지 않았다. 0회 10개(weekly-planned·service-activity·work-board·tldr·explain·capacity-plan·eng-review·plan-run·architecture-analysis·wbs), 앞 넷과 capacity-plan은 7월부터 관찰 판정 유지분
+- lint(감사 시점, 기준선 대비): R1a 62→59, R5 3→6
+- 컨텍스트: 호출당 평균 435k(zone의 약 3배) · Bash 70% · `cd` 21% 경고 · 상주 6,977 tok
+- vendored 미사용 9종: wayfinder · prototype · research · tdd · to-questionnaire · wait-what · wizard · handoff · codebase-design — 지도에 없거나 쓰는 신호가 없었다
+- 사용자 호출 전용 목록 사본 3곳 드리프트: `AGENTS.md`에 `code-review-self` 누락, `skill-authoring-principles.md` §1에 `implement`·`plan-run` 누락 — `tools/tests/test_plan_run_skill.py` 2건이 이미 실패 중
+- secret_scan 오탐 1건 — vault SP 분석 노트에서 `PWD` 컬럼에 SQL 변수(`@이름`)를 대입하는 UPDATE 구문
+
+### 적용 완료
+
+- [x] **3팩 흡수·지도 재편** — 개발 플로우에 강도(가벼움~위험)·구현 계획·보조 장치를 얹고, 분류를 지도 4그룹(구상·개발·주기·상시) 하나로 통합, command description 앞 `[그룹·단계]` 태그로 메뉴에 노출. 판정·출처는 [skill-packs-adoption-review.md](./skill-packs-adoption-review.md) [북극성 1·2·3]
+- [x] **가지치기 4건** (사용자 승인 2026-10-21) — `weekly-planned` → `/ad:weekly-report planned` 모드(절차 SoT는 `docs/sprint/weekly-report-guide.md` §6) · `service-activity` 삭제 · `work-board` 스킬 삭제(`tools/run_work_board.py`·Hermes 경로 유지, 지도에 도구 명령으로) · `tldr` → `/ad:explain --tldr`(규격 `docs/explain/tldr.md`). `/ad:*` 30→26, Codex alias 동수, 사용자 호출 전용 8→6. 기준선에서 삭제 파일 해결분 7건·reasoned_headings 4건 제거 [북극성 3]
+- [x] **사용자 호출 전용 목록 단일화** — `skill-authoring-principles.md` §1 `canonical:user-only` → `CLAUDE.md`·`AGENTS.md` generated(R7). `test_plan_run_skill.py`가 frontmatter `disable-model-invocation: true`의 개수·이름과 대조(하드코딩 "6종" 제거, 기존 실패 2건 해소). harness-guide 사본은 링크로 [북극성 4·5]
+- [x] **Codex 동시 적용** — alias 26종 description에 Claude와 같은 `[그룹·단계]` 태그 + 이번 트리거(orchestration·work-prep·implement·eng-review·code-review·weekly-report·explain). 태그 패리티 테스트(`tests/test_codex_skills.py`). `memory/claude-base.md` 작업 플로우 요약을 `canonical:workflow-summary`로 `AGENTS.md`·`dev2-ad-commands-ko`에 생성(평면 매핑 목록 대체 — 라우팅은 alias description이 맡는다) [북극성 4·5]
+- [x] **지도 동사 존재 테스트** — 지도 §작업 플로우의 `/ad:*`가 command 파일로 없으면 실패(`tests/test_work_prep_command_docs.py`). 스킬을 지우고 지도를 안 고치는 경로를 막는다 [북극성 5]
+- [x] **secret_scan** — 값이 `@이름`이고 SQL 문맥이며 접속문자열이 아닌 줄은 제외, 값 하한 8→6자(`abc123` 길이 실값 검출). 테스트로 양방향 고정. 하향으로 repo 오탐 0, vault 실값 후보 1건 추가 검출 [북극성 5]
+
+### 기각·이관
+
+- **기각** 3레벨 네임스페이스(`/ad:dev:*`) — 스킬이 여러 그룹에 걸쳐 이름이 거짓이 된다. 분류는 지도 주 소속+참조와 메뉴 태그로 한다
+- **관찰** capacity-plan — 팀장 사용 여부 확인 필요
+- **관찰** eng-review · plan-run · architecture-analysis · wbs · explain(tldr 흡수) — 30일 재측정. work-prep 허브의 "다음 단계" 안내가 중간 단계 사용을 끌어올리는지 본다
+- **관찰** vendored 미사용 9종 — 지도에 쓰는 신호와 함께 올렸다. 30일 재측정
+- **보류** 리뷰어가 vault에 접근하지 못할 때 완료 조건 대조 — 티켓 코멘트 미러링은 YouTrack 쓰기라 보류
+- **이관** `tools/harness_context_audit.py` §6 언급 집계 결함 재확인 — 6회차 이관 미해소, 호출이 아니라 언급을 센다
+- **이관** vault `wiki/processes/tickets/dev2-8920.md:270` — secret_scan 하한 6자로 잡힌 `…PASSWORD=` 7자 값. 실값 여부 사람 확인 후 마스킹
+- **이관** 머지 후 `scripts/setup.sh` — `~/.codex/skills`의 삭제 alias 링크 4건(`ad-weekly-planned`·`ad-service-activity`·`ad-work-board`·`ad-tldr`)과 개인 `~/.codex/AGENTS.md` 정리
+- **판정만** 개인 `~/.claude/skills`의 `.trash`·`synced` 등 — 개인 환경이라 판정만 남긴다
 
 ## 6회차 감사 (2026-09-28) — gstack 제거
 
@@ -306,14 +340,14 @@
 
 기준: [policies/harness-north-star.md](../policies/harness-north-star.md). 측정 신호가 좁혀지는지 회차 간 추이로 본다.
 
-| # | 원칙 | 측정 신호 | 3회차 (2026-08-08) | 4회차 (2026-09-16) | 5회차 (2026-09-16) |
-|---|---|---|---|---|---|
-| 1 | 검증 루프 > 지시 | 카탈로그 검증 루프 필드 보유율 | **9/11 실증** (verified 7·partial 2·미구축 2 — shopping·blog는 러너 부재가 사실, 2026-08-08) | 필드 11/11 보유, R6 lint로 회귀 차단. 실증 등급은 미재측 | R6 0건 유지. 실증 등급 여전히 미재측 |
-| 2 | 문제 단위 위임 | 근거 없는 순서·개수·도구 고정 발견 수 | 1차 15선 재표현 완료, 전수 미완 | **R4 고정 시퀀스 43건** (스킬 15 · Codex alias 26 · 가이드 2) — 첫 전수 측정. 위임 5요소 계약 도입 | **R4 21건** — alias 22건은 오탐으로 판정해 범위에서 제외. 남은 것은 실신호 |
-| 3 | smart zone | 호출당 평균 컨텍스트 / 상주 예산 | 470k (목표 200k) / 6,032 tok (상한 8,000) | 미측정 (다음 회차 R5 10건 로드량 측정과 함께) | **299k / 6,135 tok** — 3회차 470k보다 개선됐으나 여전히 zone 이탈. 상주는 상한 내 |
-| 4 | 환경=진실 | 캐시·죽은 참조 발견 수 | AGENTS.md 죽은 경로 2건 정리, 전수 스캔 미실시 | generated 블록 드리프트 R7 0건 (수동 복제 1건을 생성으로 전환) | **SoT 사본 전수 대조 72건 → 드리프트 2건 수정**, canonical/generated 쌍 1→3, 등록부 5주제 등재 |
-| 5 | 게이트 기계화 | INVARIANT 중 훅·권한 강제 비율 | 훅 2건 (DB MCP 차단, sqlcmd readonly) | 훅 3건 (+pre-commit: secret_scan·lint ratchet, Claude·Codex 공통). **R1a 근거 미기재 하드룰 72건 유예** (matcher v8 기준, 전수 손판정 후) — 회차마다 이 수를 내린다 | 훅 3건 유지. **R1a 72→65 유예**, 총 발견 119→90 |
-| 6 | 아티팩트 기억 | glossary 항목 / decisions 수 | 0건 / 7건 | 미측정 | 미측정 |
+| # | 원칙 | 측정 신호 | 3회차 (2026-08-08) | 4회차 (2026-09-16) | 5회차 (2026-09-16) | 7회차 (2026-10-21) |
+|---|---|---|---|---|---|---|
+| 1 | 검증 루프 > 지시 | 카탈로그 검증 루프 필드 보유율 | **9/11 실증** (verified 7·partial 2·미구축 2 — shopping·blog는 러너 부재가 사실, 2026-08-08) | 필드 11/11 보유, R6 lint로 회귀 차단. 실증 등급은 미재측 | R6 0건 유지. 실증 등급 여전히 미재측 | R6 0건 유지. 실증 등급 미재측. 개발 플로우 구현 계획에 검증 명령(실제 실행) 도입 |
+| 2 | 문제 단위 위임 | 근거 없는 순서·개수·도구 고정 발견 수 | 1차 15선 재표현 완료, 전수 미완 | **R4 고정 시퀀스 43건** (스킬 15 · Codex alias 26 · 가이드 2) — 첫 전수 측정. 위임 5요소 계약 도입 | **R4 21건** — alias 22건은 오탐으로 판정해 범위에서 제외. 남은 것은 실신호 | **R4 20→17** (가지치기로 해소분 포함) |
+| 3 | smart zone | 호출당 평균 컨텍스트 / 상주 예산 | 470k (목표 200k) / 6,032 tok (상한 8,000) | 미측정 (다음 회차 R5 10건 로드량 측정과 함께) | **299k / 6,135 tok** — 3회차 470k보다 개선됐으나 여전히 zone 이탈. 상주는 상한 내 | **435k / 6,977 tok** — zone 이탈 지속, Bash 70%·`cd` 21% 경고. `/ad:*` 30→26, 드문 경로(tldr·planned) 본문 분리 |
+| 4 | 환경=진실 | 캐시·죽은 참조 발견 수 | AGENTS.md 죽은 경로 2건 정리, 전수 스캔 미실시 | generated 블록 드리프트 R7 0건 (수동 복제 1건을 생성으로 전환) | **SoT 사본 전수 대조 72건 → 드리프트 2건 수정**, canonical/generated 쌍 1→3, 등록부 5주제 등재 | 사용자 호출 전용 목록 사본 3곳 드리프트 → 생성 전환. canonical/generated 쌍 3→5, 삭제 스킬 참조 정리 |
+| 5 | 게이트 기계화 | INVARIANT 중 훅·권한 강제 비율 | 훅 2건 (DB MCP 차단, sqlcmd readonly) | 훅 3건 (+pre-commit: secret_scan·lint ratchet, Claude·Codex 공통). **R1a 근거 미기재 하드룰 72건 유예** (matcher v8 기준, 전수 손판정 후) — 회차마다 이 수를 내린다 | 훅 3건 유지. **R1a 72→65 유예**, 총 발견 119→90 | 훅 3건 유지. **R1a 65→55 유예**. 기계 대조 +3(Codex 태그 패리티·사용자 호출 전용 목록·지도 동사 존재), secret_scan SQL 변수 오탐 제거 |
+| 6 | 아티팩트 기억 | glossary 항목 / decisions 수 | 0건 / 7건 | 미측정 | 미측정 | 미측정 |
 
 ### 3회차 추가 (2026-08-08 후속) — 환경 선언화
 

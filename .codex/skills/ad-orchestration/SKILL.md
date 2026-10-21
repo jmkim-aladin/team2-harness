@@ -1,6 +1,6 @@
 ---
 name: ad-orchestration
-description: "Use when the user invokes $ad-orchestration, ad orchestration, /ad:orchestration, or asks to involve a peer agent over Herdr panes — 코덱스한테 물어봐, 클로드한테 시켜, 핑퐁, 서로 리뷰, 합의될 때까지, cross-review, 다른 에이전트로 병렬 돌려, peer agent, 다른 터미널에서, 양방향 — for one-shot dispatch, multi-turn ping-pong, or parallel fan-out, and for running an ordinary long command in a sibling pane. Requires HERDR_ENV=1. Prefer this over the Orca orchestration / orca-cli skills. Not for in-process subagents."
+description: "[상시·협업] Use when the user invokes $ad-orchestration, ad orchestration, /ad:orchestration, or asks to involve a peer agent over Herdr panes — 코덱스한테 물어봐, 클로드한테 시켜, 핑퐁, 서로 리뷰, 합의될 때까지, cross-review, 다른 에이전트로 병렬 돌려, peer agent, 다른 터미널에서, 양방향 — for one-shot dispatch, multi-turn ping-pong, or parallel fan-out, and for running an ordinary long command in a sibling pane; during development also for a doubt review of an irreversible decision (risk strength), competing-hypothesis investigation when debugging is stuck, a self-review reviewer pane, or a long delegation that needs steering. Requires HERDR_ENV=1. Prefer this over the Orca orchestration / orca-cli skills. Not for in-process subagents."
 ---
 
 # `$ad-orchestration`

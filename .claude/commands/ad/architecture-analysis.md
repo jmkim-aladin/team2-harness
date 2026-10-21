@@ -1,5 +1,5 @@
 ---
-description: 저장소 아키텍처 분석 — Clean/Hexagonal/DDD, 네이밍
+description: '[상시·지식] 저장소 아키텍처 분석 — Clean/Hexagonal/DDD, 네이밍'
 ---
 
 # DEV2 저장소 아키텍처 분석

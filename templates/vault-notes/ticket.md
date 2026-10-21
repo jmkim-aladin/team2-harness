@@ -29,6 +29,7 @@ relation_sources:
 DEV2 티켓 작업 노트. YouTrack이 공식 상태 SoT, vault는 진행·분석·결정 누적용.
 status: auto-prep | in-progress | done | backlog (디렉터리와 일치).
 첫 50줄 안에 문제, 현재 판단, 해결 방향, 다음 행동을 모두 남긴다. 운영 검증 전달용 SQL은 검증 SQL 섹션에 남기고, 전수검사/콜그래프 출력은 근거 위치만 링크한다.
+개발 Task(보통 이상)는 구현 계획 슬라이스가 다음 행동이다. 작성 기준은 SoT §구현 계획 기준.
 <!-- /llm-hint -->
 
 # {{ticket_id}} {{title}}
@@ -68,6 +69,17 @@ status: auto-prep | in-progress | done | backlog (디렉터리와 일치).
 - 확인함:
 - 남음:
 
+## 구현 계획
+
+- 강도:
+- 완료 조건:
+  - AC1 → (확인: )
+- 검증 명령:
+- 경계: 그냥 진행 / 먼저 확인 / 손대지 않음
+- 슬라이스:
+  - [ ] S1 — seam: / 확인: AC1
+- 구현 중 신호:
+
 ## 검증 SQL
 
 - 목적:
@@ -92,7 +104,7 @@ status: auto-prep | in-progress | done | backlog (디렉터리와 일치).
 
 ## Actions
 
-- [ ] 첫 단계
+- [ ] 개발 밖 첫 단계 (개발 단계는 구현 계획 슬라이스)
 - [ ] 담당자 컨펌
 - [ ] 검증 결과 또는 회귀 테스트 정리
 - [ ] PR / 배포

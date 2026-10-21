@@ -1,5 +1,5 @@
 ---
-description: Herdr pane peer-agent 협업 — 단발 위임, 다중 턴 핑퐁, 병렬 fan-out. HERDR_ENV=1 필요
+description: '[상시·협업] Herdr peer-agent 협업 — 위임·핑퐁·병렬 fan-out. 개발 중 반증 검토(위험), 막힌 디버깅의 경쟁 가설 조사, 셀프 리뷰어, 조향이 필요한 긴 위임에. HERDR_ENV=1 필요'
 ---
 
 # `/ad:orchestration`

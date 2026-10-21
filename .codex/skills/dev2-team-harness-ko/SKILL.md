@@ -1,6 +1,6 @@
 ---
 name: dev2-team-harness-ko
-description: "Use when a request needs DEV2/team2 harness context: policies, service catalog, KB, OKR, weekly reports, review rules, data requests, sprint/capacity/service activity, local wiki boundaries, or /ad:* parity."
+description: "Use when a request needs DEV2/team2 harness context: policies, service catalog, KB, OKR, weekly reports, review rules, data requests, sprint/capacity, local wiki boundaries, or /ad:* parity."
 ---
 
 # 개발 2팀 하네스
@@ -16,7 +16,7 @@ description: "Use when a request needs DEV2/team2 harness context: policies, ser
 
 ## 참조
 
-- 진입점: `CLAUDE.md`, `AGENTS.md`
+- 진입점: `CLAUDE.md`, `AGENTS.md`. 작업 지도: `docs/harness-guide.md` §작업 플로우(요약: `dev2-ad-commands-ko`)
 - 정책: `policies/` — 디렉토리가 SoT (`ls policies/`로 조회)
 - 서비스/스프린트/분석: `catalog/{service}.yaml`, `docs/sprint/*.md`, `docs/analysis-guides.md`
 

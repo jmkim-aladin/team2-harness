@@ -1,6 +1,6 @@
 ---
 name: ad-work-close
-description: "Use when the user invokes $ad-work-close, ad work close, /ad:work-close, or asks to close/finish a DEV2 YouTrack ticket itself — state to Fixed with completion comment and spent-time work items. Wiki note closure stays with ad-work-prep."
+description: "[개발·종료] Use when the user invokes $ad-work-close, ad work close, /ad:work-close, or asks to close/finish a DEV2 YouTrack ticket itself — state to Fixed with completion comment and spent-time work items. Wiki note closure stays with ad-work-prep."
 ---
 
 # `$ad-work-close`

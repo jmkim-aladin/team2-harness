@@ -69,7 +69,7 @@
 | **전사 상태 플로우** | `youtrack/ticket-guide.md` | `docs/sprint/ticket-guide.md` §14 (링크만) |
 | **OKR (팀/개인)** | Obsidian vault `wiki/processes/okr/` | `.claude/commands/ad/okr.md` |
 | **서비스 프로파일** | `catalog/*.yaml` | `.claude/commands/ad/ticket.md` |
-| **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/capacity-plan.md`, `.claude/commands/ad/sprint-close-check.md`, `.claude/commands/ad/weekly-planned.md` |
+| **팀원 정보** | `policies/team-members.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/okr.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/capacity-plan.md`, `.claude/commands/ad/sprint-close-check.md` |
 | **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만). 필드 스펙은 여기가 SoT, **티켓 노트의 구조·본문 스켈레톤**은 아래 "티켓 노트 스켈레톤" 행이 SoT |
 | **지시 강도·우선순위·표기 규약** | `policies/instruction-precedence-policy.md` | CLAUDE.md, AGENTS.md, `policies/skill-authoring-principles.md`, `.claude/commands/ad/harness-optimize.md` (전부 링크만). 준수 검사는 `tools/lint_harness_rules.py`, 판정 기록은 `docs/harness-rule-baseline.json` |
 | **위임 프롬프트 계약(5요소)** | `memory/claude-base.md` §위임 프롬프트 계약 (`canonical:delegation-contract` 마커 블록) | AGENTS.md (`generated:delegation-contract` — 수동 편집 금지, `lint_harness_rules.py --sync-generated`로 생성. 드리프트는 R7이 차단) |

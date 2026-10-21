@@ -10,10 +10,10 @@
 | §2 (2-1~2-3) | 티켓 크기·외부 티켓·단계 분리·환경 분리 | ticket |
 | §3, 3-0 | 5W1H·Task 작성 규칙 | ticket |
 | §3-1 | 로컬 위키 티켓 노트 기준 | work-prep |
-| §3-2, 3-3 | 용어·계획 시점 서술 원칙 | ticket, weekly-planned |
+| §3-2, 3-3 | 용어·계획 시점 서술 원칙 | ticket, weekly-report(planned) |
 | §4~7 | 팀원 표기·예상 시작일·계획 시점·점진적 강화 | ticket, capacity-plan |
 | §8~9 | 이월(상세 SoT는 plan-change-process)·월말 분리 | sprint-close-check, work-close |
-| §10~11 | 태그·필수 커스텀 필드 | ticket, weekly-planned, service-activity |
+| §10~11 | 태그·필수 커스텀 필드 | ticket, weekly-report(planned) |
 | §12 | OKR → 스프린트 변환 | okr, capacity-plan |
 | §13~15 | YouTrack 서식·전사 상태 플로우(SoT: youtrack/ticket-guide)·주간 핵심 목표 | weekly-report |
 

@@ -1,5 +1,5 @@
 ---
-description: YouTrack 지식베이스(KB·기술자료) 문서 조회
+description: '[상시·지식] YouTrack 지식베이스(KB·기술자료) 문서 조회'
 ---
 
 # YouTrack 지식베이스(KB·기술자료) 문서 조회

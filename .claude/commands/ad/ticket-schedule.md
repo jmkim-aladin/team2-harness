@@ -1,5 +1,5 @@
 ---
-description: 계획 일정 지정 — planned 티켓의 시작예정일·완료목표일을 한 건씩 확인받아 코멘트로 일괄 입력
+description: '[주기·주간] 계획 일정 지정 — planned 티켓 시작예정일·완료목표일을 건별 확인 후 코멘트로 일괄 입력'
 disable-model-invocation: true
 ---
 

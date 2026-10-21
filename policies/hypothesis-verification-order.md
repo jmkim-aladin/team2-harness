@@ -32,6 +32,6 @@
 
 ## 적용 스킬
 
-이 정책을 명시 인용: `work-prep`, `ticket`, `code-review`, `data-request`, `explain`, `tldr`. 그 외 스킬도 검증 순서 자체는 따른다.
+이 정책을 명시 인용: `work-prep`, `ticket`, `code-review`, `data-request`, `explain`(`--tldr` 포함). 그 외 스킬도 검증 순서 자체는 따른다.
 
 각 스킬은 자체 흐름에서 1·2단계를 명시적으로 수행한 뒤 잔여 항목만 컨펌으로 보낸다.
