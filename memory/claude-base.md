@@ -17,7 +17,7 @@
 
 ## 작업 플로우
 
-<!-- canonical:workflow-summary targets=AGENTS.md,.codex/skills/dev2-ad-commands-ko/SKILL.md -->
+<!-- canonical:workflow-summary targets=AGENTS.md,.codex/skills/dev2-ad-commands-ko/SKILL.md,README.md -->
 4그룹 — 떠올릴 단서는 "지금 티켓 기준 어디냐". 그룹 허브를 먼저 부르면 나머지를 안내한다. 지도 SoT(상황별 동사·강도·단계별 도구 명칭): `docs/harness-guide.md` §작업 플로우.
 
 | 그룹 | 기억 단서 | 허브 → 흐름 |

@@ -22,7 +22,7 @@
 상세 가이드: [setup-guide.md](./setup-guide.md)
 
 ```bash
-git clone https://github.com/AladinCommunication/team2.git
+git clone https://github.com/jmkim-aladin/team2-harness.git team2
 cd team2 && ./scripts/setup.sh
 ```
 

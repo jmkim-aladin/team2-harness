@@ -86,7 +86,7 @@ class UserOnlyListTest(unittest.TestCase):
     def test_listed_skills_match_frontmatter(self):
         expected = self.frontmatter_user_only()
         self.assertIn("plan-run", expected)
-        for relative in ("policies/skill-authoring-principles.md", "CLAUDE.md", "AGENTS.md"):
+        for relative in ("policies/skill-authoring-principles.md", "CLAUDE.md", "AGENTS.md", "README.md"):
             with self.subTest(path=relative):
                 match = self.LIST_BLOCK.search((ROOT / relative).read_text(encoding="utf-8"))
                 self.assertIsNotNone(match, "user-only 블록 없음")

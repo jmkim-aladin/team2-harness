@@ -29,9 +29,9 @@
 
 - **description이 라우팅의 유일한 자리다.** CLAUDE.md·AGENTS.md에 라우팅 목록을 병행하지 않는다 — 같은 일을 두 곳에서 하면 한쪽이 반드시 낡고, 상주 비용을 두 번 낸다. 라우팅 블록(약 350 tok)을 걷고 description(약 135 tok)만 남기면 자동 호출을 유지하면서도 가벼워진다
 - **모델 호출 description은 트리거 문구가 본체**: `[그룹·단계]` 태그 바로 뒤에 유도 단어를 앞세우고, 트리거 브랜치당 한 문구만 (동의어 나열 = 중복), 본문에 이미 있는 정체성 설명은 넣지 않는다. 길이는 한 줄
-- **사용자 호출 전용은 사이드이펙트 스킬에 한정**한다 — 게시·배포·dispatch처럼 시점을 사람이 정해야 하는 것. `/ad:*` 목록은 아래 블록 — SoT는 frontmatter `disable-model-invocation: true`, `--sync-generated`로 CLAUDE.md·AGENTS.md에 생성, 대조는 `test_plan_run_skill.py`. `eli5`·`eli5-html`·`eli5-onboard`는 **설명 형식이 취향**이라 사용자 호출. 근거: 2026-09-01 사용자 지정, 2026-10-21 사본 3곳 드리프트
+- **사용자 호출 전용은 사이드이펙트 스킬에 한정**한다 — 게시·배포·dispatch처럼 시점을 사람이 정해야 하는 것. `/ad:*` 목록은 아래 블록 — SoT는 frontmatter `disable-model-invocation: true`, `--sync-generated`로 생성, 대조는 `test_plan_run_skill.py`. `eli5`·`eli5-html`·`eli5-onboard`는 **설명 형식이 취향**이라 사용자 호출. 근거: 2026-09-01 사용자 지정, 2026-10-21 사본 3곳 드리프트
 
-<!-- canonical:user-only targets=CLAUDE.md,AGENTS.md -->
+<!-- canonical:user-only targets=CLAUDE.md,AGENTS.md,README.md -->
 **사용자 호출 전용 6종**(사이드이펙트, 사람이 시점 결정): `/ad:code-review`, `/ad:code-review-self`, `/ad:explain`, `/ad:implement`, `/ad:plan-run`, `/ad:ticket-schedule`
 <!-- /canonical:user-only -->
 

@@ -741,7 +741,7 @@ python3 tools/secret_scan.py --staged    # pre-commit 용
 
 ## lint_harness_rules.py — 지시문 표기 규약 준수 검사 (ratchet)
 
-[instruction-precedence-policy.md](../policies/instruction-precedence-policy.md) §표기 규약을 문장이 아니라 검사로 지킨다 (북극성 1·5). 정책·스킬·템플릿·CLAUDE.md·AGENTS.md를 heading 트리로 파싱해 item 단위로 판정하고, `docs/harness-rule-baseline.json`에 fingerprint로 기록한 기존 위반은 허용하되 **신규 유입은 차단**한다. `/ad:harness-optimize 제약` 모드 Step 1. Claude·Codex 어느 세션에서든 같은 명령.
+[instruction-precedence-policy.md](../policies/instruction-precedence-policy.md) §표기 규약을 문장이 아니라 검사로 지킨다 (북극성 1·5). 정책·스킬·템플릿·CLAUDE.md·AGENTS.md·README.md를 heading 트리로 파싱해 item 단위로 판정하고, `docs/harness-rule-baseline.json`에 fingerprint로 기록한 기존 위반은 허용하되 **신규 유입은 차단**한다. `/ad:harness-optimize 제약` 모드 Step 1. Claude·Codex 어느 세션에서든 같은 명령.
 
 ```bash
 python3 tools/lint_harness_rules.py                  # 전체 발견 + 규칙별 요약

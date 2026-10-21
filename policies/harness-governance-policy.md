@@ -77,7 +77,7 @@
 | **지시문 준수 베이스라인** | `docs/harness-rule-baseline.json` (도구 생성물 — 손으로 편집하지 않는다) | `.claude/commands/ad/harness-optimize.md` 제약 모드, `docs/skill-audit-baseline.md` 북극성 거리표 (회차 카운트만) |
 | **하네스 개선 방향(북극성)** | `policies/harness-north-star.md` | harness-governance-policy, `.claude/commands/ad/harness-optimize.md`, CLAUDE.md (전부 링크만) |
 | **컨텍스트 예산·외부 스택 판정** | `policies/harness-governance-policy.md` §컨텍스트 예산 + `docs/skill-stack-and-workflow-plan.md` | CLAUDE.md, AGENTS.md, `.claude/commands/ad/harness-optimize.md` (링크만) |
-| **작업 플로우·스킬 인덱스** | `docs/harness-guide.md` §작업 플로우 | CLAUDE.md, AGENTS.md (링크만) |
+| **작업 플로우·스킬 인덱스** | `docs/harness-guide.md` §작업 플로우 | CLAUDE.md, AGENTS.md (링크만), README.md (`generated:workflow-summary`·`generated:user-only` + 스킬 레퍼런스 표 — 표는 `tests/test_work_prep_command_docs.py`가 command 집합·그룹 태그·호출 방식과 대조) |
 | **DB/SP 첨부물 (PR 단계)** | `policies/code-review-policy.md` | engineering/legacy-modernization-policy, templates (링크만) |
 | **DB/SP 첨부물 (배포 단계)** | `policies/release-policy.md` | 동일 |
 | **시크릿 취급 공통 원칙** | `policies/security-policy.md` §취급 공통 원칙 | aws-secrets-convention, local-credentials-policy, datadog-api-policy (링크만) |

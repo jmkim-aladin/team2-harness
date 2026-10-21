@@ -34,7 +34,7 @@ team2 레포에서 Codex 실행 시:
 ### 자동 셋업
 
 ```bash
-git clone https://github.com/AladinCommunication/team2.git
+git clone https://github.com/jmkim-aladin/team2-harness.git team2
 cd team2
 ./scripts/setup.sh
 ```
@@ -96,7 +96,7 @@ team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구�
 
 #### 1. 레포 클론
 ```bash
-git clone https://github.com/AladinCommunication/team2.git
+git clone https://github.com/jmkim-aladin/team2-harness.git team2
 ```
 
 #### 2. 팀 스킬 심볼릭 링크

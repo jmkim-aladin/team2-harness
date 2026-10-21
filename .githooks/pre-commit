@@ -20,13 +20,14 @@ python3 "$repo/tools/secret_scan.py" --staged || fail=1
 
 # 2) 지시문 규약 ratchet — 하네스 지시문 파일이 staged 일 때만 (속도)
 # 트리거 = 린터 대상(MD_PATTERNS·YAML_PATTERNS) + 린터·베이스라인·훅 자체. 린터가 바뀌면 베이스라인 정합도 다시 본다
-if git diff --cached --name-only | grep -Eq '^(CLAUDE\.md|AGENTS\.md|memory/|policies/|\.claude/commands/ad/|\.codex/skills/|templates/|docs/sprint/|docs/agents/|catalog/[^/]+\.yaml|docs/harness-rule-baseline\.json|tools/lint_harness_rules\.py|tests/test_lint_harness_rules|\.githooks/)'; then
+if git diff --cached --name-only | grep -Eq '^(CLAUDE\.md|AGENTS\.md|README\.md|memory/|policies/|\.claude/commands/ad/|\.codex/skills/|templates/|docs/sprint/|docs/agents/|catalog/[^/]+\.yaml|docs/harness-rule-baseline\.json|tools/lint_harness_rules\.py|tests/test_lint_harness_rules|\.githooks/)'; then
   python3 "$repo/tools/lint_harness_rules.py" --check || fail=1
 fi
 
 # 3) 회귀 테스트 — 도구·테스트·Codex 스킬(단어 한도·필수 문구 테스트가 있다)이 staged 일 때. ~5초.
 #    근거: 2026-09-16 단어 한도 초과가 lint·secret 게이트를 통과해 두 번 커밋됨 — 훅이 unittest 를 안 돌렸다
-if git diff --cached --name-only | grep -Eq '^(tools/|tests/|\.codex/skills/|\.githooks/)'; then
+#    command·지도·README 는 서로 대조하는 테스트가 있다 — 한쪽만 바뀐 커밋도 테스트를 돌려야 대조가 걸린다 (2026-10-21)
+if git diff --cached --name-only | grep -Eq '^(tools/|tests/|\.codex/skills/|\.githooks/|\.claude/commands/ad/|docs/harness-guide\.md|README\.md)'; then
   # 워크트리 커밋은 GIT_DIR 등을 훅에 넘긴다 — 임시 repo를 만드는 테스트가 실제 repo를 보지 않게 비운다
   if ! (unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX GIT_COMMON_DIR; python3 -m unittest discover -s "$repo/tests" -p 'test_*.py') >"$log" 2>&1; then
     echo "pre-commit: unittest 실패 — $log"

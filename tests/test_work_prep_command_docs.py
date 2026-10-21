@@ -103,6 +103,7 @@ class DevFlowMapNamingTests(unittest.TestCase):
         "docs/harness-guide.md",
         "docs/eng-review/review-sections.md",
         "docs/eng-review/doubt-review.md",
+        "README.md",
     )
     FORBIDDEN_SYNONYMS = (
         "신호 카드", "수락 기준", "인수 조건", "doubt-driven", "의심 검토",
@@ -163,6 +164,69 @@ class DevFlowMapNamingTests(unittest.TestCase):
             for word in self.FORBIDDEN_SYNONYMS:
                 with self.subTest(file=relative, word=word):
                     self.assertNotIn(word, text)
+
+
+class ReadmeSkillReferenceTests(unittest.TestCase):
+    """README §스킬 레퍼런스는 사람이 쓰는 사본이다 — command 집합·그룹 태그·호출 방식과 어긋나면 실패한다.
+
+    SoT는 `.claude/commands/ad/*.md` frontmatter(description `[그룹·단계]` 태그, `disable-model-invocation`).
+    스킬을 추가·삭제·이동하고 README를 안 고치면 정문이 거짓말을 한다.
+    """
+
+    README = ROOT / "README.md"
+    GROUP_HEADING = re.compile(r"^### (구상|개발|주기|상시) ")
+    ROW = re.compile(r"^\| `/ad:([a-z0-9-]+)` \|.*\| (모델|사용자) \|$")
+    VERB = re.compile(r"/ad:([a-z0-9]{2,}(?:-[a-z0-9]+)*)")
+    CODEX_ALIAS = re.compile(r"\$ad-([a-z0-9]{2,}(?:-[a-z0-9]+)*)")
+
+    def reference_rows(self) -> dict:
+        text = self.README.read_text(encoding="utf-8")
+        section = text[text.index("## 스킬 레퍼런스"):]
+        section = section[:section.index("\n## ", 1)]
+        rows, group = {}, None
+        for line in section.splitlines():
+            heading = self.GROUP_HEADING.match(line)
+            if heading:
+                group = heading.group(1)
+                continue
+            row = self.ROW.match(line)
+            if row:
+                self.assertNotIn(row.group(1), rows, f"README 표에 /ad:{row.group(1)} 행이 두 번")
+                rows[row.group(1)] = (group, row.group(2))
+        return rows
+
+    def commands(self) -> dict:
+        out = {}
+        for path in sorted((ROOT / ".claude/commands/ad").glob("*.md")):
+            text = path.read_text(encoding="utf-8")
+            tag = DevFlowMapNamingTests.DESCRIPTION_TAG.match(text.splitlines()[1])
+            head = text.split("---")[1]
+            user_only = re.search(r"^disable-model-invocation:\s*true\s*$", head, re.M)
+            out[path.stem] = (tag.group(1) if tag else None, "사용자" if user_only else "모델")
+        return out
+
+    def test_reference_lists_every_command_once(self) -> None:
+        commands, rows = self.commands(), self.reference_rows()
+        self.assertTrue(commands)
+        self.assertEqual(sorted(rows), sorted(commands))
+
+    def test_reference_group_and_invocation_match_frontmatter(self) -> None:
+        rows = self.reference_rows()
+        for name, expected in self.commands().items():
+            with self.subTest(command=name):
+                self.assertEqual(rows.get(name), expected)
+
+    def test_readme_names_only_existing_skills(self) -> None:
+        """표 밖(다이어그램·본문)의 `/ad:*`·`$ad-*`도 실재해야 한다 — 지운 스킬이 정문에 남지 않게."""
+        text = self.README.read_text(encoding="utf-8")
+        commands = {p.stem for p in (ROOT / ".claude/commands/ad").glob("*.md")}
+        aliases = {p.name[len("ad-"):] for p in (ROOT / ".codex/skills").glob("ad-*") if p.is_dir()}
+        for verb in sorted(set(self.VERB.findall(text))):
+            with self.subTest(verb=f"/ad:{verb}"):
+                self.assertIn(verb, commands)
+        for alias in sorted(set(self.CODEX_ALIAS.findall(text))):
+            with self.subTest(alias=f"$ad-{alias}"):
+                self.assertIn(alias, aliases)
 
 
 if __name__ == "__main__":
