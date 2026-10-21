@@ -354,6 +354,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 지식 | KB 등록·초안 게시 | `/ad:kb-publish` — 등록할 때 로컬 전용 내용 제외·링크 변환·저장 확인 | — |
 | 지식 | 변경·분석 설명서, 아키텍처 한 장 요약 | `/ad:explain` — 변경·분석은 배경→직관→본체→퀴즈, `--tldr`은 아키텍처 one-pager | — |
 | 지식 | 기존 저장소 아키텍처 분석 | `/ad:architecture-analysis` | — |
+| 브라우저 | 웹 UI를 띄워 개발 중 확인·테스트 | `aside-browser`(Aside) 기본 — 흐름은 `aside exec`, 스크린샷·DOM·콘솔은 `aside repl`. 규칙 SoT: [memory/claude-base.md](../memory/claude-base.md) §브라우저 개발·테스트 | 개발 — 구현 계획의 검증 명령·리뷰 확인 |
 | 이해 | 낯선 주제·용어·에러를 빨리 정확히 이해하고 남에게 옮기기 | `/eli5` — 구체 사례 + ASCII 그림 + 옮겨 말하기 대본, 터미널 | — |
 | 이해 | 같은 설명을 남에게 보낼 한 장으로 | `/eli5-html` — 자족 HTML 1개 | — |
 | 이해 | 낯선 저장소에 처음 투입 | `/eli5-onboard` — 30분 안에 1분 설명 가능 → 업무→용어→흐름→구조 순 단계별 커리큘럼 | — |
