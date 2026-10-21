@@ -4,6 +4,8 @@ description: Plan a huge chunk of work — more than one agent session can hold 
 disable-model-invocation: true
 ---
 
+> 팀 오버라이드: 사용자에게 보내는 매 턴의 마지막 메시지는 "① 된 것 / ② 사용자가 할 것" 평문 2부 요약으로 끝낸다 — $TEAM2_HARNESS_PATH/policies/overrides/mattpocock.md §오버라이드 규칙 "세션 보고 형식". 트래커·도메인 문서 위치는 docs/agents/issue-tracker.md·domain.md.
+
 A loose idea has arrived — too big for one agent session, and wrapped in fog: the way from here to the **destination** isn't visible yet. Wayfinding is about finding that way, not charging at the destination. This skill charts the way as a **shared map** on the repo's issue tracker, then works its **decision tickets** — questions whose resolution is a decision, not slices of a build to execute — one at a time until the route is clear.
 
 The destination varies per effort, and naming it is the first act of charting — it shapes every ticket. It might be a spec to hand off and iterate on, a decision to lock before planning starts, or a change made in place like a data-structure migration. The map is domain-agnostic — engineering work, course content, whatever fits the shape.
