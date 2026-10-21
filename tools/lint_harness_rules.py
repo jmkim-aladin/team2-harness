@@ -33,7 +33,7 @@ MATCHER_VERSION = 8
 
 # 기본 대상 — 하네스 지시문이 사는 곳만. 서술 문서(docs/ 일반)는 규약 대상이 아니다
 MD_PATTERNS = [
-    "CLAUDE.md", "AGENTS.md", "memory/*.md", "policies/**/*.md",
+    "CLAUDE.md", "AGENTS.md", "README.md", "memory/*.md", "policies/**/*.md",
     ".claude/commands/ad/*.md", "docs/code-review/**/*.md", ".codex/skills/**/*.md",
     "templates/**/*.md", "docs/sprint/*.md", "docs/agents/*.md",
 ]
