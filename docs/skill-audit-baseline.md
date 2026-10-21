@@ -26,6 +26,8 @@
 - [x] **Codex 동시 적용** — alias 26종 description에 Claude와 같은 `[그룹·단계]` 태그 + 이번 트리거(orchestration·work-prep·implement·eng-review·code-review·weekly-report·explain). 태그 패리티 테스트(`tests/test_codex_skills.py`). `memory/claude-base.md` 작업 플로우 요약을 `canonical:workflow-summary`로 `AGENTS.md`·`dev2-ad-commands-ko`에 생성(평면 매핑 목록 대체 — 라우팅은 alias description이 맡는다) [북극성 4·5]
 - [x] **지도 동사 존재 테스트** — 지도 §작업 플로우의 `/ad:*`가 command 파일로 없으면 실패(`tests/test_work_prep_command_docs.py`). 스킬을 지우고 지도를 안 고치는 경로를 막는다 [북극성 5]
 - [x] **secret_scan** — 값이 `@이름`이고 SQL 문맥이며 접속문자열이 아닌 줄은 제외, 값 하한 8→6자(`abc123` 길이 실값 검출). 테스트로 양방향 고정. 하향으로 repo 오탐 0, vault 실값 후보 1건 추가 검출 [북극성 5]
+- [x] **머지 후 정리** — `~/.codex/skills`의 삭제 alias 끊긴 링크 4건 제거, 누락이던 `ad-ticket-schedule` 링크 추가. `setup_harness --check` 정상 82 [북극성 4]
+- [x] **같은 날 후속** — 루트 README(생성 블록·대조 테스트로 드리프트 차단), Aside 기본 브라우저(`claude-base` canonical → `AGENTS.md`, manifest 선언), spec 품질 게이트(`/ad:ticket` 완료 기준 판정 가능성 검사·work-prep 보완안), 위임 계약 출력 3구분(Opus 5.5 프롬프팅 가이드) [북극성 1·4·5]
 
 ### 기각·이관
 
@@ -35,8 +37,8 @@
 - **관찰** vendored 미사용 9종 — 지도에 쓰는 신호와 함께 올렸다. 30일 재측정
 - **보류** 리뷰어가 vault에 접근하지 못할 때 완료 조건 대조 — 티켓 코멘트 미러링은 YouTrack 쓰기라 보류
 - **이관** `tools/harness_context_audit.py` §6 언급 집계 결함 재확인 — 6회차 이관 미해소, 호출이 아니라 언급을 센다
-- **이관** vault `wiki/processes/tickets/dev2-8920.md:270` — secret_scan 하한 6자로 잡힌 `…PASSWORD=` 7자 값. 실값 여부 사람 확인 후 마스킹
-- **이관** 머지 후 `scripts/setup.sh` — `~/.codex/skills`의 삭제 alias 링크 4건(`ad-weekly-planned`·`ad-service-activity`·`ad-work-board`·`ad-tldr`)과 개인 `~/.codex/AGENTS.md` 정리
+- **유지** vault `wiki/processes/tickets/dev2-8920.md:270` — secret_scan 하한 6자로 잡힌 `…PASSWORD=` 7자 값. 로컬 컨테이너 전용 값이라 사용자 결정으로 그대로 둔다
+- **판정만(개인 환경)** Opus 5.5 effort `xhigh`→`high`(`~/.claude/settings.json` `modelSettings`) — Anthropic 가이드: medium에서 시작해 근거가 있을 때만 올린다(Opus 5.5 medium ≈ Opus 5 high). 1~2주 뒤 호출당 컨텍스트·지연·품질로 medium 검토 [북극성 3]
 - **판정만** 개인 `~/.claude/skills`의 `.trash`·`synced` 등 — 개인 환경이라 판정만 남긴다
 
 ## 6회차 감사 (2026-09-28) — gstack 제거
