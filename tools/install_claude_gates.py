@@ -12,6 +12,8 @@ git push·gh pr create 는 정적 ask 에 두지 않고 agent-run-guard 가 판�
     python3 tools/install_claude_gates.py                       # ~/.claude/settings.json 에 설치
     python3 tools/install_claude_gates.py --check               # 보고만 (설치 필요 시 exit 1)
     python3 tools/install_claude_gates.py --settings PATH --harness DIR
+    python3 tools/install_claude_gates.py --uninstall           # 관리 훅·ask 규칙만 제거 (--check 와 함께면 미리보기)
+제거 후 setup.sh·setup_harness.py 를 다시 돌리면 게이트가 재설치된다.
 의존성: python3 stdlib.
 """
 
@@ -101,6 +103,46 @@ def merge_settings(settings, harness):
     return s, changes
 
 
+def remove_settings(settings):
+    """(새 settings, 변경 목록). 관리 훅(경로 무관)과 관리 ask 규칙만 뺀다. 다른 항목은 그대로 둔다."""
+    if not isinstance(settings, dict):
+        raise ValueError("settings.json 최상위가 객체가 아님")
+    s = copy.deepcopy(settings)
+    changes = []
+    hooks = s.get("hooks")
+    pre = hooks.get("PreToolUse") if isinstance(hooks, dict) else None
+    if isinstance(pre, list):
+        groups = []
+        for group in pre:
+            entries = group.get("hooks") if isinstance(group, dict) else None
+            if not isinstance(entries, list):
+                groups.append(group)
+                continue
+            keep = []
+            for h in entries:
+                name = next((n for n, _ in HOOKS if isinstance(h, dict) and _managed(h.get("command"), n)), None)
+                if name:
+                    changes.append(f"PreToolUse 훅 제거 — {name} [{group.get('matcher')}]")
+                else:
+                    keep.append(h)
+            if keep or not entries:
+                group["hooks"] = keep
+                groups.append(group)
+        pre[:] = groups
+        if not pre:
+            del hooks["PreToolUse"]
+    perms = s.get("permissions")
+    ask = perms.get("ask") if isinstance(perms, dict) else None
+    if isinstance(ask, list):
+        for rule in ASK_RULES + RETIRED_ASK_RULES:
+            if rule in ask:
+                ask[:] = [r for r in ask if r != rule]
+                changes.append(f"permissions.ask 제거 — {rule}")
+        if not ask:
+            del perms["ask"]
+    return s, changes
+
+
 def read_settings(path):
     if not os.path.exists(path):
         return {}
@@ -136,19 +178,20 @@ def main(argv=None):
     ap.add_argument("--settings", default=os.path.join(os.path.expanduser("~"), ".claude", "settings.json"))
     ap.add_argument("--harness", default=REPO, help="훅 스크립트가 있는 하네스 절대 경로")
     ap.add_argument("--check", action="store_true", help="보고만, 변경 없음 (설치 필요 시 exit 1)")
+    ap.add_argument("--uninstall", action="store_true", help="관리 훅·ask 규칙 제거")
     a = ap.parse_args(argv)
     harness = os.path.abspath(a.harness)
     try:
         current = read_settings(a.settings)
-        merged, changes = merge_settings(current, harness)
+        merged, changes = remove_settings(current) if a.uninstall else merge_settings(current, harness)
     except (OSError, ValueError) as e:
         print(f"  ⚠ {a.settings} 를 읽거나 병합할 수 없어 중단 — {e}")
         return 2
     if not changes:
-        print("  이미 설치됨 — 게이트 훅 3종·ask 규칙")
+        print("  제거할 게이트 없음" if a.uninstall else "  이미 설치됨 — 게이트 훅 3종·ask 규칙")
         return 0
     for c in changes:
-        print(("  [설치 필요] " if a.check else "  ✓ ") + c)
+        print(("  [변경 예정] " if a.check else "  ✓ ") + c)
     if a.check:
         return 1
     backup = write_settings(merged, a.settings)

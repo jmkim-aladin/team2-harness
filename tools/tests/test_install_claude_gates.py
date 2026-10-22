@@ -118,6 +118,20 @@ class MergeTests(unittest.TestCase):
         self.assertEqual(changes, ["PreToolUse 훅 중복 제거 — agent-run-guard (1건)"])
         self.assertEqual(merged["permissions"]["ask"][0], "Bash(npm publish:*)")
 
+    def test_uninstall_restores_pre_install_settings(self):
+        installed, _ = gates.merge_settings(user_settings(), HARNESS)
+        installed["permissions"]["ask"].insert(0, "Bash(npm publish:*)")
+        removed, changes = gates.remove_settings(installed)
+        expected = user_settings()
+        expected["permissions"]["ask"] = ["Bash(npm publish:*)"]
+        self.assertEqual(removed, expected)
+        self.assertEqual(len(changes), len(gates.HOOKS) + len(gates.ASK_RULES))
+        self.assertEqual(gates.remove_settings(user_settings()), (user_settings(), []))
+
+    def test_uninstall_drops_containers_it_emptied(self):
+        installed, _ = gates.merge_settings({}, HARNESS)
+        self.assertEqual(gates.remove_settings(installed)[0], {"hooks": {}, "permissions": {}})
+
     def test_empty_and_malformed_settings(self):
         merged, _ = gates.merge_settings({}, HARNESS)
         self.assertEqual(len(merged["hooks"]["PreToolUse"]), 3)
@@ -152,6 +166,18 @@ class CliTests(unittest.TestCase):
         self.assertEqual(self.path.read_text(encoding="utf-8"), installed)
         self.assertEqual(len(self.backups()), 1)
         self.assertEqual(self.run_cli("--check").returncode, 0)
+
+    def test_uninstall_cli_check_then_remove(self):
+        self.path.write_text(json.dumps(user_settings()), encoding="utf-8")
+        self.assertEqual(self.run_cli().returncode, 0)
+        preview = self.run_cli("--uninstall", "--check")
+        self.assertEqual(preview.returncode, 1)
+        self.assertIn("[변경 예정]", preview.stdout)
+        self.assertEqual(len(managed_commands(json.loads(self.path.read_text(encoding="utf-8")))), 3)
+        result = self.run_cli("--uninstall")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")), user_settings())
+        self.assertIn("제거할 게이트 없음", self.run_cli("--uninstall").stdout)
 
     def test_missing_file_created_and_invalid_json_untouched(self):
         self.assertEqual(self.run_cli().returncode, 0)
