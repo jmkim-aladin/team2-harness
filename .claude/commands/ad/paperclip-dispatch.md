@@ -10,9 +10,12 @@ YouTrack DEV2 티켓을 로컬 Paperclip(`http://127.0.0.1:3100`) 이슈로 등�
 
 ```
 /ad:paperclip-dispatch DEV2-8499 [DEV2-…]                     # 등록 — Board 담당 backlog, 규칙 일치 시 프로젝트·정책
-/ad:paperclip-dispatch --inbox                               # 내 미해결 DEV2 티켓 일괄 (pilot.json inboxQuery)
+/ad:paperclip-dispatch --inbox                               # 내 담당(Assignee) 최근 14일 Task·Bug 일괄 (pilot.json inboxQuery)
 /ad:paperclip-dispatch --project "쇼핑 데이터 추출" DEV2-8499   # 분류 — 프로젝트·격리·리뷰→승인 정책 부착
+/ad:paperclip-dispatch --project "티켓 분석" DEV2-12779        # 분류 — 격리 없음·승인 단계만 (Ticket Prep이 work-prep)
 ```
+
+프로젝트별 정책(격리 여부·단계)은 `pilot.json` `projects`에 있다. 거기 없는 프로젝트 이름은 error다.
 
 ## 실행
 
@@ -30,9 +33,10 @@ python3 "$TEAM2_HARNESS_PATH/tools/paperclip_import_ticket.py" {인자}
 - 티켓당 한 줄: 결과, 이슈 URL(`http://127.0.0.1:3100/ALA/issues/ALA-n`), 배분 프로젝트(불일치면 "프로젝트 없음"), error면 사유
 - 다음 행동 안내:
   - 프로젝트 없는 이슈 → 화면 Inbox "Mine"에서 보고, 맡길 것은 `--project "<이름>" {ID}`로 분류한다. 화면에서 프로젝트만 바꾸면 격리·정책이 붙지 않는다
-  - 실행 시작 → 화면에서 담당을 SQL Writer로 바꾸고 상태를 todo로 올린다. backlog에서는 할당해도 에이전트를 깨우지 않는다
+  - 실행 시작 → 화면에서 담당을 그 프로젝트 에이전트(SQL Writer·Ticket Prep)로 바꾸고 상태를 todo로 올린다. backlog에서는 할당해도 에이전트를 깨우지 않는다
   - 승인·반려 → API로 보낸다. 코멘트와 상태 변경이 한 요청이어야 해서다 — README §에이전트
 - `Paperclip 서버 응답 없음`이면 `launchctl print gui/$(id -u)/com.team2.paperclip`로 서비스 상태를 확인하라고 안내한다
 - `YouTrack 토큰 없음`이면 `python3 tools/cred.py set youtrack-token`을 안내한다
+- `담당자 불일치: <login>`이면 그 티켓은 쓰지 않았다고 알린다 — 토큰 사용자가 담당인 티켓만 받는다. 맡길 티켓이면 YouTrack 담당자부터 확인하게 안내한다
 
 ARGUMENTS: $ARGUMENTS

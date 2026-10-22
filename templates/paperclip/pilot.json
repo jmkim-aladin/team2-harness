@@ -1,9 +1,12 @@
 {
   "baseUrl": "http://127.0.0.1:3100",
   "company": "aladin-dev2",
-  "reviewerAgent": "SQL Reviewer",
   "approverUserId": "local-board",
-  "inboxQuery": "for: me #Unresolved project: DEV2",
+  "inboxQuery": "Assignee: me #Unresolved project: DEV2 Type: Task, Bug created: {minus 14d} .. Today",
+  "projects": {
+    "쇼핑 데이터 추출": {"isolatedWorkspace": true, "stages": ["review:SQL Reviewer", "approval:local-board"]},
+    "티켓 분석": {"isolatedWorkspace": false, "stages": ["approval:local-board"]}
+  },
   "rules": [
     {
       "project": "쇼핑 데이터 추출",
