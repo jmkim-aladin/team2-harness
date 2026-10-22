@@ -1,0 +1,17 @@
+{
+  "baseUrl": "http://127.0.0.1:3100",
+  "company": "aladin-dev2",
+  "reviewerAgent": "SQL Reviewer",
+  "approverUserId": "local-board",
+  "inboxQuery": "for: me #Unresolved project: DEV2",
+  "rules": [
+    {
+      "project": "쇼핑 데이터 추출",
+      "when": {"summaryAny": ["추출", "엑셀", "대상자", "명단", "데이터 요청"], "tagsAny": []}
+    }
+  ],
+  "labels": {
+    "reporter": {"prefix": "요청자:", "color": "#6B7280"},
+    "tag": {"prefix": "태그:", "color": "#2563EB"}
+  }
+}
