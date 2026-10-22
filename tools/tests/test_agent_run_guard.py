@@ -201,7 +201,7 @@ class YouTrackTests(GuardFixture):
 
 
 class ProductionDbTests(GuardFixture):
-    """운영 DB 경로 — 승인 env 와 무관하게 막고, 소스 읽기와 개발 sqlcmd SELECT 는 지나간다."""
+    """운영 DB 경로 — 승인 env 와 무관하게 막고, 소스 읽기와 개발 sqlcmd 읽기 스크립트는 지나간다."""
 
     DENY = [
         "python3 tools/db_prod_client.py status",

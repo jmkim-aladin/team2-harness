@@ -154,7 +154,9 @@ dev/staging DB 대상의 **읽기 전용 쿼리**(`SELECT`/`EXPLAIN`/`SHOW`/스�
 
 #### 로컬 실행기와 훅의 적용 범위
 
-훅은 등록된 cool-dev 호스트와 `WebCatalog/ToBe/Community/WebLog/WebMarket`를 명시한 `sqlcmd -S … -d … -Q …`의 한 문장 SELECT를 처리하고 직접 DML은 `tools/db_execute.py`로 안내한다. 다른 dev 엔진·staging 호스트를 추가할 때는 대상과 도구 경로를 검토해 등록한다. 접속 대상 미확인·운영 호스트·대화형 실행·배치·원격 참조는 자동 경로 밖이다.
+훅은 등록된 cool-dev 호스트와 `WebCatalog/ToBe/Community/WebLog/WebMarket`를 명시한 `sqlcmd -S … -d …`의 **읽기 스크립트**(`-Q` 리터럴 또는 `-i` 절대 경로 UTF-8 파일)를 처리하고 영구 테이블 DML은 `tools/db_execute.py`로 안내한다. 읽기 스크립트에는 여러 문장·주석·`GO`, SELECT/CTE, DECLARE·SET(변수 대입과 NOCOUNT·STATISTICS·TRANSACTION ISOLATION LEVEL 같은 조회용 옵션), IF/WHILE/BEGIN…END/PRINT/RETURN·RAISERROR(`WITH LOG` 제외), `#임시 테이블` 생성·인덱스·변경·삭제, 개발 DB·tempdb 3부 이름, 개발 DB `USE`, `EXEC sp_help`·`sp_helptext`·`sp_columns`(리터럴 인자)를 쓸 수 있다. 영구 객체 DML·DDL·`SELECT INTO 영구 테이블`, 그 밖의 EXEC·동적 SQL, 트랜잭션 제어, 4부 이름(링크드 서버)·목록 밖 DB, sqlcmd 변수·내부 명령은 거부한다. 다른 dev 엔진·staging 호스트를 추가할 때는 대상과 도구 경로를 검토해 등록한다. 접속 대상 미확인·운영 호스트·대화형 실행·원격 참조는 자동 경로 밖이다.
+
+근거: 2026-10-22 사용자 결정 — 개발 DB 조회 제한을 푼다. 실제 데이터 추출 SQL(DECLARE·CTE·`#temp`·3부 참조·여러 문장)을 사람·에이전트가 개발 DB에서 그대로 검증하게 한다. 개발 DB 읽기는 위 §dev/staging DB 읽기 쿼리: 사전 동의 범위다.
 
 기본: 개발 DML은 전용 실행기에 작업 ID(`--task`), 등록 DB(`--database`), 사용자(`--user`)와 stdin SQL 한 문장을 전달한다. 비밀번호는 `SQLCMDPASSWORD` 환경변수를 쓴다. 실행기는 개발 host를 고정하며 운영 접속 옵션을 제공하지 않는다. 열을 지정한 리터럴 INSERT VALUES, 단일 테이블 UPDATE/DELETE를 지원한다. 수정값은 리터럴, 대상 조건은 `열 = 값` 또는 `열 IN (값 목록)`을 AND로 연결한다. 실제 키 여부와 업무 대상은 실행 전 확인한다.
 

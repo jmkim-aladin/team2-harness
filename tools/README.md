@@ -619,7 +619,7 @@ python3 tools/cred.py check          # manifest credentials 선언분 존재 검
 
 정책: [로컬 자격증명](../policies/local-credentials-policy.md) · [운영 DB 접근](../policies/production-db-access-policy.md).
 
-`.claude/hooks/sqlcmd-readonly.sh`는 기존 연결을 유지하는 진입점이며 Python 표준 라이브러리 검사기를 호출한다. 등록된 dev의 리터럴 `-S/-d/-Q` 한 문장 SELECT를 처리한다. 직접 DML은 전용 실행기로 안내하며 DDL/SP·미등록/운영 호스트·파일/동적 SQL은 거부한다. `tool_input.command`와 `tool_input.cmd` 입력을 지원한다.
+`.claude/hooks/sqlcmd-readonly.sh`는 기존 연결을 유지하는 진입점이며 Python 표준 라이브러리 검사기를 호출한다. 등록된 dev의 리터럴 `-S/-d`와 `-Q` 또는 `-i`(절대 경로 UTF-8 파일) **읽기 스크립트**를 처리한다 — 여러 문장·주석·`GO`, SELECT/CTE, DECLARE·SET(변수·조회용 세션 옵션)·제어 흐름·RAISERROR(`WITH LOG` 제외), `#임시 테이블` 생성·인덱스·변경·삭제, 개발 DB·tempdb 3부 이름, 개발 DB `USE`, `EXEC sp_help`·`sp_helptext`·`sp_columns`(리터럴 인자). 영구 테이블 DML은 전용 실행기로 안내하며 영구 객체 DDL·그 밖의 SP·동적 SQL·트랜잭션 제어·4부 이름·목록 밖 DB·sqlcmd 변수/내부 명령·미등록/운영 호스트는 거부한다. `-i` 파일은 훅 시점에 읽으므로 같은 명령에는 자격증명 조회(`PW=$(security find-generic-password …)`)·환경변수 지정·`unset`만 둘 수 있다. `tool_input.command`와 `tool_input.cmd` 입력을 지원한다. 근거: 2026-10-22 사용자 결정 — 개발 DB 조회 제한 해제.
 
 ```bash
 python3 -m unittest discover -s tools/tests -p 'test_db_*.py'

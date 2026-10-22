@@ -27,7 +27,7 @@
 Paperclip이 띄운 실행(`PAPERCLIP_RUN_ID`)은 커밋·푸시·PR의 사용자 확인을 아래 흐름으로 대신한다. 강제는 `tools/agent_run_guard.py`가 한다.
 - 로컬 커밋은 확인 없이 한다. 사람이 Paperclip에서 승인하면 `feature/*` push, `develop` 대상 draft PR, 자체 리뷰(`/ad:code-review {PR} --auto`, Claude·Codex 교차)를 한다.
 - merge·ready 전환·배포는 사람이 한다. 로컬 위키 vault 쓰기는 허용한다.
-- 운영 DB 실행과 개발 DML은 사람이 한다. 에이전트는 SQL 작성·로컬 커밋과 개발 DB 단일 SELECT 검증까지만 한다.
+- 운영 DB 실행과 개발 DML은 사람이 한다. 에이전트는 SQL 작성·로컬 커밋과 개발 DB 읽기 스크립트 검증까지만 한다.
 - 근거: 2026-10-22 사용자 결정
 
 ## 메시지 작성 품질
