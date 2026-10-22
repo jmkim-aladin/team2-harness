@@ -47,6 +47,16 @@ YouTrack 데이터 추출 요청의 SQL과 산출물을 [`AladinCommunication/da
 
 `/ad:data-request [DEV2-####] [요청부서] [설명]` 또는 인자 없이 호출 시 사용자에게 질문한다.
 
+### Paperclip 에이전트 실행 (`PAPERCLIP_RUN_ID`)
+
+[ai-usage-policy.md §Paperclip 에이전트 실행 예외](../../../policies/ai-usage-policy.md)를 적용한다. 다른 단계는 그대로고, 아래만 바뀐다. 에이전트 지시문은 [templates/paperclip/](../../../templates/paperclip/README.md)에 있다.
+
+- 1단계: 티켓 ID·요청부서는 할당된 Paperclip 이슈(`PAPERCLIP_TASK_ID`)의 제목·본문에서 읽는다. 누락 항목은 Paperclip 이슈 질문 카드(`ask_user_questions`)로 남기고 실행을 끝낸다 — AskUserQuestion은 비대화 실행에서 자동 거부된다
+- 2단계: `REPO`는 현재 작업 디렉토리(Paperclip worktree)다. `main`·`sprint/*`는 checkout하지 않고 `git fetch origin` 뒤 `origin/sprint/YYYY-MM`(없으면 `origin/main`)에서 `feature/DEV2-####`를 만든다. 같은 브랜치는 두 worktree에서 동시에 checkout할 수 없고, 사람의 체크아웃을 건드리면 안 되기 때문이다
+- 3단계: `설명.md`에 `## 실행 안내`를 둔다 — 대상 DB, 예상 범위·건수, 게이트웨이 실행 가능 여부(단일 SELECT, `#temp`·DECLARE·3-part 참조 없음) 또는 SSMS 필요, 참조한 스냅샷 기준일
+- 4단계: diff 확인 없이 로컬 커밋한다. 5단계 푸시는 하지 않는다 — 사람이 운영 실행 뒤 `sprint/YYYY-MM`에 반영한다
+- 6단계: 보고는 Paperclip 이슈 댓글로 한다
+
 ### 1단계: 입력 파악
 
 다음을 확인한다. 누락된 항목은 사용자에게 묻는다.
