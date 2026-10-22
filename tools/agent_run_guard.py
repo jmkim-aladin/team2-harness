@@ -12,7 +12,7 @@
   YouTrack 쓰기   항상 차단 — YouTrack→Paperclip 단방향이다
   운영 DB 경로    항상 차단 — db_prod_*·db_query_control·db_execute 실행, 게이트웨이 소켓, --from-chat-digest.
                   소켓 인증은 peer UID 뿐이고 chat digest 는 비대화 실행이 스스로 만들 수 있어서다.
-                  소스 읽기(cat·grep·sed)는 허용, 개발 sqlcmd SELECT 는 sqlcmd-readonly 훅이 판정한다.
+                  소스 읽기(cat·grep·sed)는 허용, 개발 sqlcmd 읽기 스크립트는 sqlcmd-readonly 훅이 판정한다.
   승인 env 는 훅 프로세스(= Claude 프로세스) env 에서 읽는다. 에이전트가 Bash 에서 export 해도 판정은 바뀌지 않는다.
 사람 세션 (PAPERCLIP_RUN_ID 없음): git push·gh pr create 에 ask 를 돌려준다.
   정적 permissions.ask 로 두지 않는 이유 — 훅 allow 는 ask 규칙을 넘지 못해 승인된 에이전트까지 막힌다.
@@ -527,7 +527,7 @@ def _db_exec(command, depth=0):
 
 
 def _db_reason(command):
-    """운영 DB 실행 경로 — 승인 env 와 무관하게 막는다. 개발 sqlcmd SELECT 는 sqlcmd-readonly 몫이다."""
+    """운영 DB 실행 경로 — 승인 env 와 무관하게 막는다. 개발 sqlcmd 읽기 스크립트는 sqlcmd-readonly 몫이다."""
     if "--from-chat-digest" in command:
         label = "--from-chat-digest"
     elif _DB_SOCKET.search(command):
@@ -544,7 +544,7 @@ def _db_reason(command):
     if not label:
         return None
     return (f"{PREFIX} 운영 DB 경로 금지 ({label}). SQL은 data-requests-dev2에 작성·로컬 커밋까지만 하고 "
-            "운영 실행·개발 DML은 사람이 한다. 개발 DB 검증은 sqlcmd 단일 SELECT로 할 것.")
+            "운영 실행·개발 DML은 사람이 한다. 개발 DB 검증은 sqlcmd 읽기 스크립트(-Q 또는 -i 파일)로 할 것.")
 
 
 # ---------- 판정 ----------
