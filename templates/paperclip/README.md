@@ -14,7 +14,16 @@
 
 ## 프로젝트·이슈
 
-프로젝트별 정책은 `pilot.json` `projects`가 SoT다. 등록 도구가 분류할 때 그대로 붙인다.
+흐름은 팀 흐름처럼 분석이 먼저다(2026-10-22 사용자 결정).
+
+1. 내 티켓을 등록한다 — Inbox(프로젝트 없음, Board 담당 backlog)
+2. 사람이 `--project "티켓 분석" DEV2-####`로 분류하고 Ticket Prep에게 맡긴다
+3. 사람이 분석 결과를 승인한다(done)
+4. 그 뒤의 일(데이터 추출, 나중에는 개발)은 분석 이슈의 하위 이슈로 만든다 — `--project "<프로젝트>" --from ALA-n [DEV2-####]`
+
+단계마다 이슈를 따로 두는 이유: 프로젝트만 바꾸면 분석 승인 기록이 초기화되고 일감을 하나로만 이어 간다. 같은 프로젝트에서 에이전트만 바꾸면 작업 공간이 프로젝트에 묶여 있어 사람용 체크아웃에서 돈다.
+
+프로젝트별 정책은 `pilot.json` `projects`가 SoT다. 등록 도구가 분류·하위 이슈 생성 때 그대로 붙인다. 하위 이슈의 부모가 될 분석 프로젝트는 `analysisProject`다.
 
 | | 쇼핑 데이터 추출 | 티켓 분석 |
 |---|---|---|
@@ -22,13 +31,16 @@
 | 프로젝트 workspace | `data-requests-dev2`, 이슈별 git worktree 격리 | 없음 — 에이전트 cwd(빈 폴더)에서 돈다 |
 | executionPolicy | 리뷰(SQL Reviewer) → 승인(Board) | 승인(Board)만 |
 | 실행 담당 | SQL Writer | Ticket Prep |
-| 분류 경로 | `rules` 일치 또는 `--project` | `--project`만 — 규칙 없음 |
+| 들어오는 길 | 승인된 분석 이슈의 하위 이슈(`--from`) | Inbox 이슈를 `--project`로 분류 |
 
 - 쇼핑 데이터 추출은 이슈에도 `executionWorkspaceSettings.mode: isolated_workspace`를 명시한다. 티켓 분석으로 옮긴 이슈는 이 값을 지운다
 - worktree 위치는 `workspaceStrategy.worktreeParentDir`로 repo 밖에 둔다. 기본값은 repo 안의 `.paperclip/worktrees/`라서 사람 쪽 `git status`에 섞인다. 이미 repo 안에 만들었다면 `.git/info/exclude`에 `.paperclip/`를 넣는다
 - 이슈 제목은 `DEV2-#### {요청 제목}`, 본문은 YouTrack 링크와 요청 요약이다. import는 YouTrack → Paperclip 단방향이다
-- 등록은 `/ad:paperclip-dispatch DEV2-####`(또는 `--inbox`)다. Board 담당·backlog로 들어가 Inbox "Mine"에 모이고, `pilot.json` 규칙에 맞으면 프로젝트·정책이 붙는다. 라벨 `요청자:`·`태그:`와 Artifacts 탭의 원본 티켓 링크(work product)도 함께 붙는다. 맡길 이슈는 `--project "<프로젝트>" DEV2-####`로 분류한다 — 화면에서 프로젝트만 바꾸면 격리·정책이 붙지 않는다
-- 등록·분류는 YouTrack 담당자가 토큰 사용자인 티켓만 받는다. 다르거나 비어 있으면 `담당자 불일치`로 거부하고 쓰지 않는다 — 파일럿은 내 티켓만 처리한다
+- 등록은 `/ad:paperclip-dispatch DEV2-####`(또는 `--inbox`)다. Board 담당·backlog로 Inbox "Mine"에 모인다. `pilot.json` `rules`는 비워 둔다 — 키워드로 바로 배분하면 분석을 건너뛴다. 라벨 `요청자:`·`태그:`와 Artifacts 탭의 원본 티켓 링크(work product)도 함께 붙는다. 분류는 도구로 한다 — 화면에서 프로젝트만 바꾸면 격리·정책이 붙지 않는다
+- `--from` 없는 `--project`는 「티켓 분석」(`analysisProject`)만 받는다 — 데이터 추출도 분석이 먼저다. `rules`의 project도 같다
+- `--project`는 이미 done이거나 다른 프로젝트에 속한 이슈를 옮기지 않는다. 이어지는 일은 `--from` 하위 이슈로 만든다
+- 하위 이슈(`--from ALA-n`): 부모는 「티켓 분석」 소속이고 done이어야 한다. 부모 제목의 DEV2 번호를 원본으로 쓰고, 제목 `{DEV2} {요약} · {프로젝트}`, 부모 라벨, 대상 프로젝트 정책, Board 담당 backlog로 만든다. 사람이 YouTrack에 새 Task를 만들었으면 그 DEV2를 같이 준다 — 제목·라벨·원본 링크가 그 티켓 기준이 된다. 부모를 막는 옵션(`blockParentUntilDone`)은 쓰지 않는다. 부모는 이미 done이기 때문이다
+- 등록·분류·하위 이슈는 YouTrack 담당자가 토큰 사용자인 티켓만 받는다. 다르거나 비어 있으면 `담당자 불일치`로 거부하고 쓰지 않는다 — 파일럿은 내 티켓만 처리한다
 - 실행 시작은 사람이 담당을 그 프로젝트의 에이전트(SQL Writer·Ticket Prep)로 바꾸고 상태를 todo로 올리는 순간이다. backlog 이슈는 할당해도 깨우지 않는다(`issue-assignment-wakeup.ts:46`)
 - 자동화: cron·routine이 `python3 tools/paperclip_import_ticket.py --inbox`(또는 `--query "<YouTrack 검색식>"`)를 부른다. 멱등이라 반복 실행해도 중복이 없다. 해결된 티켓의 Paperclip 반영(`--sync-resolved`)은 후속이다
 

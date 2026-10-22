@@ -227,9 +227,9 @@ class Base(unittest.TestCase):
 
     def write_config(self, **overrides):
         cfg = {
-            "baseUrl": self.pc_url, "company": "aladin-dev2", "projects": POLICIES,
+            "baseUrl": self.pc_url, "company": "aladin-dev2", "projects": POLICIES, "analysisProject": "티켓 분석",
             "approverUserId": "local-board", "inboxQuery": "for: me #Unresolved project: DEV2",
-            "rules": [{"project": "쇼핑 데이터 추출",
+            "rules": [{"project": "티켓 분석",  # 규칙 엔진 검증용 — pilot.json은 빈 목록, 분석 프로젝트만 받는다
                        "when": {"summaryAny": ["추출", "엑셀", "리스트", "데이터 요청"], "tagsAny": []}}],
             "labels": {"reporter": {"prefix": "요청자:", "color": "#6B7280"},
                        "tag": {"prefix": "태그:", "color": "#2563EB"}},
@@ -269,19 +269,17 @@ class CreateTests(Base):
         result = report["results"][0]
         self.assertEqual((result["result"], result["issue"]), ("created", "ALA-1"))
         self.assertEqual(result["url"], f"{self.pc_url}/ALA/issues/ALA-1")
-        self.assertEqual(result["rule"], {"matched": True, "index": 0, "project": "쇼핑 데이터 추출",
+        # 규칙은 분석 프로젝트만 가리킬 수 있다 — 쇼핑 정책 본문은 SubIssueTests가 --from 경로로 고정한다
+        self.assertEqual(result["rule"], {"matched": True, "index": 0, "project": "티켓 분석",
                                           "hit": "summary:추출"})
         [body] = self.issue_posts()
         self.assertEqual(body["title"], "DEV2-1 회원 리스트 추출 요청")
         self.assertEqual((body["status"], body["priority"], body["assigneeUserId"]),
                          ("backlog", "medium", "local-board"))
         self.assertNotIn("assigneeAgentId", body)
-        self.assertEqual(body["projectId"], PID)
-        self.assertEqual(body["executionWorkspaceSettings"], {"mode": "isolated_workspace"})
-        self.assertEqual(body["executionPolicy"], {"mode": "normal", "commentRequired": True, "stages": [
-            {"type": "review", "approvalsNeeded": 1, "participants": [{"type": "agent", "agentId": REVIEWER}]},
-            {"type": "approval", "approvalsNeeded": 1, "participants": [{"type": "user", "userId": "local-board"}]},
-        ]})
+        self.assertEqual(body["projectId"], PID_PREP)
+        self.assertNotIn("executionWorkspaceSettings", body)
+        self.assertEqual(body["executionPolicy"], PREP_POLICY)
         self.assertIn(f"{self.yt_url}/issue/DEV2-1", body["description"])
         self.assertIn("회원 리스트 추출 요청", body["description"])
         self.assertIn("등록: 2026-10-22 티켓 지정", body["description"])
@@ -301,15 +299,16 @@ class CreateTests(Base):
 
     def test_rule_by_tag_and_first_match_only(self):
         config = self.write_config(rules=[
-            {"project": "기타 요청", "when": {"summaryAny": [], "tagsAny": ["데이터요청"]}},
-            {"project": "쇼핑 데이터 추출", "when": {"summaryAny": ["추출"], "tagsAny": []}},
+            {"project": "티켓 분석", "when": {"summaryAny": [], "tagsAny": ["데이터요청"]}},
+            {"project": "티켓 분석", "when": {"summaryAny": ["추출"], "tagsAny": []}},
         ])
         self.yt.add("DEV2-3", "주문 추출", tags=("데이터요청",))
         code, report, _ = self.run_json("DEV2-3", config=config)
 
         self.assertEqual(code, 0)
-        self.assertEqual(report["results"][0]["rule"]["hit"], "tag:데이터요청")
-        self.assertEqual(self.issue_posts()[0]["projectId"], PID_OTHER)
+        self.assertEqual((report["results"][0]["rule"]["hit"], report["results"][0]["rule"]["index"]),
+                         ("tag:데이터요청", 0))
+        self.assertEqual(self.issue_posts()[0]["projectId"], PID_PREP)
 
     def test_multiple_tickets_dedupe_input(self):
         self.yt.add("DEV2-1", "엑셀 추출")
@@ -366,8 +365,7 @@ class DryRunTests(Base):
 
         self.assertEqual(code, 0)
         self.assertEqual(self.pc.writes(), [])
-        self.assertIn(PID, out)
-        self.assertIn(REVIEWER, out)
+        self.assertIn(PID_PREP, out)
         self.assertIn('"action": "would_create"', out)
         self.assertIn("요청자:김정민", out)
         self.assertIn("태그:쇼핑", out)
@@ -451,18 +449,27 @@ class ErrorTests(Base):
         self.assertIn("회사 '없는 회사' 없음", report["results"][0]["reason"])
 
     def test_rule_project_or_reviewer_missing_fails_only_that_ticket(self):
-        config = self.write_config(rules=[{"project": "없는 프로젝트", "when": {"summaryAny": ["추출"]}}])
+        # 규칙이 분석 프로젝트 밖을 가리키면 설정 오류다 — Paperclip에 없는 경우만 티켓 단위 error로 남는다
+        code, out, err = self.run_tool("DEV2-1", config=self.write_config(
+            rules=[{"project": "없는 프로젝트", "when": {"summaryAny": ["추출"]}}]))
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("analysisProject 밖의 프로젝트", err)
+
+        self.pc.projects = [p for p in self.pc.projects if p["name"] != "티켓 분석"]
         self.yt.add("DEV2-1", "추출")
         self.yt.add("DEV2-2", "로그인 오류")
-        code, report, _ = self.run_json("DEV2-1", "DEV2-2", config=config)
+        code, report, _ = self.run_json("DEV2-1", "DEV2-2")
 
         self.assertEqual(code, 1)
-        self.assertIn("프로젝트 '없는 프로젝트' 없음", report["results"][0]["reason"])
+        self.assertIn("프로젝트 '티켓 분석' 없음", report["results"][0]["reason"])
         self.assertEqual(report["results"][1]["result"], "created")
 
+        self.pc.add_issue("DEV2-3 분석", status="done", projectId=PID_PREP)
+        self.pc.projects.append({"id": PID_PREP, "name": "티켓 분석"})
         self.yt.add("DEV2-3", "추출")
         missing_reviewer = {**POLICIES, "쇼핑 데이터 추출": {**SHOP, "stages": ["review:없는 리뷰어", "approval:local-board"]}}
-        _, report, _ = self.run_json("DEV2-3", config=self.write_config(projects=missing_reviewer))
+        _, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", "ALA-2",
+                                     config=self.write_config(projects=missing_reviewer))
         self.assertIn("에이전트 '없는 리뷰어' 없음", report["results"][0]["reason"])
 
     def test_invalid_ticket_id(self):
@@ -563,39 +570,31 @@ class WorkProductTests(Base):
 
 class ClassifyTests(Base):
     def test_project_flag_patches_existing_issue_then_is_idempotent(self):
-        issue = self.pc.add_issue("DEV2-1 로그인 오류", status="backlog", assigneeUserId="local-board")
+        # 분석 먼저 — Inbox 이슈를 분석 밖 프로젝트로 바로 옮기지 않는다(읽기도 하지 않는다). 분석 분류는 ProjectPolicyTests
+        self.pc.add_issue("DEV2-1 로그인 오류", status="backlog", assigneeUserId="local-board")
         self.yt.add("DEV2-1", "로그인 오류")
         code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "DEV2-1")
 
-        self.assertEqual(code, 0)
-        self.assertEqual(report["results"][0]["result"], "updated")
-        [(_, path, patch)] = self.pc.writes("PATCH")
-        self.assertEqual(path, f"/api/issues/{issue['id']}")
-        self.assertEqual(sorted(patch), ["executionPolicy", "executionWorkspaceSettings", "projectId"])
-        self.assertEqual(patch["projectId"], PID)
-        self.assertEqual(patch["executionPolicy"]["stages"][0]["participants"], [{"type": "agent", "agentId": REVIEWER}])
-        self.assertEqual(self.issue_posts(), [])
-
-        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "DEV2-1")
-        self.assertEqual(code, 0)
-        self.assertEqual((report["results"][0]["result"], report["results"][0]["reason"]),
-                         ("unchanged", "이미 같은 프로젝트·정책"))
-        self.assertEqual(len(self.pc.writes("PATCH")), 1)
+        self.assertEqual(code, 1)
+        self.assertEqual(report["results"][0]["reason"],
+                         "분석 먼저 — Inbox 이슈는 「티켓 분석」으로만 분류한다. 분석 승인 후 --from ALA-n으로 하위 이슈를 만든다")
+        self.assertEqual(self.pc.requests, [])
+        self.assertEqual(self.yt.seen_auth, [])
 
     def test_project_flag_sends_only_differing_fields(self):
-        self.pc.add_issue("DEV2-1 x", projectId=PID_OTHER, executionWorkspaceSettings={"mode": "isolated_workspace"},
-                          executionPolicy=FakePaperclip.normalized(SHOP_POLICY))
+        # 다른 프로젝트 소속은 옮기지 않으므로(DoneOrOtherProjectTests) 프로젝트만 빠진 Inbox 이슈로 본다
+        self.pc.add_issue("DEV2-1 x", projectId=None, executionPolicy=FakePaperclip.normalized(PREP_POLICY))
         self.yt.add("DEV2-1", "x")
-        self.run_tool("--project", "쇼핑 데이터 추출", "DEV2-1")
+        self.run_tool("--project", "티켓 분석", "DEV2-1")
         [(_, _, patch)] = self.pc.writes("PATCH")
-        self.assertEqual(patch, {"projectId": PID})
+        self.assertEqual(patch, {"projectId": PID_PREP})
 
     def test_project_flag_refuses_while_run_or_review_is_live(self):
         self.pc.add_issue("DEV2-1 a", executionRunId="run-1")
         self.pc.add_issue("DEV2-2 b", executionState={"status": "pending", "currentStageId": "s"})
         self.yt.add("DEV2-1", "a")
         self.yt.add("DEV2-2", "b")
-        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "DEV2-1", "DEV2-2")
+        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1", "DEV2-2")
 
         self.assertEqual(code, 1)
         self.assertEqual([r["result"] for r in report["results"]], ["error", "error"])
@@ -604,19 +603,25 @@ class ClassifyTests(Base):
         self.assertEqual(self.pc.writes("PATCH"), [])
 
     def test_project_flag_creates_when_missing(self):
-        self.yt.add("DEV2-1", "로그인 오류")  # 규칙에는 안 맞지만 사람이 지정한 프로젝트를 쓴다
-        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "DEV2-1")
+        self.yt.add("DEV2-1", "로그인 오류")
+        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "DEV2-1", "dev3-1")  # 분석 밖 프로젝트로는 만들지 않는다
+        self.assertEqual(code, 1)
+        self.assertTrue(report["results"][0]["reason"].startswith("분석 먼저 — "))
+        self.assertEqual(report["results"][1]["reason"], "DEV2-#### 형식이 아니다")
+        self.assertEqual(self.pc.requests, [])
 
+        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1")  # 규칙에는 안 맞지만 사람이 지정한 분석으로
         self.assertEqual(code, 0)
         self.assertEqual(report["results"][0]["rule"]["hit"], "--project")
         [body] = self.issue_posts()
-        self.assertEqual((body["projectId"], body["status"], body["assigneeUserId"]), (PID, "backlog", "local-board"))
+        self.assertEqual((body["projectId"], body["status"], body["assigneeUserId"]),
+                         (PID_PREP, "backlog", "local-board"))
         self.assertIn("executionPolicy", body)
 
     def test_project_flag_dry_run_and_unknown_project(self):
         self.pc.add_issue("DEV2-1 a")
         self.yt.add("DEV2-1", "a")
-        code, out, _ = self.run_tool("--project", "쇼핑 데이터 추출", "DEV2-1", "--dry-run")
+        code, out, _ = self.run_tool("--project", "티켓 분석", "DEV2-1", "--dry-run")
         self.assertEqual(code, 0)
         self.assertIn('"patch"', out)
         self.assertEqual(self.pc.writes(), [])
@@ -628,12 +633,12 @@ class ClassifyTests(Base):
 
 class ProjectPolicyTests(Base):
     def test_each_project_gets_its_own_policy_on_create(self):
-        self.yt.add("DEV2-1", "로그인 오류")
         self.yt.add("DEV2-2", "결제 화면 개선")
-        self.assertEqual(self.run_tool("--project", "쇼핑 데이터 추출", "DEV2-1")[0], 0)
         self.assertEqual(self.run_tool("--project", "티켓 분석", "DEV2-2")[0], 0)
+        self.pc.issues[0]["status"] = "done"  # 분석 승인 → 추출은 하위 이슈로
+        self.assertEqual(self.run_tool("--project", "쇼핑 데이터 추출", "--from", "ALA-1")[0], 0)
 
-        shop, prep = self.issue_posts()
+        prep, shop = self.issue_posts()
         self.assertEqual((shop["projectId"], shop["executionWorkspaceSettings"], shop["executionPolicy"]),
                          (PID, {"mode": "isolated_workspace"}, SHOP_POLICY))
         self.assertEqual((prep["projectId"], prep["executionPolicy"]), (PID_PREP, PREP_POLICY))
@@ -659,7 +664,7 @@ class ProjectPolicyTests(Base):
         self.assertEqual(len(self.pc.writes("PATCH")), 1)
 
     def test_moving_isolated_issue_to_ticket_prep_clears_isolation(self):
-        self.pc.add_issue("DEV2-1 x", projectId=PID, executionWorkspaceSettings={"mode": "isolated_workspace"},
+        self.pc.add_issue("DEV2-1 x", projectId=None, executionWorkspaceSettings={"mode": "isolated_workspace"},
                           executionPolicy=FakePaperclip.normalized(SHOP_POLICY))
         self.yt.add("DEV2-1", "x")
         self.run_tool("--project", "티켓 분석", "DEV2-1")
@@ -671,7 +676,7 @@ class ProjectPolicyTests(Base):
         self.assertEqual(report["results"][0]["result"], "unchanged")
 
     def test_policy_change_still_refused_while_review_is_live(self):
-        self.pc.add_issue("DEV2-1 x", projectId=PID, executionState={"status": "changes_requested"})
+        self.pc.add_issue("DEV2-1 x", projectId=None, executionState={"status": "changes_requested"})
         self.yt.add("DEV2-1", "x")
         code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1")
         self.assertEqual(code, 1)
@@ -679,18 +684,19 @@ class ProjectPolicyTests(Base):
         self.assertEqual(self.pc.writes("PATCH"), [])
 
     def test_project_missing_from_config_is_error_and_writes_nothing(self):
-        config = self.write_config(projects={"쇼핑 데이터 추출": SHOP},
-                                   rules=[{"project": "기타 요청", "when": {"summaryAny": ["추출"]}}])
+        # 규칙의 project가 맵 밖이면 설정 오류다(ErrorTests) — 여기는 --project·--from 이름
+        config = self.write_config(projects={"티켓 분석": PREP}, rules=[])
         self.pc.add_issue("DEV2-1 a")
+        self.pc.add_issue("DEV2-2 분석", status="done", projectId=PID_PREP)
         self.yt.add("DEV2-1", "a")
         self.yt.add("DEV2-2", "추출")
-        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1", config=config)
+        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "DEV2-1", config=config)
         self.assertEqual(code, 1)
-        self.assertIn("설정 projects에 프로젝트 '티켓 분석' 없음", report["results"][0]["reason"])
+        self.assertIn("설정 projects에 프로젝트 '쇼핑 데이터 추출' 없음", report["results"][0]["reason"])
 
-        code, report, _ = self.run_json("DEV2-2", config=config)  # 규칙의 project도 맵을 본다
+        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", "ALA-2", config=config)
         self.assertEqual(code, 1)
-        self.assertIn("설정 projects에 프로젝트 '기타 요청' 없음", report["results"][0]["reason"])
+        self.assertIn("설정 projects에 프로젝트 '쇼핑 데이터 추출' 없음", report["results"][0]["reason"])
         self.assertEqual(self.pc.writes(), [])
 
     def test_project_in_config_but_not_in_paperclip(self):
@@ -757,6 +763,149 @@ class AssigneeTests(Base):
         self.assertIn("YouTrack 토큰 사용자 조회 실패 — HTTP 401", report["results"][0]["reason"])
         self.assertNotIn(TOKEN, out + err)
         self.assertEqual(self.pc.requests, [])
+
+
+class EmptyRulesTests(Base):
+    def test_shipped_config_has_no_rules_and_analysis_project(self):
+        cfg = tool.load_config(tool.DEFAULT_CONFIG)
+        self.assertEqual(cfg["rules"], [])
+        self.assertIn(cfg["analysisProject"], cfg["policies"])
+
+    def test_empty_rules_put_everything_in_inbox(self):
+        config = self.write_config(rules=[])
+        self.yt.add("DEV2-1", "회원 엑셀 추출")
+        self.yt.queries["for: me #Unresolved project: DEV2"] = ["DEV2-1"]
+        code, out, _ = self.run_tool("--inbox", config=config)
+
+        self.assertEqual(code, 0)
+        self.assertIn("→ Inbox(프로젝트 없음)", out)
+        [body] = self.issue_posts()
+        for key in ("projectId", "executionPolicy", "executionWorkspaceSettings", "parentId"):
+            self.assertNotIn(key, body)
+        self.assertEqual((body["status"], body["assigneeUserId"]), ("backlog", "local-board"))
+
+
+class SubIssueTests(Base):
+    def analysis(self, title="DEV2-1 회원 추출 요청", status="done", project=PID_PREP, **extra):
+        return self.pc.add_issue(title, status=status, projectId=project, executionPolicy=PREP_POLICY, **extra)
+
+    def test_child_from_parent_ticket_copies_labels_and_uses_target_policy(self):
+        lb1, lb2 = self.pc.add_label("요청자:김정민"), self.pc.add_label("태그:쇼핑", "#2563EB")
+        parent = self.analysis(labelIds=[lb1["id"], lb2["id"]])
+        self.yt.add("DEV2-1", "회원 추출 요청 (YouTrack 쪽 제목이 바뀌어도 부모 제목을 쓴다)")
+
+        code, out, _ = self.run_tool("--project", "쇼핑 데이터 추출", "--from", "ala-1", "--dry-run")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.pc.writes(), [])
+        self.assertIn("→ 쇼핑 데이터 추출 (--from ALA-1)", out)
+        self.assertIn(f'"parentId": "{parent["id"]}"', out)
+
+        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", "ALA-1")
+        self.assertEqual(code, 0)
+        self.assertEqual(report["from"], "ALA-1")
+        result = report["results"][0]
+        self.assertEqual((result["result"], result["issue"], result["parent"]), ("created", "ALA-2", "ALA-1"))
+        [body] = self.issue_posts()
+        self.assertEqual(body["title"], "DEV2-1 회원 추출 요청 · 쇼핑 데이터 추출")
+        self.assertEqual(body["parentId"], parent["id"])
+        self.assertEqual((body["projectId"], body["executionWorkspaceSettings"], body["executionPolicy"]),
+                         (PID, {"mode": "isolated_workspace"}, SHOP_POLICY))
+        self.assertEqual((body["status"], body["assigneeUserId"]), ("backlog", "local-board"))
+        self.assertEqual(body["labelIds"], [lb1["id"], lb2["id"]])
+        self.assertNotIn("blockParentUntilDone", body)
+        self.assertIn("요청: 회원 추출 요청", body["description"])
+        self.assertIn("--from `ALA-1` 하위 이슈", body["description"])
+        self.assertEqual(self.label_posts(), [])
+        self.assertEqual([b["externalId"] for b in self.wp_posts()], ["DEV2-1"])
+
+        _, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", "ALA-1")  # 멱등
+        self.assertEqual((report["results"][0]["result"], report["results"][0]["reason"]),
+                         ("skipped", "기존 하위 ALA-2"))
+        _, report, _ = self.run_json("DEV2-1")  # 등록 멱등은 최상위 이슈를 가리킨다
+        self.assertEqual(report["results"][0]["reason"], "기존 ALA-1")
+        self.assertEqual(len(self.issue_posts()), 1)
+
+    def test_child_for_new_task_uses_that_ticket_and_checks_assignee(self):
+        parent = self.analysis()
+        self.yt.add("DEV2-1", "회원 추출 요청")
+        self.yt.add("DEV2-2", "추출 SQL 작성", reporter=("박요청", "park"), tags=("쇼핑",))
+        self.yt.add("DEV2-3", "남의 Task", assignee="someone")
+
+        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", "ALA-1", "DEV2-3")
+        self.assertEqual(code, 1)
+        self.assertTrue(report["results"][0]["reason"].startswith("담당자 불일치: someone"))
+        self.assertEqual(self.pc.writes(), [])
+
+        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", "ALA-1", "DEV2-2")
+        self.assertEqual((code, report["results"][0]["result"]), (0, "created"))
+        [body] = self.issue_posts()
+        self.assertEqual((body["title"], body["parentId"], body["projectId"]), ("DEV2-2 추출 SQL 작성", parent["id"], PID))
+        self.assertEqual([b["name"] for b in self.label_posts()], ["요청자:박요청", "태그:쇼핑"])
+        self.assertEqual([b["externalId"] for b in self.wp_posts()], ["DEV2-2"])
+
+        _, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", "ALA-1", "DEV2-2")
+        self.assertEqual(report["results"][0]["result"], "skipped")
+        _, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", "ALA-1")  # 다른 DEV2라 따로 만든다
+        self.assertEqual(report["results"][0]["result"], "created")
+        self.assertEqual(len(self.issue_posts()), 2)
+
+    def test_parent_must_be_done_analysis_issue(self):
+        self.analysis(status="in_review")
+        self.analysis(title="DEV2-2 스모크", project=PID)
+        self.analysis(title="제목에 티켓 없음")
+        self.yt.add("DEV2-1", "a")
+        self.yt.add("DEV2-2", "b")
+        cases = {"ALA-1": "분석 승인 전: 현재 in_review", "ALA-2": "부모 ALA-2 이슈는 「쇼핑 데이터 추출」 소속",
+                 "ALA-3": "`DEV2-#### `로 시작하지 않는다", "ALA-99": "부모 ALA-99 없음"}
+        for ref, reason in cases.items():
+            code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", ref)
+            self.assertEqual(code, 1, ref)
+            self.assertIn(reason, report["results"][0]["reason"])
+        self.assertEqual(self.pc.writes(), [])
+
+    def test_given_ticket_already_registered_elsewhere_is_refused(self):
+        self.analysis()
+        self.pc.add_issue("DEV2-2 Inbox에 먼저 들어온 Task", status="backlog")
+        self.yt.add("DEV2-2", "Task")
+        code, report, _ = self.run_json("--project", "쇼핑 데이터 추출", "--from", "ALA-1", "DEV2-2")
+        self.assertEqual(code, 1)
+        self.assertIn("DEV2-2 이슈가 이미 ALA-2로 있다", report["results"][0]["reason"])
+        self.assertEqual(self.pc.writes(), [])
+
+    def test_from_argument_shape(self):
+        for argv in (["--from", "ALA-1"], ["--project", "쇼핑 데이터 추출", "--from", "DEV2-1"],
+                     ["--project", "쇼핑 데이터 추출", "--from", "ALA-1", "DEV2-1", "DEV2-2"],
+                     ["--project", "쇼핑 데이터 추출", "--from", "ALA-1", "--inbox"]):
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as ctx:
+                tool.parse_args(argv)
+            self.assertEqual(ctx.exception.code, 2, argv)
+
+
+class DoneOrOtherProjectTests(Base):
+    def test_project_flag_refuses_done_or_other_project_and_points_to_from(self):
+        self.pc.add_issue("DEV2-1 분석 끝남", status="done", projectId=PID_PREP)  # 정책이 달라 PATCH가 필요한 상태
+        self.pc.add_issue("DEV2-2 추출 진행 중", status="backlog", projectId=PID,
+                          executionWorkspaceSettings={"mode": "isolated_workspace"}, executionPolicy=SHOP_POLICY)
+        self.pc.add_issue("DEV2-3 Inbox에서 끝남", status="done")
+        for n in (1, 2, 3):
+            self.yt.add(f"DEV2-{n}", "x")
+        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1")
+        self.assertEqual(code, 1)
+        self.assertIn("ALA-1 이슈는 이미 done", report["results"][0]["reason"])
+        self.assertIn('`--project "<프로젝트>" --from ALA-1`', report["results"][0]["reason"])
+
+        _, report, _ = self.run_json("--project", "티켓 분석", "DEV2-2", "DEV2-3")
+        other, done = report["results"]
+        self.assertIn("ALA-2 이슈는 「쇼핑 데이터 추출」 소속", other["reason"])
+        self.assertIn("--from <승인된 분석 이슈 ALA-n>", other["reason"])
+        self.assertIn("ALA-3 이슈는 이미 done", done["reason"])
+        self.assertEqual(self.pc.writes("PATCH"), [])
+
+    def test_same_project_and_policy_is_still_unchanged(self):
+        self.pc.add_issue("DEV2-1 분석 끝남", status="done", projectId=PID_PREP, executionPolicy=PREP_POLICY)
+        self.yt.add("DEV2-1", "x")
+        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1")
+        self.assertEqual((code, report["results"][0]["result"]), (0, "unchanged"))
 
 
 if __name__ == "__main__":
