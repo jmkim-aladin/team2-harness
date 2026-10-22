@@ -77,7 +77,7 @@ echo "=== 개발 2팀 하네스 셋업 ==="
 echo ""
 
 # 0. TEAM2_HARNESS_PATH 등록
-echo "[0/5] 팀 하네스 경로 등록..."
+echo "[0/6] 팀 하네스 경로 등록..."
 
 mkdir -p "$CLAUDE_DIR" "$CODEX_DIR"
 
@@ -112,25 +112,32 @@ else
     echo "  ✓ YOUTRACK_BASE_URL 설정됨"
 fi
 
-# 1. 팀 스킬 심볼릭 링크
+# 1. 사용자 레벨 하드 게이트 — 모든 repo·worktree·에이전트 실행에 DB 가드, push·PR·YouTrack 가드, merge ask 규칙
 echo ""
-echo "[1/5] Claude Code /ad 명령 연결..."
+echo "[1/6] Claude Code 하드 게이트 설치 (~/.claude/settings.json 훅·ask 규칙)..."
+if ! python3 "$TEAM2_DIR/tools/install_claude_gates.py" --settings "$CLAUDE_DIR/settings.json" --harness "$TEAM2_DIR"; then
+    echo "  ⚠ 게이트 설치 실패 — 위 메시지 확인 후 재실행 (settings.json은 바꾸지 않음)"
+fi
+
+# 2. 팀 스킬 심볼릭 링크
+echo ""
+echo "[2/6] Claude Code /ad 명령 연결..."
 mkdir -p "$CLAUDE_DIR/commands"
 
 link_path "$TEAM2_DIR/.claude/commands/ad" "$CLAUDE_DIR/commands/ad" "~/.claude/commands/ad"
 
-# 2. 전역 Codex/Claude Code team2 Skill 연결
+# 3. 전역 Codex/Claude Code team2 Skill 연결
 echo ""
-echo "[2/5] Codex / Claude Code 전역 Skill 연결..."
+echo "[3/6] Codex / Claude Code 전역 Skill 연결..."
 
 remove_stale_codex_agents
 
 link_team2_skills "$CODEX_DIR/skills" "~/.codex/skills"
 link_team2_skills "$CLAUDE_DIR/skills" "~/.claude/skills" skip-ad
 
-# 3. YouTrack 토큰 확인
+# 4. YouTrack 토큰 확인
 echo ""
-echo "[3/5] YouTrack 토큰 확인..."
+echo "[4/6] YouTrack 토큰 확인..."
 
 if [ -f "$CLAUDE_DIR/settings.json" ]; then
     if grep -q "YOUTRACK_TOKEN" "$CLAUDE_DIR/settings.json"; then
@@ -154,9 +161,9 @@ else
     echo '  }'
 fi
 
-# 4. gh CLI 확인
+# 5. gh CLI 확인
 echo ""
-echo "[4/5] gh CLI 확인..."
+echo "[5/6] gh CLI 확인..."
 
 if command -v gh &> /dev/null; then
     echo "  ✓ gh CLI 설치됨: $(gh --version | head -1)"
@@ -172,7 +179,7 @@ else
 fi
 
 echo ""
-echo "[5/5] 연결 상태 확인..."
+echo "[6/6] 연결 상태 확인..."
 if [ -L "$CLAUDE_DIR/commands/ad" ]; then
     echo "  ✓ Claude Code /ad command 연결됨"
 else

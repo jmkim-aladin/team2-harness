@@ -9,7 +9,7 @@
     python3 tools/setup_harness.py --check    # 보고만 (드리프트 있으면 exit 1)
     python3 tools/setup_harness.py --reset    # 관리 영역 초과분을 격리 후 수렴
 
-관리 영역: ~/.claude/skills, ~/.claude/commands/ad, ~/.codex/skills, settings.json 훅·env, 팀 메모리 링크, team2 repo core.hooksPath.
+관리 영역: ~/.claude/skills, ~/.claude/commands/ad, ~/.codex/skills, settings.json 훅·env·게이트 ask 규칙, 팀 메모리 링크, team2 repo core.hooksPath.
 비관리(절대 안 건드림): 인증·토큰 값, ~/.claude/projects 세션 로그, 개인 CLAUDE.md 내용, plugins on/off.
 --reset 도 삭제하지 않는다 — ~/.claude/harness-quarantine-<ts>/ 로 이동 (되돌리기 = mv).
 
@@ -150,6 +150,24 @@ def converge_env(m, apply):
         write_settings(s, p)
     if "YOUTRACK_TOKEN" in env:
         warn("YOUTRACK_TOKEN 이 settings.json 에 평문으로 있음 — Keychain 이관: python3 tools/cred.py set youtrack-token 후 env 에서 제거 (local-credentials-policy)")
+
+
+def converge_claude_gates(apply):
+    """사용자 레벨 하드 게이트(훅 3종·ask 규칙) — 선언 SoT 는 tools/install_claude_gates.py."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import install_claude_gates as gates
+    s, p = read_settings()
+    merged, changes = gates.merge_settings(s, REPO)
+    if not changes:
+        ok("claude 게이트 훅·ask 규칙")
+        return
+    if apply:
+        write_settings(merged, p)
+        for c in changes:
+            fixed(c)
+    else:
+        for c in changes:
+            warn(f"{c} → 수렴 필요")
 
 
 def converge_links(m, apply):
@@ -359,6 +377,7 @@ def main():
 
     m = load_manifest()
     converge_env(m, apply)
+    converge_claude_gates(apply)
     converge_links(m, apply)
     converge_vendored(m, apply)
     converge_memory(m, apply)
