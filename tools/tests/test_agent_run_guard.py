@@ -200,6 +200,60 @@ class YouTrackTests(GuardFixture):
         self.assertIsNone(guard.decide(event("mcp__youtrack__create_issue"), {}))
 
 
+class ProductionDbTests(GuardFixture):
+    """운영 DB 경로 — 승인 env 와 무관하게 막고, 소스 읽기와 개발 sqlcmd SELECT 는 지나간다."""
+
+    DENY = [
+        "python3 tools/db_prod_client.py status",
+        "python3 /Users/x/team2/tools/db_prod_client.py prepare < /tmp/q.sql",
+        "./tools/db_prod_client.py stop", "tools/db_prod_gateway.py", "python3 -u tools/db_prod_gateway.py",
+        "sh -c 'python3 tools/db_query_control.py status'",
+        'bash -lc "./tools/db_execute.py --task DEV2-1 --database WebCatalog"',
+        "env PYTHONPATH=tools python3 tools/db_execute.py --task DEV2-1",
+        "rtk proxy python3 tools/db_prod_client.py status", "timeout 30 python3 tools/db_prod_recovery.py",
+        "cd tools && python3 db_prod_watchdog.py", "echo x | xargs python3 tools/db_prod_client.py",
+        "python3 -m tools.db_prod_client status", "PYTHONPATH=tools python3 -m db_prod_diagnostics",
+        "python3 - < tools/db_prod_client.py", "cat tools/db_prod_client.py | python3 -",
+        "X=`python3 tools/db_prod_client.py status`", "uv run tools/db_prod_transport.py",
+        "nc -U /tmp/team2-db-501/query.sock", 'socat - UNIX-CONNECT:"$TMPDIR/team2-db-501/query.sock"',
+        "python3 -c \"import socket; s=socket.socket(socket.AF_UNIX); s.connect('/tmp/team2-db-501/query.sock')\"",
+        "python3 tools/db_prod_client.py approve --from-chat-digest abc123", "some-tool --from-chat-digest abc",
+        'python3 -c "import db_prod_client; db_prod_client.main()"', 'python3 -c "from tools import db_prod_gateway"',
+        "python3 - <<'EOF'\nimport importlib.util\nspec = importlib.util.spec_from_file_location('c', "
+        "'tools/db_prod_client.py')\nEOF",
+        "node -e \"require('child_process').execSync('python3 tools/db_prod_client.py status')\"",
+        "python3 -c \"import subprocess; subprocess.run(['python3', 'tools/db_prod_client.py', 'status'])\"",
+        "swiftc tools/db_prod_keychain.swift -o /tmp/k",
+        '"$HOME/Library/Application Support/team2-db/db-prod-keychain"',
+    ]
+    ALLOW = [
+        "cat tools/db_prod_client.py", 'grep -n "def main" tools/db_prod_gateway.py',
+        "sed -n 180,200p tools/db_prod_gateway.py", "rg -n SOCKET tools/db_prod_client.py tools/db_query_control.py",
+        "wc -l tools/db_execute.py", "git diff tools/db_prod_gateway.py", "head -50 tools/db_prod_keychain.swift",
+        "python3 -m pytest tools/tests/test_db_prod_gateway.py -q", "python3 tools/db_sqlcmd_guard.py < /tmp/e.json",
+        "sqlcmd -S rds-cluster-cool-dev.cleuiesc8bqi.ap-northeast-2.rds.amazonaws.com -d WebCatalog -U u -C -b "
+        "-Q 'SELECT TOP 1 name FROM sys.tables'",
+    ]
+
+    def test_execution_paths_denied_regardless_of_approval(self):
+        for status in [None, "approved"]:
+            for command in self.DENY:
+                with self.subTest(status=status, command=command):
+                    reason = self.reason(command, agent(status))
+                    self.assertIn("운영 DB 경로 금지", reason)
+                    self.assertIn("data-requests-dev2", reason)
+
+    def test_source_reads_and_dev_select_pass(self):
+        for command in self.ALLOW:
+            with self.subTest(command=command):
+                self.assertIsNone(self.decide(command, agent("approved")))
+
+    def test_human_session_untouched(self):
+        for command in self.DENY[:3] + ["nc -U /tmp/team2-db-501/query.sock"]:
+            with self.subTest(command=command):
+                self.assertIsNone(self.decide(command, {}))
+
+
 class HumanSessionTests(GuardFixture):
     def test_push_and_pr_create_ask(self):
         for command in ["git push", f"git push origin {FEATURE}", "rtk git push", "gh pr create --fill",
@@ -271,6 +325,7 @@ class HookProtocolTests(GuardFixture):
             ("gh pr create --draft --base develop", "ask", "deny", None),
             ("gh pr merge 7 --squash", None, "deny", "deny"),
             (YT_POST, None, "deny", "deny"),
+            ("python3 tools/db_prod_client.py status", None, "deny", "deny"),
             ("git status --short", None, None, None),
         ]
         for command, human, pending, approved in cases:
