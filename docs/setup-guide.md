@@ -48,6 +48,7 @@ cd team2
 6. gh CLI 설치/인증 확인
 
 > - push/PR 가드(`tools/agent_run_guard.py`)는 Paperclip 실행(`PAPERCLIP_RUN_ID`)에서 승인 env(`PAPERCLIP_APPROVAL_STATUS=approved`)가 있을 때만 `feature/*` push와 `develop` 대상 draft PR을 통과시킨다. 승인 env는 Claude 프로세스 env라 에이전트가 Bash에서 바꿀 수 없다.
+> - Paperclip 실행에서는 운영 DB 경로(`tools/db_prod_*`·`db_query_control.py`·`db_execute.py` 실행, 게이트웨이 소켓, `--from-chat-digest`)를 승인과 무관하게 막는다. 소켓 인증이 같은 UID만 보고, chat digest는 비대화 실행이 스스로 만들 수 있기 때문이다.
 > - 사람 세션의 `git push`·`gh pr create` 확인은 정적 `permissions.ask`가 아니라 훅 ask로 건다. 훅 allow는 ask 규칙을 넘지 못해, 정적 ask로 두면 승인된 에이전트도 막히기 때문이다.
 > - Bash 판정은 문자열 매칭이라 별칭·스크립트 파일 안 호출·명령 밖 변수는 놓칠 수 있다. Codex(`codex_local`)는 Claude Code 훅을 읽지 않아 범위 밖이다.
 

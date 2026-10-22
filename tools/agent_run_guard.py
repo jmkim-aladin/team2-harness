@@ -10,6 +10,9 @@
   gh pr create    approved, --draft, --base develop 일 때만 통과
   항상 차단       gh pr merge·ready, gh workflow run, gh release create, gh api 의 merge·ref·dispatch·release 쓰기
   YouTrack 쓰기   항상 차단 — YouTrack→Paperclip 단방향이다
+  운영 DB 경로    항상 차단 — db_prod_*·db_query_control·db_execute 실행, 게이트웨이 소켓, --from-chat-digest.
+                  소켓 인증은 peer UID 뿐이고 chat digest 는 비대화 실행이 스스로 만들 수 있어서다.
+                  소스 읽기(cat·grep·sed)는 허용, 개발 sqlcmd SELECT 는 sqlcmd-readonly 훅이 판정한다.
   승인 env 는 훅 프로세스(= Claude 프로세스) env 에서 읽는다. 에이전트가 Bash 에서 export 해도 판정은 바뀌지 않는다.
 사람 세션 (PAPERCLIP_RUN_ID 없음): git push·gh pr create 에 ask 를 돌려준다.
   정적 permissions.ask 로 두지 않는 이유 — 훅 allow 는 ask 규칙을 넘지 못해 승인된 에이전트까지 막힌다.
@@ -75,6 +78,23 @@ _YT_MCP_WRITE = re.compile(r"(?:^|[_\-])(?:create|update|delete|add|remove|set|c
                            r"|move|assign|edit|patch|put|execute|command|vote|star|attach|upload|import|merge"
                            r"|close|resolve|reopen|log|track|transition)")
 
+# 운영 DB 경로 — 소켓 인증이 peer UID 뿐이고 --from-chat-digest 는 비대화 실행이 스스로 만들 수 있다
+_DB_NAME = r"(?:db_prod_[a-z_]+|db_query_control|db_execute)"
+_DB_FILE = re.compile(r"^" + _DB_NAME + r"\.py$")
+_DB_MODULE = re.compile(r"(?:^|\.)" + _DB_NAME + r"$")
+_DB_MENTION = re.compile(r"(?<![\w-])" + _DB_NAME + r"\.(?:py|swift)\b")
+_DB_SOCKET = re.compile(r"(?:/tmp/+|/private/tmp/+|\$\{?TMPDIR\}?/+|/var/folders/\S*?/)team2-db-"
+                        r"|team2-db-[^\s'\"/]*/query\.sock|team2-db/db-prod-keychain")
+# 따옴표·다른 언어 문자열 안의 실행 형태 (python3 [옵션] …/db_prod_client.py, ['python3', '…'])
+_DB_RUN_RAW = re.compile(r"(?:python[\d.]*|swiftc?)(?:\.exe)?['\"]?(?:[\s,]+['\"]?-[\w-]+['\"]?)*[\s,]+['\"]?"
+                         r"[^\s;&|'\",]*?(?<![\w-])" + _DB_NAME + r"\.(?:py|swift)")
+_DB_INLINE = re.compile(r"\b(?:import|from)\s+(?:[\w.]+\.)?" + _DB_NAME + r"\b"
+                        r"|\bfrom\s+[\w.]+\s+import\s+(?:[\w\s,]*,\s*)?" + _DB_NAME + r"\b"
+                        r"|(?:run_path|run_module|spec_from_file_location|SourceFileLoader|import_module|__import__"
+                        r"|exec|execfile|system|Popen|run|call|check_output|check_call|execSync|spawn\w*)"
+                        r"\s*\([^)]*" + _DB_NAME)
+_PY_VALUE_OPTS = {"-W", "-X", "-Q"}
+
 _PUNCT = ";&|<>()\n"
 _WRAPPERS = {"sudo", "env", "command", "builtin", "exec", "nohup", "time", "nice", "xargs",
              "timeout", "rtk", "proxy", "caffeinate", "stdbuf"}
@@ -121,26 +141,28 @@ def _tokens(command):
 
 
 def _simple_commands(tokens):
-    """연산자에서 끊어 단순 명령의 단어 목록으로. 리다이렉트 대상은 인자에서 뺀다."""
-    out, words, i = [], [], 0
+    """연산자에서 끊어 (단어 목록, 입력 리다이렉트 파일) 단위로. 리다이렉트 대상은 인자에서 뺀다."""
+    out, words, inputs, i = [], [], [], 0
     while i < len(tokens):
         tok = tokens[i]
         if tok and all(c in _PUNCT for c in tok):
             if any(c in ";|()\n&" for c in tok.replace(">&", "").replace("&>", "")):
-                if words:
-                    out.append(words)
-                words = []
+                if words or inputs:
+                    out.append((words, inputs))
+                words, inputs = [], []
             if ("<" in tok or ">" in tok):
                 if words and words[-1].isdigit():
                     words.pop()  # 2>, 1>> 같은 fd 번호
                 nxt = tokens[i + 1] if i + 1 < len(tokens) else None
                 if nxt is not None and not all(c in _PUNCT for c in nxt):
+                    if tok.endswith("<") and not tok.endswith("<<"):
+                        inputs.append(nxt)  # heredoc 구분자·here-string 값은 파일이 아니다
                     i += 1
         else:
             words.append(tok)
         i += 1
-    if words:
-        out.append(words)
+    if words or inputs:
+        out.append((words, inputs))
     return out
 
 
@@ -213,7 +235,7 @@ def _gh_parts(args):
 def _scan(command, cwd):
     """단순 명령마다 git push·gh 호출을 찾는다. cd 는 이후 명령의 작업 위치를 바꾼다."""
     cur, found = cwd, []
-    for words in _simple_commands(_tokens(command)):
+    for words, _ in _simple_commands(_tokens(command)):
         words = _strip_wrappers(words)
         if not words:
             continue
@@ -443,9 +465,94 @@ def _youtrack_write(command):
     return None
 
 
+# ---------- 운영 DB ----------
+
+def _py_target(args):
+    """python 인자 → ("file", 경로) | ("module", 이름) | ("code", None) | ("stdin", None)."""
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "-c" or (a.startswith("-") and not a.startswith("--") and "c" in a[1:] and a[1] != "m"):
+            return "code", None
+        if a == "-m" and i + 1 < len(args):
+            return "module", args[i + 1]
+        if a.startswith("-m") and len(a) > 2:
+            return "module", a[2:]
+        if a == "-":
+            return "stdin", None
+        if a in _PY_VALUE_OPTS:
+            i += 2
+            continue
+        if not a.startswith("-"):
+            return "file", a
+        i += 1
+    return "stdin", None
+
+
+def _db_exec(command, depth=0):
+    """단순 명령마다 DB 도구를 띄우는 형태를 찾는다. 읽기(cat·grep·sed)는 실행이 아니라 지나간다."""
+    for words, inputs in _simple_commands(_tokens(command.replace("`", " ; "))):
+        words = _strip_wrappers(words)
+        if words and os.path.basename(words[0]).lower() == "uv" and words[1:2] == ["run"]:
+            words = [w for w in words[2:] if not w.startswith("-")] or words
+        if not words:
+            continue
+        name, args = os.path.basename(words[0]), words[1:]
+        lower = name.lower().removesuffix(".exe")
+        if _DB_FILE.match(name) or name == "db-prod-keychain":
+            return f"{name} 실행"
+        if re.match(r"^python[\d.]*$", lower):
+            kind, target = _py_target(args)
+            if kind == "file" and _DB_FILE.match(os.path.basename(target)):
+                return f"{os.path.basename(target)} 실행"
+            if kind == "module" and _DB_MODULE.search(target):
+                return f"python -m {target} 실행"
+            if kind == "stdin" and (any(_DB_FILE.match(os.path.basename(t)) for t in inputs)
+                                    or _DB_MENTION.search(command)):
+                return "DB 도구를 stdin 으로 실행"
+        if lower in ("swift", "swiftc") and any(os.path.basename(a) == "db_prod_keychain.swift" for a in args):
+            return "keychain 헬퍼 빌드·실행"
+        if depth < 3 and lower in ("sh", "bash", "zsh", "dash", "ksh"):
+            for i, arg in enumerate(args[:-1]):
+                if re.match(r"^-[A-Za-z]*c[A-Za-z]*$", arg):
+                    label = _db_exec(args[i + 1], depth + 1)
+                    if label:
+                        return label
+                    break
+        if depth < 3 and lower == "eval" and args:
+            label = _db_exec(" ".join(args), depth + 1)
+            if label:
+                return label
+    return None
+
+
+def _db_reason(command):
+    """운영 DB 실행 경로 — 승인 env 와 무관하게 막는다. 개발 sqlcmd SELECT 는 sqlcmd-readonly 몫이다."""
+    if "--from-chat-digest" in command:
+        label = "--from-chat-digest"
+    elif _DB_SOCKET.search(command):
+        label = "게이트웨이 소켓 경로"
+    elif _DB_RUN_RAW.search(command):
+        label = "DB 도구 실행"
+    elif _INTERPRETER.search(command) and _DB_INLINE.search(command):
+        label = "DB 도구 인라인 로드"
+    else:
+        try:
+            label = _db_exec(command)
+        except ValueError:
+            label = "해석할 수 없는 명령의 DB 도구 언급" if _DB_MENTION.search(command) else None
+    if not label:
+        return None
+    return (f"{PREFIX} 운영 DB 경로 금지 ({label}). SQL은 data-requests-dev2에 작성·로컬 커밋까지만 하고 "
+            "운영 실행·개발 DML은 사람이 한다. 개발 DB 검증은 sqlcmd 단일 SELECT로 할 것.")
+
+
 # ---------- 판정 ----------
 
 def _agent_bash(command, cwd, env):
+    reason = _db_reason(command)
+    if reason:
+        return reason
     label = _youtrack_write(command)
     if label:
         return (f"{PREFIX} YouTrack 쓰기 금지 (명령: {label}). "
