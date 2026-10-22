@@ -26,9 +26,21 @@ TODAY = date(2026, 10, 22)
 CID = "3ea0f9e5-0000-4000-8000-000000000001"
 PID = "8db40eb8-0000-4000-8000-000000000002"
 PID_OTHER = "8db40eb8-0000-4000-8000-000000000003"
+PID_PREP = "8db40eb8-0000-4000-8000-000000000006"
 WRITER = "c0707c1d-0000-4000-8000-000000000004"
 REVIEWER = "e6301f4b-0000-4000-8000-000000000005"
 SECRET_DESCRIPTION = "요청 원문 — 고객 연락처 010-0000-0000"
+ME = "jmkim"
+SHOP = {"isolatedWorkspace": True, "stages": ["review:SQL Reviewer", "approval:local-board"]}
+PREP = {"isolatedWorkspace": False, "stages": ["approval:local-board"]}
+POLICIES = {"쇼핑 데이터 추출": SHOP, "기타 요청": SHOP, "티켓 분석": PREP}
+SHOP_POLICY = {"mode": "normal", "commentRequired": True, "stages": [
+    {"type": "review", "approvalsNeeded": 1, "participants": [{"type": "agent", "agentId": REVIEWER}]},
+    {"type": "approval", "approvalsNeeded": 1, "participants": [{"type": "user", "userId": "local-board"}]},
+]}
+PREP_POLICY = {"mode": "normal", "commentRequired": True, "stages": [
+    {"type": "approval", "approvalsNeeded": 1, "participants": [{"type": "user", "userId": "local-board"}]},
+]}
 
 
 def free_port():
@@ -79,12 +91,15 @@ class FakeYouTrack:
         self.seen_auth = []
         self.seen_queries = []
         self.writes = []
+        self.me = {"login": ME}  # /api/users/me 응답 — None이면 401
 
-    def add(self, iid, summary, *, reporter=("김정민", "jmkim"), tags=()):
+    def add(self, iid, summary, *, reporter=("김정민", "jmkim"), tags=(), assignee=ME):
         self.issues[iid] = {
             "idReadable": iid, "summary": summary, "description": SECRET_DESCRIPTION,
             "reporter": {"fullName": reporter[0], "login": reporter[1]} if reporter else None,
             "tags": [{"name": t} for t in tags],
+            "customFields": [{"name": "Priority", "value": {"name": "Normal"}},
+                             {"name": "Assignee", "value": {"login": assignee} if assignee else None}],
         }
 
     def handle(self, method, path, query, body, headers):
@@ -92,6 +107,8 @@ class FakeYouTrack:
         if method != "GET":
             self.writes.append((method, path, body))
             return 405, {"error": "read only"}
+        if path == "/api/users/me":
+            return (200, self.me) if self.me is not None else (401, {"error": "Unauthorized"})
         if path == "/api/issues":
             q = query.get("query", [""])[0]
             self.seen_queries.append(q)
@@ -107,7 +124,8 @@ class FakeYouTrack:
 class FakePaperclip:
     def __init__(self):
         self.companies = [{"id": CID, "name": "aladin-dev2", "issuePrefix": "ALA"}]
-        self.projects = [{"id": PID, "name": "쇼핑 데이터 추출"}, {"id": PID_OTHER, "name": "기타 요청"}]
+        self.projects = [{"id": PID, "name": "쇼핑 데이터 추출"}, {"id": PID_OTHER, "name": "기타 요청"},
+                         {"id": PID_PREP, "name": "티켓 분석"}]
         self.agents = [{"id": WRITER, "name": "SQL Writer"}, {"id": REVIEWER, "name": "SQL Reviewer"}]
         self.labels = []
         self.issues = []
@@ -209,7 +227,7 @@ class Base(unittest.TestCase):
 
     def write_config(self, **overrides):
         cfg = {
-            "baseUrl": self.pc_url, "company": "aladin-dev2", "reviewerAgent": "SQL Reviewer",
+            "baseUrl": self.pc_url, "company": "aladin-dev2", "projects": POLICIES,
             "approverUserId": "local-board", "inboxQuery": "for: me #Unresolved project: DEV2",
             "rules": [{"project": "쇼핑 데이터 추출",
                        "when": {"summaryAny": ["추출", "엑셀", "리스트", "데이터 요청"], "tagsAny": []}}],
@@ -443,7 +461,8 @@ class ErrorTests(Base):
         self.assertEqual(report["results"][1]["result"], "created")
 
         self.yt.add("DEV2-3", "추출")
-        _, report, _ = self.run_json("DEV2-3", config=self.write_config(reviewerAgent="없는 리뷰어"))
+        missing_reviewer = {**POLICIES, "쇼핑 데이터 추출": {**SHOP, "stages": ["review:없는 리뷰어", "approval:local-board"]}}
+        _, report, _ = self.run_json("DEV2-3", config=self.write_config(projects=missing_reviewer))
         self.assertIn("에이전트 '없는 리뷰어' 없음", report["results"][0]["reason"])
 
     def test_invalid_ticket_id(self):
@@ -565,7 +584,7 @@ class ClassifyTests(Base):
 
     def test_project_flag_sends_only_differing_fields(self):
         self.pc.add_issue("DEV2-1 x", projectId=PID_OTHER, executionWorkspaceSettings={"mode": "isolated_workspace"},
-                          executionPolicy=FakePaperclip.normalized(tool.execution_policy(REVIEWER, "local-board")))
+                          executionPolicy=FakePaperclip.normalized(SHOP_POLICY))
         self.yt.add("DEV2-1", "x")
         self.run_tool("--project", "쇼핑 데이터 추출", "DEV2-1")
         [(_, _, patch)] = self.pc.writes("PATCH")
@@ -605,6 +624,139 @@ class ClassifyTests(Base):
         code, report, _ = self.run_json("--project", "없는 프로젝트", "DEV2-1")
         self.assertEqual(code, 1)
         self.assertIn("프로젝트 '없는 프로젝트' 없음", report["results"][0]["reason"])
+
+
+class ProjectPolicyTests(Base):
+    def test_each_project_gets_its_own_policy_on_create(self):
+        self.yt.add("DEV2-1", "로그인 오류")
+        self.yt.add("DEV2-2", "결제 화면 개선")
+        self.assertEqual(self.run_tool("--project", "쇼핑 데이터 추출", "DEV2-1")[0], 0)
+        self.assertEqual(self.run_tool("--project", "티켓 분석", "DEV2-2")[0], 0)
+
+        shop, prep = self.issue_posts()
+        self.assertEqual((shop["projectId"], shop["executionWorkspaceSettings"], shop["executionPolicy"]),
+                         (PID, {"mode": "isolated_workspace"}, SHOP_POLICY))
+        self.assertEqual((prep["projectId"], prep["executionPolicy"]), (PID_PREP, PREP_POLICY))
+        self.assertNotIn("executionWorkspaceSettings", prep)
+        self.assertEqual((prep["status"], prep["assigneeUserId"]), ("backlog", "local-board"))
+
+    def test_ticket_prep_patch_has_no_isolation_and_approval_only(self):
+        issue = self.pc.add_issue("DEV2-1 결제 화면 개선", status="backlog", assigneeUserId="local-board")
+        self.yt.add("DEV2-1", "결제 화면 개선")
+        code, out, _ = self.run_tool("--project", "티켓 분석", "DEV2-1", "--dry-run")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.pc.writes(), [])
+        self.assertNotIn("isolated_workspace", out)
+
+        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1")
+        self.assertEqual((code, report["results"][0]["result"]), (0, "updated"))
+        [(_, path, patch)] = self.pc.writes("PATCH")
+        self.assertEqual(path, f"/api/issues/{issue['id']}")
+        self.assertEqual(patch, {"projectId": PID_PREP, "executionPolicy": PREP_POLICY})
+
+        _, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1")
+        self.assertEqual(report["results"][0]["result"], "unchanged")
+        self.assertEqual(len(self.pc.writes("PATCH")), 1)
+
+    def test_moving_isolated_issue_to_ticket_prep_clears_isolation(self):
+        self.pc.add_issue("DEV2-1 x", projectId=PID, executionWorkspaceSettings={"mode": "isolated_workspace"},
+                          executionPolicy=FakePaperclip.normalized(SHOP_POLICY))
+        self.yt.add("DEV2-1", "x")
+        self.run_tool("--project", "티켓 분석", "DEV2-1")
+        [(_, _, patch)] = self.pc.writes("PATCH")
+        self.assertEqual(patch, {"projectId": PID_PREP, "executionWorkspaceSettings": None,
+                                 "executionPolicy": PREP_POLICY})
+
+        _, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1")
+        self.assertEqual(report["results"][0]["result"], "unchanged")
+
+    def test_policy_change_still_refused_while_review_is_live(self):
+        self.pc.add_issue("DEV2-1 x", projectId=PID, executionState={"status": "changes_requested"})
+        self.yt.add("DEV2-1", "x")
+        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1")
+        self.assertEqual(code, 1)
+        self.assertIn("검토 단계 진행 중 (changes_requested)", report["results"][0]["reason"])
+        self.assertEqual(self.pc.writes("PATCH"), [])
+
+    def test_project_missing_from_config_is_error_and_writes_nothing(self):
+        config = self.write_config(projects={"쇼핑 데이터 추출": SHOP},
+                                   rules=[{"project": "기타 요청", "when": {"summaryAny": ["추출"]}}])
+        self.pc.add_issue("DEV2-1 a")
+        self.yt.add("DEV2-1", "a")
+        self.yt.add("DEV2-2", "추출")
+        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1", config=config)
+        self.assertEqual(code, 1)
+        self.assertIn("설정 projects에 프로젝트 '티켓 분석' 없음", report["results"][0]["reason"])
+
+        code, report, _ = self.run_json("DEV2-2", config=config)  # 규칙의 project도 맵을 본다
+        self.assertEqual(code, 1)
+        self.assertIn("설정 projects에 프로젝트 '기타 요청' 없음", report["results"][0]["reason"])
+        self.assertEqual(self.pc.writes(), [])
+
+    def test_project_in_config_but_not_in_paperclip(self):
+        self.pc.projects = [p for p in self.pc.projects if p["name"] != "티켓 분석"]
+        self.pc.add_issue("DEV2-1 a")
+        self.yt.add("DEV2-1", "a")
+        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1", "--dry-run")
+        self.assertEqual(code, 1)
+        self.assertIn("Paperclip 프로젝트 '티켓 분석' 없음 — Paperclip에 만들거나", report["results"][0]["reason"])
+
+    def test_invalid_policy_config_exits_2(self):
+        self.yt.add("DEV2-1", "추출")
+        for projects in ({}, {"티켓 분석": {"stages": ["approval:local-board"]}},
+                         {"티켓 분석": {"isolatedWorkspace": "no", "stages": ["approval:local-board"]}},
+                         {"티켓 분석": {**PREP, "stages": []}},
+                         {"티켓 분석": {**PREP, "stages": ["reviewer:SQL Reviewer"]}},
+                         {"티켓 분석": {**PREP, "stages": ["approval:"]}},
+                         ["티켓 분석"]):
+            code, out, err = self.run_tool("DEV2-1", config=self.write_config(projects=projects))
+            self.assertEqual((code, out), (2, ""), projects)
+            self.assertIn("projects", err)
+        self.assertEqual(self.pc.requests, [])
+
+
+class AssigneeTests(Base):
+    def test_other_or_missing_assignee_is_refused_and_nothing_is_written(self):
+        self.pc.add_issue("DEV2-3 기존")  # skipped 경로의 work product 부착도 하지 않는다
+        self.yt.add("DEV2-1", "추출", assignee="someone")
+        self.yt.add("DEV2-2", "추출", assignee=None)
+        self.yt.add("DEV2-3", "추출", assignee="someone")
+        code, report, _ = self.run_json("DEV2-1", "DEV2-2", "DEV2-3")
+
+        self.assertEqual(code, 1)
+        self.assertEqual([r["result"] for r in report["results"]], ["error"] * 3)
+        self.assertTrue(report["results"][0]["reason"].startswith("담당자 불일치: someone"))
+        self.assertTrue(report["results"][1]["reason"].startswith("담당자 불일치: (없음)"))
+        self.assertIn(f"토큰 사용자 {ME}", report["results"][0]["reason"])
+        self.assertEqual(self.pc.writes(), [])
+
+    def test_mine_proceeds_others_refused_in_project_and_query_paths(self):
+        self.pc.add_issue("DEV2-1 a")
+        self.pc.add_issue("DEV2-2 b")
+        self.yt.add("DEV2-1", "a")
+        self.yt.add("DEV2-2", "b", assignee="someone")
+        code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1", "DEV2-2")
+        self.assertEqual(code, 1)
+        self.assertEqual([r["result"] for r in report["results"]], ["updated", "error"])
+        self.assertIn("담당자 불일치: someone", report["results"][1]["reason"])
+        self.assertEqual(len(self.pc.writes("PATCH")), 1)
+
+        self.yt.add("DEV2-5", "추출", assignee="someone")
+        self.yt.add("DEV2-6", "추출")
+        self.yt.queries["tag: paperclip"] = ["DEV2-5", "DEV2-6"]
+        _, report, _ = self.run_json("--query", "tag: paperclip")
+        self.assertEqual([r["result"] for r in report["results"]], ["error", "created"])
+        self.assertEqual([b["title"] for b in self.issue_posts()], ["DEV2-6 추출"])
+
+    def test_token_user_lookup_failure_refuses_all(self):
+        self.yt.me = None
+        self.yt.add("DEV2-1", "추출")
+        code, out, err = self.run_tool("DEV2-1", "--json")
+        report = json.loads(out)
+        self.assertEqual(code, 1)
+        self.assertIn("YouTrack 토큰 사용자 조회 실패 — HTTP 401", report["results"][0]["reason"])
+        self.assertNotIn(TOKEN, out + err)
+        self.assertEqual(self.pc.requests, [])
 
 
 if __name__ == "__main__":

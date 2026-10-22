@@ -1,33 +1,39 @@
 #!/usr/bin/env python3
 """YouTrack DEV2 티켓 → 로컬 Paperclip 이슈 등록·분류 — `/ad:paperclip-dispatch` 스킬의 결정적 층.
 
-Paperclip 파일럿(templates/paperclip/README.md)은 쇼핑 데이터 추출 요청의 SQL 작성을 에이전트에 맡긴다.
+Paperclip 파일럿(templates/paperclip/README.md)은 쇼핑 데이터 추출 요청의 SQL 작성과 티켓 분석(work-prep)을 에이전트에 맡긴다.
 업무 원천은 YouTrack이고 방향은 YouTrack → Paperclip 하나다. 이 도구는 YouTrack을 읽기만 하고 Paperclip에만 쓴다.
 판정·등록은 여기 두고 스킬은 실행·보고만 한다 — cron·routine이 `--inbox`·`--query`로 같은 도구를 부르게 하기 위해서다.
 
+담당자 검사(항상): YouTrack 담당자(Assignee login)가 토큰 사용자(/api/users/me login)가 아니거나 비어 있으면
+  그 티켓은 error(담당자 불일치)로 거부하고 Paperclip에 아무것도 쓰지 않는다 — 파일럿은 내 티켓만 처리한다.
 등록(기본):
   - 제목 `DEV2-#### {summary}`, 본문은 YouTrack 링크·summary·등록 경위 한 줄. 요청 원문(description)은 옮기지 않는다
     — 개인정보가 있을 수 있고, 작성 에이전트가 YouTrack REST로 직접 읽는다
   - 상태 backlog, 담당 Board 사용자(설정 approverUserId) — 사람 Inbox "Mine"에 모이고 에이전트는 깨어나지 않는다.
     에이전트 할당(실행 시작)은 사람이 화면에서 한다
-  - 프로젝트 배분: 설정 rules를 순서대로 보고 첫 일치 규칙만 쓴다. 일치하면 projectId + 이슈별 격리 workspace
-    + executionPolicy(리뷰 에이전트 → Board 승인), 불일치하면 프로젝트·정책 없이 만든다
+  - 프로젝트 배분: 설정 rules를 순서대로 보고 첫 일치 규칙만 쓴다. 일치하면 projectId + 설정 projects의 그 프로젝트 정책
+    (isolatedWorkspace면 이슈별 격리 workspace, stages 순서의 executionPolicy), 불일치하면 프로젝트·정책 없이 만든다
     규칙 일치 = summary에 summaryAny 중 하나가 들어 있음(대소문자 무시) 또는 태그가 tagsAny 중 하나
   - 라벨 `요청자:{fullName}`·`태그:{tag}`(48자 절단, 회사에 없으면 만든다). 요청자 login은 넣지 않는다
   - work product(artifact, provider youtrack)로 원본 티켓 링크 — 이슈 옆 Artifacts 탭에서 원본으로 간다
-분류(`--project 이름`): 기존 이슈면 projectId·격리 workspace·executionPolicy 중 다른 것만 PATCH한다(같으면 unchanged).
-  화면에서 프로젝트만 바꾸면 정책과 격리가 붙지 않아서다. 진행 중 실행·검토 단계가 있으면 건드리지 않고 error —
-  정책을 바꾸면 서버가 검토 주기를 초기화한다(server issue-execution-policy.ts). 기존 이슈가 없으면 그 프로젝트로 만든다.
+프로젝트 정책(설정 projects, 이름 → {isolatedWorkspace, stages}): stages는 `review:{에이전트 이름}`·`approval:{Board userId}`
+  문자열 목록이고 적은 순서가 단계 순서다. 규칙의 project와 `--project`는 이 맵에 있어야 한다 — 없으면 그 티켓은 error.
+분류(`--project 이름`): 기존 이슈면 projectId·격리 workspace·executionPolicy 중 정책과 다른 것만 PATCH한다(같으면 unchanged).
+  격리 없는 프로젝트로 옮기면 격리 설정을 지운다(null). 화면에서 프로젝트만 바꾸면 정책과 격리가 붙지 않아서다.
+  진행 중 실행·검토 단계가 있으면 건드리지 않고 error — 정책을 바꾸면 서버가 검토 주기를 초기화한다
+  (server issue-execution-policy.ts). 기존 이슈가 없으면 그 프로젝트로 만든다.
 멱등: 회사 안에 제목이 `DEV2-#### `로 시작하고 cancelled가 아닌 이슈가 있으면 skipped.
   skipped여도 그 이슈에 같은 provider·externalId work product가 없으면 붙인다. 라벨은 이름이 같으면 재사용한다.
-대상 이름(회사·프로젝트·리뷰어)·Board userId·라벨 접두사와 색·Inbox 검색식은 templates/paperclip/pilot.json에서 읽고,
-  ID는 이름으로 조회한다 — 환경을 다시 만들면 ID가 바뀐다.
+대상 이름(회사·프로젝트·단계 에이전트)·Board userId·프로젝트 정책·라벨 접두사와 색·Inbox 검색식은
+  templates/paperclip/pilot.json에서 읽고, ID는 이름으로 조회한다 — 환경을 다시 만들면 ID가 바뀐다.
 
 사용법:
     python3 tools/paperclip_import_ticket.py DEV2-8499 [DEV2-8500 ...]
     python3 tools/paperclip_import_ticket.py --inbox                      # 설정 inboxQuery (자동화용)
     python3 tools/paperclip_import_ticket.py --query "project: DEV2 tag: paperclip #Unresolved"
     python3 tools/paperclip_import_ticket.py --project "쇼핑 데이터 추출" DEV2-8499
+    python3 tools/paperclip_import_ticket.py --project "티켓 분석" DEV2-12779
     python3 tools/paperclip_import_ticket.py --inbox --dry-run --json
 
 결과: 티켓마다 created | skipped(기존 ALA-n) | updated | unchanged | dry_run(쓰지 않음) | error(사유).
@@ -54,13 +60,15 @@ from typing import Any, Dict, List, Optional, Tuple
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = REPO / "templates" / "paperclip" / "pilot.json"
 DEFAULT_YT_BASE = "https://aladincommunication.youtrack.cloud"
-DEFAULT_INBOX_QUERY = "for: me #Unresolved project: DEV2"
+# YouTrack `for: me`는 Assignee 기준이 아니다(2026-10-22 실측: 남의 담당 티켓 6건이 걸림) — Assignee로 명시
+DEFAULT_INBOX_QUERY = "Assignee: me #Unresolved project: DEV2 Type: Task, Bug created: {minus 14d} .. Today"
 TOKEN_CRED_NAME = "youtrack-token"
 KST = dt.timezone(dt.timedelta(hours=9))
 
 TICKET_RE = re.compile(r"^DEV2-\d+$")
 COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
-YT_FIELDS = "idReadable,summary,reporter(login,fullName),tags(name)"
+YT_FIELDS = "idReadable,summary,reporter(login,fullName),tags(name),customFields(name,value(login))"
+ASSIGNEE_FIELD = "Assignee"
 LABEL_MAX = 48  # Paperclip createIssueLabelSchema name max(48) — JS 문자열 길이(UTF-16 code unit) 기준
 CANCELLED = "cancelled"
 STATUS_NEW = "backlog"
@@ -73,8 +81,9 @@ DEFAULT_MAX = 20
 RETRIES = 2
 DETAIL_LIMIT = 200
 SERVICE_HINT = "launchctl print gui/$(id -u)/com.team2.paperclip"
-CONFIG_KEYS = ("baseUrl", "company", "reviewerAgent", "approverUserId", "labels")
+CONFIG_KEYS = ("baseUrl", "company", "approverUserId", "projects", "labels")
 LABEL_KINDS = ("reporter", "tag")
+STAGE_TYPES = ("review", "approval")  # review → 에이전트 이름, approval → Board userId
 
 # 루프백은 시스템 프록시를 타지 않게 한다 — 로컬 Paperclip 호출이 프록시로 새면 연결 실패로 보인다
 _DIRECT = urllib.request.build_opener(urllib.request.ProxyHandler({}))
@@ -148,6 +157,13 @@ class YouTrack:
     def issue(self, ticket_id: str) -> Dict[str, Any]:
         return self.get(f"/api/issues/{urllib.parse.quote(ticket_id)}", {"fields": YT_FIELDS})
 
+    def me(self) -> str:
+        """토큰 사용자 login. 비어 있으면 HttpError — 담당자 검사를 열어 둔 채 진행하지 않는다."""
+        login = ((self.get("/api/users/me", {"fields": "login"}) or {}).get("login") or "").strip()
+        if not login:
+            raise HttpError("응답에 login 없음")
+        return login
+
     def search(self, query: str, cap: int) -> List[Dict[str, Any]]:
         """검색 결과를 cap+1건까지만 모은다 — 상한 초과 판정에는 그것으로 충분하다."""
         out: List[Dict[str, Any]] = []
@@ -215,6 +231,9 @@ def load_config(path: Path) -> Dict[str, Any]:
         spec = cfg["labels"].get(kind) if isinstance(cfg["labels"], dict) else None
         if not isinstance(spec, dict) or not spec.get("prefix") or not COLOR_RE.match(str(spec.get("color") or "")):
             raise ConfigError(f"설정 {path}의 labels.{kind}에는 prefix와 #RRGGBB color가 있어야 한다")
+    if not isinstance(cfg["projects"], dict):
+        raise ConfigError(f"설정 {path}의 projects는 {{프로젝트 이름: {{isolatedWorkspace, stages}}}} 맵이어야 한다")
+    cfg["policies"] = {name: parse_policy(path, name, spec) for name, spec in cfg["projects"].items()}
     rules = cfg.setdefault("rules", [])
     if not isinstance(rules, list) or not all(
             isinstance(r, dict) and isinstance(r.get("project"), str) and r["project"]
@@ -224,10 +243,28 @@ def load_config(path: Path) -> Dict[str, Any]:
     return cfg
 
 
+def parse_policy(path: Path, name: str, spec: Any) -> Dict[str, Any]:
+    """`review:SQL Reviewer` → ("review", "SQL Reviewer"). 단계가 없으면 사람 승인 없이 done이 되므로 받지 않는다."""
+    where = f"설정 {path}의 projects.{name}"
+    if not isinstance(spec, dict) or not isinstance(spec.get("isolatedWorkspace"), bool):
+        raise ConfigError(f"{where}에는 isolatedWorkspace(true/false)가 있어야 한다")
+    stages = spec.get("stages")
+    if not isinstance(stages, list) or not stages:
+        raise ConfigError(f"{where}.stages는 비지 않은 목록이어야 한다 — 단계가 없으면 사람 승인 없이 done이 된다")
+    parsed: List[Tuple[str, str]] = []
+    for stage in stages:
+        kind, _, target = str(stage).partition(":")
+        if not isinstance(stage, str) or kind.strip() not in STAGE_TYPES or not target.strip():
+            raise ConfigError(f"{where}.stages의 '{stage}' — `review:{{에이전트 이름}}` 또는 "
+                              "`approval:{Board userId}` 형식이어야 한다")
+        parsed.append((kind.strip(), target.strip()))
+    return {"isolatedWorkspace": spec["isolatedWorkspace"], "stages": parsed}
+
+
 def _one(items: Any, name: str, kind: str) -> Dict[str, Any]:
     matches = [it for it in items or [] if isinstance(it, dict) and it.get("name") == name]
     if not matches:
-        raise ResolveError(f"Paperclip {kind} '{name}' 없음 — templates/paperclip/pilot.json 확인")
+        raise ResolveError(f"Paperclip {kind} '{name}' 없음 — Paperclip에 만들거나 templates/paperclip/pilot.json의 이름을 고친다")
     if len(matches) > 1:
         raise ResolveError(f"Paperclip {kind} '{name}'이 {len(matches)}개 — 이름을 하나로 정리")
     return matches[0]
@@ -247,7 +284,7 @@ def list_company_issues(pc: Paperclip, company_id: str) -> List[Dict[str, Any]]:
 
 def resolve_context(pc: Paperclip, cfg: Dict[str, Any]) -> Dict[str, Any]:
     """회사, 이름→프로젝트·에이전트, 회사 라벨, 회사 이슈 목록. 연결 실패·회사 해소 실패는 ResolveError.
-    프로젝트·리뷰어는 그것이 필요한 티켓에서만 해소한다 — 규칙 불일치 티켓은 정책이 없다."""
+    프로젝트·단계 에이전트는 그것이 필요한 티켓에서만 해소한다 — 규칙 불일치 티켓은 정책이 없다."""
     try:
         company = _one(pc.get("/api/companies"), cfg["company"], "회사")
         cid = company["id"]
@@ -268,12 +305,22 @@ def resolve_context(pc: Paperclip, cfg: Dict[str, Any]) -> Dict[str, Any]:
 
 def normalize_ticket(raw: Dict[str, Any]) -> Dict[str, Any]:
     reporter = raw.get("reporter") if isinstance(raw.get("reporter"), dict) else None
+    fields = {cf.get("name"): cf.get("value") for cf in raw.get("customFields") or [] if isinstance(cf, dict)}
+    assignee = fields.get(ASSIGNEE_FIELD)
     return {
         "id": raw.get("idReadable") or "",
         "summary": " ".join((raw.get("summary") or "").split()),
         "reporter": {"fullName": reporter.get("fullName"), "login": reporter.get("login")} if reporter else None,
         "tags": [t["name"] for t in raw.get("tags") or [] if isinstance(t, dict) and t.get("name")],
+        "assignee": ((assignee.get("login") or "").strip() or None) if isinstance(assignee, dict) else None,
     }
+
+
+def assignee_reason(ticket: Dict[str, Any], me: str) -> Optional[str]:
+    """내 티켓이 아니면 거부 사유. 담당자가 비어 있어도 거부한다 — 파일럿은 내 티켓만 처리한다."""
+    if ticket.get("assignee") == me:
+        return None
+    return f"담당자 불일치: {ticket.get('assignee') or '(없음)'} — 토큰 사용자 {me}의 티켓만 처리한다"
 
 
 def find_existing(issues: List[Dict[str, Any]], ticket_id: str) -> List[Dict[str, Any]]:
@@ -341,10 +388,10 @@ def description(ticket: Dict[str, Any], yt_base: str, origin: str, today: dt.dat
     ])
 
 
-def execution_policy(reviewer_id: str, approver_user_id: str) -> Dict[str, Any]:
+def execution_policy(participants: List[Tuple[str, Dict[str, str]]]) -> Dict[str, Any]:
+    """(단계 종류, 참여자) 순서대로 단계 하나씩. 참여자는 {"type":"agent","agentId"} 또는 {"type":"user","userId"}."""
     return {"mode": "normal", "commentRequired": True, "stages": [
-        {"type": "review", "approvalsNeeded": 1, "participants": [{"type": "agent", "agentId": reviewer_id}]},
-        {"type": "approval", "approvalsNeeded": 1, "participants": [{"type": "user", "userId": approver_user_id}]},
+        {"type": kind, "approvalsNeeded": 1, "participants": [person]} for kind, person in participants
     ]}
 
 
@@ -361,11 +408,21 @@ def policy_signature(policy: Any) -> Any:
 
 
 def placement(ctx: Dict[str, Any], cfg: Dict[str, Any], project_name: str) -> Dict[str, Any]:
-    """프로젝트에 붙일 필드 3종. 이름 해소 실패는 ResolveError."""
+    """프로젝트에 붙일 필드 — projectId, (격리 정책이면) executionWorkspaceSettings, executionPolicy.
+    설정 projects에 없는 이름·Paperclip 이름 해소 실패는 ResolveError."""
+    policy = cfg["policies"].get(project_name)
+    if policy is None:
+        raise ResolveError(f"설정 projects에 프로젝트 '{project_name}' 없음 — "
+                           "templates/paperclip/pilot.json projects에 정책을 둔다")
     project = _one(ctx["projects"], project_name, "프로젝트")
-    reviewer = _one(ctx["agents"], cfg["reviewerAgent"], "에이전트")
-    return {"projectId": project["id"], "executionWorkspaceSettings": dict(WORKSPACE),
-            "executionPolicy": execution_policy(reviewer["id"], cfg["approverUserId"])}
+    participants = [(kind, {"type": "agent", "agentId": _one(ctx["agents"], target, "에이전트")["id"]}
+                     if kind == "review" else {"type": "user", "userId": target})
+                    for kind, target in policy["stages"]]
+    place: Dict[str, Any] = {"projectId": project["id"]}
+    if policy["isolatedWorkspace"]:
+        place["executionWorkspaceSettings"] = dict(WORKSPACE)
+    place["executionPolicy"] = execution_policy(participants)
+    return place
 
 
 def issue_body(ticket: Dict[str, Any], cfg: Dict[str, Any], label_ids: List[str], place: Optional[Dict[str, Any]],
@@ -404,8 +461,12 @@ def placement_patch(current: Dict[str, Any], place: Dict[str, Any]) -> Dict[str,
     if current.get("projectId") != place["projectId"]:
         patch["projectId"] = place["projectId"]
     settings = current.get("executionWorkspaceSettings")
-    if not isinstance(settings, dict) or settings.get("mode") != WORKSPACE["mode"]:
-        patch["executionWorkspaceSettings"] = place["executionWorkspaceSettings"]
+    isolated = isinstance(settings, dict) and settings.get("mode") == WORKSPACE["mode"]
+    if "executionWorkspaceSettings" in place:
+        if not isolated:
+            patch["executionWorkspaceSettings"] = place["executionWorkspaceSettings"]
+    elif isolated:  # 격리 없는 프로젝트로 옮기면 격리를 푼다 — 실행 위치를 그 프로젝트 정책(에이전트 cwd)에 맞춘다
+        patch["executionWorkspaceSettings"] = None
     if policy_signature(current.get("executionPolicy")) != policy_signature(place["executionPolicy"]):
         patch["executionPolicy"] = place["executionPolicy"]
     return patch
@@ -607,7 +668,23 @@ def run(args: argparse.Namespace, cfg: Dict[str, Any], today: Optional[dt.date] 
     else:
         origin = "티켓 지정"
 
-    pending = [tid for tid, rec in tickets.items() if not isinstance(rec, str)]
+    # YouTrack을 먼저 다 읽고 담당자 검사로 거른 뒤에 Paperclip을 본다 — 거부된 티켓은 Paperclip에 닿지 않는다
+    for tid in [tid for tid, rec in tickets.items() if rec is None]:
+        try:
+            tickets[tid] = normalize_ticket(yt.issue(tid))
+        except HttpError as exc:
+            tickets[tid] = _yt_reason(exc)
+    if any(isinstance(rec, dict) for rec in tickets.values()):
+        try:
+            me = yt.me()
+        except HttpError as exc:
+            me, reason = None, f"YouTrack 토큰 사용자 조회 실패 — {exc}. 담당자 검사를 못 해 쓰지 않았다"
+            tickets.update({tid: reason for tid, rec in tickets.items() if isinstance(rec, dict)})
+        for tid, rec in tickets.items():
+            if me and isinstance(rec, dict):
+                tickets[tid] = assignee_reason(rec, me) or rec
+
+    pending = [tid for tid, rec in tickets.items() if isinstance(rec, dict)]
     pc = Paperclip(cfg["baseUrl"])
     dispatcher: Optional[Dispatcher] = None
     if pending:
@@ -620,12 +697,6 @@ def run(args: argparse.Namespace, cfg: Dict[str, Any], today: Optional[dt.date] 
         if isinstance(rec, str) or dispatcher is None:
             report["results"].append(_error(tid, rec if isinstance(rec, str) else "처리 안 됨"))
             continue
-        if rec is None:
-            try:
-                rec = normalize_ticket(yt.issue(tid))
-            except HttpError as exc:
-                report["results"].append(_error(tid, _yt_reason(exc)))
-                continue
         report["results"].append(dispatcher.run(rec, args.project))
     return report
 
@@ -689,7 +760,8 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     source = parser.add_mutually_exclusive_group()
     source.add_argument("--inbox", action="store_true", help="설정 inboxQuery 결과를 등록 (자동화용)")
     source.add_argument("--query", help="YouTrack 검색식 결과를 등록")
-    parser.add_argument("--project", help="분류: 기존 이슈에 이 프로젝트·격리·정책을 붙이고, 없으면 이 프로젝트로 만든다")
+    parser.add_argument("--project", help="분류: 기존 이슈에 이 프로젝트와 설정 projects의 정책(격리·단계)을 붙이고,"
+                                          " 없으면 이 프로젝트로 만든다")
     parser.add_argument("--max", type=int, default=DEFAULT_MAX,
                         help=f"--inbox·--query 결과 상한, 넘으면 아무것도 쓰지 않는다 (기본 {DEFAULT_MAX})")
     parser.add_argument("--dry-run", action="store_true", help="보낼 요청만 출력하고 쓰지 않음")
