@@ -8,6 +8,16 @@ Paperclip 파일럿(templates/paperclip/README.md)은 쇼핑 데이터 추출 �
 흐름(2026-10-22 사용자 결정): 내 티켓 → Inbox(프로젝트 없음) → 사람이 분석 프로젝트(설정 analysisProject)로 분류
   → 분석 에이전트 → 사람 승인(done) → 그 뒤의 일(데이터 추출·개발)은 분석 이슈의 하위 이슈(`--from`).
   프로젝트만 바꾸면 그 단계의 승인 기록이 초기화되고 일감을 하나로만 이어 가서, 단계마다 이슈를 따로 둔다.
+자동 분석(설정 autoAnalyze {agent, wakeMax}, 없거나 enabled:false면 꺼짐): 등록(ID·--inbox·--query)으로 새로 만드는
+  이슈는 analysisProject 정책 + 그 에이전트 담당 + todo로 만든다 — 서버가 생성 직후 할당 깨움을 보낸다
+  (server issue-assignment-wakeup.ts). 요청자(reporter login)가 토큰 사용자이거나 비어 있으면 자동 분석하지 않고
+  Board backlog로 만든다 — query가 바뀌어도 내가 만든 티켓은 자동 실행되지 않게 한다. 기존 이슈(skipped)는 그대로 둔다.
+깨움 보정(--inbox, 자동 분석 켜짐): analysisProject에서 그 에이전트 담당 todo 이슈 중 진행·대기 실행
+  (GET /api/issues/{id}/runs의 queued·scheduled_retry·running)이 없는 것에 POST /api/agents/{id}/wakeup을 보낸다.
+  서버 할당 깨움이 빠진 일이 있었다(ALA-2 리뷰 단계). 한 번에 wakeMax건(기본 3) — 이번 실행에서 깨우는 수의 상한이고
+  동시 실행 상한이 아니다. 에이전트가 paused·terminated·pending_approval이면 깨우지 않는다(사람이 멈춘 상태 존중).
+  방금 만든 이슈와, 그 에이전트의 최근 실행이 failed·timed_out·cancelled·interrupted인 이슈도 건너뛴다 —
+  같은 실패를 주기마다 되풀이하지 않게 사람이 확인한다.
 담당자 검사(항상): YouTrack 담당자(Assignee login)가 토큰 사용자(/api/users/me login)가 아니거나 비어 있으면
   그 티켓은 error(담당자 불일치)로 거부하고 Paperclip에 아무것도 쓰지 않는다 — 파일럿은 내 티켓만 처리한다.
 등록(기본):
@@ -76,8 +86,10 @@ from typing import Any, Dict, List, Optional, Tuple
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = REPO / "templates" / "paperclip" / "pilot.json"
 DEFAULT_YT_BASE = "https://aladincommunication.youtrack.cloud"
-# YouTrack `for: me`는 Assignee 기준이 아니다(2026-10-22 실측: 남의 담당 티켓 6건이 걸림) — Assignee로 명시
-DEFAULT_INBOX_QUERY = "Assignee: me #Unresolved project: DEV2 Type: Task, Bug created: {minus 14d} .. Today"
+# YouTrack `for: me`는 Assignee 기준이 아니다(2026-10-22 실측: 남의 담당 티켓 6건이 걸림) — Assignee로 명시.
+# Reporter: -me — 자동 등록·분석은 "내가 만들지 않은, 나에게 할당된" 티켓만 (2026-10-22 사용자 결정)
+DEFAULT_INBOX_QUERY = ("Assignee: me Reporter: -me #Unresolved project: DEV2 Type: Task, Bug"
+                       " created: {minus 14d} .. Today")
 TOKEN_CRED_NAME = "youtrack-token"
 KST = dt.timezone(dt.timedelta(hours=9))
 
@@ -91,6 +103,12 @@ LABEL_MAX = 48  # Paperclip createIssueLabelSchema name max(48) — JS 문자열
 CANCELLED = "cancelled"
 DONE = "done"
 STATUS_NEW = "backlog"
+STATUS_AUTO = "todo"  # 에이전트 할당 + todo면 서버가 생성 직후 할당 깨움을 보낸다(server issue-assignment-wakeup.ts)
+LIVE_RUN = ("queued", "scheduled_retry", "running")  # HEARTBEAT_RUN_STATUSES 중 진행·대기
+STOPPED_RUN = ("failed", "timed_out", "cancelled", "interrupted")
+NO_WAKE_AGENT = ("paused", "terminated", "pending_approval")  # 사람이 멈췄거나 아직 쓸 수 없는 에이전트
+DEFAULT_WAKE_MAX = 3
+WAKE_REASON = "paperclip-inbox self-heal"
 WORKSPACE = {"mode": "isolated_workspace"}
 LIVE_REVIEW = ("pending", "changes_requested")  # executionState.status — 정책을 바꾸면 이 주기가 초기화된다
 WP_PROVIDER = "youtrack"
@@ -266,7 +284,19 @@ def load_config(path: Path) -> Dict[str, Any]:
         raise ConfigError(f"설정 {path}의 rules가 analysisProject 밖의 프로젝트를 가리킨다({', '.join(stray)})"
                           " — 분석 먼저, 다른 프로젝트는 --from 하위 이슈로만 들어간다")
     cfg.setdefault("inboxQuery", DEFAULT_INBOX_QUERY)
+    cfg["auto"] = parse_auto(path, cfg.get("autoAnalyze"))
     return cfg
+
+
+def parse_auto(path: Path, spec: Any) -> Optional[Dict[str, Any]]:
+    """autoAnalyze: {agent, wakeMax?, enabled?} — 없거나 enabled:false면 None(꺼짐)."""
+    if spec is None or (isinstance(spec, dict) and spec.get("enabled", True) is False):
+        return None
+    wake_max = spec.get("wakeMax", DEFAULT_WAKE_MAX) if isinstance(spec, dict) else None
+    if (not isinstance(spec, dict) or not isinstance(spec.get("agent"), str) or not spec["agent"].strip()
+            or not isinstance(wake_max, int) or isinstance(wake_max, bool) or wake_max < 0):
+        raise ConfigError(f"설정 {path}의 autoAnalyze는 {{agent: 에이전트 이름, wakeMax: 0 이상 정수, enabled}}여야 한다")
+    return {"agent": spec["agent"].strip(), "wakeMax": wake_max}
 
 
 def parse_policy(path: Path, name: str, spec: Any) -> Dict[str, Any]:
@@ -495,14 +525,16 @@ def placement(ctx: Dict[str, Any], cfg: Dict[str, Any], project_name: str) -> Di
 
 
 def issue_body(ticket: Dict[str, Any], cfg: Dict[str, Any], label_ids: List[str], place: Optional[Dict[str, Any]],
-               yt_base: str, origin: str, today: dt.date, title: Optional[str] = None) -> Dict[str, Any]:
-    """backlog + Board 담당 — Inbox에 모이고 에이전트는 깨어나지 않는다. 에이전트 할당은 사람이 한다."""
+               yt_base: str, origin: str, today: dt.date, title: Optional[str] = None,
+               agent_id: Optional[str] = None) -> Dict[str, Any]:
+    """기본은 backlog + Board 담당 — Inbox에 모이고 에이전트는 깨어나지 않는다. 에이전트 할당은 사람이 한다.
+    agent_id(자동 분석)면 todo + 그 에이전트 담당 — 서버가 생성 직후 할당 깨움을 보낸다."""
     body = {
         "title": title or f"{ticket['id']} {ticket['summary']}".strip(),
         "description": description(ticket, yt_base, origin, today),
-        "status": STATUS_NEW,
+        "status": STATUS_AUTO if agent_id else STATUS_NEW,
         "priority": "medium",
-        "assigneeUserId": cfg["approverUserId"],
+        **({"assigneeAgentId": agent_id} if agent_id else {"assigneeUserId": cfg["approverUserId"]}),
         "labelIds": label_ids,
     }
     body.update(place or {})
@@ -594,11 +626,30 @@ def attach_work_product(pc: Paperclip, issue_id: str, body: Dict[str, Any], dry_
     return {"action": "attached", "body": body}
 
 
+def wake_body(issue_id: str) -> Dict[str, Any]:
+    return {"source": "assignment", "triggerDetail": "system", "reason": WAKE_REASON,
+            "payload": {"issueId": issue_id, "taskId": issue_id}}
+
+
 class Dispatcher:
     def __init__(self, pc: Paperclip, ctx: Dict[str, Any], cfg: Dict[str, Any], yt_base: str,
-                 origin: str, today: dt.date, dry_run: bool) -> None:
+                 origin: str, today: dt.date, dry_run: bool, me: Optional[str] = None) -> None:
         self.pc, self.ctx, self.cfg = pc, ctx, cfg
         self.yt_base, self.origin, self.today, self.dry_run = yt_base, origin, today, dry_run
+        self.me = me
+        self.created_ids: set = set()  # 이번 실행에서 만든 이슈 — 서버가 할당 깨움을 이미 보냈다
+
+    def auto_decision(self, ticket: Dict[str, Any]) -> Dict[str, Any]:
+        """자동 분석 여부. 요청자가 토큰 사용자면(또는 알 수 없으면) 하지 않는다 — query가 바뀌어도
+        내가 만든 티켓은 자동 실행되지 않게 한다."""
+        agent = self.cfg["auto"]["agent"]
+        reporter = (((ticket.get("reporter") or {}).get("login")) or "").strip()
+        if not reporter:
+            return {"on": False, "agent": agent, "reason": "요청자 login 없음 — 내가 만든 티켓인지 몰라 Board backlog로"}
+        if reporter == self.me:
+            return {"on": False, "agent": agent,
+                    "reason": f"요청자가 토큰 사용자({reporter}) — 내가 만든 티켓은 자동 분석하지 않고 Board backlog로"}
+        return {"on": True, "agent": agent}
 
     def url(self, identifier: str) -> str:
         return issue_url(self.cfg, self.ctx, identifier)
@@ -617,15 +668,24 @@ class Dispatcher:
                           existing=[i.get("identifier") for i in existing])
             result["workProduct"] = self.work_product(issue["id"], tid, check_existing=True)
             return result
+        auto = self.auto_decision(ticket) if self.cfg["auto"] and not project and not existing else None
+        if auto and auto["on"]:
+            rule = {"matched": True, "project": self.cfg["analysisProject"], "hit": "autoAnalyze"}
         result["rule"] = rule
+        if auto:
+            result["autoAnalyze"] = auto
+        agent_id = None
         try:
             place = placement(self.ctx, self.cfg, rule["project"]) if rule["matched"] else None
+            if auto and auto["on"]:
+                agent = _one(self.ctx["agents"], auto["agent"], "에이전트")
+                agent_id, auto["agentStatus"] = agent["id"], agent.get("status")
         except ResolveError as exc:
             result["reason"] = str(exc)
             return result
         if existing:
             return self.classify(result, existing[0], place, rule["project"])
-        return self.create(result, ticket, place)
+        return self.create(result, ticket, place, agent_id)
 
     def work_product(self, issue_id: str, tid: str, check_existing: bool) -> Dict[str, Any]:
         return attach_work_product(self.pc, issue_id, work_product_body(tid, self.yt_base), self.dry_run,
@@ -663,15 +723,74 @@ class Dispatcher:
         result["workProduct"] = self.work_product(issue["id"], result["ticket"], check_existing=True)
         return result
 
-    def create(self, result: Dict[str, Any], ticket: Dict[str, Any], place: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    def create(self, result: Dict[str, Any], ticket: Dict[str, Any], place: Optional[Dict[str, Any]],
+               agent_id: Optional[str] = None) -> Dict[str, Any]:
         try:
             label_ids, plan = ensure_labels(self.pc, self.ctx, label_specs(ticket, self.cfg), self.dry_run)
         except HttpError as exc:
             result["reason"] = f"Paperclip 라벨 생성 실패 — {exc}"
             return result
         result["labels"] = plan
-        body = issue_body(ticket, self.cfg, label_ids, place, self.yt_base, self.origin, self.today)
+        origin = f"{self.origin} · 자동 분석 {self.cfg['auto']['agent']}" if agent_id else self.origin
+        body = issue_body(ticket, self.cfg, label_ids, place, self.yt_base, origin, self.today, agent_id=agent_id)
         return self.post_issue(result, body, ticket["id"])
+
+    def wake_pending(self) -> Dict[str, Any]:
+        """깨움 보정 — 분석 프로젝트에서 자동 분석 에이전트 담당 todo인데 진행·대기 실행이 없는 이슈를 깨운다.
+        서버의 할당 깨움이 빠지는 일이 있었다(ALA-2 리뷰 단계). 한 번에 wakeMax건까지 — 동시 실행 상한이 아니라
+        이번 실행에서 깨우는 수의 상한이다. 방금 만든 이슈는 서버가 이미 깨웠으므로 건너뛴다."""
+        auto = self.cfg["auto"]
+        out: Dict[str, Any] = {"agent": auto["agent"], "max": auto["wakeMax"], "items": []}
+        try:
+            agent = _one(self.ctx["agents"], auto["agent"], "에이전트")
+            project = _one(self.ctx["projects"], self.cfg["analysisProject"], "프로젝트")
+        except ResolveError as exc:
+            out["error"] = str(exc)
+            return out
+        out["agentStatus"] = status = agent.get("status")
+        todo = sorted((i for i in self.ctx["issues"] if i.get("projectId") == project["id"]
+                       and i.get("assigneeAgentId") == agent["id"] and i.get("status") == STATUS_AUTO),
+                      key=lambda i: i.get("issueNumber") or 0)
+        woken = 0
+        for issue in todo:
+            item: Dict[str, Any] = {"issue": issue.get("identifier")}
+            out["items"].append(item)
+            if issue["id"] in self.created_ids:
+                item.update(action="just_created", reason="방금 만든 이슈 — 서버가 할당 깨움을 보냈다")
+                continue
+            if status in NO_WAKE_AGENT:
+                item.update(action="agent_stopped", reason=f"에이전트 {status} — 사람이 멈춘 상태라 깨우지 않는다")
+                continue
+            if woken >= auto["wakeMax"]:
+                item.update(action="deferred", reason=f"이번 실행 상한 {auto['wakeMax']}건 — 다음 실행에서")
+                continue
+            try:
+                runs = [r for r in self.pc.get(f"/api/issues/{issue['id']}/runs") or [] if isinstance(r, dict)]
+            except HttpError as exc:
+                item.update(action="error", reason=f"실행 조회 실패 — {exc}")
+                continue
+            live = [r for r in runs if r.get("status") in LIVE_RUN]
+            if live:
+                item.update(action="running", reason=f"실행 {live[0].get('status')} ({live[0].get('runId')})")
+                continue
+            last = max((r for r in runs if r.get("agentId") == agent["id"]),
+                       key=lambda r: str(r.get("createdAt") or ""), default=None)
+            if last and last.get("status") in STOPPED_RUN:
+                item.update(action="stopped_run", reason=f"최근 실행 {last['status']} — 같은 실패를 5분마다 되풀이하지"
+                                                          " 않게 사람이 확인한 뒤 깨운다")
+                continue
+            body = wake_body(issue["id"])
+            woken += 1
+            if self.dry_run:
+                item.update(action="would_wake", request={"path": f"/api/agents/{agent['id']}/wakeup", "body": body})
+                continue
+            try:
+                resp = self.pc.post(f"/api/agents/{agent['id']}/wakeup", body) or {}
+            except HttpError as exc:
+                item.update(action="error", reason=f"깨움 실패 — {exc}")
+                continue
+            item.update(action="server_skipped" if resp.get("status") == "skipped" else "woken")
+        return out
 
     def child(self, parent: Dict[str, Any], ticket: Dict[str, Any], given: bool, project: str) -> Dict[str, Any]:
         """분석 이슈(parent)의 하위 이슈. given=False면 ticket은 부모 DEV2 티켓(담당자 검사용)이고 제목·라벨은 부모에서 온다."""
@@ -726,6 +845,8 @@ class Dispatcher:
             result["reason"] = f"Paperclip 이슈 생성 실패 — {exc}"
             return result
         self.ctx["issues"].append({**body, **created})  # 같은 실행 안의 중복 입력 방어
+        if created.get("id"):
+            self.created_ids.add(created["id"])
         identifier = created.get("identifier") or ""
         result.update(result="created", reason=None, issue=identifier, url=self.url(identifier))
         result["workProduct"] = (self.work_product(created["id"], tid, check_existing=False)
@@ -802,6 +923,7 @@ def run(args: argparse.Namespace, cfg: Dict[str, Any], today: Optional[dt.date] 
             tickets[tid] = normalize_ticket(yt.issue(tid))
         except HttpError as exc:
             tickets[tid] = _yt_reason(exc)
+    me: Optional[str] = None
     if any(isinstance(rec, dict) for rec in tickets.values()):
         try:
             me = yt.me()
@@ -817,7 +939,7 @@ def run(args: argparse.Namespace, cfg: Dict[str, Any], today: Optional[dt.date] 
     dispatcher: Optional[Dispatcher] = None
     if pending:
         try:
-            dispatcher = Dispatcher(pc, resolve_context(pc, cfg), cfg, yt_base, origin, today, args.dry_run)
+            dispatcher = Dispatcher(pc, resolve_context(pc, cfg), cfg, yt_base, origin, today, args.dry_run, me)
         except ResolveError as exc:
             tickets.update({tid: str(exc) for tid in pending})
 
@@ -826,6 +948,17 @@ def run(args: argparse.Namespace, cfg: Dict[str, Any], today: Optional[dt.date] 
             report["results"].append(_error(tid, rec if isinstance(rec, str) else "처리 안 됨"))
             continue
         report["results"].append(dispatcher.run(rec, args.project))
+
+    # 깨움 보정은 --inbox(주기 실행)에서만 — 등록할 티켓이 없어도 돈다
+    if args.inbox and cfg["auto"]:
+        if dispatcher is None:
+            try:
+                dispatcher = Dispatcher(pc, resolve_context(pc, cfg), cfg, yt_base, origin, today, args.dry_run, me)
+            except ResolveError as exc:
+                report["wake"] = {"agent": cfg["auto"]["agent"], "max": cfg["auto"]["wakeMax"], "items": [],
+                                  "error": str(exc)}
+                return report
+        report["wake"] = dispatcher.wake_pending()
     return report
 
 
@@ -869,11 +1002,45 @@ def run_child(args: argparse.Namespace, cfg: Dict[str, Any], report: Dict[str, A
 
 
 def failed(report: Dict[str, Any]) -> bool:
-    return bool(report["error"]) or any(
+    wake = report.get("wake") or {}
+    return bool(report["error"]) or bool(wake.get("error")) or any(
+        i.get("action") == "error" for i in wake.get("items") or []) or any(
         r["result"] == "error" or (r.get("workProduct") or {}).get("action") == "error" for r in report["results"])
 
 
 WP_TEXT = {"attached": "원본 링크 부착", "exists": "원본 링크 있음", "would_attach": "원본 링크 부착 예정"}
+WAKE_TEXT = {"woken": "깨움", "would_wake": "깨움 예정", "server_skipped": "서버가 깨움 건너뜀", "running": "실행 중",
+             "stopped_run": "최근 실행 멈춤", "agent_stopped": "에이전트 멈춤", "deferred": "다음 실행",
+             "just_created": "방금 생성", "error": "오류"}
+
+
+def _auto_text(auto: Optional[Dict[str, Any]]) -> str:
+    if not auto:
+        return ""
+    if not auto["on"]:
+        return f"자동 분석 안 함: {auto['reason']}"
+    status = auto.get("agentStatus")
+    waiting = f" (에이전트 {status} — 재개되면 분석)" if status in NO_WAKE_AGENT else ""
+    return f"자동 분석 → {auto['agent']}{waiting}"
+
+
+def _wake_lines(wake: Dict[str, Any]) -> List[str]:
+    lines = [f"{i['issue']}  {WAKE_TEXT.get(i['action'], i['action'])}  {i.get('reason') or ''}".rstrip()
+             for i in wake.get("items") or [] if i.get("action") != "would_wake"]
+    planned = [i for i in wake.get("items") or [] if i.get("action") == "would_wake"]
+    if planned:
+        lines.append(f"--- 깨움 보낼 요청 (쓰지 않음) {len(planned)}건")
+        lines.append(json.dumps([{"issue": i["issue"], **i["request"]} for i in planned], ensure_ascii=False, indent=2))
+    counts: Dict[str, int] = {}
+    for i in wake.get("items") or []:
+        counts[i["action"]] = counts.get(i["action"], 0) + 1
+    summary = " · ".join(f"{WAKE_TEXT.get(k, k)} {v}" for k, v in counts.items()) or "대상 0건"
+    head = f"깨움 보정({wake['agent']}, 상한 {wake['max']}"
+    head += f", 에이전트 {wake['agentStatus']})" if wake.get("agentStatus") else ")"
+    lines.append(f"{head}: {summary}")
+    if wake.get("error"):
+        lines.append(f"깨움 보정 오류: {wake['error']}")
+    return lines
 ORDER = ("created", "skipped", "updated", "unchanged", "dry_run", "error")
 
 
@@ -909,12 +1076,15 @@ def render(report: Dict[str, Any]) -> str:
                       r.get("url") or "", _rule_text(r.get("rule"))]
             if r.get("labels") is not None:
                 parts.append(f"라벨 {len(r['labels'])}")
+            parts.append(_auto_text(r.get("autoAnalyze")))
         wp = r.get("workProduct") or {}
         if wp.get("action") == "error":
             parts.append(wp.get("reason") or "")
         elif wp.get("action") in WP_TEXT:
             parts.append(WP_TEXT[wp["action"]])
         lines.append("  ".join(p for p in parts if p))
+    if report.get("wake") is not None:
+        lines.extend(_wake_lines(report["wake"]))
     if report["error"]:
         lines.append(f"오류: {report['error']}")
     lines.append("결과: " + " · ".join(f"{k} {counts.get(k, 0)}" for k in ORDER if counts.get(k) or k in ORDER[:2]))

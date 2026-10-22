@@ -29,6 +29,7 @@ PID_OTHER = "8db40eb8-0000-4000-8000-000000000003"
 PID_PREP = "8db40eb8-0000-4000-8000-000000000006"
 WRITER = "c0707c1d-0000-4000-8000-000000000004"
 REVIEWER = "e6301f4b-0000-4000-8000-000000000005"
+PREP_AGENT = "403cdfc6-0000-4000-8000-000000000007"
 SECRET_DESCRIPTION = "요청 원문 — 고객 연락처 010-0000-0000"
 ME = "jmkim"
 SHOP = {"isolatedWorkspace": True, "stages": ["review:SQL Reviewer", "approval:local-board"]}
@@ -126,10 +127,13 @@ class FakePaperclip:
         self.companies = [{"id": CID, "name": "aladin-dev2", "issuePrefix": "ALA"}]
         self.projects = [{"id": PID, "name": "쇼핑 데이터 추출"}, {"id": PID_OTHER, "name": "기타 요청"},
                          {"id": PID_PREP, "name": "티켓 분석"}]
-        self.agents = [{"id": WRITER, "name": "SQL Writer"}, {"id": REVIEWER, "name": "SQL Reviewer"}]
+        self.agents = [{"id": WRITER, "name": "SQL Writer"}, {"id": REVIEWER, "name": "SQL Reviewer"},
+                       {"id": PREP_AGENT, "name": "Ticket Prep", "status": "idle"}]
         self.labels = []
         self.issues = []
         self.work_products = {}
+        self.runs = {}  # issue id → GET /api/issues/{id}/runs 응답
+        self.wake_response = {"id": "run-new", "status": "queued"}
         self.requests = []
         self.seq = 0
 
@@ -192,10 +196,17 @@ class FakePaperclip:
             if body.get("executionPolicy"):
                 issue["executionPolicy"] = self.normalized(body["executionPolicy"])
             return 201, issue
-        m = re.match(r"^/api/issues/([^/]+)(/work-products)?$", path)
+        m = re.match(r"^/api/agents/([^/]+)/wakeup$", path)
+        if m and method == "POST":
+            if not any(a["id"] == m.group(1) for a in self.agents):
+                return 404, {"error": "Agent not found"}
+            return 202, self.wake_response
+        m = re.match(r"^/api/issues/([^/]+)(/work-products|/runs)?$", path)
         issue = next((i for i in self.issues if m and i["id"] == m.group(1)), None)
         if not issue:
             return 404, {"error": "Issue not found"}
+        if m.group(2) == "/runs" and method == "GET":
+            return 200, self.runs.get(issue["id"], [])
         if m.group(2):
             items = self.work_products.setdefault(issue["id"], [])
             if method == "GET":
@@ -906,6 +917,155 @@ class DoneOrOtherProjectTests(Base):
         self.yt.add("DEV2-1", "x")
         code, report, _ = self.run_json("--project", "티켓 분석", "DEV2-1")
         self.assertEqual((code, report["results"][0]["result"]), (0, "unchanged"))
+
+
+INBOX = "for: me #Unresolved project: DEV2"
+AUTO = {"agent": "Ticket Prep", "wakeMax": 3}
+
+
+class AutoAnalyzeTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.auto = self.write_config(rules=[], autoAnalyze=AUTO)
+
+    def wakes(self):
+        return [(p, b) for _, p, b in self.pc.writes("POST", "/wakeup")]
+
+    def prep_todo(self, title, project=PID_PREP, agent=PREP_AGENT, status="todo", runs=None):
+        issue = self.pc.add_issue(title, status=status, projectId=project, assigneeAgentId=agent)
+        if runs is not None:
+            self.pc.runs[issue["id"]] = runs
+        return issue
+
+    def test_new_ticket_goes_to_ticket_prep_and_is_not_woken_again(self):
+        self.yt.add("DEV2-1", "회원 추출", reporter=("박요청", "park"))
+        self.yt.queries[INBOX] = ["DEV2-1"]
+        code, out, _ = self.run_tool("--inbox", "--dry-run", config=self.auto)
+        self.assertEqual((code, self.pc.writes()), (0, []))
+        self.assertIn("→ 티켓 분석 (autoAnalyze)", out)
+        self.assertIn("자동 분석 → Ticket Prep", out)
+
+        code, report, _ = self.run_json("--inbox", config=self.auto)
+        self.assertEqual(code, 0)
+        result = report["results"][0]
+        self.assertEqual(result["autoAnalyze"], {"on": True, "agent": "Ticket Prep", "agentStatus": "idle"})
+        [body] = self.issue_posts()
+        self.assertEqual((body["status"], body["assigneeAgentId"], body["projectId"], body["executionPolicy"]),
+                         ("todo", PREP_AGENT, PID_PREP, PREP_POLICY))
+        for key in ("assigneeUserId", "executionWorkspaceSettings", "parentId"):
+            self.assertNotIn(key, body)
+        self.assertIn("자동 분석 Ticket Prep", body["description"])
+        # 생성 직후 서버가 할당 깨움을 보낸다(issue-assignment-wakeup.ts) — 같은 실행에서 다시 깨우지 않는다
+        self.assertEqual([i["action"] for i in report["wake"]["items"]], ["just_created"])
+        self.assertEqual(self.wakes(), [])
+
+    def test_own_or_unknown_reporter_falls_back_to_board_backlog(self):
+        self.yt.add("DEV2-1", "내가 만든 티켓")  # 기본 reporter = jmkim = 토큰 사용자
+        self.yt.add("DEV2-2", "요청자 없음", reporter=None)
+        _, out, _ = self.run_tool("DEV2-1", "--dry-run", config=self.auto)
+        self.assertIn("자동 분석 안 함: 요청자가 토큰 사용자(jmkim)", out)
+        code, report, _ = self.run_json("DEV2-1", "DEV2-2", config=self.auto)
+
+        self.assertEqual(code, 0)
+        own, unknown = report["results"]
+        self.assertFalse(own["autoAnalyze"]["on"])
+        self.assertIn("요청자가 토큰 사용자(jmkim)", own["autoAnalyze"]["reason"])
+        self.assertIn("요청자 login 없음", unknown["autoAnalyze"]["reason"])
+        for body in self.issue_posts():
+            self.assertEqual((body["status"], body["assigneeUserId"]), ("backlog", "local-board"))
+            for key in ("assigneeAgentId", "projectId", "executionPolicy"):
+                self.assertNotIn(key, body)
+        self.assertNotIn("wake", report)  # 깨움 보정은 --inbox에서만
+
+    def test_existing_issue_is_left_alone(self):
+        issue = self.pc.add_issue("DEV2-1 기존", status="backlog", assigneeUserId="local-board")
+        self.pc.work_products[issue["id"]] = [{"provider": "youtrack", "externalId": "DEV2-1"}]
+        self.yt.add("DEV2-1", "기존", reporter=("박요청", "park"))
+        self.yt.queries[INBOX] = ["DEV2-1"]
+        code, report, _ = self.run_json("--inbox", config=self.auto)
+        self.assertEqual((code, report["results"][0]["result"]), (0, "skipped"))
+        self.assertNotIn("autoAnalyze", report["results"][0])
+        self.assertEqual(self.pc.writes(), [])
+
+    def test_wake_selects_idle_todo_issues_and_respects_cap(self):
+        running = self.prep_todo("DEV2-1 a", runs=[{"runId": "r1", "status": "running", "agentId": PREP_AGENT}])
+        failed = self.prep_todo("DEV2-2 b", runs=[{"runId": "r2", "status": "failed", "agentId": PREP_AGENT,
+                                                    "createdAt": "2026-10-22T02:00:00Z"}])
+        ok = [self.prep_todo(f"DEV2-{n} c", runs=[{"runId": "r", "status": "succeeded", "agentId": PREP_AGENT}])
+              for n in (3, 4, 5, 6)]
+        self.prep_todo("DEV2-7 진행 중", status="in_progress")
+        self.prep_todo("DEV2-8 다른 에이전트", agent=WRITER)
+        self.prep_todo("DEV2-9 다른 프로젝트", project=PID)
+
+        code, report, _ = self.run_json("--inbox", "--dry-run", config=self.auto)
+        self.assertEqual((code, self.pc.writes()), (0, []))
+        self.assertEqual([(i["issue"], i["action"]) for i in report["wake"]["items"]],
+                         [("ALA-1", "running"), ("ALA-2", "stopped_run"), ("ALA-3", "would_wake"),
+                          ("ALA-4", "would_wake"), ("ALA-5", "would_wake"), ("ALA-6", "deferred")])
+
+        code, out, _ = self.run_tool("--inbox", config=self.auto)
+        self.assertEqual(code, 0)
+        self.assertEqual(self.wakes(), [(f"/api/agents/{PREP_AGENT}/wakeup",
+                                         {"source": "assignment", "triggerDetail": "system",
+                                          "reason": "paperclip-inbox self-heal",
+                                          "payload": {"issueId": i["id"], "taskId": i["id"]}}) for i in ok[:3]])
+        self.assertIn("깨움 보정(Ticket Prep, 상한 3, 에이전트 idle): 실행 중 1 · 최근 실행 멈춤 1 · 깨움 3 · 다음 실행 1", out)
+        self.assertNotIn(running["id"], json.dumps(self.wakes()))
+        self.assertNotIn(failed["id"], json.dumps(self.wakes()))
+
+    def test_paused_agent_keeps_registering_but_is_not_woken(self):
+        next(a for a in self.pc.agents if a["name"] == "Ticket Prep")["status"] = "paused"
+        self.prep_todo("DEV2-1 대기")
+        self.yt.add("DEV2-2", "새 요청", reporter=("박요청", "park"))
+        self.yt.queries[INBOX] = ["DEV2-2"]
+        code, out, _ = self.run_tool("--inbox", config=self.auto)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(self.wakes(), [])
+        self.assertEqual(self.issue_posts()[0]["assigneeAgentId"], PREP_AGENT)
+        self.assertIn("자동 분석 → Ticket Prep (에이전트 paused — 재개되면 분석)", out)
+        self.assertIn("ALA-1  에이전트 멈춤  에이전트 paused", out)
+
+    def test_wake_targets_agent_id_and_missing_agent_is_error(self):
+        self.prep_todo("DEV2-1 a")
+        self.pc.agents = [a for a in self.pc.agents if a["name"] != "Ticket Prep"] + [
+            {"id": "11111111-0000-4000-8000-000000000000", "name": "Ticket Prep", "status": "idle"}]
+        code, report, _ = self.run_json("--inbox", config=self.auto)  # 담당 id가 다르면 대상이 아니다
+        self.assertEqual((code, report["wake"]["items"]), (0, []))
+        code, report, _ = self.run_json("--inbox", config=self.write_config(autoAnalyze={"agent": "없는 에이전트"}))
+        self.assertEqual(code, 1)
+        self.assertIn("에이전트 '없는 에이전트' 없음", report["wake"]["error"])
+
+    def test_auto_off_is_byte_identical(self):
+        def scenario(config):
+            yt, pc = FakeYouTrack(), FakePaperclip()
+            servers = [serve(yt), serve(pc)]
+            try:
+                pc.add_issue("DEV2-5 기존")
+                yt.add("DEV2-1", "회원 추출", reporter=("박요청", "park"), tags=("쇼핑",))
+                yt.add("DEV2-5", "기존")
+                yt.queries[INBOX] = ["DEV2-1", "DEV2-5"]
+                cfg = self.write_config(baseUrl=servers[1][1], **config)
+                outs = [self.run_tool(*argv, config=cfg, env={"YOUTRACK_BASE_URL": servers[0][1]})[:2]
+                        for argv in (["--inbox", "--dry-run"], ["--inbox", "--json"], ["DEV2-1"])]
+                text = json.dumps([outs, pc.requests], ensure_ascii=False)
+                return text.replace(servers[1][1], "PC").replace(servers[0][1], "YT")
+            finally:
+                for server, _ in servers:
+                    server.shutdown()
+                    server.server_close()
+
+        off = scenario({"rules": []})
+        self.assertEqual(scenario({"rules": [], "autoAnalyze": {**AUTO, "enabled": False}}), off)
+        self.assertNotIn("wakeup", off)
+        self.assertNotIn("autoAnalyze", off)
+
+    def test_invalid_auto_config_exits_2(self):
+        for spec in ({}, {"agent": ""}, {"agent": "Ticket Prep", "wakeMax": -1},
+                     {"agent": "Ticket Prep", "wakeMax": True}, "Ticket Prep"):
+            code, out, err = self.run_tool("DEV2-1", config=self.write_config(autoAnalyze=spec))
+            self.assertEqual((code, out), (2, ""), spec)
+            self.assertIn("autoAnalyze", err)
 
 
 if __name__ == "__main__":

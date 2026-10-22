@@ -16,10 +16,12 @@
 
 흐름은 팀 흐름처럼 분석이 먼저다(2026-10-22 사용자 결정).
 
-1. 내 티켓을 등록한다 — Inbox(프로젝트 없음, Board 담당 backlog)
-2. 사람이 `--project "티켓 분석" DEV2-####`로 분류하고 Ticket Prep에게 맡긴다
-3. 사람이 분석 결과를 승인한다(done)
-4. 그 뒤의 일(데이터 추출, 나중에는 개발)은 분석 이슈의 하위 이슈로 만든다 — `--project "<프로젝트>" --from ALA-n [DEV2-####]`
+1. 등록 — `--inbox`가 "내가 만들지 않은, 나에게 할당된" 티켓(`Reporter: -me`)을 넣는다. 자동 분석(`pilot.json` `autoAnalyze`)이 켜져 있으면 새 이슈는 「티켓 분석」·Ticket Prep 담당·todo로 만들어진다
+2. 자동 분석 — 서버가 생성 직후 Ticket Prep을 깨우고, Ticket Prep이 `/ad:work-prep`을 돌린다
+3. 승인 대기 — 결과는 승인 단계(Board)에서 기다린다. 사람이 승인(done)한다
+4. 사람 결정 — 그 뒤의 일(데이터 추출, 나중에는 개발)은 분석 이슈의 하위 이슈로 만든다(`--project "<프로젝트>" --from ALA-n [DEV2-####]`). 종료도 사람이 정한다
+
+내가 만든 티켓이거나 자동 분석이 꺼져 있으면 Inbox(프로젝트 없음, Board 담당 backlog)로 들어가고, 사람이 `--project "티켓 분석" DEV2-####`로 분류해 Ticket Prep에게 맡긴다. 자동 분석은 새로 만드는 이슈에만 적용된다 — 이미 있는 이슈는 그대로 둔다.
 
 단계마다 이슈를 따로 두는 이유: 프로젝트만 바꾸면 분석 승인 기록이 초기화되고 일감을 하나로만 이어 간다. 같은 프로젝트에서 에이전트만 바꾸면 작업 공간이 프로젝트에 묶여 있어 사람용 체크아웃에서 돈다.
 
@@ -31,17 +33,20 @@
 | 프로젝트 workspace | `data-requests-dev2`, 이슈별 git worktree 격리 | 없음 — 에이전트 cwd(빈 폴더)에서 돈다 |
 | executionPolicy | 리뷰(SQL Reviewer) → 승인(Board) | 승인(Board)만 |
 | 실행 담당 | SQL Writer | Ticket Prep |
-| 들어오는 길 | 승인된 분석 이슈의 하위 이슈(`--from`) | Inbox 이슈를 `--project`로 분류 |
+| 들어오는 길 | 승인된 분석 이슈의 하위 이슈(`--from`) | 자동 분석 등록, 또는 Inbox 이슈를 `--project`로 분류 |
 
 - 쇼핑 데이터 추출은 이슈에도 `executionWorkspaceSettings.mode: isolated_workspace`를 명시한다. 티켓 분석으로 옮긴 이슈는 이 값을 지운다
 - worktree 위치는 `workspaceStrategy.worktreeParentDir`로 repo 밖에 둔다. 기본값은 repo 안의 `.paperclip/worktrees/`라서 사람 쪽 `git status`에 섞인다. 이미 repo 안에 만들었다면 `.git/info/exclude`에 `.paperclip/`를 넣는다
 - 이슈 제목은 `DEV2-#### {요청 제목}`, 본문은 YouTrack 링크와 요청 요약이다. import는 YouTrack → Paperclip 단방향이다
-- 등록은 `/ad:paperclip-dispatch DEV2-####`(또는 `--inbox`)다. Board 담당·backlog로 Inbox "Mine"에 모인다. `pilot.json` `rules`는 비워 둔다 — 키워드로 바로 배분하면 분석을 건너뛴다. 라벨 `요청자:`·`태그:`와 Artifacts 탭의 원본 티켓 링크(work product)도 함께 붙는다. 분류는 도구로 한다 — 화면에서 프로젝트만 바꾸면 격리·정책이 붙지 않는다
+- 등록은 `/ad:paperclip-dispatch DEV2-####`(또는 `--inbox`)다. 자동 분석 대상이 아니면 Board 담당·backlog로 Inbox "Mine"에 모인다. `pilot.json` `rules`는 비워 둔다 — 키워드로 바로 배분하면 분석을 건너뛴다. 라벨 `요청자:`·`태그:`와 Artifacts 탭의 원본 티켓 링크(work product)도 함께 붙는다. 분류는 도구로 한다 — 화면에서 프로젝트만 바꾸면 격리·정책이 붙지 않는다
 - `--from` 없는 `--project`는 「티켓 분석」(`analysisProject`)만 받는다 — 데이터 추출도 분석이 먼저다. `rules`의 project도 같다
 - `--project`는 이미 done이거나 다른 프로젝트에 속한 이슈를 옮기지 않는다. 이어지는 일은 `--from` 하위 이슈로 만든다
 - 하위 이슈(`--from ALA-n`): 부모는 「티켓 분석」 소속이고 done이어야 한다. 부모 제목의 DEV2 번호를 원본으로 쓰고, 제목 `{DEV2} {요약} · {프로젝트}`, 부모 라벨, 대상 프로젝트 정책, Board 담당 backlog로 만든다. 사람이 YouTrack에 새 Task를 만들었으면 그 DEV2를 같이 준다 — 제목·라벨·원본 링크가 그 티켓 기준이 된다. 부모를 막는 옵션(`blockParentUntilDone`)은 쓰지 않는다. 부모는 이미 done이기 때문이다
 - 등록·분류·하위 이슈는 YouTrack 담당자가 토큰 사용자인 티켓만 받는다. 다르거나 비어 있으면 `담당자 불일치`로 거부하고 쓰지 않는다 — 파일럿은 내 티켓만 처리한다
-- 실행 시작은 사람이 담당을 그 프로젝트의 에이전트(SQL Writer·Ticket Prep)로 바꾸고 상태를 todo로 올리는 순간이다. backlog 이슈는 할당해도 깨우지 않는다(`issue-assignment-wakeup.ts:46`)
+- 실행 시작은 담당이 그 프로젝트의 에이전트(SQL Writer·Ticket Prep)이고 상태가 todo가 되는 순간이다. 자동 분석은 이 상태로 만들고, 그 밖에는 사람이 화면에서 바꾼다. backlog 이슈는 할당해도 깨우지 않는다(`issue-assignment-wakeup.ts`)
+- 자동 분석 방어: 티켓 요청자(reporter)가 토큰 사용자이거나 비어 있으면 자동 분석하지 않고 Board backlog로 만든다 — query가 바뀌어도 내가 만든 티켓은 자동 실행되지 않는다. 출력에 사유가 나온다
+- 멈추는 법: 화면에서 Ticket Prep을 일시정지(paused)한다. 등록은 계속되고(Ticket Prep 담당 todo로 쌓임), 분석은 재개할 때까지 기다린다 — 재개하면 다음 `--inbox`의 깨움 보정이 깨운다. 자동 분석 자체를 끄려면 `autoAnalyze`에 `"enabled": false`를 넣는다
+- 깨움 보정: `--inbox` 실행마다 「티켓 분석」에서 Ticket Prep 담당 todo인데 진행·대기 실행이 없는 이슈를 `POST /api/agents/{id}/wakeup`으로 깨운다. 한 번에 `wakeMax`(기본 3)건까지다 — 이번 주기에 깨우는 수의 상한이고 동시 실행 상한이 아니다(여러 건이 병렬로 돌 수 있다). 에이전트가 paused면 깨우지 않는다. 방금 만든 이슈(서버가 이미 깨움)와 최근 실행이 실패·취소된 이슈(같은 실패 반복 방지 — 사람이 확인 후 깨운다)는 건너뛴다
 - 자동화: cron·routine이 `python3 tools/paperclip_import_ticket.py --inbox`(또는 `--query "<YouTrack 검색식>"`)를 부른다. 멱등이라 반복 실행해도 중복이 없다. 해결된 티켓의 Paperclip 반영(`--sync-resolved`)은 후속이다
 
 ## 에이전트 (claude_local)
@@ -55,15 +60,15 @@
 | model | `claude-opus-5-5` | `claude-sonnet-5-5` | `claude-opus-5-5` |
 | engine | `cli` | `cli` | `cli` |
 | cwd | 이슈별 worktree | 같음 | `~/.paperclip/instances/default/prep-cwd` — repo가 아닌 빈 폴더, 미리 만든다 |
-| heartbeat | `enabled: false`(주기 끔), `wakeOnDemand: true`, `maxConcurrentRuns: 1` | 같음 | 같음 |
+| heartbeat | `enabled: false`(주기 끔), `wakeOnDemand: true`. 동시 실행 수는 기본값(`AGENT_DEFAULT_MAX_CONCURRENT_RUNS` 20) | 같음 | 같음 |
 
 - 새 에이전트는 `promptTemplate`을 받지 않는다(지시문 번들만, `2026.1012.0`). 번들은 external 모드로 repo 파일을 직접 가리키게 한다 — 복사본은 repo와 어긋난다
 - engine은 `cli`로 둔다. 기본값(ACP)은 내장 Claude Code 2.1.257로 돌아 Opus 5.5에서 400 오류가 난다(2.1.280 이상 필요). 또 SDK 경로라 `~/.claude` 훅 로드가 검증되지 않았다. `cli`는 설치된 `claude --print`를 써서 가드 훅 로드가 headless로 확인된 경로다
 - 진입 스킬은 모델이 호출할 수 있어야 한다. 사람 전용 스킬(`disable-model-invocation`)은 지시문으로 부를 수 없다
-- `wakeOnDemand` 하나가 할당·수동·자동 깨움을 함께 켜고 끈다(`heartbeat/queue.ts:2699`). 끄면 수동 실행도 막힌다. 그래서 작성·분석 에이전트는 사람이 이슈를 할당하는 순간이 실행이고, 리뷰 에이전트는 리뷰 단계 전이 때 자동으로 돈다 — 판정만 하고 가드가 걸려 있어 위험이 낮다
+- `wakeOnDemand` 하나가 할당·수동·자동 깨움을 함께 켜고 끈다(`heartbeat/queue.ts:2699`). 끄면 수동 실행도 막힌다. 그래서 작성 에이전트는 사람이 이슈를 할당하는 순간이 실행이고, 분석 에이전트는 자동 분석 등록(또는 사람의 할당) 순간, 리뷰 에이전트는 리뷰 단계 전이 때 자동으로 돈다 — 분석·리뷰는 코드를 바꾸지 않고 가드가 걸려 있어 위험이 낮다
 - 분석 에이전트는 vault 티켓 노트만 쓴다. 결과는 이슈 문서 `prep`과 요약 댓글로 오고, done 전환 때 승인 단계(Board)로 돌아온다. cwd를 repo 밖 빈 폴더로 두는 이유는 코드·git을 건드릴 작업 트리를 주지 않기 위해서다
 - `dangerouslySkipPermissions`는 기본값(true)으로 둔다. 경계는 사용자 레벨 훅이 지킨다 — 훅 deny는 우회 모드에서도 강제된다
 - 승인·반려 결정은 코멘트와 상태 변경이 **같은 요청**이어야 한다(`PATCH /api/issues/{id}` `{status, comment}`). 화면은 둘을 따로 보내서 결정이 거부된다(2026-10-22 ALA-2). 결정은 API로 보낸다
-- 에이전트가 자기 실행 안에서 이슈를 다음 단계로 넘기면, 다음 담당 에이전트의 깨움이 누락될 수 있다(ALA-2 리뷰 단계). 담당 에이전트가 `idle`인 채 실행이 없으면 `POST /api/agents/{id}/wakeup` `{source:"assignment", payload:{issueId}}`로 깨운다
+- 에이전트가 자기 실행 안에서 이슈를 다음 단계로 넘기면, 다음 담당 에이전트의 깨움이 누락될 수 있다(ALA-2 리뷰 단계). 담당 에이전트가 `idle`인 채 실행이 없으면 `POST /api/agents/{id}/wakeup` `{source:"assignment", payload:{issueId}}`로 깨운다. Ticket Prep 담당 todo는 `--inbox`의 깨움 보정이 이 일을 한다
 - ACP 엔진으로 돈 적이 있으면 대상 repo에 `.claude/settings.local.json`(`curl:*`·`env` 허용 규칙)이 남는다. 지운다
 - Codex 교차 검증은 2주차에 붙인다. codex_local 어댑터는 쓰지 않는다 — 샌드박스 우회가 기본이고, 격리 CODEX_HOME에 팀 스킬이 없다

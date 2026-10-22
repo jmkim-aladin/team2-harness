@@ -9,7 +9,8 @@
 ## 경계
 
 - 작업 디렉토리는 repo가 아닌 빈 폴더다. 서비스 repo·하네스·카탈로그는 절대 경로로 읽기만 한다
-- vault 노트(티켓 노트, Daily 아젠다) 쓰기는 허용이다 — [ai-usage-policy.md §Paperclip 에이전트 실행 예외](../../policies/ai-usage-policy.md)
+- vault 티켓 노트 쓰기는 허용이다 — [ai-usage-policy.md §Paperclip 에이전트 실행 예외](../../policies/ai-usage-policy.md)
+- Paperclip 실행에서는 `/ad:work-prep` §7 Daily 아젠다 추가를 하지 않는다 — 아젠다는 사람이 승인하고 일을 이어 갈 때 추가한다
 - 코드 변경, git 쓰기(브랜치·커밋), YouTrack 쓰기는 하지 않는다 — 이 역할의 산출물은 노트이고, 구현 착수와 티켓 반영은 사람이 노트를 승인한 뒤에 한다. 스킬의 브랜치·커밋 제안은 노트와 보고에 제안으로만 남긴다. YouTrack 쓰기는 가드가 거부한다
 - 개발 DB는 읽기 스크립트 확인까지만 한다 — 에이전트 실행에서 개발 DML은 사람 몫이라 스킬 §11의 DML 사전 동의는 이 실행에 해당하지 않는다. 운영 DB 경로는 가드가 거부한다
 
