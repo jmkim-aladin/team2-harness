@@ -5,6 +5,9 @@ Paperclip 파일럿(templates/paperclip/README.md)은 쇼핑 데이터 추출 �
 업무 원천은 YouTrack이고 방향은 YouTrack → Paperclip 하나다. 이 도구는 YouTrack을 읽기만 하고 Paperclip에만 쓴다.
 판정·등록은 여기 두고 스킬은 실행·보고만 한다 — cron·routine이 `--inbox`·`--query`로 같은 도구를 부르게 하기 위해서다.
 
+흐름(2026-10-22 사용자 결정): 내 티켓 → Inbox(프로젝트 없음) → 사람이 분석 프로젝트(설정 analysisProject)로 분류
+  → 분석 에이전트 → 사람 승인(done) → 그 뒤의 일(데이터 추출·개발)은 분석 이슈의 하위 이슈(`--from`).
+  프로젝트만 바꾸면 그 단계의 승인 기록이 초기화되고 일감을 하나로만 이어 가서, 단계마다 이슈를 따로 둔다.
 담당자 검사(항상): YouTrack 담당자(Assignee login)가 토큰 사용자(/api/users/me login)가 아니거나 비어 있으면
   그 티켓은 error(담당자 불일치)로 거부하고 Paperclip에 아무것도 쓰지 않는다 — 파일럿은 내 티켓만 처리한다.
 등록(기본):
@@ -14,26 +17,39 @@ Paperclip 파일럿(templates/paperclip/README.md)은 쇼핑 데이터 추출 �
     에이전트 할당(실행 시작)은 사람이 화면에서 한다
   - 프로젝트 배분: 설정 rules를 순서대로 보고 첫 일치 규칙만 쓴다. 일치하면 projectId + 설정 projects의 그 프로젝트 정책
     (isolatedWorkspace면 이슈별 격리 workspace, stages 순서의 executionPolicy), 불일치하면 프로젝트·정책 없이 만든다
-    규칙 일치 = summary에 summaryAny 중 하나가 들어 있음(대소문자 무시) 또는 태그가 tagsAny 중 하나
+    규칙 일치 = summary에 summaryAny 중 하나가 들어 있음(대소문자 무시) 또는 태그가 tagsAny 중 하나.
+    pilot.json의 rules는 비어 있다 — 모든 티켓이 Inbox로 들어가 분석부터 거친다. rules의 project는
+    analysisProject만 받는다(다른 값은 설정 오류)
   - 라벨 `요청자:{fullName}`·`태그:{tag}`(48자 절단, 회사에 없으면 만든다). 요청자 login은 넣지 않는다
   - work product(artifact, provider youtrack)로 원본 티켓 링크 — 이슈 옆 Artifacts 탭에서 원본으로 간다
 프로젝트 정책(설정 projects, 이름 → {isolatedWorkspace, stages}): stages는 `review:{에이전트 이름}`·`approval:{Board userId}`
   문자열 목록이고 적은 순서가 단계 순서다. 규칙의 project와 `--project`는 이 맵에 있어야 한다 — 없으면 그 티켓은 error.
-분류(`--project 이름`): 기존 이슈면 projectId·격리 workspace·executionPolicy 중 정책과 다른 것만 PATCH한다(같으면 unchanged).
-  격리 없는 프로젝트로 옮기면 격리 설정을 지운다(null). 화면에서 프로젝트만 바꾸면 정책과 격리가 붙지 않아서다.
-  진행 중 실행·검토 단계가 있으면 건드리지 않고 error — 정책을 바꾸면 서버가 검토 주기를 초기화한다
-  (server issue-execution-policy.ts). 기존 이슈가 없으면 그 프로젝트로 만든다.
-멱등: 회사 안에 제목이 `DEV2-#### `로 시작하고 cancelled가 아닌 이슈가 있으면 skipped.
+분류(`--project 이름 DEV2-####`): 분석 먼저 — `--from` 없는 `--project`는 analysisProject만 받는다. 다른 프로젝트
+  이름이면 YouTrack·Paperclip을 보지 않고 error. 기존 이슈면 projectId·격리 workspace·executionPolicy 중 정책과 다른 것만 PATCH한다
+  (같으면 unchanged). 격리 없는 프로젝트로 옮기면 격리 설정을 지운다(null). 화면에서 프로젝트만 바꾸면 정책과 격리가
+  붙지 않아서다. 이미 done이거나 다른 프로젝트 소속이면 옮기지 않고 error로 `--from`을 안내한다. 진행 중 실행·검토
+  단계가 있으면 건드리지 않고 error — 정책을 바꾸면 서버가 검토 주기를 초기화한다(server issue-execution-policy.ts).
+  기존 이슈가 없으면 그 프로젝트로 만든다.
+하위 이슈(`--project 이름 --from ALA-n [DEV2-####]`): 부모는 분석 프로젝트 소속이고 done이어야 한다(아니면 error
+  `분석 승인 전: 현재 <status>`). 부모 제목의 DEV2 번호를 읽는다. 하위 이슈는 parentId·그 프로젝트 정책·Board 담당·
+  backlog로 만든다. POST /api/companies/{id}/issues에 parentId를 싣고 부모를 막는 옵션(blockParentUntilDone)은 쓰지 않는다
+  — 부모는 이미 done이다. 대상 프로젝트가 부모와 다르면 서버는 부모 workspace를 물려주지 않는다(server issues.ts create).
+  - DEV2를 주면(사람이 YouTrack에 새 Task를 만든 경우) 그 티켓을 읽어 담당자 검사를 하고, 제목·라벨·원본 링크는 그 티켓 기준
+  - 안 주면 부모 DEV2 티켓으로 담당자 검사를 하고, 제목 `{부모 DEV2} {부모 summary} · {프로젝트}`, 부모 라벨 복사, 원본 링크는 부모 티켓
+  - 멱등: 같은 부모·같은 프로젝트·같은 DEV2의 cancelled 아닌 하위 이슈가 있으면 skipped.
+    DEV2를 줬는데 그 DEV2 이슈가 다른 곳에 이미 있으면 error — 같은 티켓이 두 갈래로 진행되지 않게 한다
+멱등: 회사 안에 제목이 `DEV2-#### `로 시작하고 cancelled가 아닌 이슈가 있으면 skipped(하위 이슈 포함, 최상위 이슈 우선).
   skipped여도 그 이슈에 같은 provider·externalId work product가 없으면 붙인다. 라벨은 이름이 같으면 재사용한다.
-대상 이름(회사·프로젝트·단계 에이전트)·Board userId·프로젝트 정책·라벨 접두사와 색·Inbox 검색식은
+대상 이름(회사·프로젝트·단계 에이전트·분석 프로젝트)·Board userId·프로젝트 정책·라벨 접두사와 색·Inbox 검색식은
   templates/paperclip/pilot.json에서 읽고, ID는 이름으로 조회한다 — 환경을 다시 만들면 ID가 바뀐다.
 
 사용법:
     python3 tools/paperclip_import_ticket.py DEV2-8499 [DEV2-8500 ...]
     python3 tools/paperclip_import_ticket.py --inbox                      # 설정 inboxQuery (자동화용)
     python3 tools/paperclip_import_ticket.py --query "project: DEV2 tag: paperclip #Unresolved"
-    python3 tools/paperclip_import_ticket.py --project "쇼핑 데이터 추출" DEV2-8499
     python3 tools/paperclip_import_ticket.py --project "티켓 분석" DEV2-12779
+    python3 tools/paperclip_import_ticket.py --project "쇼핑 데이터 추출" --from ALA-5            # 분석 승인 후 하위 이슈
+    python3 tools/paperclip_import_ticket.py --project "쇼핑 데이터 추출" --from ALA-5 DEV2-12800  # 새 YouTrack Task
     python3 tools/paperclip_import_ticket.py --inbox --dry-run --json
 
 결과: 티켓마다 created | skipped(기존 ALA-n) | updated | unchanged | dry_run(쓰지 않음) | error(사유).
@@ -66,11 +82,14 @@ TOKEN_CRED_NAME = "youtrack-token"
 KST = dt.timezone(dt.timedelta(hours=9))
 
 TICKET_RE = re.compile(r"^DEV2-\d+$")
+ISSUE_REF_RE = re.compile(r"^[A-Z]+-\d+$")  # Paperclip 이슈 번호 (ALA-n)
+TITLE_TICKET_RE = re.compile(r"^(DEV2-\d+)(?:\s+(.*))?$")
 COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 YT_FIELDS = "idReadable,summary,reporter(login,fullName),tags(name),customFields(name,value(login))"
 ASSIGNEE_FIELD = "Assignee"
 LABEL_MAX = 48  # Paperclip createIssueLabelSchema name max(48) — JS 문자열 길이(UTF-16 code unit) 기준
 CANCELLED = "cancelled"
+DONE = "done"
 STATUS_NEW = "backlog"
 WORKSPACE = {"mode": "isolated_workspace"}
 LIVE_REVIEW = ("pending", "changes_requested")  # executionState.status — 정책을 바꾸면 이 주기가 초기화된다
@@ -81,7 +100,7 @@ DEFAULT_MAX = 20
 RETRIES = 2
 DETAIL_LIMIT = 200
 SERVICE_HINT = "launchctl print gui/$(id -u)/com.team2.paperclip"
-CONFIG_KEYS = ("baseUrl", "company", "approverUserId", "projects", "labels")
+CONFIG_KEYS = ("baseUrl", "company", "approverUserId", "projects", "analysisProject", "labels")
 LABEL_KINDS = ("reporter", "tag")
 STAGE_TYPES = ("review", "approval")  # review → 에이전트 이름, approval → Board userId
 
@@ -234,11 +253,18 @@ def load_config(path: Path) -> Dict[str, Any]:
     if not isinstance(cfg["projects"], dict):
         raise ConfigError(f"설정 {path}의 projects는 {{프로젝트 이름: {{isolatedWorkspace, stages}}}} 맵이어야 한다")
     cfg["policies"] = {name: parse_policy(path, name, spec) for name, spec in cfg["projects"].items()}
+    if cfg["analysisProject"] not in cfg["policies"]:
+        raise ConfigError(f"설정 {path}의 analysisProject '{cfg['analysisProject']}'가 projects에 없다"
+                          " — 하위 이슈의 부모가 될 분석 프로젝트 이름이다")
     rules = cfg.setdefault("rules", [])
     if not isinstance(rules, list) or not all(
             isinstance(r, dict) and isinstance(r.get("project"), str) and r["project"]
             and isinstance(r.get("when"), dict) for r in rules):
         raise ConfigError(f"설정 {path}의 rules는 [{{project, when:{{summaryAny, tagsAny}}}}] 목록이어야 한다")
+    stray = sorted({r["project"] for r in rules} - {cfg["analysisProject"]})
+    if stray:
+        raise ConfigError(f"설정 {path}의 rules가 analysisProject 밖의 프로젝트를 가리킨다({', '.join(stray)})"
+                          " — 분석 먼저, 다른 프로젝트는 --from 하위 이슈로만 들어간다")
     cfg.setdefault("inboxQuery", DEFAULT_INBOX_QUERY)
     return cfg
 
@@ -324,11 +350,54 @@ def assignee_reason(ticket: Dict[str, Any], me: str) -> Optional[str]:
 
 
 def find_existing(issues: List[Dict[str, Any]], ticket_id: str) -> List[Dict[str, Any]]:
-    """제목이 `{ticket_id} `로 시작하고 cancelled가 아닌 이슈. 이슈 번호 오름차순."""
+    """제목이 `{ticket_id} `로 시작하고 cancelled가 아닌 이슈. 최상위 이슈 먼저, 그 안에서 이슈 번호 오름차순 —
+    부모 DEV2를 제목에 단 하위 이슈가 있어도 분류·skipped 대상은 최상위 이슈다."""
     found = [i for i in issues
              if ((i.get("title") or "") == ticket_id or (i.get("title") or "").startswith(ticket_id + " "))
              and i.get("status") != CANCELLED]
-    return sorted(found, key=lambda i: i.get("issueNumber") or 0)
+    return sorted(found, key=lambda i: (bool(i.get("parentId")), i.get("issueNumber") or 0))
+
+
+def project_name(ctx: Dict[str, Any], project_id: Optional[str]) -> str:
+    return next((p.get("name") for p in ctx["projects"] if p.get("id") == project_id), None) or f"프로젝트 {project_id}"
+
+
+def find_parent(pc: Paperclip, ctx: Dict[str, Any], cfg: Dict[str, Any], ref: str) -> Dict[str, Any]:
+    """`--from` 부모 — 분석 프로젝트 소속 done 이슈. 쓰기 직전 상태를 다시 읽는다. 조건 미달은 ResolveError.
+    분석 프로젝트로 묶는 이유: 다른 프로젝트의 done은 분석 승인이 아니라 그 단계의 승인이라, 분석을 건너뛴 사슬이 생긴다."""
+    matches = [i for i in ctx["issues"] if (i.get("identifier") or "").upper() == ref]
+    if not matches:
+        raise ResolveError(f"부모 {ref} 없음 — Paperclip 이슈 번호(ALA-n)를 확인")
+    try:
+        parent = pc.get(f"/api/issues/{matches[0]['id']}") or {}
+    except HttpError as exc:
+        raise ResolveError(f"Paperclip 이슈 조회 실패 — {exc}") from None
+    if parent.get("status") != DONE:
+        raise ResolveError(f"분석 승인 전: 현재 {parent.get('status')} — {ref}가 승인(done)된 뒤 하위 이슈를 만든다")
+    analysis = _one(ctx["projects"], cfg["analysisProject"], "프로젝트")
+    if parent.get("projectId") != analysis["id"]:
+        where = project_name(ctx, parent["projectId"]) if parent.get("projectId") else "프로젝트 없음"
+        raise ResolveError(f"부모 {ref} 이슈는 「{where}」 소속 — 하위 이슈는 「{cfg['analysisProject']}」에서"
+                           " 승인된 분석 이슈에만 단다. 다른 프로젝트의 done은 분석 승인이 아니다")
+    m = TITLE_TICKET_RE.match(" ".join((parent.get("title") or "").split()))
+    if not m:
+        raise ResolveError(f"부모 {ref} 제목이 `DEV2-#### `로 시작하지 않는다 — 원본 티켓을 알 수 없다")
+    return {**parent, "ticket": m.group(1), "ticketSummary": m.group(2) or ""}
+
+
+def move_reason(current: Dict[str, Any], place: Dict[str, Any], ctx: Dict[str, Any], project: str,
+                analysis_project: str) -> Optional[str]:
+    """`--project`가 이미 끝났거나 다른 프로젝트에 있는 이슈를 옮기려 하면 사유. 옮기면 그 단계의 승인 기록이 초기화된다."""
+    identifier = current.get("identifier") or ""
+    analysis = next((p.get("id") for p in ctx["projects"] if p.get("name") == analysis_project), None)
+    parent = identifier if analysis and current.get("projectId") == analysis else "<승인된 분석 이슈 ALA-n>"
+    hint = f'이어지는 일은 `--project "<프로젝트>" --from {parent}`로 하위 이슈를 만든다'
+    if current.get("status") == DONE:
+        return f"{identifier} 이슈는 이미 done — 승인 기록을 지키려고 옮기지 않는다. {hint}"
+    if current.get("projectId") and current["projectId"] != place["projectId"]:
+        return (f"{identifier} 이슈는 「{project_name(ctx, current['projectId'])}」 소속 — 옮기면 그 단계의 승인 기록이"
+                f" 초기화된다. {hint}")
+    return None
 
 
 def match_rule(ticket: Dict[str, Any], rules: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -426,10 +495,10 @@ def placement(ctx: Dict[str, Any], cfg: Dict[str, Any], project_name: str) -> Di
 
 
 def issue_body(ticket: Dict[str, Any], cfg: Dict[str, Any], label_ids: List[str], place: Optional[Dict[str, Any]],
-               yt_base: str, origin: str, today: dt.date) -> Dict[str, Any]:
+               yt_base: str, origin: str, today: dt.date, title: Optional[str] = None) -> Dict[str, Any]:
     """backlog + Board 담당 — Inbox에 모이고 에이전트는 깨어나지 않는다. 에이전트 할당은 사람이 한다."""
     body = {
-        "title": f"{ticket['id']} {ticket['summary']}".strip(),
+        "title": title or f"{ticket['id']} {ticket['summary']}".strip(),
         "description": description(ticket, yt_base, origin, today),
         "status": STATUS_NEW,
         "priority": "medium",
@@ -555,14 +624,15 @@ class Dispatcher:
             result["reason"] = str(exc)
             return result
         if existing:
-            return self.classify(result, existing[0], place)
+            return self.classify(result, existing[0], place, rule["project"])
         return self.create(result, ticket, place)
 
     def work_product(self, issue_id: str, tid: str, check_existing: bool) -> Dict[str, Any]:
         return attach_work_product(self.pc, issue_id, work_product_body(tid, self.yt_base), self.dry_run,
                                    check_existing)
 
-    def classify(self, result: Dict[str, Any], issue: Dict[str, Any], place: Dict[str, Any]) -> Dict[str, Any]:
+    def classify(self, result: Dict[str, Any], issue: Dict[str, Any], place: Dict[str, Any],
+                 project: str) -> Dict[str, Any]:
         identifier = issue.get("identifier") or ""
         result.update(issue=identifier, url=self.url(identifier))
         try:  # 목록은 실행 시작 시점 값이라, 쓰기 직전 상태를 다시 읽는다
@@ -571,8 +641,13 @@ class Dispatcher:
             result["reason"] = f"Paperclip 이슈 조회 실패 — {exc}"
             return result
         patch = placement_patch(current, place)
+        moved = (move_reason({"identifier": identifier, **current}, place, self.ctx, project, self.cfg["analysisProject"])
+                 if patch else None)
         if not patch:
             result.update(result="unchanged", reason="이미 같은 프로젝트·정책")
+        elif moved:
+            result["reason"] = moved
+            return result
         elif active_reason(current):
             result["reason"] = f"{identifier} {active_reason(current)}"
             return result
@@ -596,7 +671,51 @@ class Dispatcher:
             return result
         result["labels"] = plan
         body = issue_body(ticket, self.cfg, label_ids, place, self.yt_base, self.origin, self.today)
-        wp = work_product_body(ticket["id"], self.yt_base)
+        return self.post_issue(result, body, ticket["id"])
+
+    def child(self, parent: Dict[str, Any], ticket: Dict[str, Any], given: bool, project: str) -> Dict[str, Any]:
+        """분석 이슈(parent)의 하위 이슈. given=False면 ticket은 부모 DEV2 티켓(담당자 검사용)이고 제목·라벨은 부모에서 온다."""
+        tid, ref = ticket["id"], parent.get("identifier") or ""
+        summary = ticket["summary"] if given else parent["ticketSummary"]
+        result: Dict[str, Any] = {"ticket": tid, "result": "error", "reason": None, "summary": summary, "parent": ref,
+                                  "rule": {"matched": True, "project": project, "hit": f"--from {ref}"}}
+        try:
+            place = placement(self.ctx, self.cfg, project)
+        except ResolveError as exc:
+            result["reason"] = str(exc)
+            return result
+        existing = find_existing(self.ctx["issues"], tid)
+        same = [i for i in existing if i.get("parentId") == parent["id"] and i.get("projectId") == place["projectId"]]
+        if same:
+            issue = same[0]
+            result.update(result="skipped", reason=f"기존 하위 {issue.get('identifier')}", issue=issue.get("identifier"),
+                          url=self.url(issue.get("identifier") or ""))
+            result["workProduct"] = self.work_product(issue["id"], tid, check_existing=True)
+            return result
+        if given and existing:
+            result["reason"] = (f"{tid} 이슈가 이미 {existing[0].get('identifier')}로 있다 — 같은 티켓이 두 갈래로"
+                                " 진행되지 않게 만들지 않는다. 그 이슈를 cancelled로 정리한 뒤 다시")
+            return result
+        if given:
+            try:
+                label_ids, plan = ensure_labels(self.pc, self.ctx, label_specs(ticket, self.cfg), self.dry_run)
+            except HttpError as exc:
+                result["reason"] = f"Paperclip 라벨 생성 실패 — {exc}"
+                return result
+            body = issue_body(ticket, self.cfg, label_ids, place, self.yt_base, self.origin, self.today)
+        else:
+            names = {lb.get("id"): name for name, lb in self.ctx["labels"].items()}
+            label_ids = [lid for lid in parent.get("labelIds") or [] if isinstance(lid, str)]
+            plan = [{"name": names.get(lid), "id": lid, "action": "parent"} for lid in label_ids]
+            base = {"id": tid, "summary": summary}
+            body = issue_body(base, self.cfg, label_ids, place, self.yt_base, self.origin, self.today,
+                              title=" ".join(p for p in (tid, summary, f"· {project}") if p))
+        result["labels"] = plan
+        body["parentId"] = parent["id"]
+        return self.post_issue(result, body, tid)
+
+    def post_issue(self, result: Dict[str, Any], body: Dict[str, Any], tid: str) -> Dict[str, Any]:
+        wp = work_product_body(tid, self.yt_base)
         if self.dry_run:
             result.update(result="dry_run", reason="쓰지 않음", request={"issue": body, "workProduct": wp})
             result["workProduct"] = {"action": "would_attach", "body": wp}
@@ -609,7 +728,7 @@ class Dispatcher:
         self.ctx["issues"].append({**body, **created})  # 같은 실행 안의 중복 입력 방어
         identifier = created.get("identifier") or ""
         result.update(result="created", reason=None, issue=identifier, url=self.url(identifier))
-        result["workProduct"] = (self.work_product(created["id"], ticket["id"], check_existing=False)
+        result["workProduct"] = (self.work_product(created["id"], tid, check_existing=False)
                                  if created.get("id") else {"action": "error", "reason": "생성 응답에 id 없음"})
         return result
 
@@ -634,12 +753,21 @@ def run(args: argparse.Namespace, cfg: Dict[str, Any], today: Optional[dt.date] 
     query = cfg["inboxQuery"] if args.inbox else args.query
     report: Dict[str, Any] = {"dryRun": bool(args.dry_run), "project": args.project, "query": query,
                               "error": None, "results": []}
+    if args.parent:
+        report["from"] = args.parent
+        return run_child(args, cfg, report, yt_base, today)
 
     # 입력 순서를 지킨다. 값: None = YouTrack에서 읽을 티켓, dict = 검색 결과 레코드, str = 이미 정해진 오류
     tickets: Dict[str, Any] = {}
     for raw in args.tickets:
         tid = raw.strip().upper()
         tickets.setdefault(tid, None if TICKET_RE.match(tid) else "DEV2-#### 형식이 아니다")
+    analysis = cfg["analysisProject"]
+    if args.project and args.project in cfg["policies"] and args.project != analysis:
+        reason = (f"분석 먼저 — Inbox 이슈는 「{analysis}」으로만 분류한다. 분석 승인 후 --from ALA-n으로"
+                  " 하위 이슈를 만든다")
+        report["results"] = [_error(tid, rec or reason) for tid, rec in tickets.items()]
+        return report
     try:
         yt = YouTrack(yt_base, resolve_token())
     except HttpError as exc:
@@ -701,6 +829,45 @@ def run(args: argparse.Namespace, cfg: Dict[str, Any], today: Optional[dt.date] 
     return report
 
 
+def run_child(args: argparse.Namespace, cfg: Dict[str, Any], report: Dict[str, Any], yt_base: str,
+              today: dt.date) -> Dict[str, Any]:
+    """`--from ALA-n [DEV2-####]` — 부모는 Paperclip에서 먼저 읽고(읽기만), 담당자 검사를 통과해야 쓴다."""
+    ref = args.parent
+    given = args.tickets[0].strip().upper() if args.tickets else None
+
+    def fail(reason: str, ticket: Optional[str] = None) -> Dict[str, Any]:
+        report["results"].append({**_error(ticket or given or ref, reason), "parent": ref})
+        return report
+
+    if given and not TICKET_RE.match(given):
+        return fail("DEV2-#### 형식이 아니다")
+    try:
+        yt = YouTrack(yt_base, resolve_token())
+    except HttpError as exc:
+        report["error"] = str(exc)
+        return fail(str(exc))
+    pc = Paperclip(cfg["baseUrl"])
+    try:
+        ctx = resolve_context(pc, cfg)
+        parent = find_parent(pc, ctx, cfg, ref)
+    except ResolveError as exc:
+        return fail(str(exc))
+    tid = given or parent["ticket"]
+    try:
+        ticket = normalize_ticket(yt.issue(tid))
+        me = yt.me()
+    except HttpError as exc:
+        return fail(_yt_reason(exc) if exc.status == 404 else f"YouTrack 조회 실패 — {exc}. 담당자 검사를 못 해 쓰지 않았다",
+                    tid)
+    reason = assignee_reason(ticket, me)
+    if reason:
+        return fail(reason, tid)
+    origin = f"--from `{ref}` 하위 이슈 · --project `{args.project}`"
+    dispatcher = Dispatcher(pc, ctx, cfg, yt_base, origin, today, args.dry_run)
+    report["results"].append(dispatcher.child(parent, ticket, given is not None, args.project))
+    return report
+
+
 def failed(report: Dict[str, Any]) -> bool:
     return bool(report["error"]) or any(
         r["result"] == "error" or (r.get("workProduct") or {}).get("action") == "error" for r in report["results"])
@@ -713,7 +880,7 @@ ORDER = ("created", "skipped", "updated", "unchanged", "dry_run", "error")
 def _rule_text(rule: Optional[Dict[str, Any]]) -> str:
     if not rule:
         return ""
-    return f"→ {rule['project']} ({rule['hit']})" if rule.get("matched") else "→ 프로젝트 없음(규칙 불일치)"
+    return f"→ {rule['project']} ({rule['hit']})" if rule.get("matched") else "→ Inbox(프로젝트 없음)"
 
 
 def render(report: Dict[str, Any]) -> str:
@@ -762,12 +929,22 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     source.add_argument("--query", help="YouTrack 검색식 결과를 등록")
     parser.add_argument("--project", help="분류: 기존 이슈에 이 프로젝트와 설정 projects의 정책(격리·단계)을 붙이고,"
                                           " 없으면 이 프로젝트로 만든다")
+    parser.add_argument("--from", dest="parent", metavar="ALA-n",
+                        help="하위 이슈: 승인(done)된 분석 이슈 아래에 --project 프로젝트의 하위 이슈를 만든다."
+                             " DEV2-####을 하나 주면 그 티켓 기준, 안 주면 부모 티켓 기준")
     parser.add_argument("--max", type=int, default=DEFAULT_MAX,
                         help=f"--inbox·--query 결과 상한, 넘으면 아무것도 쓰지 않는다 (기본 {DEFAULT_MAX})")
     parser.add_argument("--dry-run", action="store_true", help="보낼 요청만 출력하고 쓰지 않음")
     parser.add_argument("--json", action="store_true", help="기계 판독 JSON 출력")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG), help="파일럿 설정 (기본 templates/paperclip/pilot.json)")
     args = parser.parse_args(argv)
+    if args.parent is not None:
+        args.parent = args.parent.strip().upper()
+        if not ISSUE_REF_RE.match(args.parent):
+            parser.error("--from은 Paperclip 이슈 번호(ALA-n)다")
+        if not (args.project or "").strip() or args.inbox or args.query or len(args.tickets) > 1:
+            parser.error('--from은 --project "<이름>"과 함께, DEV2-####은 없거나 하나만 쓴다')
+        return args
     if not args.tickets and not (args.inbox or args.query):
         parser.error("DEV2-####, --inbox, --query 중 하나는 있어야 한다")
     if args.project is not None and (not args.project.strip() or args.inbox or args.query or not args.tickets):

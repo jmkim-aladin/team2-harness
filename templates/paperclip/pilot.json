@@ -7,12 +7,8 @@
     "쇼핑 데이터 추출": {"isolatedWorkspace": true, "stages": ["review:SQL Reviewer", "approval:local-board"]},
     "티켓 분석": {"isolatedWorkspace": false, "stages": ["approval:local-board"]}
   },
-  "rules": [
-    {
-      "project": "쇼핑 데이터 추출",
-      "when": {"summaryAny": ["추출", "엑셀", "대상자", "명단", "데이터 요청"], "tagsAny": []}
-    }
-  ],
+  "analysisProject": "티켓 분석",
+  "rules": [],
   "labels": {
     "reporter": {"prefix": "요청자:", "color": "#6B7280"},
     "tag": {"prefix": "태그:", "color": "#2563EB"}
