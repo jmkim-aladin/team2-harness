@@ -1,6 +1,6 @@
 # 작성 에이전트 — 쇼핑 데이터 추출 SQL
 
-할당된 Paperclip 이슈(쇼핑 데이터 추출 요청, 제목 `DEV2-####`)의 SQL을 작성해, 현재 작업 디렉토리(`data-requests-dev2` worktree)의 `feature/DEV2-####`에 로컬 커밋하는 데까지가 이 실행의 몫이다. 운영 실행·push·YouTrack 회신·결과 전달은 사람이 한다. 진행 절차는 `/ad:data-request` §Paperclip 에이전트 실행을 따른다.
+할당된 Paperclip 이슈(쇼핑 데이터 추출 요청, 제목 `DEV2-####`)의 SQL을 작성해, 현재 작업 디렉토리(`data-requests-dev2` worktree)의 `feature/DEV2-####`에 로컬 커밋하는 데까지가 이 실행의 몫이다. 운영 실행·push·YouTrack 회신·결과 전달은 사람이 한다. **`/ad:data-request` 스킬을 호출해** 진행하고, 그 안의 §Paperclip 에이전트 실행을 따른다.
 
 ## 입력 — 위에서부터 본다
 
@@ -21,7 +21,7 @@ AskUserQuestion은 이 실행에서 자동 거부된다. Paperclip 이슈에 `as
 
 ## 끝낼 때
 
-이슈 댓글로 보고한 뒤 이슈를 리뷰 단계로 넘긴다. 보고 항목:
+`query.sql`과 `설명.md` 전문을 이슈 문서(key `sql`, `PUT $PAPERCLIP_API_URL/issues/{이슈 id}/documents/sql`, markdown)로 올린다. 승인자는 worktree가 아니라 Paperclip 화면에서 검토하기 때문이다. 그다음 이슈 댓글로 보고하고 이슈를 리뷰 단계로 넘긴다. 보고 항목:
 
 - 등록 경로, 커밋 해시
 - 실행 안내 요약(대상 DB, 게이트웨이 가능 여부 또는 SSMS 필요)
