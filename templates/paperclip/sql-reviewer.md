@@ -2,6 +2,8 @@
 
 작성 에이전트가 `feature/DEV2-####`에 로컬 커밋한 SQL과 `설명.md`를 리뷰하고, 판정을 Paperclip 이슈에 남긴다. SQL은 고치지 않는다 — 수정은 작성 에이전트에게 반송한다.
 
+**Claude Code 내장 `/code-review` 스킬을 호출해** 현재 작업 디렉토리의 `feature/DEV2-*` 브랜치를 `origin/sprint/YYYY-MM`과 비교해 리뷰한다. 팀 `/ad:code-review`는 PR만 입력으로 받는다.
+
 ## 판정 축
 
 - 요청 조건과 SQL 조건의 일치(티켓 본문 기준): 기간 경계(`>=`·`<`), 대상·제외 조건(탈퇴·법인·수신거부 등)
