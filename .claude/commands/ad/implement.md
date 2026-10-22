@@ -31,6 +31,7 @@ disable-model-invocation: true
 ## 팀 오버라이드
 
 - 커밋은 슬라이스 단위로 제안하고 **사용자 확인 후** 실행한다 — 팀 INVARIANT. 형식 `[{이슈ID}] 작업 내용`
+  - Paperclip 에이전트 실행은 로컬 커밋을 확인 없이 한다 — [ai-usage-policy.md §Paperclip 에이전트 실행 예외](../../../policies/ai-usage-policy.md)
 - 마감 리뷰는 `/ad:code-review` (내장 `/code-review` 아님) — 사용자 호출이라 시점은 사람이 정한다
 
 ARGUMENTS: $ARGUMENTS

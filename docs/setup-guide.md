@@ -41,10 +41,15 @@ cd team2
 
 스크립트가 자동으로:
 1. `TEAM2_HARNESS_PATH`, `YOUTRACK_BASE_URL` 등록
-2. Claude Code `/ad` command 심볼릭 링크 생성
-3. `~/.codex/skills/*`, `~/.claude/skills/*`에 team2 Skill 심볼릭 링크 생성
-4. YouTrack 토큰 설정 확인
-5. gh CLI 설치/인증 확인
+2. 사용자 레벨 하드 게이트 설치 — `~/.claude/settings.json`에 DB 가드·push/PR 가드 훅과 `gh pr merge` ask 규칙 (`tools/install_claude_gates.py`, `setup_harness.py`도 같은 선언으로 수렴)
+3. Claude Code `/ad` command 심볼릭 링크 생성
+4. `~/.codex/skills/*`, `~/.claude/skills/*`에 team2 Skill 심볼릭 링크 생성
+5. YouTrack 토큰 설정 확인
+6. gh CLI 설치/인증 확인
+
+> - push/PR 가드(`tools/agent_run_guard.py`)는 Paperclip 실행(`PAPERCLIP_RUN_ID`)에서 승인 env(`PAPERCLIP_APPROVAL_STATUS=approved`)가 있을 때만 `feature/*` push와 `develop` 대상 draft PR을 통과시킨다. 승인 env는 Claude 프로세스 env라 에이전트가 Bash에서 바꿀 수 없다.
+> - 사람 세션의 `git push`·`gh pr create` 확인은 정적 `permissions.ask`가 아니라 훅 ask로 건다. 훅 allow는 ask 규칙을 넘지 못해, 정적 ask로 두면 승인된 에이전트도 막히기 때문이다.
+> - Bash 판정은 문자열 매칭이라 별칭·스크립트 파일 안 호출·명령 밖 변수는 놓칠 수 있다. Codex(`codex_local`)는 Claude Code 훅을 읽지 않아 범위 밖이다.
 
 터미널 control pane에서 `team2-agent`를 짧게 쓰려면 shell profile에 team2 `bin/`을 추가한다.
 

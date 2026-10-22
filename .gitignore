@@ -1,12 +1,13 @@
 .DS_Store
 .playwright-mcp/
 
-# 팀 명령과 DB 접근 훅만 추적. 개인 설정은 제외한다.
+# 팀 명령과 게이트 훅(DB 접근·에이전트 실행)만 추적. 개인 설정은 제외한다.
 .claude/*
 !.claude/commands/
 !.claude/hooks/
 .claude/hooks/*
 !.claude/hooks/sqlcmd-readonly.sh
 !.claude/hooks/block-db-mcp.sh
+!.claude/hooks/agent-run-guard.sh
 
 .gbrain-source

@@ -80,7 +80,10 @@
     "rtk",
     "orca",
     "herdr",
-    "caveman"
+    "caveman",
+    "sqlcmd-readonly",
+    "block-db-mcp",
+    "agent-run-guard"
   ],
   "_hooks_doc": "settings.json 훅 command 에 이 부분 문자열이 없으면 미등록 훅 — 경고, --reset 시 제거. GSD 훅 9개가 3주간 미검출된 재발 방지 (2026-08-08).",
   "git_hooks": {
