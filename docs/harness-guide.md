@@ -361,6 +361,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 이해 | 방금 설명이 이해 안 될 때 재설명 | `/wait-what` — 팀 용어집 어휘로 재피치 | — |
 | 이해 | 새 기술·개념 다세션 학습 | `/teach` — 현재 디렉토리를 학습 워크스페이스로 | — |
 | 협업 | 다른 에이전트와 협업 (Herdr) | `/ad:orchestration` | 개발 — `HERDR_ENV=1`이면 필요할 때 자동 사용, 아니면 서브에이전트로 대체: 설계 검증(위험) 반증 검토를 다른 벤더 peer(Codex)의 fresh context로(완료 조건·슬라이스·코드만 전송 — 교차 모델 리뷰와 같은 데이터 경계) / 디버깅 `diagnosing-bugs`가 막히면 경쟁 가설 조사를 가설별 peer 병렬로 / 리뷰 `/ad:code-review-self` 리뷰어 pane / 구현 중 오래 걸리고 중간 조향이 필요한 위임. 슬라이스 구현은 하나씩 — 병렬 슬라이스는 사용자 지시가 있을 때만 |
+| 협업 | DEV2 티켓을 로컬 Paperclip 에이전트에 맡김 (파일럿) | `/ad:paperclip-dispatch` — Inbox 등록(`{ID…}`·`--inbox`), 프로젝트·격리·리뷰→승인 정책 분류(`--project`). 결정적 층 `tools/paperclip_import_ticket.py`, 구성 [templates/paperclip/README.md](../templates/paperclip/README.md) | 개발·착수 준비 — 쇼핑 데이터 추출 요청이면 work-prep 다음 단계로 `--project` 분류 |
 | 협업 | 새 하네스·디렉토리·동료에게 인계 | `/handoff` | 단계 경계 — 세션·사람 이동 |
 | 협업 | 사람만 할 수 있는 절차 (자격증명·대시보드) | `wizard` (모델 호출) | — |
 | 협업 | merge·rebase 충돌 | `resolving-merge-conflicts` (모델 호출) | — |

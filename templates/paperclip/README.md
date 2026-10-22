@@ -18,6 +18,9 @@
 - worktree 위치는 `workspaceStrategy.worktreeParentDir`로 repo 밖에 둔다. 기본값은 repo 안의 `.paperclip/worktrees/`라서 사람 쪽 `git status`에 섞인다. 이미 repo 안에 만들었다면 `.git/info/exclude`에 `.paperclip/`를 넣는다
 - 이슈 제목은 `DEV2-#### {요청 제목}`, 본문은 YouTrack 링크와 요청 요약이다. import는 YouTrack → Paperclip 단방향이다
 - executionPolicy는 리뷰 단계(리뷰 에이전트) → 승인 단계(board 사용자) 순서다
+- 등록은 `/ad:paperclip-dispatch DEV2-####`(또는 `--inbox`)다. Board 담당·backlog로 들어가 Inbox "Mine"에 모이고, `pilot.json` 규칙에 맞으면 프로젝트·격리·정책이 붙는다. 라벨 `요청자:`·`태그:`와 Artifacts 탭의 원본 티켓 링크(work product)도 함께 붙는다. 맡길 이슈는 `--project "쇼핑 데이터 추출" DEV2-####`로 분류한다 — 화면에서 프로젝트만 바꾸면 격리·정책이 붙지 않는다
+- 실행 시작은 사람이 담당을 SQL Writer로 바꾸고 상태를 todo로 올리는 순간이다. backlog 이슈는 할당해도 깨우지 않는다(`issue-assignment-wakeup.ts:46`)
+- 자동화: cron·routine이 `python3 tools/paperclip_import_ticket.py --inbox`(또는 `--query "<YouTrack 검색식>"`)를 부른다. 멱등이라 반복 실행해도 중복이 없다. 해결된 티켓의 Paperclip 반영(`--sync-resolved`)은 후속이다
 
 ## 에이전트 (claude_local)
 

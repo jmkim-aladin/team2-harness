@@ -138,6 +138,7 @@ Claude Code의 `/ad:*`는 symlink라 어느 repo에서든 쓸 수 있다. 코드
 | `/ad:explain` | 지식 — 코드 변경·분석 설명서를 만든다. `--tldr`은 아키텍처 one-pager | 사용자 |
 | `/ad:architecture-analysis` | 지식 — 저장소 아키텍처를 분석한다(Clean/Hexagonal/DDD, 네이밍) | 모델 |
 | `/ad:orchestration` | 협업 — Herdr peer-agent와 위임·핑퐁·병렬 fan-out. `HERDR_ENV=1`일 때 | 모델 |
+| `/ad:paperclip-dispatch` | 협업 — DEV2 티켓을 로컬 Paperclip Inbox에 등록하고 프로젝트·정책으로 분류한다(파일럿) | 모델 |
 | `/ad:data-request` | 운영 DB — 운영 데이터 추출 SQL을 data-requests-dev2에 등록한다 | 모델 |
 | `/ad:db-stop` | 운영 DB — 현재 Mac 계정의 운영 DB 조회 취소·종료를 확인한다 | 모델 |
 | `/ad:harness-optimize` | 하네스 — 중복 제거, KB 동기화, 스킬·제약·스택 감사, repo↔vault 드리프트 | 모델 |
