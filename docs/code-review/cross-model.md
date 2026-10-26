@@ -26,13 +26,15 @@
 읽기 전용은 CLI 인자로 강제한다 — 프롬프트 문구에만 기대지 않는다: `codex`는 `-s read-only`, `claude`는 `--allowedTools Read Grep Glob`(쓰기·Bash·네트워크 미허용). 한 번에 5~12분 걸리므로 `run_in_background: true`로 띄우고(포그라운드면 `timeout: 600000`) 아래 중단 기준으로 확인한다.
 
 ```bash
+# 공통: $CH = 임시 CODEX_HOME(auth.json만) — 두 모드 모두
+mkdir -p "$CH" && cp ~/.codex/auth.json "$CH/"
+
 # Claude Code 호스트 → Codex (문맥 모드)
-codex exec -s read-only -C "{로컬 클론}" -o "$SCRATCH/cross-final.txt" "$(cat "$PROMPT_FILE")" \
+CODEX_HOME="$CH" codex exec -s read-only -C "{로컬 클론}" -o "$SCRATCH/cross-final.txt" "$(cat "$PROMPT_FILE")" \
   -c 'model_reasoning_effort="high"' < /dev/null > "$SCRATCH/cross-out.txt" 2>&1
 
 # Claude Code 호스트 → Codex (diff-only 모드)
-#   $ISO = 새 빈 스크래치 디렉토리(diff·prompt만)  $CH = 임시 CODEX_HOME(auth.json만)
-mkdir -p "$CH" && cp ~/.codex/auth.json "$CH/"
+#   $ISO = 새 빈 스크래치 디렉토리(diff·prompt만)
 CODEX_HOME="$CH" codex exec -s read-only --skip-git-repo-check -C "$ISO" -o "$SCRATCH/cross-final.txt" "$(cat "$ISO/prompt.txt")" \
   -c 'model_reasoning_effort="high"' < /dev/null > "$SCRATCH/cross-out.txt" 2>&1
 
@@ -43,11 +45,11 @@ CODEX_HOME="$CH" codex exec -s read-only --skip-git-repo-check -C "$ISO" -o "$SC
 
 `cross-out.txt`는 진행 감시(크기·탐색)용 원시 로그이고, 완료 판정은 최종 응답 파일 `cross-final.txt`만 본다 — codex는 `-o`(`--output-last-message`), `claude -p`는 텍스트 모드 stdout이 최종 응답이다.
 
-diff-only 격리 규칙 — 셋 다 실측 사고에서 나왔다:
+격리 규칙 — 셋 다 실측 사고에서 나왔다. CODEX_HOME은 두 모드 모두, cwd·출력 경로는 diff-only 모드에 적용한다:
 
-- **cwd**: 빈 `$ISO`를 `-C`로 지목하고 git 레포가 아니므로 `--skip-git-repo-check`를 준다. `-C`를 빼면 codex가 team2 하네스 전체를 탐색한다 (2026-08-10: 176초에 193KB, 완료 없이 타임아웃)
-- **CODEX_HOME**: `-C`는 워킹 디렉토리만 바꾸고 전역 `AGENTS.md`·`config.toml`(하네스 경로 env·team2 플러그인·프로젝트 훅)은 그대로 로드된다 (2026-08-11 PR #9: 격리 출력에 전역 `AGENTS.md`와 `hook: PreToolUse`가 찍혔다). 빈 `CODEX_HOME`에 `auth.json`만 복사하고 — 통째로 비우면 로그인 실패 — 리뷰 후 지운다. 문맥 모드는 대상 레포 읽기가 목적이라 격리하지 않는다
-- **출력 경로**: 출력은 `$ISO` 밖(스크래치 상위)으로 받는다 — 안에 두면 모델이 자기 출력을 소스로 다시 읽는다 (2026-08-11 PR #9: `rg` 결과가 `./codex-out.txt` 히트로 채워졌다)
+- **CODEX_HOME (두 모드)**: `-C`는 워킹 디렉토리만 바꾸고 전역 `AGENTS.md`·`config.toml`(하네스 경로 env·team2 플러그인·프로젝트 훅)·전역 스킬은 그대로 로드된다 (2026-08-11 PR #9: 격리 출력에 전역 `AGENTS.md`와 `hook: PreToolUse`가 찍혔다). 문맥 모드도 대상 레포만 읽으면 되므로 격리한다 — 2026-10-26 attendance PR #104: 격리 없는 문맥 모드 codex가 전역 `ad-code-review` 스킬과 하네스 `code-review.md`를 읽었다(§프롬프트 데이터 경계 위반). 빈 `CODEX_HOME`에 `auth.json`만 복사하고 — 통째로 비우면 로그인 실패 — 리뷰 후 지운다
+- **cwd (diff-only)**: 빈 `$ISO`를 `-C`로 지목하고 git 레포가 아니므로 `--skip-git-repo-check`를 준다. `-C`를 빼면 codex가 team2 하네스 전체를 탐색한다 (2026-08-10: 176초에 193KB, 완료 없이 타임아웃)
+- **출력 경로 (diff-only)**: 출력은 `$ISO` 밖(스크래치 상위)으로 받는다 — 안에 두면 모델이 자기 출력을 소스로 다시 읽는다 (2026-08-11 PR #9: `rg` 결과가 `./codex-out.txt` 히트로 채워졌다)
 
 diff-only는 코드 문맥이 없어 지적 질이 떨어지므로 결과에 모드를 명시한다.
 
