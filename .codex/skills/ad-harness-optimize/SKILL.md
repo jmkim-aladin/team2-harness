@@ -1,6 +1,6 @@
 ---
 name: ad-harness-optimize
-description: "[상시·하네스] Use when the user invokes $ad-harness-optimize, ad harness optimize, /ad:harness-optimize, or asks to optimize DEV2 harness and vault boundaries."
+description: "[상시·하네스] Use when asked to optimize DEV2 harness and vault boundaries. Also /ad:harness-optimize."
 ---
 
 # `$ad-harness-optimize`

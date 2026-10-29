@@ -1,6 +1,6 @@
 ---
 name: ad-implement
-description: "[개발·구현] Use when the user invokes $ad-implement or /ad:implement to implement one slice of a DEV2 ticket note's implementation plan with TDD and then stop (commit only after confirmation), or work described by a spec or ticket."
+description: "[개발·구현] Use when asked to implement one slice of a DEV2 ticket note's implementation plan with TDD and then stop (commit only after confirmation), or work described by a spec or ticket. Also /ad:implement."
 ---
 
 # `$ad-implement`

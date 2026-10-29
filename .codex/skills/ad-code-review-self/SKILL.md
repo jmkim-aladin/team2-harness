@@ -1,6 +1,6 @@
 ---
 name: ad-code-review-self
-description: "[개발·리뷰] Use when the user invokes $ad-code-review-self, ad code review self, /ad:code-review-self, or asks to self-review their own DEV2 GitHub PR with a separate reviewer agent until review completion."
+description: "[개발·리뷰] Use when asked to self-review their own DEV2 GitHub PR with a separate reviewer agent until review completion. Also /ad:code-review-self."
 ---
 
 # `$ad-code-review-self`

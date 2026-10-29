@@ -164,16 +164,19 @@ Never leave them implicit.
 The model per role lives in one place — `MODEL_TIERS` (model ids) and
 `ROLE_LAUNCH_DEFAULTS` (role → tier/effort) in `tools/team2_agent.py`, the same values
 `team2-agent herdr` launches with. This file
-does not copy them, so it cannot go stale. Read the current line-up before every start:
+does not copy them, so it cannot go stale. Read the current line-up once per session;
+refresh it when the launch configuration changes:
 
 ```bash
-team2-agent profiles    # TSV: role  codex_model  codex_effort  claude_model
-                        # then: tier  codex_model  claude_model  use, and the override rules
+team2-agent profiles    # TSV: role  codex_model  codex_effort  claude_model  claude_effort
+                        # then: tier  codex_model  claude_model  effort  use, and override rules
 ```
 
 Use the role default. Deviate only when the work is clearly easier or harder than that
 default: choose a `tier` and/or `effort` from the tier table and rules `profiles` prints,
-and take the engine's model id from that table. A direct `herdr agent start` follows the
+and take the engine's model id from that table. A tier selects both model and effort;
+an explicit effort takes precedence. Use the fast tier for mechanical exploration;
+keep ambiguous investigation and implementation at the role default or above. A direct `herdr agent start` follows the
 same rules `team2-agent herdr worker|role --tier/--effort/--why` enforces — `orchestrator`
 keeps its default, `reviewer`/`verifier` keep their default tier and stay at or above the
 gate effort floor, effort never exceeds the model's cap — and records the reason as one
@@ -189,12 +192,13 @@ herdr agent start codex1 --kind codex --pane <pane_id> --timeout 60000 \
 ```
 
 Claude peer — pass `--model <claude_model>` and Claude's own options. **Never** forward
-`-m` or `model_reasoning_effort`; those are Codex-only. Claude's effort is not set by
-the caller, except on an override, where it goes as `--effort <level>`:
+`-m` or `model_reasoning_effort`; those are Codex-only. Pass Claude's native
+`--effort <claude_effort>` from the role or selected tier, including default launches.
+Opus 5.5 is the user-selected ceiling; Fable is not used:
 
 ```bash
 herdr agent start claude1 --kind claude --pane <pane_id> --timeout 60000 \
-  -- --dangerously-skip-permissions --model <claude_model>
+  -- --dangerously-skip-permissions --model <claude_model> --effort <claude_effort>
 ```
 
 Every freshly started peer prints this once, as the first line of its first
@@ -254,9 +258,8 @@ The first three drive section 0's branch. The last three are the handoff record 
 same `role` / `model` / `effort` you passed at `agent start`, restated so the peer can
 emit its `[model]` line and so the exchange is auditable from the transcript alone. Add
 `HERDR_SESSION=<id>` when resuming a known session. When the peer is Claude, send
-`HERDR_MODEL=<claude_model>` you passed, and `HERDR_EFFORT=unknown` — you did not
-choose it, so do not assert it (on an effort override, send the `--effort` value you
-passed). Add `HERDR_OVERRIDE=<why>` whenever tier or effort left the role default.
+`HERDR_MODEL=<claude_model>` and `HERDR_EFFORT=<claude_effort>` matching the native
+`--model` and `--effort` values you passed. Add `HERDR_OVERRIDE=<why>` whenever tier or effort left the role default.
 
 Then give: the repo path, the exact files or diff range, what to produce, the
 read/write scope stated explicitly, and that a conversation is expected. Ask for

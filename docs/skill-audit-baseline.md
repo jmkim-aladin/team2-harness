@@ -3,7 +3,39 @@
 기준: [policies/skill-authoring-principles.md](../policies/skill-authoring-principles.md) | 갱신: `/ad:harness-optimize 스킬`·`제약`·`스택`
 통계: `python3 tools/skill_usage_report.py` (팀 스킬) | `python3 tools/harness_context_audit.py` (컨텍스트·외부 스택·훅)
 
-최종 감사일: 2026-10-21 (7회차 — 3팩 흡수·지도 재편·가지치기)
+최종 감사일: 2026-10-30 (8회차 — Codex alias 설명 중복 축약)
+
+## 8회차 감사 (2026-10-30) — Codex alias 설명 중복 축약
+
+범위: 사용자 요청에 따라 API 비용 최적화는 제외하고, 상시 로드되는 스킬 설명의 반복만 줄였다. [북극성 3·4]
+
+| 항목 | 결과 |
+|---|---|
+| 사용 통계 | 최근 90일 Claude·Codex 합산: orchestration 302, code-review 234, work-prep 229, plan 148. 0회 5종은 삭제하지 않음 — 로그 밖 경로 및 필요성 미판정 |
+| 변경 | Codex ad alias 27개 중 26개 description에서 이름의 세 가지 반복 표기를 `/ad:*` 하나로 축약. 본문·자연어 작업 조건·제외 조건·승인 게이트·호출 정책 보존 |
+| 상주 설명 크기 | ad alias description UTF-8 바이트 합계 5,880 → 4,791 (18.5% 감소). tokenizer 측정이나 전체 세션 절감률이 아님 |
+| 대표 요청 비교 | 같은 Codex CLI·gpt-6-luna·max, 새 ephemeral 세션의 설명 카탈로그 분류 10건: 전후 모두 기대한 선택. 위키 노트/YouTrack 종료, KB 게시, SQL 등록, 단순 오타, Herdr 협업, capacity, planned 주간, 설계 검토, 명시 alias 포함 |
+| 확인 한계 | 각 후보 1회 실행으로 분류 관찰만 확인. 실제 스킬 실행·게시·DB·품질 개선·평균 사용량 절감은 검증하지 않음. 운영 절차 삭제의 근거로 확대하지 않음 |
+| 형식·패리티 | `test_codex_skills.py` 4개 통과, `lint_harness_rules.py --check` 신규 위반·회귀 0 |
+
+원본 후보·요청·CLI 실행 이벤트·결과·종료 기록: `/Users/jm/.codex/backups/skill-optimization-20261030/` (로컬 백업).
+
+후속 에이전트 설정 [북극성 2·3·4·5]: 사용자가 Codex·Claude 모델/effort 재설계를 요청하고 Claude 상한을 Opus 5.5로 지정했다. 실행값은 `tools/team2_agent.py`의 `team2-agent profiles`로 조회한다. Codex 조율 Astra→Sol, worker max→high; Claude Fable 제외 및 역할별 native effort 명시. `--tier`는 모델·effort preset이며 명시 effort가 우선한다. 리뷰·검수 tier 고정과 xhigh 하한, 조율 override 차단, 모델별 상한, 사유 기록은 유지했다. 프로필 테스트를 별도 클래스로 묶었고 에이전트 테스트 111개 통과. 기존 실행 중인 pane에는 적용하지 않았으며 새 실행부터 적용한다. 모델별 업무 품질·실제 사용 한도 절감률은 미측정이다.
+
+추가 진단(사용자 요청, 동일 회차) [북극성 1·3·4]: `ad-harness-optimize`의 스킬·스택 진단 도구를 확인했다. Claude에 동기화된 `skill-creator`는 호출 정확도 평가·벤치마크용이며, 비활성 superpowers 캐시의 `diagnosing-superpowers`는 특정 세션 조사용이다. 후자는 이번 작업에 활성화하지 않았다.
+
+| 진단 | 관찰·한계 |
+|---|---|
+| 30일 컨텍스트 감사 | `tools/harness_context_audit.py --days 30 --json` 실행 완료. 원본은 로컬 백업의 `context-audit-30d.json` |
+| 상주 추정 | 7,866 tok (chars/4). Claude 관련 파일 합계에 harness CLAUDE/AGENTS를 함께 더한 근사치이며 Codex 실제 로드량·전체 시스템 컨텍스트를 측정한 값이 아님 |
+| Claude 도구 분포 | Bash 70.0%, Bash 중 cd 19.7%. Codex 셸 읽기까지 같은 의미로 해석하지 않음 |
+| Codex 호출 오탐 | `tools/harness_context_audit.py`의 Codex 루프가 전체 파일에서 `$이름`을 검색해 주입된 스킬 목록·셸 변수도 집계하며 기간 필터가 없음. 해당 `skill_hits`를 미사용/삭제 판정에 사용하지 않음. 위 사용 통계는 별도 `skill_usage_report.py` 결과 |
+| 평균 컨텍스트 지표 | 현재 구현은 Claude cache-read 토큰 합계 / 도구 호출 수. 실제 모델 요청당 총 입력 컨텍스트의 평균이 아니므로 출력된 425,709를 실제 컨텍스트 크기로 해석하지 않음 |
+| 독립 리뷰 | 에이전트 코드의 차단 결함 없음. Claude effort 설명 드리프트를 찾아 `docs/harness-guide.md`와 handoff envelope를 구현에 맞춤. 실제 Herdr/원격 모델 실행은 제외 |
+
+후속 후보: 진단 도구의 Codex 호출 식별·기간 필터와 요청당 컨텍스트 집계 교정은 별도 변경으로 분리한다. 이번에는 진단 수치를 근거로 스킬·훅을 끄거나 제거하지 않았다.
+
+이관: 공통 컨텍스트 스킬의 트리거 재설계·대형 본문 분리는 보류. 실제 호출 경로별 로드량과 재독을 측정한 뒤 판단한다. 자동 호출 비활성화·스킬 삭제·Claude 절차 변경은 이번 범위에 포함하지 않는다.
 
 ## 7회차 감사 (2026-10-21) — 3팩 흡수·지도 재편·가지치기
 

@@ -1,6 +1,6 @@
 ---
 name: ad-weekly-report
-description: "[주기·주간] Use when the user invokes $ad-weekly-report, ad weekly report, /ad:weekly-report, or asks for a DEV2 weekly work report, or (planned mode) a planned-tag plan snapshot saved to wiki meetings."
+description: "[주기·주간] Use when asked for a DEV2 weekly work report, or (planned mode) a planned-tag plan snapshot saved to wiki meetings. Also /ad:weekly-report."
 ---
 
 # `$ad-weekly-report`

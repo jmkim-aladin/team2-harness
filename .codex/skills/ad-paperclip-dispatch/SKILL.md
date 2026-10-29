@@ -1,6 +1,6 @@
 ---
 name: ad-paperclip-dispatch
-description: "[상시·협업] Use when the user invokes $ad-paperclip-dispatch or /ad:paperclip-dispatch, or asks to put DEV2 tickets into the local Paperclip inbox or classify them into a Paperclip project for agent work."
+description: "[상시·협업] Use when asked to put DEV2 tickets into the local Paperclip inbox or classify them into a Paperclip project for agent work. Also /ad:paperclip-dispatch."
 ---
 
 # `$ad-paperclip-dispatch`

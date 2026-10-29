@@ -1,6 +1,6 @@
 ---
 name: ad-kb-publish
-description: "[상시·지식] Use when the user invokes $ad-kb-publish or /ad:kb-publish, or asks to register or post a document or draft in YouTrack KB. Applies during registration, not ongoing KB synchronization or general link maintenance."
+description: "[상시·지식] Use when asked to register or post a document or draft in YouTrack KB. Applies during registration, not ongoing KB synchronization or general link maintenance. Also /ad:kb-publish."
 ---
 
 # `$ad-kb-publish`

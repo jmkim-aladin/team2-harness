@@ -164,7 +164,7 @@ team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구�
 
 ### agent 모델 라우팅
 
-herdr가 agent를 시작하면 prompt의 역할명만 쓰지 않고 launch role별 모델을 CLI 인자로 지정한다. Codex는 model과 reasoning effort를, Claude는 `--model`만 지정한다. 각 agent는 새 작업의 첫 응답 첫 줄에 `[model] role=<role> model=<model> effort=<effort>`를 출력한다.
+herdr가 agent를 시작하면 prompt의 역할명만 쓰지 않고 launch role별 모델을 CLI 인자로 지정한다. Codex는 model과 reasoning effort를, Claude는 native `--model`과 `--effort`를 지정한다. 각 agent는 새 작업의 첫 응답 첫 줄에 `[model] role=<role> model=<model> effort=<effort>`를 출력한다.
 
 | 실행 대상 | launch role |
 |---|---|
@@ -175,7 +175,7 @@ herdr가 agent를 시작하면 prompt의 역할명만 쓰지 않고 launch role�
 
 role별 모델 값은 `tools/team2_agent.py`의 `MODEL_TIERS`(모델 id)·`ROLE_LAUNCH_DEFAULTS`(role→tier·effort)가 SoT다. 문서에 복제하지 않으므로 현재 값은 `team2-agent profiles`로 조회한다.
 
-기본값을 쓰되 업무 난이도가 기본과 다를 때만 `herdr worker`·`herdr role`에 `--tier {fast|workhorse|frontier}`·`--effort`·`--why "사유"`를 붙여 바꾸고, 엔진 중립 tier는 CLI가 `MODEL_TIERS` 표로 엔진별 모델 id로 푼다(tier 표와 규칙도 `team2-agent profiles`가 출력). CLI는 herdr 호출 전에 사유 누락, orchestrator override, reviewer·verifier의 tier 변경·effort 하한 미달, 모델별 effort 상한 초과를 거부하고(exit 2), 통과하면 시작 로그 끝에 `override="<사유>"`를 남긴다. Claude는 override effort가 있을 때만 `--effort`를 받는다.
+기본값을 쓰되 업무 난이도가 기본과 다를 때만 `herdr worker`·`herdr role`에 `--tier {fast|workhorse|frontier}`·`--effort`·`--why "사유"`를 붙여 바꾸고, 엔진 중립 tier는 CLI가 `MODEL_TIERS` 표로 엔진별 모델 id로 푼다(tier 표와 규칙도 `team2-agent profiles`가 출력). CLI는 herdr 호출 전에 사유 누락, orchestrator override, reviewer·verifier의 tier 변경·effort 하한 미달, 모델별 effort 상한 초과를 거부하고(exit 2), 통과하면 시작 로그 끝에 `override="<사유>"`를 남긴다. tier는 모델과 effort를 함께 선택하며, 명시 `--effort`가 우선한다. 동일 tier를 지정한 reviewer·verifier는 역할 기본 effort를 유지한다. Claude도 역할 기본값부터 native `--effort`를 받으며, 최상위 모델은 사용자 지정 Opus 5.5로 제한한다.
 
 이 launch role은 새 최상위 thread의 역할이다. Codex thread가 다시 Codex subagent를 생성하면 개인 `~/.codex/config.toml`과 custom agent 설정이 적용된다. Claude engine에는 Codex 전용 `model_reasoning_effort`를 전달하지 않는다.
 

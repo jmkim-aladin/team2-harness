@@ -1,6 +1,6 @@
 ---
 name: ad-ticket
-description: "[개발·스펙+분할] Use when the user invokes $ad-ticket, ad ticket, /ad:ticket, or asks to draft or create a DEV2 YouTrack ticket."
+description: "[개발·스펙+분할] Use when asked to draft or create a DEV2 YouTrack ticket. Also /ad:ticket."
 ---
 
 # `$ad-ticket`

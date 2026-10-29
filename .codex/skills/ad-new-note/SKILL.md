@@ -1,6 +1,6 @@
 ---
 name: ad-new-note
-description: "[상시·지식] Use when the user invokes $ad-new-note, ad new note, /ad:new-note, or asks to create a new DEV2 operations wiki note."
+description: "[상시·지식] Use when asked to create a new DEV2 operations wiki note. Also /ad:new-note."
 ---
 
 # `$ad-new-note`
