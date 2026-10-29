@@ -1,6 +1,6 @@
 ---
 name: ad-explain
-description: "[상시·지식] Use when the user invokes $ad-explain, ad explain, /ad:explain, or asks for an explainer document of a code change, PR, branch, or of an analysis just completed, or (--tldr mode) a one-page TL;DR architecture overview of a repository."
+description: "[상시·지식] Use when asked for an explainer document of a code change, PR, branch, or of an analysis just completed, or (--tldr mode) a one-page TL;DR architecture overview of a repository. Also /ad:explain."
 ---
 
 # `$ad-explain`

@@ -1,6 +1,6 @@
 ---
 name: ad-plan
-description: "[구상·정렬] Use when the user invokes $ad-plan, /ad:plan, or wants to synthesize an idea or grill session into a vault plan note."
+description: "[구상·정렬] Use when asked to synthesize an idea or grill session into a vault plan note. Also /ad:plan."
 ---
 
 # `$ad-plan`

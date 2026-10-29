@@ -1,6 +1,6 @@
 ---
 name: ad-capacity-plan
-description: "[주기·월말] Use when the user invokes $ad-capacity-plan, ad capacity plan, /ad:capacity-plan, or asks for DEV2 capacity planning, velocity, or man-day analysis."
+description: "[주기·월말] Use when asked for DEV2 capacity planning, velocity, or man-day analysis. Also /ad:capacity-plan."
 ---
 
 # `$ad-capacity-plan`

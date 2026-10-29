@@ -1,6 +1,6 @@
 ---
 name: ad-work-prep
-description: "[개발·착수 준비] Use when the user invokes $ad-work-prep, ad work prep, /ad:work-prep, asks to prepare DEV2 ticket work (strength, implementation plan), or asks to close/mark done/finish a DEV2 ticket wiki note once work is done."
+description: "[개발·착수 준비] Use when asked to prepare DEV2 ticket work (strength, implementation plan), or to close/mark done/finish a DEV2 ticket wiki note once work is done. Also /ad:work-prep."
 ---
 
 # `$ad-work-prep`

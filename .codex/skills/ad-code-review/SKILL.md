@@ -1,6 +1,6 @@
 ---
 name: ad-code-review
-description: "[개발·리뷰] Use when the user invokes $ad-code-review, ad code review, /ad:code-review, or asks for a DEV2 GitHub PR code review, including persona review and blast-radius checks for risk-strength changes."
+description: "[개발·리뷰] Use when asked for a DEV2 GitHub PR code review, including persona review and blast-radius checks for risk-strength changes. Also /ad:code-review."
 ---
 
 # `$ad-code-review`

@@ -49,6 +49,15 @@
 - SP 호출은 legacy adapter repo/service에서만 허용
 - 신규 서비스가 레거시 DB를 직접 조회/수정 금지 — adapter/facade 뒤로 숨김
 
+## PostgreSQL 구현 원칙
+
+- PostgreSQL 사용자 정의 함수와 트리거를 새로 만들거나 도입하지 않는다. 신규 마이그레이션의 `CREATE FUNCTION`, `CREATE OR REPLACE FUNCTION`, `CREATE TRIGGER`, `CREATE CONSTRAINT TRIGGER`, `CREATE EVENT TRIGGER`도 이 규칙을 따른다 — 설정 변경에 숨은 DB 실행 절차가 개입하지 않도록 한다
+- 검증·상태 변경·버전 관리·감사 기록은 애플리케이션의 명시적인 SQL과 트랜잭션으로 처리한다. PK·FK·UNIQUE·CHECK 등 표준 제약은 데이터 정합성을 위해 사용한다
+- PostgreSQL 내장 함수와 일반 조회·집계 SQL은 사용할 수 있다. 금지 대상은 서비스가 추가하는 사용자 정의 함수와 트리거다
+- 기존 함수·트리거를 정리할 때는 의존 로직과 회귀 영향을 확인하고 새 마이그레이션으로 제거한다. 이미 적용된 마이그레이션은 checksum과 이력 보존을 위해 원본을 유지한다
+
+근거: 2026-10-26 사용자 명시 지시 — "앞으로 postgres용 함수는 만들지 말고 트리거도 만들지마 팀하네스에 적용해줘". DEV2-11846에서 모드 직접 수정이 DB 함수·트리거에 막힌 운영 복잡성을 줄이기 위한 팀 규칙
+
 ## ADR (아키텍처 결정 기록)
 
 서비스 repo `docs/adr/`에 기록한다. 다음 셋을 **모두** 충족할 때만 작성한다 — 하나라도 빠지면 ADR이 아니다:

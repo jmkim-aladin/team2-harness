@@ -88,6 +88,7 @@ class ModelTier(NamedTuple):
     name: str
     codex_model: str
     claude_model: str
+    effort: str
     use: str
 
 
@@ -95,6 +96,7 @@ class RoleLaunchDefault(NamedTuple):
     codex_tier: str
     codex_effort: str
     claude_tier: str
+    claude_effort: str
 
 
 class LaunchOverride(NamedTuple):
@@ -112,12 +114,12 @@ class LaunchOverride(NamedTuple):
 NO_OVERRIDE = LaunchOverride()
 
 # 모델 id의 SoT. 모델 교체는 이 표만 고친다. 선언 순서가 낮은→높은 tier 순서다.
-# 짝짓기 근거: Codex models_cache 설명(astra "Frontier intelligence", sol "Workhorse", luna "Fast and affordable")과
-# Claude 등급(Fable 5.1 최상위, Opus 5.5, Sonnet 5).
+# Codex는 모델과 effort를 함께 올린다. Claude는 사용자 지정 상한 Opus 5.5 안에서
+# Sonnet/Opus와 effort로 구분한다 (2026-10-30: Fable 미사용).
 MODEL_TIERS = {
-    "fast": ModelTier("fast", "gpt-6-luna", "claude-sonnet-5", "기계적 탐색·위치 찾기·단순 편집·포맷 변환"),
-    "workhorse": ModelTier("workhorse", "gpt-6-sol", "claude-opus-5-5", "일반 코딩·버그 수정·테스트 작성·구조 파악"),
-    "frontier": ModelTier("frontier", "gpt-6-astra", "claude-fable-5-1", "설계 판단·까다로운 디버깅·장시간 자율 작업"),
+    "fast": ModelTier("fast", "gpt-6-luna", "claude-sonnet-5", "medium", "기계적 탐색·위치 찾기·단순 편집·포맷 변환"),
+    "workhorse": ModelTier("workhorse", "gpt-6-sol", "claude-opus-5-5", "high", "일반 코딩·버그 수정·테스트 작성·구조 파악"),
+    "frontier": ModelTier("frontier", "gpt-6-astra", "claude-opus-5-5", "xhigh", "설계 판단·까다로운 디버깅·장시간 자율 작업"),
 }
 
 EFFORT_LEVELS = ("low", "medium", "high", "xhigh", "max", "ultra")
@@ -129,7 +131,6 @@ MODEL_MAX_EFFORT = {
     "gpt-6-luna": "max",
     "claude-sonnet-5": "max",
     "claude-opus-5-5": "max",
-    "claude-fable-5-1": "max",
 }
 
 # 리뷰·검증은 품질 게이트라 조용히 약해지면 안 된다 — tier는 기본값 고정, effort는 하한 이상.
@@ -140,10 +141,10 @@ FIXED_LAUNCH_ROLES = frozenset({"orchestrator"})
 
 # 역할별 launch 기본값의 SoT(tier 이름으로 적는다). 스킬·가이드는 값을 복제하지 않고 `team2-agent profiles`로 조회한다.
 ROLE_LAUNCH_DEFAULTS = {
-    "orchestrator": RoleLaunchDefault("frontier", "xhigh", "frontier"),
-    "worker": RoleLaunchDefault("fast", "max", "workhorse"),
-    "reviewer": RoleLaunchDefault("workhorse", "xhigh", "workhorse"),
-    "verifier": RoleLaunchDefault("workhorse", "xhigh", "workhorse"),
+    "orchestrator": RoleLaunchDefault("workhorse", "xhigh", "workhorse", "xhigh"),
+    "worker": RoleLaunchDefault("fast", "high", "workhorse", "high"),
+    "reviewer": RoleLaunchDefault("workhorse", "xhigh", "workhorse", "xhigh"),
+    "verifier": RoleLaunchDefault("workhorse", "xhigh", "workhorse", "xhigh"),
 }
 
 CODEX_LAUNCH_PROFILES = {
@@ -151,7 +152,7 @@ CODEX_LAUNCH_PROFILES = {
     for role, default in ROLE_LAUNCH_DEFAULTS.items()
 }
 
-# Claude는 기본적으로 --model만 지정한다. effort는 override가 있을 때만 --effort로 넘긴다.
+# Claude도 역할별 native --effort를 지정해 로컬 설정에 따른 비용·로그 드리프트를 막는다.
 CLAUDE_LAUNCH_MODELS = {role: MODEL_TIERS[default.claude_tier].claude_model for role, default in ROLE_LAUNCH_DEFAULTS.items()}
 
 TEAM2_ROLE_TO_CODEX_ROLE = {
@@ -198,12 +199,8 @@ def claude_launch_model(role: str) -> str:
 
 
 def claude_start_instruction(role: str, model: str, override: LaunchOverride = NO_OVERRIDE) -> str:
-    """Claude에는 기본적으로 --model만 넘기므로 model은 launcher 값, effort는 Claude가 스스로 보고한다.
-
-    override effort를 --effort로 넘겼으면 그 값을 적는다. Codex 전용 model_reasoning_effort는 Claude에 전달하면 안 된다.
-    확인 불가 필드는 unknown으로 둔다.
-    """
-    effort = override.effort or "<실제 effort>"
+    """CLI와 같은 native effort를 로그에 전달한다. Codex 옵션은 Claude에 넘기지 않는다."""
+    effort = launch_effort("claude", role, override)
     return (
         "첫 사용자 표시 응답의 첫 줄에 "
         f"`[model] role={role} model={model} effort={effort}{override_log_suffix(override)}` 형식으로 한 번 출력한다. "
@@ -221,10 +218,21 @@ def default_tier(engine: str, role: str) -> str:
     return default.claude_tier if engine == "claude" else default.codex_tier
 
 
+def launch_effort(engine: str, role: str, override: LaunchOverride = NO_OVERRIDE) -> str:
+    role = launch_role(role)
+    default = ROLE_LAUNCH_DEFAULTS[role]
+    if override.effort:
+        return override.effort
+    # 동일 tier를 명시해도 품질 게이트의 역할 기본 effort를 낮추지 않는다.
+    if override.tier and role not in GATE_ROLES:
+        return MODEL_TIERS[override.tier].effort
+    return default.claude_effort if engine == "claude" else default.codex_effort
+
+
 def codex_override_profile(role: str, override: LaunchOverride = NO_OVERRIDE) -> CodexLaunchProfile:
     base = codex_launch_profile(role)
     model = MODEL_TIERS[override.tier].codex_model if override.tier else base.model
-    return base._replace(model=model, effort=override.effort or base.effort)
+    return base._replace(model=model, effort=launch_effort("codex", role, override))
 
 
 def claude_override_model(role: str, override: LaunchOverride = NO_OVERRIDE) -> str:
@@ -251,7 +259,7 @@ def launch_override_error(engine: str, role: str, override: LaunchOverride) -> s
         if override.effort and effort_rank(override.effort) < effort_rank(GATE_MIN_EFFORT):
             return f"launch role={role}: 품질 게이트라 effort가 {GATE_MIN_EFFORT} 이상이어야 한다"
     if engine == "claude":
-        model, effort = claude_override_model(role, override), override.effort
+        model, effort = claude_override_model(role, override), launch_effort("claude", role, override)
     else:
         profile = codex_override_profile(role, override)
         model, effort = profile.model, profile.effort
@@ -275,13 +283,13 @@ def reject_launch_override(engine: str, role: str, override: LaunchOverride) -> 
 
 
 def launch_profiles_text() -> str:
-    rows = [("role", "codex_model", "codex_effort", "claude_model")]
+    rows = [("role", "codex_model", "codex_effort", "claude_model", "claude_effort")]
     for role, profile in CODEX_LAUNCH_PROFILES.items():
-        rows.append((role, profile.model, profile.effort, claude_launch_model(role)))
+        rows.append((role, profile.model, profile.effort, claude_launch_model(role), launch_effort("claude", role)))
     rows.append(())
-    rows.append(("tier", "codex_model", "claude_model", "use"))
+    rows.append(("tier", "codex_model", "claude_model", "effort", "use"))
     for tier in MODEL_TIERS.values():
-        rows.append((tier.name, tier.codex_model, tier.claude_model, tier.use))
+        rows.append((tier.name, tier.codex_model, tier.claude_model, tier.effort, tier.use))
     caps: dict[str, list[str]] = {}
     for model, cap in MODEL_MAX_EFFORT.items():
         caps.setdefault(cap, []).append(model)
@@ -289,6 +297,7 @@ def launch_profiles_text() -> str:
     notes = [
         "",
         'override: herdr worker|role --tier TIER --effort LEVEL --why "사유" — 기본값을 쓰고 업무 난이도가 다를 때만. --tier/--effort에는 --why 필수',
+        "tier는 model+effort preset; --effort를 함께 주면 그 값 우선. 동일 tier의 reviewer/verifier는 역할 effort 유지. Claude 최상위는 Opus 5.5 (Fable 미사용)",
         f"effort: {' < '.join(EFFORT_LEVELS)} — 모델 상한 초과는 거부 ({cap_text})",
         f"gate: {'·'.join(sorted(GATE_ROLES))}는 기본 tier 고정, effort {GATE_MIN_EFFORT} 이상",
         f"fixed: {'·'.join(sorted(FIXED_LAUNCH_ROLES))}(planner·architect 포함)는 기본값 고정, override 거부",
@@ -978,14 +987,11 @@ def ai_command_text(
             argv.extend(["--ask-for-approval", "never"])
         argv.append(prompt)
     elif engine == "claude":
-        # Codex 전용 model_reasoning_effort는 넘기지 않는다. role을 정규화해 --model을 지정하고,
-        # effort는 override가 있을 때만 Claude CLI의 --effort로 넘긴다.
+        # Claude native 옵션만 전달하며 시작 로그도 같은 값을 사용한다.
         role = launch_role(codex_role)
         model = claude_override_model(role, override)
         prompt = f"{claude_start_instruction(role, model, override)} {prompt}"
-        argv = [engine, "--dangerously-skip-permissions", "--model", model]
-        if override.effort:
-            argv.extend(["--effort", override.effort])
+        argv = [engine, "--dangerously-skip-permissions", "--model", model, "--effort", launch_effort("claude", role, override)]
         argv.append(prompt)
     else:
         argv = [engine, prompt]

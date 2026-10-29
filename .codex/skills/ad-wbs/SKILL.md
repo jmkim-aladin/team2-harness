@@ -1,6 +1,6 @@
 ---
 name: ad-wbs
-description: "[주기·수시] Use when the user invokes $ad-wbs, ad wbs, /ad:wbs, or asks to export a YouTrack issue tree as a WBS or Gantt spreadsheet/HTML."
+description: "[주기·수시] Use when asked to export a YouTrack issue tree as a WBS or Gantt spreadsheet/HTML. Also /ad:wbs."
 ---
 
 # `$ad-wbs`

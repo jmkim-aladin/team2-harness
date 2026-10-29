@@ -1,6 +1,6 @@
 ---
 name: ad-plan-run
-description: "[구상·계획 실행] Use when the user invokes $ad-plan-run, /ad:plan-run, or asks to execute one internal milestone from a DEV2 vault plan without requiring a YouTrack ticket."
+description: "[구상·계획 실행] Use when asked to execute one internal milestone from a DEV2 vault plan without requiring a YouTrack ticket. Also /ad:plan-run."
 ---
 
 # `$ad-plan-run`

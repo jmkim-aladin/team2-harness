@@ -1,6 +1,6 @@
 ---
 name: ad-team2-kb-read
-description: "[상시·지식] Use when the user invokes $ad-team2-kb-read, ad team2 kb read, /ad:team2-kb-read, or asks to read DEV2 YouTrack knowledge-base (KB/기술자료) content."
+description: "[상시·지식] Use when asked to read DEV2 YouTrack knowledge-base (KB/기술자료) content. Also /ad:team2-kb-read."
 ---
 
 # `$ad-team2-kb-read`

@@ -1,6 +1,6 @@
 ---
 name: ad-sprint-close-check
-description: "[주기·월말] Use when the user invokes $ad-sprint-close-check, ad sprint close check, /ad:sprint-close-check, or asks for a DEV2 sprint closing self-check."
+description: "[주기·월말] Use when asked for a DEV2 sprint closing self-check. Also /ad:sprint-close-check."
 ---
 
 # `$ad-sprint-close-check`
