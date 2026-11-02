@@ -19,6 +19,7 @@
 - 하네스 개선의 방향 판정: [policies/harness-north-star.md](./policies/harness-north-star.md) — 검증 루프 > 지시, 문제 단위 위임, smart zone, 환경=진실, 게이트 기계화, 아티팩트 기억
 - 지시 강도(invariant/policy/heuristic/example)·충돌 시 우선순위·판단 경계: [policies/instruction-precedence-policy.md](./policies/instruction-precedence-policy.md)
 - 세션 컨텍스트 규율: [memory/claude-base.md](./memory/claude-base.md) §세션 컨텍스트 규율
+- 공통 작업 ID·Langfuse 관측: [policies/task-tracing-policy.md](./policies/task-tracing-policy.md) — 티켓 없는 작업에도 TASK ID 발급, 위임·인계에서 공유
 - 브랜치: `feature/{이슈ID}` | 커밋: `[{이슈ID}] 작업 내용`
 - 예외: 개발2팀 하네스(`team2`) 자체 변경은 티켓 없이 `team2/{작업-slug}` 브랜치와 `[TEAM2] 작업 내용` 커밋을 사용할 수 있다
 - 모든 작업은 YouTrack 티켓(5W1H)에서 시작. 단, 개발2팀 하네스 자체 변경은 [브랜치 전략](./policies/branching-strategy.md)의 하네스 예외를 따른다

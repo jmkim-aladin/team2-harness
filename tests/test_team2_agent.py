@@ -5,6 +5,7 @@ import os
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,11 +15,25 @@ from unittest.mock import patch
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "tools" / "team2_agent.py"
 ROOT = MODULE_PATH.parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
 WRAPPER_PATH = ROOT / "bin" / "team2-agent"
 spec = importlib.util.spec_from_file_location("team2_agent", MODULE_PATH)
 agent = importlib.util.module_from_spec(spec)
 assert spec and spec.loader
 spec.loader.exec_module(agent)
+
+
+def setUpModule():
+    global _task_tmp, _task_env
+    _task_tmp = tempfile.TemporaryDirectory()
+    _task_env = patch.dict(os.environ, {"TEAM2_TASK_STATE_DIR": _task_tmp.name,
+                                      "CODEX_THREAD_ID": "team2-agent-unit-tests", "TEAM2_TASK_ID": ""})
+    _task_env.start()
+
+
+def tearDownModule():
+    _task_env.stop()
+    _task_tmp.cleanup()
 
 
 def completed(returncode: int = 0, stdout: str = "", stderr: str = "") -> subprocess.CompletedProcess[str]:
@@ -34,6 +49,40 @@ def seeds_orch_worker(command: Sequence[str]) -> bool:
 
 
 class Team2AgentLaunchProfileTests(unittest.TestCase):
+    def test_dispatch_work_lead_roles_and_routes_share_generated_task_id(self):
+        import re
+        with tempfile.TemporaryDirectory() as state, patch.dict(os.environ, {"TEAM2_TASK_STATE_DIR": state}):
+            config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+            prompts = [agent.work_lead_prompt(config, "lamp-review", service="lamp"),
+                       agent.role_agent_prompt(config, "lamp-review", "reviewer", service="lamp"),
+                       agent.herdr_route_packet(config, work_ref="lamp-review", service="lamp")]
+            ids = [re.search(r"^task_id: (\S+)$", p, re.M)[1] for p in prompts]
+            self.assertEqual(len(set(ids)), 1)
+            self.assertTrue(ids[0].startswith("TASK-"))
+            other = agent.role_agent_prompt(config, "lamp-review", "reviewer", service="other")
+            self.assertNotIn("task_id: " + ids[0], other)
+
+    def test_both_engine_launch_prompts_carry_machine_readable_task_id(self):
+        import re
+        import shlex
+        config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+        for engine in ("codex", "claude"):
+            command = agent.ai_command_text(engine, agent.role_agent_prompt(config, "DEV2-2026", "reviewer"), config)
+            prompt = shlex.split(command.split("; ", 1)[1])[-1]
+            self.assertEqual(re.findall(r"^task_id: (\S+)$", prompt, re.M), ["DEV2-2026"])
+
+    def test_ask_without_explicit_id_reuses_caller_binding(self):
+        import re
+        from task_tracing import ensure_task
+        with tempfile.TemporaryDirectory() as state, patch.dict(os.environ, {
+                "TEAM2_TASK_STATE_DIR": state, "CODEX_THREAD_ID": "caller", "TEAM2_TASK_ID": "",
+                "TEAM2_TRACE_AGENT": "", "TEAM2_TRACE_SESSION_ID": ""}):
+            task = ensure_task(Path(state), agent="codex", session_id="caller", title="Cross-review")
+            config = agent.Config(Path("/repo"), Path("/vault"), "/hermes", "team2")
+            packet = agent.herdr_ask_packet(config, instruction="review")
+            self.assertEqual(re.search(r"^task_id: (\S+)$", packet, re.M)[1], task["task_id"])
+            self.assertNotIn("task_id: none", packet)
+
     def test_codex_launch_profiles_match_team_roles(self) -> None:
         expected = {
             "orchestrator": ("orchestrator", "gpt-6-sol", "xhigh"),
@@ -618,8 +667,9 @@ class Team2AgentTests(unittest.TestCase):
             "ask_packet": (agent.herdr_ask_packet(config, task_id="DEV2-6509", expect="result", instruction="분석"), 520),
             "route_packet": (agent.herdr_route_packet(config, work_ref="DEV2-6509", expect="result", instruction="후속"), 460),
             "ticket_lead": (agent.ticket_lead_prompt(config, "DEV2-6509", service="aasm", instruction="분석"), 620),
-            "work_lead": (agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="수정"), 600),
-            "role_agent": (agent.role_agent_prompt(config, "DEV2-6509", "developer", "수정", service="aasm"), 260),
+            # Include the shared TASK identity header without dropping routing rules.
+            "work_lead": (agent.work_lead_prompt(config, "aasm-resource-url-copy", service="aasm", instruction="수정"), 650),
+            "role_agent": (agent.role_agent_prompt(config, "DEV2-6509", "developer", "수정", service="aasm"), 290),
         }
 
         for name, (prompt, max_chars) in prompts.items():
@@ -1325,6 +1375,9 @@ class Team2AgentTests(unittest.TestCase):
         self.assertFalse(any(seeds_orch_worker(command) for command in seen))
 
     def test_run_herdr_open_bootstraps_new_workspace_with_single_orchestrator_pane(self) -> None:
+        identity = patch.object(agent, "shared_dispatch_task_id", return_value="TASK-20261030-000000000001")
+        identity.start()
+        self.addCleanup(identity.stop)
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[]}}'
         create_stdout = (
@@ -2530,6 +2583,9 @@ class Team2AgentTests(unittest.TestCase):
         )
 
     def test_run_herdr_open_adds_only_orchestrator_when_existing_workspace_has_one_pane(self) -> None:
+        identity = patch.object(agent, "shared_dispatch_task_id", return_value="TASK-20261030-000000000002")
+        identity.start()
+        self.addCleanup(identity.stop)
         seen: list[list[str]] = []
         workspace_stdout = '{"result":{"workspaces":[{"workspace_id":"w2","label":"team2-orchestration","focused":true,"pane_count":1}]}}'
         panes_stdout = '{"result":{"panes":[{"pane_id":"p1"}]}}'

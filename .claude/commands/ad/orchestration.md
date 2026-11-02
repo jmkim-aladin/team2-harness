@@ -61,6 +61,17 @@ Branch 1 only: ping `HERDR_CALLER` when blocked, when you need a decision, or wh
 hold evidence that invalidates the task. On branch 3 there is no verified caller to ping
 — raise it in your own answer instead.
 
+## Window operations: shared skill
+
+For pane discovery, layout, reading and existing-window delivery, read the shared
+`herdr` skill (`$TEAM2_HARNESS_PATH/.codex/skills/herdr/SKILL.md`). Both clients use
+that source. Simple inspection or an existing-window handoff needs only that skill;
+do not enter this coordination workflow for those requests. This command retains
+caller/worker guards, model routing, task identity and multi-agent coordination.
+CLI examples below are coordination recipes; the shared skill and `herdr --skill`
+govern window operations and syntax. If inherited pane IDs are stale, resolve live
+IDs before naming or prompting anything.
+
 ## 1. Preflight (mandatory)
 
 Second gate: sections 1–12 are caller-only. Nothing stops a worker from *reading* them —
@@ -95,8 +106,11 @@ worker with no socket access still works.
 
 ## 2. Resolve the peer, and name yourself
 
-Peer kind defaults to the other of `claude` / `codex`. If the user named a kind, use
-that. Both are installed.
+Peer kind defaults to the other of `claude` / `codex` — orchestration is cross-engine
+by default (Claude caller → `codex` peers, Codex caller → `claude` peers), including
+every peer in a fan-out. If the user named a kind, use that. Both are installed. This
+is the opposite of the `herdr` skill's single new window, which defaults to the
+caller's own kind.
 
 Convention: caller is `<kind>0`, peers are `<kind>1`, `<kind>2`. Check `herdr agent
 list` before picking so you don't collide with a pane the user already has open.
@@ -224,6 +238,15 @@ codex exec -m "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$PROMPT"
 
 ## 4. One exchange (the primitive)
 
+Before the first dispatch, resolve the caller's shared task identity with
+`team2-task ensure --title '<work name>'` (add `--ticket DEV2-<number>` when known).
+Reuse the returned `task_id` in every peer opening prompt and follow-up for that work.
+This links separate processes without collapsing their session ids. For a different
+task, start a fresh peer session; a live peer's existing task binding is preserved.
+`team2-agent herdr` adds this field automatically to worker launches and ask/route/
+ticket/work/role packets; a non-ticket work lead and its roles share one registered
+TASK id per service/work reference. Source: `policies/task-tracing-policy.md`.
+
 ```bash
 herdr agent prompt codex1 "<text>" --wait --timeout 600000
 herdr agent read   codex1 --source recent-unwrapped --lines 200
@@ -252,11 +275,16 @@ HERDR_TARGET=codex1
 HERDR_TASK_ROLE=reviewer
 HERDR_MODEL=<codex_model>
 HERDR_EFFORT=<codex_effort>
+task_id: <shared task_id>
 ```
 
-The first three drive section 0's branch. The last three are the handoff record — the
+The first three drive section 0's branch. The role/model/effort fields are the handoff record — the
 same `role` / `model` / `effort` you passed at `agent start`, restated so the peer can
 emit its `[model]` line and so the exchange is auditable from the transcript alone. Add
+the shared `task_id` as its own line, outside a code fence, so the receiving hook can
+bind the new session before its first model call. Internal subagents receive the
+parent task_id through the configured SubagentStart hook and the delegation invariant.
+Add
 `HERDR_SESSION=<id>` when resuming a known session. When the peer is Claude, send
 `HERDR_MODEL=<claude_model>` and `HERDR_EFFORT=<claude_effort>` matching the native
 `--model` and `--effort` values you passed. Add `HERDR_OVERRIDE=<why>` whenever tier or effort left the role default.
