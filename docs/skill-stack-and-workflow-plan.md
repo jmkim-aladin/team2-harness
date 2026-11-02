@@ -1,5 +1,7 @@
 # 스킬 스택 정리 + 워크플로우 도입 계획
 
+> 2026-10-30 측정 정정: 아래 과거 회차의 470k·299k·435k 등은 cache-read 합계/도구 호출 수로 계산한 대리지표이며 모델 요청당 평균 입력 컨텍스트가 아니다. 해당 수치에서 도출한 컨텍스트 배수·추이·원인 판정은 미검증으로 취급한다. 당시 관찰과 결정 기록은 보존하며, 새 엔진별 요청 집계와 직접 비교하지 않는다. 현재 계약·한계는 [tools/README.md](../tools/README.md#harness_context_auditpy--컨텍스트스택훅-감사), 교정 결과는 [skill-audit-baseline.md](./skill-audit-baseline.md)를 참조한다.
+
 > 상태: Phase 4-0b·4-1·4-8 적용 + mattpocock 채택(4-4~4-7 대체, 2026-08-08 — vendor 15종·overrides·docs/agents) (2026-08-08, 브랜치 `team2/skill-stack-cleanup`, 미커밋). 잔여: 4-0 규율 정착 관찰, 4-2·4-3·4-4·4-5·4-6·4-7.
 > 적용 결과: 상주 컨텍스트 8,858 → 6,011 토큰 (−32%), GSD 훅 9개 제거(Edit당 ~280ms), 스킬 79 → 21종.
 > 감사 회차 기록: [docs/skill-audit-baseline.md](./skill-audit-baseline.md) 3회차.

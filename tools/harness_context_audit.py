@@ -1,263 +1,202 @@
 #!/usr/bin/env python3
-"""하네스 컨텍스트·스택·훅 감사.
+"""Audit local Codex/Claude logs separately; report observed usage and estimate metadata.
 
-세 가지를 실측한다:
-  1. 상주 컨텍스트 예산 — 세션 시작마다 로드되는 지시문·스킬 description
-  2. 스킬 스택 실사용 — 설치 대비 실제 호출 (Claude 슬래시 + Skill 툴 + Codex $alias)
-  3. 세션 지표 — 호출당 평균 컨텍스트, 툴 분포, 지연, 반복 Read
-
-임계값을 넘긴 항목은 [경고]로 표시된다. 판정·조치는 사람이 한다.
-
-사용법:
-    python3 tools/harness_context_audit.py            # 기본 90일
-    python3 tools/harness_context_audit.py --days 30
-    python3 tools/harness_context_audit.py --json     # 기계 판독용
+Usage: python3 tools/harness_context_audit.py --days 30 --engine both --json
+Observed model requests, tool calls and static chars/4 estimates are distinct.
 """
-import argparse, glob, json, os, re, sys
-from collections import Counter, defaultdict
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shlex
+from pathlib import Path
+from statistics import median
 from datetime import datetime, timedelta, timezone
 
-HOME = os.path.expanduser("~")
-HARNESS = os.environ.get("TEAM2_HARNESS_PATH", os.path.join(HOME, "Documents/workspace/team2"))
-CLAUDE_DIR = os.path.join(HOME, ".claude")
+from agent_usage import collect_usage, known_skill_names, skill_files
 
-# 임계값 — 넘으면 경고. 근거는 docs/skill-stack-and-workflow-plan.md §1
-LIMITS = {
-    "resident_tokens": 8000,      # 상주 컨텍스트
-    "avg_context_tokens": 200000, # 호출당 평균 컨텍스트 (smart zone 약 150k)
-    "bash_share": 0.50,           # Bash가 전체 툴 호출에서 차지하는 비중
-    "cd_share": 0.20,             # Bash 중 cd 비율
-    "reread_count": 5,            # 같은 파일 재독 횟수
-}
+HOME = Path.home()
+HARNESS = Path(os.environ.get('TEAM2_HARNESS_PATH', HOME / 'Documents/workspace/team2'))
+CLAUDE_DIR = HOME / '.claude'
+CODEX_DIR = Path(os.environ.get('CODEX_HOME', HOME / '.codex'))
+LIMITS = dict(resident_tokens=8000, avg_context_tokens=200000, bash_share=.50, cd_share=.20, reread_count=5)
+LIMITATIONS = [
+    '상주량은 발견한 지시문·스킬 메타데이터의 chars/4 근사치이며 실제 토큰 수가 아니다. 도구 스키마·숨은 시스템 지침·자동 메모리·원격 스킬은 포함하지 않는다.',
+    '스킬은 설치 목록에 있는 명시적 선두 $alias, Claude command-name 또는 Skill 호출만 집계한다. 자연어 요청에 따른 실제 스킬 본문 읽기는 집계하지 않는다.',
+    '평균 컨텍스트는 usage가 관측된 모델 응답의 입력 토큰 평균이다. 도구 호출 수·context window 한도와 다르며 usage 없는 요청은 평균에서 제외한다.',
+    'Codex는 세션별 response_id가 있는 native usage를 우선하며 native 전환 이전의 legacy 변경값은 보존한다. 이후 ID 연결이 불명확한 legacy snapshot은 quality.legacy_snapshots_after_native로 제외 범위를 표시한다.',
+    'Read는 명시적 파일 읽기 도구만 집계한다. 셸·REPL 래퍼 내부 읽기는 추정하지 않으며 도구 결과 지연은 로그 시각 차이다.',
+    'usage는 로컬 로그 관측값이며 구독 사용 한도나 청구액을 환산한 값이 아니다. Hermes cron과 로그 밖 실행은 별도 확인한다.',
+]
 
 
-def read(p):
+def read(path):
     try:
-        with open(p, errors="ignore") as f: return f.read()
-    except Exception: return ""
+        return Path(path).read_text(encoding='utf-8')
+    except (OSError, UnicodeError):
+        return ''
 
 
-def frontmatter(text):
-    m = re.search(r"^---\n(.*?)\n---", text, re.S)
-    return m.group(1) if m else ""
+def load_json(path):
+    try:
+        d = json.loads(read(path) or '{}')
+        return d if isinstance(d, dict) else {}
+    except ValueError:
+        return {}
 
 
-def description_cost(path):
-    """모델 컨텍스트에 상주하는 description 길이. 사용자 호출 전용이면 0."""
-    fm = frontmatter(read(path))
-    if not fm: return 0
-    if "disable-model-invocation: true" in fm: return 0
-    d = re.search(r"^description:\s*(.*(?:\n[ \t]+.*)*)", fm, re.M)
-    return len(d.group(1)) if d else 0
+def description_cost(path, engine):
+    text = read(path)
+    fm = re.search(r'^---\n(.*?)\n---', text, re.S)
+    if not fm:
+        return 0
+    if engine == 'claude' and re.search(r'^disable-model-invocation:\s*true\s*$', fm[1], re.M):
+        return 0
+    if engine == 'codex' and re.search(r'^\s*allow_implicit_invocation:\s*false\s*$', read(Path(path).parent / 'agents/openai.yaml'), re.M):
+        return 0
+    desc = re.search(r'^description:\s*(.*(?:\n[ \t]+.*)*)', fm[1], re.M)
+    return len(desc[1]) if desc else 0
 
 
-def resident_budget():
-    rows = []
-    for label, p in (
-        ("harness CLAUDE.md", os.path.join(HARNESS, "CLAUDE.md")),
-        ("harness AGENTS.md", os.path.join(HARNESS, "AGENTS.md")),
-    ):
-        rows.append((label, len(read(p))))
-    personal = sum(len(read(os.path.join(CLAUDE_DIR, f)))
-                   for f in os.listdir(CLAUDE_DIR)
-                   if f.endswith(".md") and os.path.isfile(os.path.join(CLAUDE_DIR, f)))
-    rows.append(("~/.claude 메모리(*.md)", personal))
+def plugin_skill_roots(home):
+    settings = load_json(home / 'settings.json')
+    installed = load_json(home / 'plugins/installed_plugins.json')
+    enabled = {k for k, v in settings.get('enabledPlugins', {}).items() if v}
+    for key, entries in installed.get('plugins', {}).items():
+        if key not in enabled:
+            continue
+        # The registry may list multiple installations; count physical paths once.
+        for entry in entries:
+            if isinstance(entry, dict) and entry.get('installPath'):
+                yield key.split('@')[0], Path(entry['installPath']) / 'skills'
 
-    skills_dir = os.path.join(CLAUDE_DIR, "skills")
-    if os.path.isdir(skills_dir):
-        rows.append(("설치 스킬 description",
-                     sum(description_cost(os.path.join(skills_dir, d, "SKILL.md"))
-                         for d in os.listdir(skills_dir))))
-    cmd_dir = os.path.join(HARNESS, ".claude/commands/ad")
-    if os.path.isdir(cmd_dir):
-        rows.append(("ad:* description",
-                     sum(description_cost(os.path.join(cmd_dir, f))
-                         for f in os.listdir(cmd_dir) if f.endswith(".md"))))
-    # 활성 플러그인만 — 비활성/구버전 캐시는 컨텍스트에 로드되지 않는다
-    settings = json.loads(read(os.path.join(CLAUDE_DIR, "settings.json")) or "{}")
-    enabled = {k for k, v in (settings.get("enabledPlugins") or {}).items() if v}
-    installed = json.loads(read(os.path.join(CLAUDE_DIR, "plugins/installed_plugins.json")) or "{}")
-    for key, entries in (installed.get("plugins") or {}).items():
-        if key not in enabled: continue
-        for e in entries:
-            sp = os.path.join(e.get("installPath", ""), "skills")
-            if not os.path.isdir(sp): continue
-            rows.append((f"플러그인 {key.split('@')[0]} description",
-                         sum(description_cost(os.path.join(sp, d, "SKILL.md")) for d in os.listdir(sp))))
+
+def resident_budget(engine, *, harness=HARNESS, claude_home=CLAUDE_DIR, codex_home=CODEX_DIR, agents_home=None):
+    harness, claude_home, codex_home = map(Path, (harness, claude_home, codex_home))
+    rows, seen = {}, set()
+
+    def instructions(path, imports=False):
+        path = Path(path)
+        resolved = path.resolve()
+        if resolved in seen or not path.is_file():
+            return
+        seen.add(resolved)
+        text = read(path)
+        rows[str(path)] = len(text)
+        if imports:
+            for name in re.findall(r'^\s*@([^\s]+)\s*$', text, re.M):
+                imported = Path(name).expanduser()
+                instructions(imported if imported.is_absolute() else path.parent / imported, True)
+
+    if engine == 'claude':
+        instructions(claude_home / 'CLAUDE.md', True)
+        instructions(harness / 'CLAUDE.md', True)
+        roots = [claude_home / 'skills']
+        roots.extend(root for _, root in plugin_skill_roots(claude_home))
+        commands = list((harness / '.claude/commands/ad').glob('*.md'))
+    else:
+        instructions(codex_home / 'AGENTS.md')
+        instructions(harness / 'AGENTS.md')
+        roots = [codex_home / 'skills'] + ([Path(agents_home)] if agents_home else [])
+        commands = []
+    for root in roots:
+        for p in skill_files(root):
+            resolved = p.resolve()
+            if resolved not in seen:
+                seen.add(resolved)
+                rows[str(p)] = description_cost(p, engine)
+    for p in commands:
+        rows[str(p)] = description_cost(p, engine)
     return rows
 
 
-def hooks():
-    s = json.loads(read(os.path.join(CLAUDE_DIR, "settings.json")) or "{}")
-    out = []
-    for ev, groups in (s.get("hooks") or {}).items():
-        for g in groups:
-            for h in g.get("hooks", []):
-                out.append((ev, g.get("matcher", "(all)"), h.get("command", "")[:80]))
-    return out
+def hooks(engine, *, harness=HARNESS, claude_home=CLAUDE_DIR, codex_home=CODEX_DIR):
+    files = [Path(claude_home) / 'settings.json', Path(harness) / '.claude/settings.json', Path(harness) / '.claude/settings.local.json'] if engine == 'claude' else [Path(codex_home) / 'hooks.json', Path(harness) / '.codex/hooks.json']
+    result = []
+    for path in files:
+        for event, groups in load_json(path).get('hooks', {}).items():
+            for group in groups:
+                for hook in group.get('hooks', []):
+                    # Only expose the executable, never credentials in command args.
+                    try:
+                        words = shlex.split(hook.get('command', ''))
+                    except ValueError:
+                        words = []
+                    head = Path(words[0]).name if words and '=' not in words[0] else '<redacted>'
+                    result.append(dict(source=str(path), event=event, matcher=group.get('matcher', '(all)'), command=head))
+    return result
 
 
-def sessions(days):
-    cut = datetime.now(timezone.utc) - timedelta(days=days)
-    skill_hits, last = Counter(), {}
-    tool_calls, tool_result_chars, tool_errors = Counter(), Counter(), Counter()
-    tool_latency = defaultdict(list)
-    reads, bash_head = Counter(), Counter()
-    tok = Counter()
-    cmd_re = re.compile(r"<command-name>/?([^<]+)</command-name>")
-    pending = {}
-
-    def stamp(rec):
-        t = rec.get("timestamp")
-        if not t: return None
-        try: return datetime.fromisoformat(t.replace("Z", "+00:00"))
-        except Exception: return None
-
-    for path in glob.glob(os.path.join(CLAUDE_DIR, "projects/**/*.jsonl"), recursive=True):
-        try: fh = open(path, errors="ignore")
-        except Exception: continue
-        with fh:
-            for line in fh:
-                try: rec = json.loads(line)
-                except Exception: continue
-                t = stamp(rec)
-                if not t or t < cut: continue
-                day = t.strftime("%Y-%m-%d")
-                msg = rec.get("message") or {}
-                for k in ("input_tokens", "output_tokens",
-                          "cache_read_input_tokens", "cache_creation_input_tokens"):
-                    tok[k] += (msg.get("usage") or {}).get(k) or 0
-                content = msg.get("content")
-                items = content if isinstance(content, list) else (
-                    [{"type": "text", "text": content}] if isinstance(content, str) else [])
-                for c in items:
-                    if not isinstance(c, dict): continue
-                    if c.get("type") == "text":
-                        for m in cmd_re.findall(c.get("text") or ""):
-                            n = m.strip().split()[0].lstrip("/")
-                            skill_hits[n] += 1; last[n] = max(last.get(n, ""), day)
-                    elif c.get("type") == "tool_use":
-                        name = c.get("name") or "?"
-                        tool_calls[name] += 1
-                        pending[c.get("id")] = (name, t)
-                        inp = c.get("input") or {}
-                        if name == "Skill" and inp.get("skill"):
-                            s = inp["skill"]; skill_hits[s] += 1; last[s] = max(last.get(s, ""), day)
-                        elif name == "Read" and inp.get("file_path"):
-                            reads[inp["file_path"]] += 1
-                        elif name == "Bash":
-                            parts = (inp.get("command") or "").strip().split()
-                            if parts: bash_head[parts[0]] += 1
-                    elif c.get("type") == "tool_result":
-                        name, t0 = pending.pop(c.get("tool_use_id"), (None, None))
-                        body = c.get("content")
-                        s = body if isinstance(body, str) else json.dumps(body, ensure_ascii=False)
-                        if name:
-                            tool_result_chars[name] += len(s)
-                            if t0: tool_latency[name].append((t - t0).total_seconds())
-                        if c.get("is_error"): tool_errors[name or "?"] += 1
-
-    # Codex $alias
-    for path in glob.glob(os.path.join(HOME, ".codex/sessions/**/*.jsonl"), recursive=True):
-        for m in re.findall(r"(?:^|\s)\$([a-z0-9_-]+)", read(path)):
-            skill_hits[m] += 1
-    return dict(skill_hits=skill_hits, last=last, tool_calls=tool_calls,
-                tool_result_chars=tool_result_chars, tool_errors=tool_errors,
-                tool_latency=tool_latency, reads=reads, bash_head=bash_head, tok=tok)
+def build_report(days=90, engine='both', *, claude_root=None, codex_root=None,
+                 harness=HARNESS, claude_home=CLAUDE_DIR, codex_home=CODEX_DIR, agents_home=HOME / '.agents/skills', now=None):
+    now = now or datetime.now(timezone.utc)
+    known = known_skill_names(harness, claude_home, codex_home, agents_home)
+    for plugin, root in plugin_skill_roots(Path(claude_home)):
+        for p in skill_files(root):
+            known.update([p.parent.name, plugin + ':' + p.parent.name])
+    stats = collect_usage(claude_root or Path(claude_home) / 'projects', codex_root or Path(codex_home) / 'sessions', days=days, now=now, known_skills=known, engines=('claude', 'codex') if engine == 'both' else (engine,))
+    engines = {}
+    for name in ('claude', 'codex') if engine == 'both' else (engine,):
+        data = stats[name]
+        budget = resident_budget(name, harness=harness, claude_home=claude_home, codex_home=codex_home, agents_home=agents_home)
+        data['resident_chars'] = sum(budget.values())
+        data['resident_tokens_estimate'] = data['resident_chars'] // 4
+        data['resident_breakdown_chars'] = budget
+        data['configured_hooks'] = hooks(name, harness=harness, claude_home=claude_home, codex_home=codex_home)
+        warnings = []
+        if data['resident_tokens_estimate'] > LIMITS['resident_tokens']:
+            warnings.append('상주 메타데이터 근사치가 예산을 초과함; 실제 로드 경로 확인 필요')
+        if data['avg_context_tokens'] is not None and data['avg_context_tokens'] > LIMITS['avg_context_tokens']:
+            warnings.append('관측 모델 요청당 평균 입력이 컨텍스트 예산을 초과함')
+        if data['bash_share'] is not None and data['bash_share'] > LIMITS['bash_share']:
+            warnings.append('셸 도구 비중이 높음; 원인과 작업 성격 확인 필요')
+        if data['cd_share'] is not None and data['cd_share'] > LIMITS['cd_share']:
+            warnings.append('직접 관측 셸 호출 중 cd 비중이 높음')
+        data['warnings'] = warnings
+        engines[name] = data
+    return dict(schema_version=2, days=days, observed_window_end=now.isoformat(),
+                observed_window_start=(now - timedelta(days=days)).isoformat() if days else None,
+                engines=engines, limitations=LIMITATIONS)
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--days", type=int, default=90)
-    ap.add_argument("--json", action="store_true")
-    a = ap.parse_args()
-
-    budget = resident_budget()
-    resident_chars = sum(c for _, c in budget)
-    resident_tok = resident_chars // 4
-    hk = hooks()
-    S = sessions(a.days)
-
-    calls = sum(S["tool_calls"].values())
-    cache_read = S["tok"]["cache_read_input_tokens"]
-    avg_ctx = cache_read // calls if calls else 0
-    bash = S["tool_calls"].get("Bash", 0)
-    bash_share = bash / calls if calls else 0
-    cd_share = S["bash_head"].get("cd", 0) / bash if bash else 0
-
-    warn = []
-    if resident_tok > LIMITS["resident_tokens"]: warn.append(f"상주 컨텍스트 {resident_tok:,} tok > {LIMITS['resident_tokens']:,}")
-    if avg_ctx > LIMITS["avg_context_tokens"]: warn.append(f"호출당 평균 컨텍스트 {avg_ctx:,} tok > {LIMITS['avg_context_tokens']:,} (smart zone 이탈)")
-    if bash_share > LIMITS["bash_share"]: warn.append(f"Bash 비중 {bash_share:.0%} > {LIMITS['bash_share']:.0%} (파일은 Read로)")
-    if cd_share > LIMITS["cd_share"]: warn.append(f"Bash 중 cd {cd_share:.0%} > {LIMITS['cd_share']:.0%} (절대 경로 사용)")
-
-    if a.json:
-        print(json.dumps({
-            "days": a.days, "resident_tokens": resident_tok,
-            "resident_breakdown": {n: c for n, c in budget},
-            "hooks": [{"event": e, "matcher": m, "command": c} for e, m, c in hk],
-            "avg_context_tokens": avg_ctx, "tool_calls": dict(S["tool_calls"]),
-            "bash_share": round(bash_share, 3), "cd_share": round(cd_share, 3),
-            "skill_hits": dict(S["skill_hits"]), "warnings": warn,
-        }, ensure_ascii=False, indent=2))
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('--days', type=int, default=90, help='0=전체 기간')
+    ap.add_argument('--engine', choices=['both', 'claude', 'codex'], default='both')
+    ap.add_argument('--claude-root', type=Path)
+    ap.add_argument('--codex-root', type=Path)
+    ap.add_argument('--json', action='store_true')
+    args = ap.parse_args()
+    if args.days < 0:
+        ap.error('--days must be nonnegative')
+    report = build_report(args.days, args.engine, claude_root=args.claude_root, codex_root=args.codex_root)
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
         return
-
-    print(f"===== 하네스 컨텍스트 감사 (최근 {a.days}일) =====\n")
-
-    print("## 1. 상주 컨텍스트 예산")
-    for n, c in budget: print(f"  {n:<34}{c:>8,} chars {c//4:>7,} tok")
-    print(f"  {'합계':<34}{resident_chars:>8,} chars {resident_tok:>7,} tok")
-    print()
-
-    print("## 2. 훅")
-    if not hk: print("  없음")
-    for e, m, c in hk: print(f"  {e:<18}{m:<34}{c}")
-    print()
-
-    print("## 3. 세션 지표")
-    print(f"  툴 호출              {calls:,}")
-    print(f"  캐시 읽기            {cache_read/1e6:,.0f}M tok")
-    print(f"  출력                 {S['tok']['output_tokens']/1e6:,.1f}M tok")
-    print(f"  호출당 평균 컨텍스트   {avg_ctx:,} tok   (smart zone 약 150,000)")
-    print(f"  Bash 비중            {bash_share:.1%}   (Bash 중 cd {cd_share:.1%})")
-    print()
-
-    print("## 4. 툴 분포·지연")
-    print(f"  {'툴':<20}{'호출':>7}{'중앙값s':>9}{'총초':>9}{'결과chars':>13}{'오류':>6}")
-    for n, c in S["tool_calls"].most_common(12):
-        lat = sorted(S["tool_latency"].get(n, []))
-        med = lat[len(lat)//2] if lat else 0
-        print(f"  {n:<20}{c:>7}{med:>9.2f}{sum(lat):>9.0f}{S['tool_result_chars'][n]:>13,}{S['tool_errors'][n]:>6}")
-    print()
-
-    print(f"## 5. 반복 Read ({LIMITS['reread_count']}회 초과)")
-    for f, c in S["reads"].most_common(15):
-        if c > LIMITS["reread_count"]: print(f"  {c:>4}  {f}")
-    print()
-
-    print("## 6. 설치 스킬 실사용")
-    skills_dir = os.path.join(CLAUDE_DIR, "skills")
-    cmd_dir = os.path.join(HARNESS, ".claude/commands/ad")
-    installed = []
-    if os.path.isdir(skills_dir):
-        installed += [(d, d) for d in sorted(os.listdir(skills_dir))]
-    if os.path.isdir(cmd_dir):
-        installed += [(f"ad:{f[:-3]}", f"ad-{f[:-3]}") for f in sorted(os.listdir(cmd_dir)) if f.endswith(".md")]
-    unused = []
-    for label, alias in installed:
-        n = S["skill_hits"].get(label, 0) + S["skill_hits"].get(alias, 0)
-        if n: print(f"  {n:>5}  {label:<28} last={S['last'].get(label, '-')}")
-        else: unused.append(label)
-    print(f"\n  미사용 {len(unused)}종: " + " ".join(unused))
-    print()
-
-    print("## 판정")
-    if warn:
-        for w in warn: print(f"  [경고] {w}")
-    else:
-        print("  임계값 초과 없음")
-    print("\n  조치는 사람이 판정한다. 0회 스킬은 Codex·Hermes cron 경로를 확인한 뒤 비활성 제안.")
+    print(f'하네스 컨텍스트 감사 — 최근 {args.days}일' if args.days else '하네스 컨텍스트 감사 — 전체 기간')
+    for engine, stats in report['engines'].items():
+        print(f'\n## {engine}')
+        print(f"상주 메타데이터: {stats['resident_chars']:,} chars / 약 {stats['resident_tokens_estimate']:,} tok (추정)")
+        avg = stats['avg_context_tokens']
+        print(f"관측 usage 응답: {stats['usage_requests']:,}; 평균 입력: {avg:,.0f} tok" if avg is not None else '관측 입력 usage 없음 — 평균 입력 미확인')
+        print(f"도구 호출: {sum(stats['tool_calls'].values()):,}; 설정된 훅: {len(stats['configured_hooks'])}")
+        for tool, count in sorted(stats['tool_calls'].items(), key=lambda x: -x[1])[:12]:
+            latency = stats['tool_latency'].get(tool, [])
+            med = f'{median(latency):.2f}s' if latency else '미확인'
+            print(f'  {tool}: {count:,}회 / 결과 시각차 중앙값 {med}')
+        print('명시적 스킬 호출:', ', '.join(f'{n}={c}' for n, c in sorted(stats['skill_hits'].items(), key=lambda x: -x[1])[:15]) or '관측 없음')
+        print('반복 읽기(기간 합계; 같은 작업의 재독이라는 뜻은 아님):')
+        for path, count in sorted(stats['reads'].items(), key=lambda x: -x[1])[:15]:
+            if count > LIMITS['reread_count']:
+                print(f'  {count}회 {path}')
+        for warning in stats['warnings']:
+            print('  [관찰]', warning)
+    print('\n집계 범위·한계:')
+    for limit in report['limitations']:
+        print('-', limit)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

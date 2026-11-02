@@ -15,6 +15,8 @@ import time
 from pathlib import Path
 from typing import Callable, NamedTuple, Sequence
 
+from task_tracing import ensure_task, state_dir, session_identity
+
 
 DEFAULT_HARNESS = "/Users/jm/Documents/workspace/team2"
 DEFAULT_VAULT = "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2"
@@ -829,12 +831,25 @@ def label_ref_and_agent(agent_name: str, work_ref: str, *, kind: str = "auto") -
     return work_ref, ""
 
 
+def shared_dispatch_task_id(*, work_ref: str = "", service: str = "triage", explicit: str = "", title: str = "") -> str:
+    """Resolve identities before sending/launching; do not rely on a peer guessing."""
+    if explicit:
+        return ensure_task(state_dir(), task_id=explicit)["task_id"]
+    if work_ref:
+        if re.fullmatch(r"DEV2-\d+", work_ref):
+            return ensure_task(state_dir(), ticket=work_ref)["task_id"]
+        return ensure_task(state_dir(), work_key=f"herdr:{service}:{work_ref}", title=title or work_ref)["task_id"]
+    agent, session = session_identity(os.environ)
+    return ensure_task(state_dir(), agent=agent, session_id=session,
+                       task_id=os.environ.get("TEAM2_TASK_ID", ""), title=title)["task_id"]
+
+
 def herdr_ask_packet(config: Config, *, task_id: str = "", expect: str = "result", instruction: str = "") -> str:
     team2_agent = config.harness / "bin" / "team2-agent"
     return "\n".join(
         [
             "[TEAM2_WORK_PACKET]",
-            f"task_id: {task_id or 'none'}",
+            f"task_id: {shared_dispatch_task_id(explicit=task_id)}",
             f"expect: {expect or 'result'}",
             f"instruction: {instruction}",
             "routing:",
@@ -850,11 +865,12 @@ def herdr_ask_packet(config: Config, *, task_id: str = "", expect: str = "result
     )
 
 
-def herdr_route_packet(config: Config, *, work_ref: str, expect: str = "result", instruction: str = "") -> str:
+def herdr_route_packet(config: Config, *, work_ref: str, expect: str = "result", instruction: str = "", service: str = "triage") -> str:
     team2_agent = config.harness / "bin" / "team2-agent"
     return "\n".join(
         [
             "[TEAM2_ROUTE_PACKET]",
+            f"task_id: {shared_dispatch_task_id(work_ref=work_ref, service=service)}",
             f"work_ref: {work_ref}",
             f"expect: {expect or 'result'}",
             f"instruction: {instruction}",
@@ -884,7 +900,7 @@ def ticket_lead_prompt(config: Config, ticket_id: str, *, service: str = "triage
     )
     if instruction:
         prompt += f" 초기 라우팅 메시지: {instruction}"
-    return prompt
+    return f"task_id: {shared_dispatch_task_id(work_ref=ticket_id, service=service)}\n{prompt}"
 
 
 def work_lead_prompt(config: Config, work_id: str, *, service: str = "triage", instruction: str = "") -> str:
@@ -901,7 +917,7 @@ def work_lead_prompt(config: Config, work_id: str, *, service: str = "triage", i
     )
     if instruction:
         prompt += f" 초기 작업: {instruction}"
-    return prompt
+    return f"task_id: {shared_dispatch_task_id(work_ref=work_id, service=service)}\n{prompt}"
 
 
 def role_agent_prompt(config: Config, ticket_id: str, role: str, instruction: str = "", *, service: str = "triage") -> str:
@@ -922,7 +938,7 @@ def role_agent_prompt(config: Config, ticket_id: str, role: str, instruction: st
     )
     if instruction:
         prompt += f" 위임 작업: {instruction}"
-    return prompt
+    return f"task_id: {shared_dispatch_task_id(work_ref=ticket_id, service=service)}\n{prompt}"
 
 
 def ai_argv(
@@ -964,6 +980,9 @@ def ai_command_text(
     override: LaunchOverride = NO_OVERRIDE,
 ) -> str:
     """override는 호출 전에 launch_override_error로 검증된 값만 받는다."""
+    # General worker launches have no ticket/work packet; carry the caller's ID.
+    if not re.search(r"^task_id: [A-Za-z0-9_.-]+$", prompt, re.M):
+        prompt = f"task_id: {shared_dispatch_task_id()}\n{prompt}"
     run_cwd = cwd or config.harness
     if engine == "codex":
         profile = codex_override_profile(codex_role, override)
@@ -980,7 +999,7 @@ def ai_command_text(
                 "danger-full-access",
             ]
         )
-        prompt = f"{codex_start_instruction(profile, override)} {prompt}"
+        prompt = f"{codex_start_instruction(profile, override)}\n{prompt}"
         if non_interactive and codex_output_path:
             argv.extend(["--output-last-message", str(codex_output_path)])
         if not non_interactive:
@@ -990,7 +1009,7 @@ def ai_command_text(
         # Claude native 옵션만 전달하며 시작 로그도 같은 값을 사용한다.
         role = launch_role(codex_role)
         model = claude_override_model(role, override)
-        prompt = f"{claude_start_instruction(role, model, override)} {prompt}"
+        prompt = f"{claude_start_instruction(role, model, override)}\n{prompt}"
         argv = [engine, "--dangerously-skip-permissions", "--model", model, "--effort", launch_effort("claude", role, override)]
         argv.append(prompt)
     else:
@@ -1831,7 +1850,7 @@ def run_herdr_route(args: argparse.Namespace, config: Config, execute=None) -> i
         agent_info = herdr_agent_info(get_proc.stdout or "")
         if not agent_info:
             return 2
-        packet = herdr_route_packet(config, work_ref=work_ref, expect=args.expect, instruction=instruction)
+        packet = herdr_route_packet(config, work_ref=work_ref, expect=args.expect, instruction=instruction, service=args.service)
         send_proc = execute([HERDR, "agent", "send", active_lead_name, packet], config.harness)
         if send_proc.returncode != 0:
             return int(send_proc.returncode)

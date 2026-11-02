@@ -545,46 +545,45 @@ python3 tools/archive_vault.py --vault "$VAULT" --days 180 --apply
 
 ## harness_context_audit.py — 컨텍스트·스택·훅 감사
 
-`/ad:harness-optimize 스택` 모드가 호출한다. 하네스 **바깥**(환경)이 모델의 사고 대역을 좁히고 있는지 실측한다.
+`/ad:harness-optimize 스택`에서 사용한다. `tools/agent_usage.py`가 Codex·Claude 로그를 스트리밍 집계하며 `tools/skill_usage_report.py`도 같은 수집기를 사용한다.
 
 ### 사용법
 
 ```bash
-python3 tools/harness_context_audit.py              # 기본 90일
-python3 tools/harness_context_audit.py --days 30
-python3 tools/harness_context_audit.py --json       # 기계 판독용
+python3 tools/harness_context_audit.py --days 30 --json
+python3 tools/harness_context_audit.py --days 30 --engine codex
+python3 tools/harness_context_audit.py --days 30 --engine claude
+python3 tools/skill_usage_report.py --days 30 --json
 ```
 
-### 출력
+기본 기간은 컨텍스트 감사 90일, 스킬 보고 전체 기간이다. 두 명령 모두 `--days 0`은 전체 기간이다. 음수는 거부한다. 감사의 `--claude-root`·`--codex-root`, 스킬 보고의 기존 `--root`·`--codex-root`로 격리 로그를 지정할 수 있다. 기간은 세션 디렉터리 날짜가 아니라 각 기록 시각으로 판정한다.
 
-1. **상주 컨텍스트 예산** — CLAUDE.md·AGENTS.md·개인 메모리·모델 호출 스킬 description. `disable-model-invocation: true`인 스킬은 0으로 계산
-2. **훅 목록** — 이벤트·매처·명령. 훅은 상주 예산이 아니라 왕복 지연으로 나타난다
-3. **세션 지표** — 호출당 평균 컨텍스트, Bash 비중, Bash 중 `cd` 비율
-4. **툴 분포·지연** — 호출 수, 지연 중앙값, 총 소요, 결과 chars, 오류
-5. **반복 Read** — 같은 파일 재독. 스킬의 SoT 참조가 여기 뜨면 절 단위 참조 대상
-6. **설치 스킬 실사용** — Claude 슬래시 + Skill 툴 + Codex `$alias` 집계, 미사용 목록
+### 집계 계약
 
-### 임계값
+- JSON은 `schema_version: 2`다. 컨텍스트 감사는 `engines.claude`·`engines.codex` 아래에 각각 지표를 둔다. 기존 최상위 `avg_context_tokens`를 읽던 소비자는 엔진별 경로로 변경한다. `observed_window_start`·`observed_window_end`에 실제 필터 경계를 기록한다.
+- `usage_requests`는 usage가 관측된 응답 수다. 평균 입력 `avg_context_tokens`는 입력 usage가 있는 `context_requests`개 응답의 입력 합계/응답 수다. 자료가 없으면 `null`이며 도구 호출 수로 나누지 않는다.
+- Claude는 응답 ID별 반복 usage snapshot을 합치고 필드별 최대 관측값을 사용한다. 입력은 `input_tokens + cache_read_input_tokens + cache_creation_input_tokens`다.
+- Codex는 세션별 `token_usage_record.response_id`의 usage를 중복 제거한다. native 전환 이전에는 누적 합계가 달라진 legacy `token_count.last_token_usage`를 보존한다. 전환 이후 연결할 ID가 없는 legacy snapshot은 추가 요청으로 추측하지 않고 `quality.legacy_snapshots_after_native`에 제외 범위를 남긴다. 누적값 reset 이후의 변경은 별도 이벤트로 센다. Codex `input_tokens`에는 cached input이 포함되므로 캐시를 다시 더하지 않는다. `usage_sources`로 적용된 경로를 확인한다.
+- 스킬은 설치 목록과 대조한 선두 `$alias`, Claude user 역할의 `command-name`, assistant의 `Skill` 호출만 센다. user 역할은 입력 경로이며 서브에이전트의 부모 지시일 수도 있으므로 사람의 직접 호출 수로 해석하지 않는다. Codex `retained_source`가 원 사용자 메시지임을 보존하면 해당 원 ID와 canonical skill로 재직렬화 사본을 합치며 블록 위치는 사용하지 않는다. event/item mirror는 안정적인 원 ID로, ID가 없으면 같은 기록 시각·같은 스킬 한 쌍으로 합친다(`quality.user_mirror_time_fallback`). 서로 다른 ID가 있으면 별도 호출이다. 주입된 목록·assistant의 언급·도구 결과·상속 기록은 사용자 호출로 세지 않는다.
+- 엔진별 상주 지표는 별도 `resident_tokens_estimate`(chars/4)다. Claude의 명시 `@파일` import는 중복을 제거해 포함하고, 임의의 개인 Markdown이나 반대 엔진의 진입점은 합산하지 않는다. 이는 실제 모델 요청의 토큰 수가 아니다.
+- 훅은 설정된 이벤트·매처·실행 파일만 출력한다. 인자·환경변수 값·원문 프롬프트는 보고서에 보관하지 않는다. 도구 지연은 호출/결과의 로그 시각차다.
 
-코드 상단 `LIMITS`에 있다. 초과 시 `[경고]`로 표시된다. 조정하려면 근거를 함께 남긴다.
+### 확인 한계와 판정
 
-| 키 | 기본값 | 의미 |
-|---|---:|---|
-| `resident_tokens` | 8,000 | 상주 컨텍스트 상한 |
-| `avg_context_tokens` | 200,000 | 호출당 평균 컨텍스트 (smart zone 약 150k) |
-| `bash_share` | 0.50 | Bash가 전체 툴 호출에서 차지하는 비중 |
-| `cd_share` | 0.20 | Bash 중 `cd` 비율 |
-| `reread_count` | 5 | 같은 파일 재독 보고 기준 |
+`quality`에 읽은 파일 수, 시각 없는 기록, 잘못된 레코드·필드, 입력 usage 누락 등 관측 범위를 남긴다. 명시적 호출 0회는 자연어 요청으로 스킬 본문을 읽지 않았다는 증거가 아니다. Hermes cron·로그 밖 실행도 포함하지 않는다.
 
-### 한계
+Codex 셸/REPL 래퍼 내부 명령과 파일 읽기는 추정하지 않는다. `bash_share`는 직접 식별한 셸 도구가 기록된 전체 도구 호출에서 차지하는 비중이며, 엔진 간 실제 셸 사용량 비교로 쓰지 않는다. `reads`도 명시적 읽기 도구의 기간 합계라서 같은 작업에서 불필요하게 다시 읽었다는 증거가 아니다.
 
-- Claude Code 세션 로그(`~/.claude/projects`)와 Codex 세션(`~/.codex/sessions`)만 집계한다. **Hermes cron 실행은 안 잡힌다** — 0회여도 즉시 비활성 판단 금지
-- 토큰은 chars/4 근사. 절대값보다 회차 간 추이를 본다
-- 판정·조치는 사람이 한다. 도구는 후보만 surface한다
+`LIMITS`의 기존 기준(상주 근사 8,000, 관측 평균 입력 200,000, 셸 비중 .5, cd 비중 .2, 기간 읽기 5회)은 검토 후보를 표시하는 신호다. 이 값이나 구독 청구액·사용 한도로 효과를 단정하지 않는다. 이전 cache-read/도구 호출 계산값과 새 요청당 평균은 직접 비교하지 않는다.
 
-### 기준 문서
+회귀 검증:
 
-정책은 [policies/harness-governance-policy.md](../policies/harness-governance-policy.md) §컨텍스트 예산, 판정 근거는 [docs/skill-stack-and-workflow-plan.md](../docs/skill-stack-and-workflow-plan.md).
+```bash
+python3 -m unittest discover -s tests -p test_agent_usage.py
+python3 -m unittest discover -s tests -p test_harness_context_audit.py
+```
+
+정책: [policies/harness-governance-policy.md](../policies/harness-governance-policy.md) §컨텍스트 예산. 감사 기록: [docs/skill-audit-baseline.md](../docs/skill-audit-baseline.md).
 
 ## setup_harness.py — 환경 수렴 (초기화 도구)
 

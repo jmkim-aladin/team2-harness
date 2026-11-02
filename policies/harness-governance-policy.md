@@ -73,6 +73,7 @@
 | **티켓 산출물 frontmatter** | vault `wiki/guides/frontmatter-spec.md` | `.claude/commands/ad/ticket.md`, `.claude/commands/ad/new-note.md`, `.claude/commands/ad/weekly-report.md`, `.claude/commands/ad/sprint-close-check.md` (전부 링크만). 필드 스펙은 여기가 SoT, **티켓 노트의 구조·본문 스켈레톤**은 아래 "티켓 노트 스켈레톤" 행이 SoT |
 | **지시 강도·우선순위·표기 규약** | `policies/instruction-precedence-policy.md` | CLAUDE.md, AGENTS.md, `policies/skill-authoring-principles.md`, `.claude/commands/ad/harness-optimize.md` (전부 링크만). 준수 검사는 `tools/lint_harness_rules.py`, 판정 기록은 `docs/harness-rule-baseline.json` |
 | **위임 프롬프트 계약(5요소)** | `memory/claude-base.md` §위임 프롬프트 계약 (`canonical:delegation-contract` 마커 블록) | AGENTS.md (`generated:delegation-contract` — 수동 편집 금지, `lint_harness_rules.py --sync-generated`로 생성. 드리프트는 R7이 차단) |
+| **공통 작업 식별·Langfuse 연결** | `policies/task-tracing-policy.md` | `memory/claude-base.md` (`canonical:task-identity` 요약 → AGENTS.md 생성), CLAUDE.md (링크), `tools/task_tracing.py` (발급·연결 구현) |
 | **팀 산출물 출력 목소리** | `policies/instruction-precedence-policy.md` §출력 목소리 | `policies/business-stakeholder-communication-policy.md` (독자별 상세), 각 스킬의 출력 형식 절 (링크만) |
 | **지시문 준수 베이스라인** | `docs/harness-rule-baseline.json` (도구 생성물 — 손으로 편집하지 않는다) | `.claude/commands/ad/harness-optimize.md` 제약 모드, `docs/skill-audit-baseline.md` 북극성 거리표 (회차 카운트만) |
 | **하네스 개선 방향(북극성)** | `policies/harness-north-star.md` | harness-governance-policy, `.claude/commands/ad/harness-optimize.md`, CLAUDE.md (전부 링크만) |
