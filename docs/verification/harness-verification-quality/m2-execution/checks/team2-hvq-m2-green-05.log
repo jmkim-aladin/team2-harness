@@ -1,0 +1,11 @@
+test_empty_sample_is_inconclusive_without_a_fabricated_success_rate (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_exclusions_and_failures_remain_visible_even_when_claimed_rate_matches (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_invalid_claims_cannot_be_accepted_as_matching_numbers (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_original_evidence_exposes_repeated_scenarios_and_wrong_denominator (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_two_thousand_distinct_passes_and_replay_preserves_inputs_and_evidence (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.986s
+
+OK

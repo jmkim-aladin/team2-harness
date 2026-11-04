@@ -1,0 +1,214 @@
+{
+  "label": "A",
+  "run_dir": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/baseline-20261104-r2",
+  "status": "FAIL",
+  "cases": [
+    {
+      "id": "small-document",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "index": 0,
+          "type": "json_field_equals",
+          "path": "result.json",
+          "field": "ready",
+          "expected": true,
+          "status": "PASS",
+          "observed": true
+        },
+        {
+          "index": 1,
+          "type": "json_field_equals",
+          "path": "result.json",
+          "field": "result",
+          "expected": "# 안내\n\n문서를 검토했습니다.\n재시도 횟수는 3회입니다.\n",
+          "status": "FAIL",
+          "reason": "assertion-false",
+          "observed": "# 안내\n\n문서를 검토했습니다.\n재시도 횟수는 3회입니다."
+        },
+        {
+          "index": 2,
+          "type": "json_field_equals",
+          "path": "result.json",
+          "field": "additional_work",
+          "expected": [],
+          "status": "FAIL",
+          "reason": "assertion-false",
+          "observed": [
+            "파일은 수정하지 않았습니다. 제시한 본문을 document.md에 반영하면 문서 변경을 마무리할 수 있습니다."
+          ]
+        }
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/small-document",
+      "reason": "assertion-false"
+    },
+    {
+      "id": "expectation-source",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "index": 0,
+          "type": "json_field_equals",
+          "path": "result.json",
+          "field": "ready",
+          "expected": false,
+          "status": "FAIL",
+          "reason": "assertion-false",
+          "observed": true
+        }
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/expectation-source",
+      "reason": "assertion-false"
+    },
+    {
+      "id": "repeated-samples",
+      "status": "PASS",
+      "assertions": [
+        {
+          "index": 0,
+          "type": "json_field_equals",
+          "path": "result.json",
+          "field": "ready",
+          "expected": false,
+          "status": "PASS",
+          "observed": false
+        },
+        {
+          "index": 1,
+          "type": "text_contains",
+          "path": "result.json",
+          "status": "PASS",
+          "literal": "381"
+        }
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/repeated-samples"
+    },
+    {
+      "id": "reconciliation",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "index": 0,
+          "type": "json_field_equals",
+          "path": "result.json",
+          "field": "ready",
+          "expected": false,
+          "status": "FAIL",
+          "reason": "assertion-false",
+          "observed": true
+        },
+        {
+          "index": 1,
+          "type": "text_contains",
+          "path": "result.json",
+          "status": "PASS",
+          "literal": "R1"
+        }
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/reconciliation",
+      "reason": "assertion-false"
+    }
+  ],
+  "issues": [],
+  "conditions": {
+    "confirmed": true,
+    "fixture_digest": "sha256:1eba0252ae85fda8017fb2f73565b7159305ffdd8cfa3b7f97c25f1292b19e74",
+    "model": "gpt-6-luna",
+    "settings": {
+      "effort": "high",
+      "sandbox": "read-only",
+      "cli": "codex-cli 0.166.0"
+    },
+    "budget": {
+      "wall_timeout_seconds_per_case": 180
+    },
+    "skill_digest": "sha256:dd21b0beb9f4f6f9f6718bca120a10a3c79cf8bb1b6045406f69ee82ce9f6db4"
+  },
+  "observations": {
+    "small-document": {
+      "commands": [
+        "/bin/zsh -lc 'cat document.md'"
+      ],
+      "command_count": 1,
+      "usage": [
+        {
+          "input_tokens": 30482,
+          "cached_input_tokens": 14976,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 595,
+          "reasoning_output_tokens": 373
+        }
+      ],
+      "prompt_bytes": 2874,
+      "elapsed_seconds": 15.601,
+      "result_sha256": "2218a33f8e1487f4b2e689852bb2ccfe6eac1bc295b81261e64e40a8c0308842"
+    },
+    "expectation-source": {
+      "commands": [
+        "/bin/zsh -lc 'pwd && rg --files'",
+        "/bin/zsh -lc 'cat evidence.json'"
+      ],
+      "command_count": 2,
+      "usage": [
+        {
+          "input_tokens": 48229,
+          "cached_input_tokens": 31616,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 710,
+          "reasoning_output_tokens": 234
+        }
+      ],
+      "prompt_bytes": 5739,
+      "elapsed_seconds": 19.225,
+      "result_sha256": "e65a0dd998ccd982611483e5d599ff8167b60a2beaba6e16b995ca96bca8e188"
+    },
+    "repeated-samples": {
+      "commands": [
+        "/bin/zsh -lc \"pwd && rg --files -g 'report.json' -g 'samples.csv' -g '\"'!**/.git/**'\"'\"",
+        "/bin/zsh -lc 'cat report.json && cat samples.csv'",
+        "/bin/zsh -lc \"python3 -c 'import csv,json,collections,pathlib; r=json.loads(pathlib.Path(\\\"report.json\\\").read_text()); rows=list(csv.DictReader(open(\\\"samples.csv\\\", newline=\\\"\\\"))); print(\\\"report\\\",r); print(\\\"rows\\\",len(rows),\\\"attempt min/max\\\",min(int(x[\\\"attempt_id\\\"]) for x in rows),max(int(x[\\\"attempt_id\\\"]) for x in rows)); print(\\\"status_counts\\\",dict(collections.Counter(x[\\\"status\\\"] for x in rows))); print(\\\"unique_scenarios\\\",len(set(x[\\\"scenario_id\\\"] for x in rows))); print(\\\"scenario_range\\\",min(x[\\\"scenario_id\\\"] for x in rows),max(x[\\\"scenario_id\\\"] for x in rows)); print(\\\"duplicate_id_count\\\",len(rows)-len(set(x[\\\"scenario_id\\\"] for x in rows))); print(\\\"attempt_id_unique\\\",len(set(x[\\\"attempt_id\\\"] for x in rows))); print(\\\"status rates of all rows\\\",{k:round(v/len(rows),6) for k,v in collections.Counter(x[\\\"status\\\"] for x in rows).items()}); print(\\\"nonexcluded_denominator rate\\\",sum(x[\\\"status\\\"]==\\\"passed\\\" for x in rows)/sum(x[\\\"status\\\"]\"'!=\"excluded\" for x in rows)); print(\"unique scenario status variability\",sum(len(set(x[\"status\"] for x in rows if x[\"scenario_id\"]==s))>1 for s in set(x[\"scenario_id\"] for x in rows)))'\"'\"",
+        "/bin/zsh -lc \"python3 -c 'import csv,collections; rows=list(csv.DictReader(open(\\\"samples.csv\\\",newline=\\\"\\\"))); groups=collections.defaultdict(list); [groups[x[\\\"scenario_id\\\"]].append((int(x[\\\"attempt_id\\\"]),x[\\\"status\\\"])) for x in rows]; print(\\\"frequency_counts\\\",dict(collections.Counter(map(len,groups.values())))); print(\\\"variable_examples\\\",[(k,v[:6]) for k,v in groups.items() if len({s for _,s in v})>1][:5]); print(\\\"constant_status_examples\\\",[(k,v[:3]) for k,v in groups.items() if len({s for _,s in v})==1][:5]); print(\\\"first_last_sample\\\",rows[0],rows[-1])' && wc -l samples.csv && cat report.json\""
+      ],
+      "command_count": 4,
+      "usage": [
+        {
+          "input_tokens": 110137,
+          "cached_input_tokens": 66688,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1926,
+          "reasoning_output_tokens": 688
+        }
+      ],
+      "prompt_bytes": 5822,
+      "elapsed_seconds": 43.218,
+      "result_sha256": "5b25988a0311eff9c8a1f81556cceb2a88675412fbccc7ecf9e2bcf966bbfd8e"
+    },
+    "reconciliation": {
+      "commands": [
+        "/bin/zsh -lc \"pwd && rg --files -g 'ledger.json' -g 'AGENTS.md' -g '*.md' -g '*.json' | head -100\"",
+        "/bin/zsh -lc 'cat ledger.json'"
+      ],
+      "command_count": 2,
+      "usage": [
+        {
+          "input_tokens": 51770,
+          "cached_input_tokens": 45568,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1391,
+          "reasoning_output_tokens": 502
+        }
+      ],
+      "prompt_bytes": 9807,
+      "elapsed_seconds": 31.139,
+      "result_sha256": "6b1f6ad7f074963e60eb94fbacc96c66f0fbee80f5b29b590ead0c2a7b7a34ea"
+    }
+  }
+}

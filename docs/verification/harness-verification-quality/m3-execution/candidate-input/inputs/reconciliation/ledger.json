@@ -1,0 +1,12 @@
+{
+  "orders": [{"order_id": "O1", "paid_won": 10000}, {"order_id": "O2", "paid_won": 5000}],
+  "refund_deliveries": [
+    {"delivery_id": "D1", "event_id": "R1", "order_id": "O1", "refund_won": 3000},
+    {"delivery_id": "D2", "event_id": "R1", "order_id": "O1", "refund_won": 3000},
+    {"delivery_id": "D3", "event_id": "R2", "order_id": "O1", "refund_won": 1000}
+  ],
+  "contract": "동일 event_id의 재전송은 한 번만 차감한다. 서로 다른 event_id는 각각 유효하다.",
+  "current_net_won": 8000,
+  "current_test_expected_won": 8000,
+  "test_exit_code": 0
+}

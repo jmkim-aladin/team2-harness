@@ -1,0 +1,15 @@
+test_original_evidence_exposes_repeated_scenarios_and_wrong_denominator (test_audit_sample_evidence.AuditSampleEvidenceTests) ... FAIL
+
+======================================================================
+FAIL: test_original_evidence_exposes_repeated_scenarios_and_wrong_denominator (test_audit_sample_evidence.AuditSampleEvidenceTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 31, in test_original_evidence_exposes_repeated_scenarios_and_wrong_denominator
+    self.assertEqual(process.returncode, 1, process.stdout + process.stderr)
+AssertionError: 2 != 1 : /Library/Developer/CommandLineTools/usr/bin/python3: can't open file '/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py': [Errno 2] No such file or directory
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.033s
+
+FAILED (failures=1)

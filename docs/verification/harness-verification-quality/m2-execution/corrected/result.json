@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/corrected/samples.csv",
+      "sha256": "8689248500fd39c087d24c46b276738744c64fbed905354db6a1c10f248a6843"
+    },
+    "report": {
+      "path": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/corrected/report.json",
+      "sha256": "472017042abb5dc04f3ba80fcdf6dedda7eb486fb4f153b9be1333dc80a99b07"
+    }
+  },
+  "counts": {
+    "attempts": 2000,
+    "unique_scenarios": 2000,
+    "duplicate_attempts": 0,
+    "passed": 2000,
+    "failed": 0,
+    "excluded": 0,
+    "compared": 2000
+  },
+  "rates": {
+    "compared_denominator": 2000,
+    "compared_pass_rate": 1.0,
+    "all_attempts_denominator": 2000,
+    "all_attempts_pass_rate": 1.0
+  },
+  "reported_metadata": {
+    "claimed_unique_scenarios": 2000,
+    "claimed_pass_rate": 1,
+    "data": "samples.csv",
+    "description": "M2 합성 확인 입력"
+  },
+  "issues": []
+}

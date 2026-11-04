@@ -1,0 +1,107 @@
+{
+  "task_id": "TASK-20261104-4560e95349bc",
+  "milestone": "M3",
+  "checked_at": "2026-11-04T05:34:11.868837+00:00",
+  "repo": "/Users/jm/Documents/workspace/team2",
+  "head": "63668bbdf1f5f95dda98fc3b5ac4eae92c99873f",
+  "branch": "team2/harness-verification-quality",
+  "source_sha256": {
+    "docs/agents/verification.md": "b27b6572edea7683c6f2ffd149d4928da9acdd287a19b6837acbb07c29f20a56",
+    "docs/sprint/work-prep-note-template.md": "12094af8680b1113e3dae854a2c4814eaab4e5f8b665f967d3ecef01ba64865c",
+    "docs/verification/harness-verification-quality/m3-execution/candidate-input/run_baseline.py": "2701fcdf70ce99f06b43d781726d50897e708850a125d4d8c7e32c0a47cfffc7",
+    "docs/verification/harness-verification-quality/m3-execution/check_source_example.py": "b1972f6d62f294ca93f531bb8015e9db15febc12369cea8a98ac3c21488a8fce",
+    "docs/verification/harness-verification-quality/m3-execution/synthetic-policy-v1.txt": "8cb3f499f0c7017625a43394c2fbdad87e15ea5c9468353f31a2d30198845b9a"
+  },
+  "acceptance": "PASS: source links and target behavior checked; broader output failures preserved",
+  "comparison_status": "FAIL",
+  "comparison_conditions": {
+    "shared_equal": true,
+    "skill_digest_differs": true,
+    "status": "PASS"
+  },
+  "automated_cases": {
+    "A": {
+      "small-document": "PASS",
+      "expectation-source": "PASS",
+      "repeated-samples": "FAIL",
+      "reconciliation": "PASS"
+    },
+    "B": {
+      "small-document": "PASS",
+      "expectation-source": "PASS",
+      "repeated-samples": "PASS",
+      "reconciliation": "PASS"
+    }
+  },
+  "source_trace_status": [
+    "INCONCLUSIVE",
+    "FAIL",
+    "PASS"
+  ],
+  "manual_reconciliation_error_preserved": true,
+  "previous_M2_sources_and_inputs_unchanged": true,
+  "verification": {
+    "tests": {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "exit_code": 0,
+      "tests": 476,
+      "seconds": 11.235,
+      "skipped": 0
+    },
+    "tools-tests": {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/tests"
+      ],
+      "exit_code": 0,
+      "tests": 279,
+      "seconds": 17.829,
+      "skipped": 1
+    },
+    "harness-lint": {
+      "argv": [
+        "python3",
+        "tools/lint_harness_rules.py",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    "vault-lint": {
+      "argv": [
+        "python3",
+        "tools/lint_vault.py",
+        "--vault",
+        "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2",
+        "--files",
+        "wiki/projects/harness-verification-quality/plan.md",
+        "wiki/processes/daily/2026-11-04.md"
+      ],
+      "exit_code": 0
+    },
+    "diff-check": {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  },
+  "limitations": [
+    "One candidate run; no general improvement or cost saving established.",
+    "Reconciliation output has a semantic scope error despite its automated PASS; handed to M4.",
+    "Synthetic source tracing does not verify production policy or application behavior."
+  ],
+  "current_worktree_status": " M docs/agents/verification.md\n M docs/sprint/work-prep-note-template.md\n M tools/README.md\n?? docs/verification/harness-verification-quality/\n?? tests/test_audit_sample_evidence.py\n?? tools/audit_sample_evidence.py\n"
+}

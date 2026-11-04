@@ -6,8 +6,9 @@
 
 - `evaluate_harness_behavior.py`: 두 실행의 원본 산출물을 사전 assertion으로 비교한다. [입력 계약·실행법·판정 한계](../docs/harness-behavior-evaluation.md).
 - `verify_harness_links.py`: 실제 링크 동기화 CLI의 dry-run·apply·반복·재개·증거 보존을 격리 fixture에서 확인한다. [실행 검증 계약](../docs/verification/harness-links.md).
+- `audit_sample_evidence.py`: 표본 CSV의 고유 시나리오·실패·제외·통과율을 실제로 집계하고 보고서 주장과 비교한다. [입력·판정·증거 계약](../docs/verification/harness-verification-quality/m2-sample-audit.md).
 
-두 도구 모두 종료 코드는 PASS 0 / FAIL 1 / INCONCLUSIVE 또는 입력 오류 2다. 로그의 성공 문구만으로 동작을 판정하지 않는다.
+세 도구 모두 종료 코드는 PASS 0 / FAIL 1 / INCONCLUSIVE 또는 입력 오류 2다. 로그의 성공 문구만으로 동작을 판정하지 않는다.
 
 ## team2-agent.py / bin/team2-agent — 터미널 조작면
 

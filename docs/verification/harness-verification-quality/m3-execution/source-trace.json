@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-20261104-4560e95349bc",
+  "input": {
+    "path": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/expectation-source/evidence.json",
+    "sha256": "471f9fa1ecb1f7519f6bb318b3c2a06ac4f66a82ffb5fc9b6fdd88c7b52859ca"
+  },
+  "synthetic_policy": {
+    "path": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/synthetic-policy-v1.txt",
+    "sha256": "8cb3f499f0c7017625a43394c2fbdad87e15ea5c9468353f31a2d30198845b9a"
+  },
+  "synthetic_policy_version": "synthetic-discount-v1",
+  "method": "hand-worked 1001*85/100=850.85 -> floor 850 -> times 2=1700, corroborated with Decimal",
+  "python": "3.9.6 (default, May 22 2026, 11:13:45) \n[Clang 21.0.0 (clang-2100.1.1.101)]",
+  "verifier": {
+    "path": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/check_source_example.py",
+    "sha256": "b1972f6d62f294ca93f531bb8015e9db15febc12369cea8a98ac3c21488a8fce"
+  },
+  "cases": [
+    {
+      "id": "original-policy-missing",
+      "expected_amount_won": null,
+      "source_status": "unverified",
+      "observed_amount_won": 1701,
+      "existing_test_exit_code": 0,
+      "status": "INCONCLUSIVE",
+      "reason": "source_documents is empty; 1700 and 1701 are possible under different policies"
+    },
+    {
+      "id": "synthetic-policy-with-copied-expectation",
+      "expected_amount_won": 1700,
+      "source_status": "verified-synthetic-fixture",
+      "observed_amount_won": 1701,
+      "status": "FAIL",
+      "reason": "apply the separately supplied synthetic policy; the copied 1701 test value is not its oracle"
+    },
+    {
+      "id": "known-worked-example",
+      "expected_amount_won": 1700,
+      "source_status": "verified-synthetic-fixture",
+      "observed_amount_won": 1700,
+      "status": "PASS",
+      "reason": "a known-correct literal supplied for this worked example; not an application output"
+    }
+  ],
+  "limitations": [
+    "No production policy or application execution was verified.",
+    "The original fixture remains unverified; the synthetic policy does not resolve its real-world policy."
+  ]
+}

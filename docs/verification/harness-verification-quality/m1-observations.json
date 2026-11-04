@@ -1,0 +1,106 @@
+{
+  "experiment": "M1 single-policy baseline; not an A/B comparison",
+  "evaluator_sha256": "ef7a7982914090ea9d17c541dc6d5c69f2196001561008c36adc8fe6fd76282b",
+  "runs": {
+    "baseline-20261104": {
+      "status": "FAIL",
+      "cases": {
+        "small-document": "PASS",
+        "expectation-source": "PASS",
+        "repeated-samples": "PASS",
+        "reconciliation": "FAIL"
+      },
+      "metrics": {
+        "small-document": {
+          "command_count": 1,
+          "prompt_bytes": 2874,
+          "elapsed_seconds": 17.749
+        },
+        "expectation-source": {
+          "command_count": 2,
+          "prompt_bytes": 5739,
+          "elapsed_seconds": 23.02
+        },
+        "repeated-samples": {
+          "command_count": 4,
+          "prompt_bytes": 5822,
+          "elapsed_seconds": 49.068
+        },
+        "reconciliation": {
+          "command_count": 3,
+          "prompt_bytes": 9807,
+          "elapsed_seconds": 55.37
+        }
+      },
+      "input_unchanged": true,
+      "runner_snapshot_matches": true
+    },
+    "baseline-20261104-r2": {
+      "status": "FAIL",
+      "cases": {
+        "small-document": "FAIL",
+        "expectation-source": "FAIL",
+        "repeated-samples": "PASS",
+        "reconciliation": "FAIL"
+      },
+      "metrics": {
+        "small-document": {
+          "command_count": 1,
+          "prompt_bytes": 2874,
+          "elapsed_seconds": 15.601
+        },
+        "expectation-source": {
+          "command_count": 2,
+          "prompt_bytes": 5739,
+          "elapsed_seconds": 19.225
+        },
+        "repeated-samples": {
+          "command_count": 4,
+          "prompt_bytes": 5822,
+          "elapsed_seconds": 43.218
+        },
+        "reconciliation": {
+          "command_count": 2,
+          "prompt_bytes": 9807,
+          "elapsed_seconds": 31.139
+        }
+      },
+      "input_unchanged": true,
+      "runner_snapshot_matches": true
+    },
+    "baseline-20261104-v2": {
+      "status": "FAIL",
+      "cases": {
+        "small-document": "PASS",
+        "expectation-source": "PASS",
+        "repeated-samples": "FAIL",
+        "reconciliation": "PASS"
+      },
+      "metrics": {
+        "small-document": {
+          "command_count": 1,
+          "prompt_bytes": 2919,
+          "elapsed_seconds": 17.142
+        },
+        "expectation-source": {
+          "command_count": 3,
+          "prompt_bytes": 5739,
+          "elapsed_seconds": 22.471
+        },
+        "repeated-samples": {
+          "command_count": 3,
+          "prompt_bytes": 5822,
+          "elapsed_seconds": 38.35
+        },
+        "reconciliation": {
+          "command_count": 2,
+          "prompt_bytes": 9807,
+          "elapsed_seconds": 24.34
+        }
+      },
+      "input_unchanged": true,
+      "runner_snapshot_matches": true
+    }
+  },
+  "authoritative_baseline": "baseline-20261104-v2"
+}

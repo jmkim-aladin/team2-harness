@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "status": "INCONCLUSIVE",
+  "identity_key": "scenario_id",
+  "inputs": {},
+  "counts": null,
+  "rates": null,
+  "reported_metadata": {},
+  "issues": [
+    {
+      "code": "invalid-input",
+      "detail": "[Errno 2] No such file or directory: '/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/missing.csv'"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "suite_id": "m4-arithmetic-review",
+  "cases": [
+    {
+      "id": "01",
+      "task": "검토 대상 ledger.json의 수치 계약 일치와 계산 근거를 확인한다.",
+      "assertions": [
+        {
+          "type": "json_field_equals",
+          "path": "result.json",
+          "field": "arithmetic_ok",
+          "expected": false
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "task": "검토 대상 ledger.json의 수치 계약 일치와 계산 근거를 확인한다.",
+      "assertions": [
+        {
+          "type": "json_field_equals",
+          "path": "result.json",
+          "field": "arithmetic_ok",
+          "expected": false
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "task": "검토 대상 ledger.json의 수치 계약 일치와 계산 근거를 확인한다.",
+      "assertions": [
+        {
+          "type": "json_field_equals",
+          "path": "result.json",
+          "field": "arithmetic_ok",
+          "expected": true
+        }
+      ]
+    }
+  ]
+}

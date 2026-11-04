@@ -1,0 +1,8 @@
+{
+  "description": "서로 다른 무작위 시나리오 2,000개로 검증했다",
+  "seed": 20261104,
+  "claimed_unique_scenarios": 2000,
+  "claimed_pass_rate": 0.997,
+  "claim_origin": "검증 구현이 작성한 요약",
+  "data": "samples.csv"
+}

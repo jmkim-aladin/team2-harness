@@ -1,0 +1,209 @@
+{
+  "task_id": "TASK-20261104-4560e95349bc",
+  "milestone": "M2",
+  "recorded_at": "2026-11-04T05:19:49.893852+00:00",
+  "repo": "/Users/jm/Documents/workspace/team2",
+  "head": "63668bbdf1f5f95dda98fc3b5ac4eae92c99873f",
+  "branch": "team2/harness-verification-quality",
+  "source_sha256": {
+    "tools/audit_sample_evidence.py": "2e6cd903d05da34a870bf531fbdf29412a4e7b7412d4f6c44e8af72371518ca5",
+    "tests/test_audit_sample_evidence.py": "44476f816176968ef10241ad9566858ca87c305a1c70d8cdb1d935c6cb06a993"
+  },
+  "cases": [
+    {
+      "case": "original",
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+        "--samples",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/repeated-samples/samples.csv",
+        "--report",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/repeated-samples/report.json",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/original"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "status": "FAIL",
+      "result_sha256": "77b1d950360f33ae7c91cc30960f62818d2de4432c680e0c9d8ae5f2aedf5af5"
+    },
+    {
+      "case": "corrected",
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+        "--samples",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/corrected/samples.csv",
+        "--report",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/corrected/report.json",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/corrected"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "status": "PASS",
+      "result_sha256": "c95c692e73cc5f4e4feb4e816501899e6534e281d1a9d4ec91c048c7717b48d1"
+    },
+    {
+      "case": "repeat",
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+        "--samples",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/corrected/samples.csv",
+        "--report",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/corrected/report.json",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/repeat"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "status": "PASS",
+      "result_sha256": "c95c692e73cc5f4e4feb4e816501899e6534e281d1a9d4ec91c048c7717b48d1"
+    },
+    {
+      "case": "empty",
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+        "--samples",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/empty/samples.csv",
+        "--report",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/empty/report.json",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/empty"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "status": "INCONCLUSIVE",
+      "result_sha256": "2995cb3626f8b02d24dd700504f85c57b0331b5512e91c523fb029ff675d3418"
+    },
+    {
+      "case": "excluded",
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+        "--samples",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/excluded/samples.csv",
+        "--report",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/excluded/report.json",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/excluded"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "status": "INCONCLUSIVE",
+      "result_sha256": "5bdb4d925d3f3995ad211b7e51c79bafb6fedf35c40798b7e6ec944e05417176"
+    },
+    {
+      "case": "failed",
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+        "--samples",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/failed/samples.csv",
+        "--report",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/failed/report.json",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/failed"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "status": "FAIL",
+      "result_sha256": "d355b0fae001dec5fa83df4099b6f8b83ca5ee9601c44b9fd5d58523c1fc4b1c"
+    },
+    {
+      "case": "missing",
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+        "--samples",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/missing.csv",
+        "--report",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/repeated-samples/report.json",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/missing"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "status": "INCONCLUSIVE",
+      "result_sha256": "2b3b03c175fc9488147e42d3ef74cc2c6ad6cffe632a8824eef692d2c49bb7b5"
+    }
+  ],
+  "existing_evidence_preserved": true,
+  "repeat_same_result": true,
+  "input_sha256": {
+    "docs/verification/harness-verification-quality/inputs/repeated-samples/samples.csv": "5ec3c9af3aa8b40371ab738520ea973bba29c4d52234a9296a16612d39c359b8",
+    "docs/verification/harness-verification-quality/inputs/repeated-samples/report.json": "00be0b44e4e54a7bb12978f2278e8394b67b816fb40a17db1db7440b5a3cf7b2",
+    "docs/verification/harness-verification-quality/m2-execution/inputs/corrected/samples.csv": "8689248500fd39c087d24c46b276738744c64fbed905354db6a1c10f248a6843",
+    "docs/verification/harness-verification-quality/m2-execution/inputs/corrected/report.json": "472017042abb5dc04f3ba80fcdf6dedda7eb486fb4f153b9be1333dc80a99b07",
+    "docs/verification/harness-verification-quality/m2-execution/inputs/empty/samples.csv": "c651ceee029d19685cdfcc45919c423045ad0a4355e59d41ceb908f7d5588ca7",
+    "docs/verification/harness-verification-quality/m2-execution/inputs/empty/report.json": "635ebf7b5a3d8c4c49b4d64aef393af61c4dcc92047312a83f7452a84bc30fdc",
+    "docs/verification/harness-verification-quality/m2-execution/inputs/excluded/samples.csv": "e4a4f42f63c2ff37d8585d4ebfc46e1dc3cb3e5c61fd3d257b049feeeb2e9c79",
+    "docs/verification/harness-verification-quality/m2-execution/inputs/excluded/report.json": "8bcd1b140bfe88cf76ab4d56ef916ff516dacf6a6a0081320f557e29ccfcb851",
+    "docs/verification/harness-verification-quality/m2-execution/inputs/failed/samples.csv": "f91541ca5c47a7c9585abaa7d5ad8640bd82c48544350c9c7ed4da11216ae69c",
+    "docs/verification/harness-verification-quality/m2-execution/inputs/failed/report.json": "2542e2c9585977bb4805f61214ff1853ee4e70340e2e328b3980eb61ceff87a5"
+  },
+  "inputs_unchanged": true,
+  "acceptance": "PASS: expected FAIL and INCONCLUSIVE outcomes were observed, not hidden",
+  "verification": {
+    "tests": {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "exit_code": 0,
+      "tests": 476,
+      "seconds": 13.509,
+      "skipped": 0
+    },
+    "tools-tests": {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/tests"
+      ],
+      "exit_code": 0,
+      "tests": 279,
+      "seconds": 24.32,
+      "skipped": 1
+    },
+    "harness-lint": {
+      "argv": [
+        "python3",
+        "tools/lint_harness_rules.py",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    "vault-lint": {
+      "argv": [
+        "python3",
+        "tools/lint_vault.py",
+        "--vault",
+        "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2",
+        "--files",
+        "wiki/projects/harness-verification-quality/plan.md",
+        "wiki/processes/daily/2026-11-04.md"
+      ],
+      "exit_code": 0
+    },
+    "diff-check": {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  },
+  "source_unchanged_since_execution": true,
+  "current_worktree_status": " M tools/README.md\n?? docs/verification/harness-verification-quality/\n?? tests/test_audit_sample_evidence.py\n?? tools/audit_sample_evidence.py\n"
+}

@@ -1,0 +1,35 @@
+{
+  "01": {
+    "arithmetic_ok": false,
+    "per_order_net": {
+      "O1": 6000,
+      "O2": 5000
+    },
+    "aggregate_net": 11000,
+    "reported_net": 8000,
+    "difference": -3000,
+    "duplicate_event": "R1"
+  },
+  "02": {
+    "arithmetic_ok": false,
+    "per_order_net": {
+      "A": 5000,
+      "B": 3500,
+      "C": 5000
+    },
+    "aggregate_net": 13500,
+    "reported_net": 12500,
+    "difference": -1000,
+    "duplicate_event": "X"
+  },
+  "03": {
+    "arithmetic_ok": true,
+    "per_order_net": {
+      "O1": 6000,
+      "O2": 5000
+    },
+    "aggregate_net": 11000,
+    "reported_net": 11000,
+    "difference": 0
+  }
+}

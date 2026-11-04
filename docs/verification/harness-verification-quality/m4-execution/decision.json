@@ -1,0 +1,188 @@
+{
+  "decision": "defer",
+  "reason": "Both methods correctly handled all three inputs. No additional verified detection by B; mandatory output expansion is not supported.",
+  "confirmation_replay_needed": false,
+  "shared_conditions": {
+    "shared_equal": true,
+    "skill_digest_differs": true,
+    "status": "PASS"
+  },
+  "observations": {
+    "A": {
+      "01": {
+        "arithmetic_ok": false,
+        "elapsed_seconds": 54.118,
+        "prompt_bytes": 7641,
+        "output_bytes": 1252,
+        "usage": [
+          {
+            "input_tokens": 69521,
+            "cached_input_tokens": 51712,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1877,
+            "reasoning_output_tokens": 920
+          }
+        ],
+        "commands": [
+          "/bin/zsh -lc \"pwd && rg --files -g '\"'!.*'\"' -g '*'\"",
+          "/bin/zsh -lc 'cat ledger.json'",
+          "/bin/zsh -lc \"ls -la && shasum -a 256 ledger.json && python3 -c 'import json; d=json.load(open(\\\"ledger.json\\\")); seen=set(); refund=0; print(\\\"orders\\\",sum(x[\\\"paid_won\\\"] for x in d[\\\"orders\\\"]));\nfor x in d[\\\"refund_deliveries\\\"]:\n if x[\\\"event_id\\\"] not in seen: seen.add(x[\\\"event_id\\\"]); refund+=x[\\\"refund_won\\\"]\nprint(\\\"unique_refunds\\\",refund); print(\\\"contract_net\\\",sum(x[\\\"paid_won\\\"] for x in d[\\\"orders\\\"])-refund); print(\\\"raw_delivery_net\\\",sum(x[\\\"paid_won\\\"] for x in d[\\\"orders\\\"])-sum(x[\\\"refund_won\\\"] for x in d[\\\"refund_deliveries\\\"]))'\""
+        ],
+        "command_count": 3,
+        "semantic_inspection": "correct aggregate, event treatment and discrepancy; no invented arithmetic defect in the normal case",
+        "result_sha256": "7e5dc1ed33eb91e42301cac97a41d63e4ff0d6c6b74de842c13efdbd11efef32"
+      },
+      "02": {
+        "arithmetic_ok": false,
+        "elapsed_seconds": 50.147,
+        "prompt_bytes": 7641,
+        "output_bytes": 1576,
+        "usage": [
+          {
+            "input_tokens": 70672,
+            "cached_input_tokens": 51968,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1622,
+            "reasoning_output_tokens": 554
+          }
+        ],
+        "commands": [
+          "/bin/zsh -lc 'ls -la'",
+          "/bin/zsh -lc \"pwd; rg --files -g '\"'!*'\"' -g 'ledger.json' -g '*.json' -g '*.md' -g '*.csv' -g '*.txt' -g '*.sql' -g '*.yaml' -g '*.yml' -g 'AGENTS.md' -g '\"'!node_modules'\"'\"",
+          "/bin/zsh -lc 'cat ledger.json'",
+          "/bin/zsh -lc 'nl -ba ledger.json'",
+          "/bin/zsh -lc \"python3 -c 'import json; d=json.load(open(\\\"ledger.json\\\")); paid=sum(o[\\\"paid_won\\\"] for o in d[\\\"orders\\\"]); seen=set(); valid=[]; duplicate=[]\nfor x in d[\\\"refund_deliveries\\\"]:\n (duplicate if x[\\\"event_id\\\"] in seen else valid).append(x)\n seen.add(x[\\\"event_id\\\"])\nprint({\\\"paid_won\\\":paid,\\\"valid_refund_won\\\":sum(x[\\\"refund_won\\\"] for x in valid),\\\"expected_net_won\\\":paid-sum(x[\\\"refund_won\\\"] for x in valid),\\\"all_deliveries_refund_won\\\":sum(x[\\\"refund_won\\\"] for x in d[\\\"refund_deliveries\\\"]),\\\"all_deliveries_net_won\\\":paid-sum(x[\\\"refund_won\\\"] for x in d[\\\"refund_deliveries\\\"]),\\\"duplicate_delivery_ids\\\":[x[\\\"delivery_id\\\"] for x in duplicate],\\\"current_net_won\\\":d[\\\"current_net_won\\\"],\\\"current_test_expected_won\\\":d[\\\"current_test_expected_won\\\"],\\\"test_exit_code\\\":d[\\\"test_exit_code\\\"]})'\""
+        ],
+        "command_count": 5,
+        "semantic_inspection": "correct aggregate, event treatment and discrepancy; no invented arithmetic defect in the normal case",
+        "result_sha256": "bbc49344e74b7b5da2fe7d2841f7f2b74df288cc1f90f3d1080dce02387c2bd5"
+      },
+      "03": {
+        "arithmetic_ok": true,
+        "elapsed_seconds": 39.672,
+        "prompt_bytes": 7641,
+        "output_bytes": 1139,
+        "usage": [
+          {
+            "input_tokens": 51573,
+            "cached_input_tokens": 45952,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1288,
+            "reasoning_output_tokens": 666
+          }
+        ],
+        "commands": [
+          "/bin/zsh -lc 'ls -la'",
+          "/bin/zsh -lc \"pwd && rg --files -g '\"'!**/.git/**'\"'\"",
+          "/bin/zsh -lc 'cat ledger.json'"
+        ],
+        "command_count": 3,
+        "semantic_inspection": "correct aggregate, event treatment and discrepancy; no invented arithmetic defect in the normal case",
+        "result_sha256": "f51e4b35d61a8e400cd1ec177dc4d1e22d1cba2cc47090fd8839445a7e264da5"
+      }
+    },
+    "B": {
+      "01": {
+        "arithmetic_ok": false,
+        "elapsed_seconds": 55.863,
+        "prompt_bytes": 7948,
+        "output_bytes": 1956,
+        "usage": [
+          {
+            "input_tokens": 69503,
+            "cached_input_tokens": 51712,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1959,
+            "reasoning_output_tokens": 922
+          }
+        ],
+        "commands": [
+          "/bin/zsh -lc \"pwd && rg --files -g '\"'!**/.git/**'\"'\"",
+          "/bin/zsh -lc 'rg --files -uu && cat ledger.json'",
+          "/bin/zsh -lc 'shasum -a 256 ledger.json'"
+        ],
+        "command_count": 3,
+        "semantic_inspection": "correct aggregate, event treatment and discrepancy; no invented arithmetic defect in the normal case",
+        "result_sha256": "30079be7bc186cd7257a6650402ec5c547cf5d6dfbd1db74529b61f517050bfd"
+      },
+      "02": {
+        "arithmetic_ok": false,
+        "elapsed_seconds": 64.469,
+        "prompt_bytes": 7948,
+        "output_bytes": 1841,
+        "usage": [
+          {
+            "input_tokens": 71415,
+            "cached_input_tokens": 64384,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2323,
+            "reasoning_output_tokens": 1169
+          }
+        ],
+        "commands": [
+          "/bin/zsh -lc pwd",
+          "/bin/zsh -lc 'ls -la'",
+          "/bin/zsh -lc 'rg --files -uu'",
+          "/bin/zsh -lc 'cat ledger.json'",
+          "/bin/zsh -lc 'nl -ba ledger.json'",
+          "/bin/zsh -lc 'shasum -a 256 ledger.json'",
+          "/bin/zsh -lc \"python3 -c 'import json; d=json.load(open(\\\"ledger.json\\\")); paid={o[\\\"order_id\\\"]:o[\\\"paid_won\\\"] for o in d[\\\"orders\\\"]}; seen=set(); refunded={o:0 for o in paid}; excluded=[]; valid=[]\nfor r in d[\\\"refund_deliveries\\\"]:\n if r[\\\"event_id\\\"] in seen: excluded.append(r[\\\"delivery_id\\\"]); continue\n seen.add(r[\\\"event_id\\\"]); refunded[r[\\\"order_id\\\"]]+=r[\\\"refund_won\\\"]; valid.append(r[\\\"delivery_id\\\"])\nprint({\\\"paid\\\":paid,\\\"valid\\\":valid,\\\"excluded\\\":excluded,\\\"refund\\\":refunded,\\\"net\\\":{o:paid[o]-refunded[o] for o in paid},\\\"total\\\":sum(paid.values())-sum(refunded.values()),\\\"delta_current\\\":d[\\\"current_net_won\\\"]-(sum(paid.values())-sum(refunded.values()))})'\""
+        ],
+        "command_count": 7,
+        "semantic_inspection": "correct aggregate, event treatment and discrepancy; no invented arithmetic defect in the normal case",
+        "result_sha256": "43b4c484a934c1617fad8c649f6e1e8de16a6fd476e70323c0cffe5432fb3ef0"
+      },
+      "03": {
+        "arithmetic_ok": true,
+        "elapsed_seconds": 92.647,
+        "prompt_bytes": 7948,
+        "output_bytes": 1714,
+        "usage": [
+          {
+            "input_tokens": 70042,
+            "cached_input_tokens": 63744,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 3110,
+            "reasoning_output_tokens": 2109
+          }
+        ],
+        "commands": [
+          "/bin/zsh -lc \"pwd && rg --files -g '\"'!**/.git/**'\"'\"",
+          "/bin/zsh -lc 'cat ledger.json'",
+          "/bin/zsh -lc 'ls -la'",
+          "/bin/zsh -lc 'nl -ba ledger.json'",
+          "/bin/zsh -lc 'shasum -a 256 ledger.json'"
+        ],
+        "command_count": 5,
+        "semantic_inspection": "correct aggregate, event treatment and discrepancy; no invented arithmetic defect in the normal case",
+        "result_sha256": "b479b84bd667613f8150815cf64ff64685a0cc22d6dd2159590ab18480deac8f"
+      }
+    }
+  },
+  "cases_per_method": 3,
+  "verified_additional_detections": 0,
+  "normal_case_false_positives": {
+    "A": 0,
+    "B": 0
+  },
+  "notes": [
+    "One execution per case/method; M3 worker output is not a control for reviewer-profile comparison.",
+    "Table output made scope explicit, but human usability and broad effectiveness were not measured."
+  ],
+  "totals": {
+    "A": {
+      "elapsed_seconds": 143.937,
+      "prompt_bytes": 22923,
+      "output_bytes": 3967,
+      "output_tokens": 4787,
+      "command_count": 11
+    },
+    "B": {
+      "elapsed_seconds": 212.979,
+      "prompt_bytes": 23844,
+      "output_bytes": 5511,
+      "output_tokens": 7392,
+      "command_count": 15
+    }
+  }
+}

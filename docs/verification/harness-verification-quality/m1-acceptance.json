@@ -1,0 +1,61 @@
+{
+  "milestone": "M1",
+  "task_id": "TASK-20261104-4560e95349bc",
+  "checked_at": "2026-11-04T05:02:12.637489+00:00",
+  "python": "3.9.6 (default, May 22 2026, 11:13:45) \n[Clang 21.0.0 (clang-2100.1.1.101)]",
+  "acceptance": "PASS: baseline obtained; observed model-output failure preserved",
+  "observed_baseline_status": "FAIL",
+  "observed_case_status": {
+    "small-document": "PASS",
+    "expectation-source": "PASS",
+    "repeated-samples": "FAIL",
+    "reconciliation": "PASS"
+  },
+  "input_and_runner_integrity": "verified",
+  "temporary_workspaces_removed": true,
+  "policy_changes": false,
+  "checks": {
+    "evaluator-tests": {
+      "tests": 22,
+      "seconds": 0.423,
+      "skipped": 0,
+      "result": "OK"
+    },
+    "tests": {
+      "tests": 465,
+      "seconds": 12.578,
+      "skipped": 0,
+      "result": "OK"
+    },
+    "tools-tests": {
+      "tests": 279,
+      "seconds": 25.017,
+      "skipped": 1,
+      "result": "OK"
+    },
+    "vault-lint": {
+      "argv": [
+        "python3",
+        "tools/lint_vault.py",
+        "--vault",
+        "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2",
+        "--files",
+        "wiki/projects/harness-verification-quality/plan.md",
+        "wiki/processes/daily/2026-11-04.md"
+      ],
+      "exit_code": 0
+    },
+    "harness-lint": {
+      "argv": [
+        "python3",
+        "tools/lint_harness_rules.py",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  },
+  "limitations": [
+    "M1 acceptance is collection and interpretation of a baseline, not all baseline cases passing.",
+    "No policy A/B effect or production readiness is established."
+  ]
+}

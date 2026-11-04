@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "--samples",
+    "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/repeated-samples/samples.csv",
+    "--report",
+    "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/repeated-samples/report.json",
+    "--output",
+    "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/original"
+  ],
+  "cwd": "/Users/jm/Documents/workspace/team2",
+  "tool_path": "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+  "python_executable": "/Library/Developer/CommandLineTools/usr/bin/python3",
+  "recorded_at": "2026-11-04T05:19:50.027883+00:00",
+  "python": "3.9.6 (default, May 22 2026, 11:13:45) \n[Clang 21.0.0 (clang-2100.1.1.101)]",
+  "tool_sha256": "2e6cd903d05da34a870bf531fbdf29412a4e7b7412d4f6c44e8af72371518ca5"
+}

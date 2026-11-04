@@ -1,0 +1,24 @@
+test_empty_sample_is_inconclusive_without_a_fabricated_success_rate (test_audit_sample_evidence.AuditSampleEvidenceTests) ... FAIL
+test_original_evidence_exposes_repeated_scenarios_and_wrong_denominator (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_two_thousand_distinct_passes_and_replay_preserves_inputs_and_evidence (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+
+======================================================================
+FAIL: test_empty_sample_is_inconclusive_without_a_fabricated_success_rate (test_audit_sample_evidence.AuditSampleEvidenceTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 79, in test_empty_sample_is_inconclusive_without_a_fabricated_success_rate
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 1 != 2 : Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 77, in <module>
+    raise SystemExit(main())
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 65, in main
+    result = audit(args.samples, args.report)
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 42, in audit
+    rate = passed / compared
+ZeroDivisionError: division by zero
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.217s
+
+FAILED (failures=1)

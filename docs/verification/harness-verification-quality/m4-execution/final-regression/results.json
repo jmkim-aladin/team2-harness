@@ -1,0 +1,45 @@
+{
+  "source_hashes_unchanged": true,
+  "checks": [
+    {
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+        "--samples",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/repeated-samples/samples.csv",
+        "--report",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/repeated-samples/report.json",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/final-regression/original"
+      ],
+      "exit_code": 1,
+      "status": "FAIL",
+      "same_as_M2_result": true
+    },
+    {
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py",
+        "--samples",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/corrected/samples.csv",
+        "--report",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/corrected/report.json",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/final-regression/corrected"
+      ],
+      "exit_code": 0,
+      "status": "PASS",
+      "same_as_M2_result": true
+    },
+    {
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/check_source_example.py",
+        "--output",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/final-regression/source-trace.json"
+      ],
+      "exit_code": 0,
+      "same_as_M3_source_trace": true
+    }
+  ]
+}

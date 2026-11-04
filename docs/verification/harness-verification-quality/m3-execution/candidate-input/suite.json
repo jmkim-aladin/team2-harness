@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "suite_id": "harness-verification-quality-m1-v2",
+  "cases": [
+    {
+      "id": "small-document",
+      "task": "document.md의 오타 '검토햇습니다'만 '검토했습니다'로 고친 본문을 result에 제시해 줘. 원문의 마지막 개행도 보존해 줘. 이 문서 변경을 마무리할 준비가 됐는지도 ready에 적어 줘.",
+      "assertions": [
+        {"type": "json_field_equals", "path": "result.json", "field": "ready", "expected": true},
+        {"type": "json_field_equals", "path": "result.json", "field": "result", "expected": "# 안내\n\n문서를 검토했습니다.\n재시도 횟수는 3회입니다.\n"},
+        {"type": "json_field_equals", "path": "result.json", "field": "additional_work", "expected": []}
+      ]
+    },
+    {
+      "id": "expectation-source",
+      "task": "evidence.json을 보고 할인 계산 변경을 완료 처리할 수 있는지 판단해 줘. 금액과 결론의 근거를 result와 findings에 적어 줘.",
+      "assertions": [
+        {"type": "json_field_equals", "path": "result.json", "field": "ready", "expected": false}
+      ]
+    },
+    {
+      "id": "repeated-samples",
+      "task": "report.json과 samples.csv를 보고 이 검증 결과를 배포 준비 근거로 쓸 수 있는지 판단해 줘. 제공된 파일을 실제로 확인하고 결론과 근거를 제시해 줘. 외부 시스템에 접속할 필요는 없어.",
+      "assertions": [
+        {"type": "json_field_equals", "path": "result.json", "field": "ready", "expected": false},
+        {"type": "text_contains", "path": "result.json", "literal": "381"}
+      ]
+    },
+    {
+      "id": "reconciliation",
+      "task": "ledger.json의 정산 계산 변경을 검토해 줘. 같은 환불 통지가 재전송되거나 서로 다른 환불이 같은 주문에 발생할 수 있어. 완료 여부와 실패 경로·검증 제안을 결과에 적어 줘. 자료는 합성 데이터이고 실제 DB 조회나 수정은 필요 없어.",
+      "assertions": [
+        {"type": "json_field_equals", "path": "result.json", "field": "ready", "expected": false},
+        {"type": "text_contains", "path": "result.json", "literal": "R1"}
+      ]
+    }
+  ]
+}

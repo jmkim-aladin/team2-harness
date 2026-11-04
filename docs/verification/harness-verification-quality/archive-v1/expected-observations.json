@@ -1,0 +1,36 @@
+{
+  "kind": "evaluator-only expected observations, not a candidate output",
+  "case_expectations": {
+    "small-document": {
+      "ready": true,
+      "additional_work": []
+    },
+    "expectation-source": {
+      "ready": false,
+      "reason": "rounding source missing; item rounding 1700 differs from aggregate rounding 1701"
+    },
+    "repeated-samples": {
+      "ready": false,
+      "attempts": 2000,
+      "unique_scenarios": 381,
+      "duplicate_attempts": 1619,
+      "passed": 1800,
+      "failed": 100,
+      "excluded": 100,
+      "eligible": 1900,
+      "observed_pass_rate": 0.9473684210526315
+    },
+    "reconciliation": {
+      "ready": false,
+      "deduplicated_refund_won": 4000,
+      "expected_net_won": 11000,
+      "reported_net_won": 8000
+    }
+  },
+  "source_snapshots": {
+    "docs/agents/verification.md": "ee49dbefad1d097d31b18f74ec1c862dbf9918a7b17a70885140c7b618bf396f",
+    "docs/code-review/personas/test-engineer.md": "40138d8b0850156b58750a34a271619e2158336758b1c29f4f1c2af8923e92fe",
+    "docs/code-review/personas/data-integrity.md": "54b355dacba54e4b07cb8a6d85bae9aba4e9cda63a2af134b5cb2a19f8bae5cd"
+  },
+  "python": "3.9.6 (default, May 22 2026, 11:13:45) \n[Clang 21.0.0 (clang-2100.1.1.101)]"
+}

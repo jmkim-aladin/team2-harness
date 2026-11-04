@@ -1,0 +1,169 @@
+{
+  "conditions": {
+    "shared_equal": true,
+    "skill_digest_differs": true,
+    "status": "PASS"
+  },
+  "issues": [],
+  "limitations": [
+    "JSON assertions inspect the user-requested artifact; they do not prove that the artifact contents are an independent oracle.",
+    "The evaluator compares recorded runs and preserves raw artifacts; it does not reproduce the agent or infer hidden reasoning."
+  ],
+  "runs": {
+    "A": {
+      "cases": [
+        {
+          "artifact_dir": "cases/01",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "arithmetic_ok",
+              "index": 0,
+              "observed": false,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "01",
+          "status": "PASS",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/02",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "arithmetic_ok",
+              "index": 0,
+              "observed": false,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "02",
+          "status": "PASS",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/03",
+          "assertions": [
+            {
+              "expected": true,
+              "field": "arithmetic_ok",
+              "index": 0,
+              "observed": true,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "03",
+          "status": "PASS",
+          "timed_out": false
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "wall_timeout_seconds_per_case": 180
+        },
+        "confirmed": true,
+        "fixture_digest": "sha256:a247fb9dcb61cdb7a81458808ebfeaa4666f9a57f8791c631d7a40ee4ad64328",
+        "model": "gpt-6-sol",
+        "settings": {
+          "cli": "codex-cli 0.166.0",
+          "effort": "xhigh",
+          "sandbox": "read-only"
+        },
+        "skill_digest": "sha256:2f01fcdd8a3b8f5624118b30a32870521f7391c7230bd4dec78652cdb4c6c514"
+      },
+      "issues": [],
+      "label": "A",
+      "run_dir": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/first-run/A",
+      "status": "PASS"
+    },
+    "B": {
+      "cases": [
+        {
+          "artifact_dir": "cases/01",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "arithmetic_ok",
+              "index": 0,
+              "observed": false,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "01",
+          "status": "PASS",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/02",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "arithmetic_ok",
+              "index": 0,
+              "observed": false,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "02",
+          "status": "PASS",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/03",
+          "assertions": [
+            {
+              "expected": true,
+              "field": "arithmetic_ok",
+              "index": 0,
+              "observed": true,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "03",
+          "status": "PASS",
+          "timed_out": false
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "wall_timeout_seconds_per_case": 180
+        },
+        "confirmed": true,
+        "fixture_digest": "sha256:a247fb9dcb61cdb7a81458808ebfeaa4666f9a57f8791c631d7a40ee4ad64328",
+        "model": "gpt-6-sol",
+        "settings": {
+          "cli": "codex-cli 0.166.0",
+          "effort": "xhigh",
+          "sandbox": "read-only"
+        },
+        "skill_digest": "sha256:be5b40f4591cfefa6784d90a7ece63cc8781ac6693ee1d0abb62d2c71e1f2274"
+      },
+      "issues": [],
+      "label": "B",
+      "run_dir": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/first-run/B",
+      "status": "PASS"
+    }
+  },
+  "schema_version": 1,
+  "status": "PASS",
+  "suite_id": "m4-arithmetic-review"
+}
