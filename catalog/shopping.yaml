@@ -108,6 +108,13 @@ data:
     shop-db-script는 일괄 export 스냅샷(참조·graphify 인덱스용)이며 변경 PR 대상이 아니다.
     webcatalog 스키마는 shopping 외에 blog/북플 서비스(blog-web 리포)도 함께 사용한다 —
     blog/북플 도메인 SP를 수정·생성할 때도 aladin-mall-db-script에 변경 PR을 올린다.
+    객체의 기존 수정 이력·현행 정의는 두 레포를 함께 본다 — aladin-mall-db-script는 최초 등록 이후만
+    담고, shop-db-script 스냅샷은 export 시점(HEAD 날짜) 이후 변경을 모른다.
+      1) aladin-mall-db-script를 fetch한 뒤 해당 객체와 같은 기능 묶음 객체의 git log
+      2) 미등록이면 shop-db-script 본문을 참조하되 스냅샷 날짜를 함께 적는다
+      3) 스냅샷 이후 변경 여부는 운영 sys.objects.modify_date로 확인한다
+    한 레포만 보고 "변경 없음"으로 판정하지 않는다.
+    (근거: 2026-11-04 DEV2-13188 — shop-db-script만 보고 판정, 11월 쿠폰 수정분 DEV2-12733은 aladin-mall-db-script에 있었음)
   query_guides:
     - "Obsidian vault: wiki/domains/shopping-order-domain-guide.md" # 정상 주문 정의·OID 함수·Ticket 이벤트 적립금 패턴
 
