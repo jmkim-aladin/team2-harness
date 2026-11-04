@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "variant": "B",
+  "task_id": "TASK-20261104-4560e95349bc",
+  "conditions": {
+    "confirmed": true,
+    "fixture_digest": "sha256:a247fb9dcb61cdb7a81458808ebfeaa4666f9a57f8791c631d7a40ee4ad64328",
+    "model": "gpt-6-sol",
+    "settings": {
+      "effort": "xhigh",
+      "sandbox": "read-only",
+      "cli": "codex-cli 0.166.0"
+    },
+    "budget": {
+      "wall_timeout_seconds_per_case": 180
+    },
+    "skill_digest": "sha256:be5b40f4591cfefa6784d90a7ece63cc8781ac6693ee1d0abb62d2c71e1f2274"
+  },
+  "target": {
+    "repo": "/Users/jm/Documents/workspace/team2",
+    "head": "63668bbdf1f5f95dda98fc3b5ac4eae92c99873f",
+    "fixture_sha256": {
+      "inputs/01/ledger.json": "fb4fc2e4c541f5baa5d32e260477c37c6e4814cf6798d62719287b23557ea777",
+      "inputs/02/ledger.json": "1e98f6759a0f253bfe8f745b8cac01224aec2e1015d33f26dffc69c3f2c4088c",
+      "inputs/03/ledger.json": "f431d3c3b568faa36cd7b76a9f4f830d6f41e0b6bafa16071dc9971b21e90a8a",
+      "schema.json": "84ac13793ce2783e86a36e155014af65da4cd892f8cf7723f8ece2c4cf1f84e4"
+    },
+    "runner_sha256": "c92b13f7801bec605f9adf3927738a91aee20efff85163f8adbceb1e5ae869c0"
+  },
+  "cases": {
+    "01": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/01",
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-sol",
+        "-c",
+        "model_reasoning_effort=\"xhigh\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m4-mkptzsj1/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/first-run/B/cases/01/result.json",
+        "-"
+      ],
+      "elapsed_seconds": 55.863,
+      "prompt_bytes": 7948,
+      "recorded_at": "2026-11-04T05:43:24.380548+00:00"
+    },
+    "02": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/02",
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-sol",
+        "-c",
+        "model_reasoning_effort=\"xhigh\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m4-pvboynej/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/first-run/B/cases/02/result.json",
+        "-"
+      ],
+      "elapsed_seconds": 64.469,
+      "prompt_bytes": 7948,
+      "recorded_at": "2026-11-04T05:44:28.970331+00:00"
+    },
+    "03": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/03",
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-sol",
+        "-c",
+        "model_reasoning_effort=\"xhigh\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m4-1ntgptex/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m4-execution/first-run/B/cases/03/result.json",
+        "-"
+      ],
+      "elapsed_seconds": 92.647,
+      "prompt_bytes": 7948,
+      "recorded_at": "2026-11-04T05:47:31.767221+00:00"
+    }
+  },
+  "inputs_unchanged": true
+}

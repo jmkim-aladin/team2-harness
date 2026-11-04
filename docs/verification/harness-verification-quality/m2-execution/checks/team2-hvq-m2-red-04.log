@@ -1,0 +1,200 @@
+test_empty_sample_is_inconclusive_without_a_fabricated_success_rate (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_exclusions_and_failures_remain_visible_even_when_claimed_rate_matches (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) ... test_original_evidence_exposes_repeated_scenarios_and_wrong_denominator (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_two_thousand_distinct_passes_and_replay_preserves_inputs_and_evidence (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+
+======================================================================
+FAIL: test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) (case='missing-file')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 116, in test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 1 != 2 : Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 85, in <module>
+    raise SystemExit(main())
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 73, in main
+    result = audit(args.samples, args.report)
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 31, in audit
+    sample_bytes, result["inputs"]["samples"] = read_input(samples)
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 24, in read_input
+    raw = path.read_bytes()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1249, in read_bytes
+    with self.open(mode='rb') as f:
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1242, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1110, in _opener
+    return self._accessor.open(self, flags, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmpe2nb3nah/samples.csv'
+
+
+======================================================================
+FAIL: test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) (case='missing-key')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 116, in test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 1 != 2 : Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 85, in <module>
+    raise SystemExit(main())
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 73, in main
+    result = audit(args.samples, args.report)
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 37, in audit
+    unique = len({row["scenario_id"] for row in rows})
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 37, in <setcomp>
+    unique = len({row["scenario_id"] for row in rows})
+KeyError: 'scenario_id'
+
+
+======================================================================
+FAIL: test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) (case='empty-key')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 116, in test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 0 != 2 : {
+  "schema_version": 1,
+  "status": "PASS",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmpe2nb3nah/samples.csv",
+      "sha256": "2d6377da240eae563ff5370711710c87a569de7ccd4bed091723fabf43a1bcbb"
+    },
+    "report": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmpe2nb3nah/report.json",
+      "sha256": "664896f7820587114a4adbe926da5e5a42cbb031cd27709492df8a149a69ee9a"
+    }
+  },
+  "counts": {
+    "attempts": 1,
+    "unique_scenarios": 1,
+    "duplicate_attempts": 0,
+    "passed": 1,
+    "failed": 0,
+    "excluded": 0,
+    "compared": 1
+  },
+  "rates": {
+    "compared_denominator": 1,
+    "compared_pass_rate": 1.0,
+    "all_attempts_denominator": 1,
+    "all_attempts_pass_rate": 1.0
+  },
+  "reported_metadata": {
+    "claimed_unique_scenarios": 1,
+    "claimed_pass_rate": 1
+  },
+  "issues": []
+}
+
+
+======================================================================
+FAIL: test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) (case='unknown-status')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 119, in test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass
+    self.assertIsNone(result["counts"])
+AssertionError: {'attempts': 1, 'unique_scenarios': 1, 'duplicate_attempts': 0, 'passed': 0, 'failed': 0, 'excluded': 0, 'compared': 0} is not None
+
+======================================================================
+FAIL: test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) (case='duplicate-attempt')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 116, in test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 1 != 2 : {
+  "schema_version": 1,
+  "status": "FAIL",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmpe2nb3nah/samples.csv",
+      "sha256": "76a6c209ec049b87e46ee78c108efc2d7edd80bb46e6bbbb0ff662902bcde440"
+    },
+    "report": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmpe2nb3nah/report.json",
+      "sha256": "664896f7820587114a4adbe926da5e5a42cbb031cd27709492df8a149a69ee9a"
+    }
+  },
+  "counts": {
+    "attempts": 2,
+    "unique_scenarios": 2,
+    "duplicate_attempts": 0,
+    "passed": 2,
+    "failed": 0,
+    "excluded": 0,
+    "compared": 2
+  },
+  "rates": {
+    "compared_denominator": 2,
+    "compared_pass_rate": 1.0,
+    "all_attempts_denominator": 2,
+    "all_attempts_pass_rate": 1.0
+  },
+  "reported_metadata": {
+    "claimed_unique_scenarios": 1,
+    "claimed_pass_rate": 1
+  },
+  "issues": [
+    {
+      "code": "unique-count-mismatch"
+    }
+  ]
+}
+
+
+======================================================================
+FAIL: test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) (case='too-many-columns')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 116, in test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 0 != 2 : {
+  "schema_version": 1,
+  "status": "PASS",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmpe2nb3nah/samples.csv",
+      "sha256": "20af6963b3baf6f68c40803be550c797a49ca234782ac4afac983d77e3a69a2a"
+    },
+    "report": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmpe2nb3nah/report.json",
+      "sha256": "664896f7820587114a4adbe926da5e5a42cbb031cd27709492df8a149a69ee9a"
+    }
+  },
+  "counts": {
+    "attempts": 1,
+    "unique_scenarios": 1,
+    "duplicate_attempts": 0,
+    "passed": 1,
+    "failed": 0,
+    "excluded": 0,
+    "compared": 1
+  },
+  "rates": {
+    "compared_denominator": 1,
+    "compared_pass_rate": 1.0,
+    "all_attempts_denominator": 1,
+    "all_attempts_pass_rate": 1.0
+  },
+  "reported_metadata": {
+    "claimed_unique_scenarios": 1,
+    "claimed_pass_rate": 1
+  },
+  "issues": []
+}
+
+
+======================================================================
+FAIL: test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) (case='too-few-columns')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 119, in test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass
+    self.assertIsNone(result["counts"])
+AssertionError: {'attempts': 1, 'unique_scenarios': 1, 'duplicate_attempts': 0, 'passed': 0, 'failed': 0, 'excluded': 0, 'compared': 0} is not None
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.698s
+
+FAILED (failures=7)

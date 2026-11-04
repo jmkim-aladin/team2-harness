@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "arithmetic_ok": {"type": "boolean", "description": "ledger.json의 현재 정산 수치가 입력 계약에 맞으면 true. 실제 구현·테스트·배포 완료 여부와 구분한다."},
+    "result": {"type": "string"},
+    "findings": {"type": "array", "items": {"type": "string"}},
+    "unverified": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["arithmetic_ok", "result", "findings", "unverified"],
+  "additionalProperties": false
+}

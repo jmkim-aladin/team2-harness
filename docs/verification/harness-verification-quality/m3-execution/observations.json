@@ -1,0 +1,66 @@
+{
+  "candidate_metrics": {
+    "small-document": {
+      "command_count": 1,
+      "usage": [
+        {
+          "input_tokens": 32087,
+          "cached_input_tokens": 27648,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 622,
+          "reasoning_output_tokens": 347
+        }
+      ]
+    },
+    "expectation-source": {
+      "command_count": 2,
+      "usage": [
+        {
+          "input_tokens": 50112,
+          "cached_input_tokens": 32896,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 627,
+          "reasoning_output_tokens": 259
+        }
+      ]
+    },
+    "repeated-samples": {
+      "command_count": 3,
+      "usage": [
+        {
+          "input_tokens": 79536,
+          "cached_input_tokens": 32896,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1403,
+          "reasoning_output_tokens": 347
+        }
+      ]
+    },
+    "reconciliation": {
+      "command_count": 2,
+      "usage": [
+        {
+          "input_tokens": 53593,
+          "cached_input_tokens": 47232,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1392,
+          "reasoning_output_tokens": 628
+        }
+      ]
+    }
+  },
+  "prompt_delta_is_only_verification_policy": true,
+  "m3_target_observations": {
+    "small_document_no_additional_work": true,
+    "missing_rounding_policy_not_approved": true
+  },
+  "manual_failure": {
+    "case": "reconciliation",
+    "evidence_level": "static inspection of saved model output plus independent integer calculation",
+    "expected_aggregate_net_won": 11000,
+    "candidate_order_net_won": 6000,
+    "reason": "The response compares per-order O1 net against aggregate current_net_won and omits O2 from that comparison.",
+    "not_detected_by_original_suite": true,
+    "follow_up": "M4: compare per-order and aggregate reconciliation artifacts; retain the original output."
+  }
+}

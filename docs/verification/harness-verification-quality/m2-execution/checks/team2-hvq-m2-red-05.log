@@ -1,0 +1,201 @@
+test_empty_sample_is_inconclusive_without_a_fabricated_success_rate (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_exclusions_and_failures_remain_visible_even_when_claimed_rate_matches (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_invalid_claims_cannot_be_accepted_as_matching_numbers (test_audit_sample_evidence.AuditSampleEvidenceTests) ... test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_original_evidence_exposes_repeated_scenarios_and_wrong_denominator (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_two_thousand_distinct_passes_and_replay_preserves_inputs_and_evidence (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+
+======================================================================
+FAIL: test_invalid_claims_cannot_be_accepted_as_matching_numbers (test_audit_sample_evidence.AuditSampleEvidenceTests) (report='[]')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 135, in test_invalid_claims_cannot_be_accepted_as_matching_numbers
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 1 != 2 : Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 109, in <module>
+    raise SystemExit(main())
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 97, in main
+    result = audit(args.samples, args.report)
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 76, in audit
+    if unique != claimed["claimed_unique_scenarios"]:
+TypeError: list indices must be integers or slices, not str
+
+
+======================================================================
+FAIL: test_invalid_claims_cannot_be_accepted_as_matching_numbers (test_audit_sample_evidence.AuditSampleEvidenceTests) (report='{}')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 135, in test_invalid_claims_cannot_be_accepted_as_matching_numbers
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 1 != 2 : Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 109, in <module>
+    raise SystemExit(main())
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 97, in main
+    result = audit(args.samples, args.report)
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 76, in audit
+    if unique != claimed["claimed_unique_scenarios"]:
+KeyError: 'claimed_unique_scenarios'
+
+
+======================================================================
+FAIL: test_invalid_claims_cannot_be_accepted_as_matching_numbers (test_audit_sample_evidence.AuditSampleEvidenceTests) (report='{"claimed_unique_scenarios": true, "claimed_pass_rate": 1}')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 135, in test_invalid_claims_cannot_be_accepted_as_matching_numbers
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 0 != 2 : {
+  "schema_version": 1,
+  "status": "PASS",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp_eym2e1q/samples.csv",
+      "sha256": "a1dd6aa3402e7130be3ead826ad063eaf67504257838b0fa553e7805e359ab21"
+    },
+    "report": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp_eym2e1q/report.json",
+      "sha256": "ef09a8bb322d8b10df6b3f32500be72410b8890e23aa6e2843ac1fe48ce2263b"
+    }
+  },
+  "counts": {
+    "attempts": 1,
+    "unique_scenarios": 1,
+    "duplicate_attempts": 0,
+    "passed": 1,
+    "failed": 0,
+    "excluded": 0,
+    "compared": 1
+  },
+  "rates": {
+    "compared_denominator": 1,
+    "compared_pass_rate": 1.0,
+    "all_attempts_denominator": 1,
+    "all_attempts_pass_rate": 1.0
+  },
+  "reported_metadata": {
+    "claimed_unique_scenarios": true,
+    "claimed_pass_rate": 1
+  },
+  "issues": []
+}
+
+
+======================================================================
+FAIL: test_invalid_claims_cannot_be_accepted_as_matching_numbers (test_audit_sample_evidence.AuditSampleEvidenceTests) (report='{"claimed_unique_scenarios": 1, "claimed_pass_rate": true}')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 135, in test_invalid_claims_cannot_be_accepted_as_matching_numbers
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 0 != 2 : {
+  "schema_version": 1,
+  "status": "PASS",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp_eym2e1q/samples.csv",
+      "sha256": "a1dd6aa3402e7130be3ead826ad063eaf67504257838b0fa553e7805e359ab21"
+    },
+    "report": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp_eym2e1q/report.json",
+      "sha256": "567fc29d7ef27302d32fbfb680d36ecf46bbb2b767e23c39cedd28c85fdf29f1"
+    }
+  },
+  "counts": {
+    "attempts": 1,
+    "unique_scenarios": 1,
+    "duplicate_attempts": 0,
+    "passed": 1,
+    "failed": 0,
+    "excluded": 0,
+    "compared": 1
+  },
+  "rates": {
+    "compared_denominator": 1,
+    "compared_pass_rate": 1.0,
+    "all_attempts_denominator": 1,
+    "all_attempts_pass_rate": 1.0
+  },
+  "reported_metadata": {
+    "claimed_unique_scenarios": 1,
+    "claimed_pass_rate": true
+  },
+  "issues": []
+}
+
+
+======================================================================
+FAIL: test_invalid_claims_cannot_be_accepted_as_matching_numbers (test_audit_sample_evidence.AuditSampleEvidenceTests) (report='{"claimed_unique_scenarios": 1, "claimed_pass_rate": NaN}')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 135, in test_invalid_claims_cannot_be_accepted_as_matching_numbers
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 1 != 2 : Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 109, in <module>
+    raise SystemExit(main())
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 98, in main
+    payload = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/__init__.py", line 234, in dumps
+    return cls(
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/encoder.py", line 201, in encode
+    chunks = list(chunks)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/encoder.py", line 431, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/encoder.py", line 405, in _iterencode_dict
+    yield from chunks
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/encoder.py", line 397, in _iterencode_dict
+    yield _floatstr(value)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/encoder.py", line 239, in floatstr
+    raise ValueError(
+ValueError: Out of range float values are not JSON compliant: nan
+
+
+======================================================================
+FAIL: test_invalid_claims_cannot_be_accepted_as_matching_numbers (test_audit_sample_evidence.AuditSampleEvidenceTests) (report='{"claimed_unique_scenarios": 1, "claimed_pass_rate": 2}')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 135, in test_invalid_claims_cannot_be_accepted_as_matching_numbers
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 1 != 2 : {
+  "schema_version": 1,
+  "status": "FAIL",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp_eym2e1q/samples.csv",
+      "sha256": "a1dd6aa3402e7130be3ead826ad063eaf67504257838b0fa553e7805e359ab21"
+    },
+    "report": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp_eym2e1q/report.json",
+      "sha256": "cf5c58c851ca7a03f5dd24bf477bf845fef18da4ccab1eb7e23a12c961bc4436"
+    }
+  },
+  "counts": {
+    "attempts": 1,
+    "unique_scenarios": 1,
+    "duplicate_attempts": 0,
+    "passed": 1,
+    "failed": 0,
+    "excluded": 0,
+    "compared": 1
+  },
+  "rates": {
+    "compared_denominator": 1,
+    "compared_pass_rate": 1.0,
+    "all_attempts_denominator": 1,
+    "all_attempts_pass_rate": 1.0
+  },
+  "reported_metadata": {
+    "claimed_unique_scenarios": 1,
+    "claimed_pass_rate": 2
+  },
+  "issues": [
+    {
+      "code": "pass-rate-mismatch"
+    }
+  ]
+}
+
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.356s
+
+FAILED (failures=6)

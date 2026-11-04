@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "variant": "B",
+  "task_id": "TASK-20261104-4560e95349bc",
+  "started_at": "2026-11-04T05:28:37.788004+00:00",
+  "conditions": {
+    "confirmed": true,
+    "fixture_digest": "sha256:37990f2b4c2cc11b466c3bb7a934aaf25e70a5051d3ae2281098bc246bb06708",
+    "model": "gpt-6-luna",
+    "settings": {
+      "effort": "high",
+      "sandbox": "read-only",
+      "cli": "codex-cli 0.166.0"
+    },
+    "budget": {
+      "wall_timeout_seconds_per_case": 180
+    },
+    "skill_digest": "sha256:d65a775e9e889b04627e49ea55a67252710f1c435979439e86ac53207b5d5b69"
+  },
+  "target": {
+    "repo": "/Users/jm/Documents/workspace/team2",
+    "head": "63668bbdf1f5f95dda98fc3b5ac4eae92c99873f",
+    "branch": "team2/harness-verification-quality",
+    "worktree_status": " M docs/agents/verification.md\n M docs/sprint/work-prep-note-template.md\n M tools/README.md\n?? docs/verification/harness-verification-quality/\n?? tests/test_audit_sample_evidence.py\n?? tools/audit_sample_evidence.py\n",
+    "fixture_sha256": {
+      "inputs/contracts/data-integrity.md": "54b355dacba54e4b07cb8a6d85bae9aba4e9cda63a2af134b5cb2a19f8bae5cd",
+      "inputs/contracts/test-engineer.md": "40138d8b0850156b58750a34a271619e2158336758b1c29f4f1c2af8923e92fe",
+      "inputs/contracts/verification.md": "b27b6572edea7683c6f2ffd149d4928da9acdd287a19b6837acbb07c29f20a56",
+      "inputs/expectation-source/evidence.json": "471f9fa1ecb1f7519f6bb318b3c2a06ac4f66a82ffb5fc9b6fdd88c7b52859ca",
+      "inputs/expectation-source/task.txt": "7b47fbedb36b58d238fcd51c1282c74c1c0b66074d5eaaaebcb92539155272ab",
+      "inputs/reconciliation/ledger.json": "fb4fc2e4c541f5baa5d32e260477c37c6e4814cf6798d62719287b23557ea777",
+      "inputs/reconciliation/task.txt": "1ab88f19e611fab73c734bf28aea21e8740d90566a33766cb75cf58d076548a6",
+      "inputs/repeated-samples/report.json": "00be0b44e4e54a7bb12978f2278e8394b67b816fb40a17db1db7440b5a3cf7b2",
+      "inputs/repeated-samples/samples.csv": "5ec3c9af3aa8b40371ab738520ea973bba29c4d52234a9296a16612d39c359b8",
+      "inputs/repeated-samples/task.txt": "6f9ed708df7b4b8cb80298a5ecce86b55e0bb3d60f1d52d488d1a9a5af07e0dc",
+      "inputs/small-document/document.md": "eb54f75e72b39a5ae94b6cbb5212fec5e98894e2556cdc569b4f18fc40628b40",
+      "inputs/small-document/task.txt": "9cf5f8e3f6222a4d191a4666db8ec26800f2fff7a5265dc782e7560cc0083a3e"
+    },
+    "runner_sha256": "2701fcdf70ce99f06b43d781726d50897e708850a125d4d8c7e32c0a47cfffc7"
+  },
+  "cases": {
+    "small-document": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/small-document",
+      "elapsed_seconds": 17.664,
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-luna",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m1-case-x9b1_po0/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/candidate-input/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/candidate/cases/small-document/result.json",
+        "-"
+      ]
+    },
+    "expectation-source": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/expectation-source",
+      "elapsed_seconds": 19.679,
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-luna",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m1-case-krjnle04/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/candidate-input/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/candidate/cases/expectation-source/result.json",
+        "-"
+      ]
+    },
+    "repeated-samples": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/repeated-samples",
+      "elapsed_seconds": 34.723,
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-luna",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m1-case-4tzd0q03/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/candidate-input/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/candidate/cases/repeated-samples/result.json",
+        "-"
+      ]
+    },
+    "reconciliation": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/reconciliation",
+      "elapsed_seconds": 43.887,
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-luna",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m1-case-oufgo_hm/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/candidate-input/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/candidate/cases/reconciliation/result.json",
+        "-"
+      ]
+    }
+  },
+  "limitations": [
+    "One run per case with selected current contract snapshots; not the full live harness.",
+    "No policy-change comparison or production-quality claim.",
+    "Wall timeout is enforced; no token or monetary budget is claimed."
+  ],
+  "input_unchanged": true,
+  "finished_at": "2026-11-04T05:30:34.640416+00:00"
+}

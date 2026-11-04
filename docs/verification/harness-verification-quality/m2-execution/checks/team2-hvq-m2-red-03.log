@@ -1,0 +1,51 @@
+test_empty_sample_is_inconclusive_without_a_fabricated_success_rate (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_exclusions_and_failures_remain_visible_even_when_claimed_rate_matches (test_audit_sample_evidence.AuditSampleEvidenceTests) ... test_original_evidence_exposes_repeated_scenarios_and_wrong_denominator (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_two_thousand_distinct_passes_and_replay_preserves_inputs_and_evidence (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+
+======================================================================
+FAIL: test_exclusions_and_failures_remain_visible_even_when_claimed_rate_matches (test_audit_sample_evidence.AuditSampleEvidenceTests) (status='excluded')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 94, in test_exclusions_and_failures_remain_visible_even_when_claimed_rate_matches
+    self.assertEqual(process.returncode, expected_code, process.stdout + process.stderr)
+AssertionError: 0 != 2 : {
+  "schema_version": 1,
+  "status": "PASS",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp5xulwm2m/samples.csv",
+      "sha256": "56f98f16c4eed72fe5b231e7e6b90c7a8974dd5a7ffa01f326c9759d33b6226d"
+    },
+    "report": {
+      "path": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp5xulwm2m/report.json",
+      "sha256": "edb43f27a399a4b1f77fdfcbc699a4d2d7b1910c98f334c354cfae6e87f6eec4"
+    }
+  },
+  "counts": {
+    "attempts": 2,
+    "unique_scenarios": 2,
+    "duplicate_attempts": 0,
+    "passed": 1,
+    "failed": 0,
+    "excluded": 1,
+    "compared": 1
+  },
+  "rates": {
+    "compared_denominator": 1,
+    "compared_pass_rate": 1.0,
+    "all_attempts_denominator": 2,
+    "all_attempts_pass_rate": 0.5
+  },
+  "reported_metadata": {
+    "claimed_unique_scenarios": 2,
+    "claimed_pass_rate": 1
+  },
+  "issues": []
+}
+
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.401s
+
+FAILED (failures=1)

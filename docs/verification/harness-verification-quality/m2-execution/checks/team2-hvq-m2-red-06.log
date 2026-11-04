@@ -1,0 +1,29 @@
+test_declared_repeats_and_id_whitespace_are_not_confused_with_distinct_scenarios (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_empty_sample_is_inconclusive_without_a_fabricated_success_rate (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_exclusions_and_failures_remain_visible_even_when_claimed_rate_matches (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_existing_evidence_is_never_overwritten (test_audit_sample_evidence.AuditSampleEvidenceTests) ... FAIL
+test_invalid_claims_cannot_be_accepted_as_matching_numbers (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_missing_or_malformed_inputs_are_inconclusive_not_a_partial_pass (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_original_evidence_exposes_repeated_scenarios_and_wrong_denominator (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+test_two_thousand_distinct_passes_and_replay_preserves_inputs_and_evidence (test_audit_sample_evidence.AuditSampleEvidenceTests) ... ok
+
+======================================================================
+FAIL: test_existing_evidence_is_never_overwritten (test_audit_sample_evidence.AuditSampleEvidenceTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tests/test_audit_sample_evidence.py", line 144, in test_existing_evidence_is_never_overwritten
+    self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+AssertionError: 1 != 2 : Traceback (most recent call last):
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 131, in <module>
+    raise SystemExit(main())
+  File "/Users/jm/Documents/workspace/team2/tools/audit_sample_evidence.py", line 118, in main
+    args.output.mkdir(parents=True, exist_ok=False)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1313, in mkdir
+    self._accessor.mkdir(self, mode)
+FileExistsError: [Errno 17] File exists: '/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmptr4uqkld/evidence'
+
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.149s
+
+FAILED (failures=1)

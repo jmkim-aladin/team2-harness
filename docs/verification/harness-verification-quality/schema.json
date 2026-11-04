@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "ready": {"type": "boolean", "description": "검토 대상 변경을 완료 처리해도 되는지에 대한 판단. 응답이나 검토 문서 작성을 마쳤는지가 아니다. 입력 근거 부족 또는 계산 결함이 있으면 false."},
+    "result": {"type": "string"},
+    "findings": {"type": "array", "items": {"type": "string"}},
+    "additional_work": {"type": "array", "items": {"type": "string"}, "description": "제공된 요청 범위를 넘어 추가로 필요한 조사·검증 작업. 파일 미수정 사실이나 제시한 본문을 적용하는 안내는 findings에 기록한다. 추가 조사·검증이 필요 없으면 빈 배열."}
+  },
+  "required": ["ready", "result", "findings", "additional_work"],
+  "additionalProperties": false
+}

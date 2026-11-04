@@ -1,0 +1,148 @@
+test_baseline_fail_and_candidate_pass_are_visible_per_neutral_label (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_boolean_is_not_equal_to_number_even_when_nested (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_cli_exit_status_distinguishes_failure_from_missing_evidence (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_cli_writes_json_and_stdout_without_overwriting_evidence (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_dangling_symlink_is_present (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_equal_but_unconfirmed_conditions_do_not_pass_comparison (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_invalid_schema_and_assertion_type_are_input_errors (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_missing_artifact_is_inconclusive (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_missing_condition_is_different_from_explicit_null (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_observed_failure_is_retained_when_other_evidence_is_missing (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_output_cannot_replace_evidence_symlink_pointing_outside (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_output_hardlink_preserves_original_evidence (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_output_inside_run_is_rejected (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_path_escape_is_inconclusive_and_external_artifact_is_untouched (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_receipt_symlink_cannot_escape_run (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_repeated_evaluation_is_deterministic_and_preserves_raw_evidence (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_same_policy_is_not_a_change_comparison (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_self_reported_pass_cannot_hide_false_assertion (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_success_uses_direct_json_text_and_absence_observations (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_symlink_escape_is_inconclusive (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_timeout_and_nonzero_exit_are_inconclusive (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+test_unequal_shared_conditions_are_inconclusive (test_evaluate_harness_behavior.HarnessBehaviorEvaluationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.423s
+
+OK
+{
+  "conditions": {
+    "shared_equal": true,
+    "skill_digest_differs": true,
+    "status": "PASS"
+  },
+  "issues": [],
+  "limitations": [
+    "JSON assertions inspect the user-requested artifact; they do not prove that the artifact contents are an independent oracle.",
+    "The evaluator compares recorded runs and preserves raw artifacts; it does not reproduce the agent or infer hidden reasoning."
+  ],
+  "runs": {
+    "A": {
+      "cases": [
+        {
+          "artifact_dir": "cases/answer",
+          "assertions": [
+            {
+              "expected": "ok",
+              "field": "status",
+              "index": 0,
+              "observed": "ok",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "index": 1,
+              "literal": "## Evidence",
+              "path": "report.md",
+              "status": "PASS",
+              "type": "text_contains"
+            },
+            {
+              "index": 2,
+              "observed": "absent",
+              "path": "debug.log",
+              "status": "PASS",
+              "type": "file_absent"
+            }
+          ],
+          "exit_code": 0,
+          "id": "answer",
+          "status": "PASS",
+          "timed_out": false
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "max_tokens": 1000
+        },
+        "confirmed": true,
+        "fixture_digest": "sha256:fixture",
+        "model": "gpt-test",
+        "settings": {
+          "temperature": 0
+        },
+        "skill_digest": "sha256:skill-A"
+      },
+      "issues": [],
+      "label": "A",
+      "run_dir": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp7nmc_d6n/a",
+      "status": "PASS"
+    },
+    "B": {
+      "cases": [
+        {
+          "artifact_dir": "cases/answer",
+          "assertions": [
+            {
+              "expected": "ok",
+              "field": "status",
+              "index": 0,
+              "observed": "ok",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "index": 1,
+              "literal": "## Evidence",
+              "path": "report.md",
+              "status": "PASS",
+              "type": "text_contains"
+            },
+            {
+              "index": 2,
+              "observed": "absent",
+              "path": "debug.log",
+              "status": "PASS",
+              "type": "file_absent"
+            }
+          ],
+          "exit_code": 0,
+          "id": "answer",
+          "status": "PASS",
+          "timed_out": false
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "max_tokens": 1000
+        },
+        "confirmed": true,
+        "fixture_digest": "sha256:fixture",
+        "model": "gpt-test",
+        "settings": {
+          "temperature": 0
+        },
+        "skill_digest": "sha256:skill-B"
+      },
+      "issues": [],
+      "label": "B",
+      "run_dir": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmp7nmc_d6n/b",
+      "status": "PASS"
+    }
+  },
+  "schema_version": 1,
+  "status": "PASS",
+  "suite_id": "behavior-regression"
+}

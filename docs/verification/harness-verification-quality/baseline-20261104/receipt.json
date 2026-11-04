@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "variant": "A",
+  "task_id": "TASK-20261104-4560e95349bc",
+  "started_at": "2026-11-04T04:52:25.913853+00:00",
+  "conditions": {
+    "confirmed": true,
+    "fixture_digest": "sha256:a3ef0968232c33ab89db5627bcd7c857a829f137f45bfa4ea4ac80a8c26578c4",
+    "model": "gpt-6-luna",
+    "settings": {
+      "effort": "high",
+      "sandbox": "read-only",
+      "cli": "codex-cli 0.166.0"
+    },
+    "budget": {
+      "wall_timeout_seconds_per_case": 180
+    },
+    "skill_digest": "sha256:dd21b0beb9f4f6f9f6718bca120a10a3c79cf8bb1b6045406f69ee82ce9f6db4"
+  },
+  "target": {
+    "repo": "/Users/jm/Documents/workspace/team2",
+    "head": "63668bbdf1f5f95dda98fc3b5ac4eae92c99873f",
+    "branch": "team2/harness-verification-quality",
+    "fixture_sha256": {
+      "inputs/contracts/data-integrity.md": "54b355dacba54e4b07cb8a6d85bae9aba4e9cda63a2af134b5cb2a19f8bae5cd",
+      "inputs/contracts/test-engineer.md": "40138d8b0850156b58750a34a271619e2158336758b1c29f4f1c2af8923e92fe",
+      "inputs/contracts/verification.md": "ee49dbefad1d097d31b18f74ec1c862dbf9918a7b17a70885140c7b618bf396f",
+      "inputs/expectation-source/evidence.json": "471f9fa1ecb1f7519f6bb318b3c2a06ac4f66a82ffb5fc9b6fdd88c7b52859ca",
+      "inputs/expectation-source/task.txt": "7b47fbedb36b58d238fcd51c1282c74c1c0b66074d5eaaaebcb92539155272ab",
+      "inputs/reconciliation/ledger.json": "fb4fc2e4c541f5baa5d32e260477c37c6e4814cf6798d62719287b23557ea777",
+      "inputs/reconciliation/task.txt": "1ab88f19e611fab73c734bf28aea21e8740d90566a33766cb75cf58d076548a6",
+      "inputs/repeated-samples/report.json": "00be0b44e4e54a7bb12978f2278e8394b67b816fb40a17db1db7440b5a3cf7b2",
+      "inputs/repeated-samples/samples.csv": "5ec3c9af3aa8b40371ab738520ea973bba29c4d52234a9296a16612d39c359b8",
+      "inputs/repeated-samples/task.txt": "6f9ed708df7b4b8cb80298a5ecce86b55e0bb3d60f1d52d488d1a9a5af07e0dc",
+      "inputs/small-document/document.md": "eb54f75e72b39a5ae94b6cbb5212fec5e98894e2556cdc569b4f18fc40628b40",
+      "inputs/small-document/task.txt": "cb7f9b6e4780c74c24f95c233075f06c31ebe91d7fc143fc1ebcb5c31f75df2d"
+    },
+    "runner_sha256": "0546177837269e0c8073bc599800a2d4429529cb80d6a3c9a147dfe8e66166a9"
+  },
+  "cases": {
+    "small-document": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/small-document",
+      "elapsed_seconds": 17.749,
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-luna",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m1-case-lm27xtbf/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/baseline-20261104/cases/small-document/result.json",
+        "-"
+      ]
+    },
+    "expectation-source": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/expectation-source",
+      "elapsed_seconds": 23.02,
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-luna",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m1-case-dlp3ptvr/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/baseline-20261104/cases/expectation-source/result.json",
+        "-"
+      ]
+    },
+    "repeated-samples": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/repeated-samples",
+      "elapsed_seconds": 49.068,
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-luna",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m1-case-hq3ykucm/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/baseline-20261104/cases/repeated-samples/result.json",
+        "-"
+      ]
+    },
+    "reconciliation": {
+      "exit_code": 0,
+      "timed_out": false,
+      "artifact_dir": "cases/reconciliation",
+      "elapsed_seconds": 55.37,
+      "argv": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-luna",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-s",
+        "read-only",
+        "-C",
+        "/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/team2-m1-case-ojq8iif1/input",
+        "--json",
+        "--output-schema",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/schema.json",
+        "--output-last-message",
+        "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/baseline-20261104/cases/reconciliation/result.json",
+        "-"
+      ]
+    }
+  },
+  "limitations": [
+    "One run per case with selected current contract snapshots; not the full live harness.",
+    "No policy-change comparison or production-quality claim.",
+    "Wall timeout is enforced; no token or monetary budget is claimed."
+  ],
+  "input_unchanged": true,
+  "finished_at": "2026-11-04T04:54:54.723974+00:00"
+}

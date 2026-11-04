@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "INCONCLUSIVE",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/empty/samples.csv",
+      "sha256": "c651ceee029d19685cdfcc45919c423045ad0a4355e59d41ceb908f7d5588ca7"
+    },
+    "report": {
+      "path": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m2-execution/inputs/empty/report.json",
+      "sha256": "635ebf7b5a3d8c4c49b4d64aef393af61c4dcc92047312a83f7452a84bc30fdc"
+    }
+  },
+  "counts": {
+    "attempts": 0,
+    "unique_scenarios": 0,
+    "duplicate_attempts": 0,
+    "passed": 0,
+    "failed": 0,
+    "excluded": 0,
+    "compared": 0
+  },
+  "rates": {
+    "compared_denominator": 0,
+    "compared_pass_rate": null,
+    "all_attempts_denominator": 0,
+    "all_attempts_pass_rate": null
+  },
+  "reported_metadata": {
+    "claimed_unique_scenarios": 0,
+    "claimed_pass_rate": 0,
+    "data": "samples.csv",
+    "description": "M2 합성 확인 입력"
+  },
+  "issues": [
+    {
+      "code": "no-comparable-samples"
+    }
+  ]
+}

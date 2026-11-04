@@ -1,0 +1,271 @@
+{
+  "conditions": {
+    "shared_equal": true,
+    "skill_digest_differs": true,
+    "status": "PASS"
+  },
+  "issues": [],
+  "limitations": [
+    "JSON assertions inspect the user-requested artifact; they do not prove that the artifact contents are an independent oracle.",
+    "The evaluator compares recorded runs and preserves raw artifacts; it does not reproduce the agent or infer hidden reasoning."
+  ],
+  "runs": {
+    "A": {
+      "cases": [
+        {
+          "artifact_dir": "cases/small-document",
+          "assertions": [
+            {
+              "expected": true,
+              "field": "ready",
+              "index": 0,
+              "observed": true,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "expected": "# 안내\n\n문서를 검토했습니다.\n재시도 횟수는 3회입니다.\n",
+              "field": "result",
+              "index": 1,
+              "observed": "# 안내\n\n문서를 검토했습니다.\n재시도 횟수는 3회입니다.\n",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "expected": [],
+              "field": "additional_work",
+              "index": 2,
+              "observed": [],
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "small-document",
+          "status": "PASS",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/expectation-source",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "ready",
+              "index": 0,
+              "observed": false,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "expectation-source",
+          "status": "PASS",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/repeated-samples",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "ready",
+              "index": 0,
+              "observed": true,
+              "path": "result.json",
+              "reason": "assertion-false",
+              "status": "FAIL",
+              "type": "json_field_equals"
+            },
+            {
+              "index": 1,
+              "literal": "381",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "text_contains"
+            }
+          ],
+          "exit_code": 0,
+          "id": "repeated-samples",
+          "reason": "assertion-false",
+          "status": "FAIL",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/reconciliation",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "ready",
+              "index": 0,
+              "observed": false,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "index": 1,
+              "literal": "R1",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "text_contains"
+            }
+          ],
+          "exit_code": 0,
+          "id": "reconciliation",
+          "status": "PASS",
+          "timed_out": false
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "wall_timeout_seconds_per_case": 180
+        },
+        "confirmed": true,
+        "fixture_digest": "sha256:37990f2b4c2cc11b466c3bb7a934aaf25e70a5051d3ae2281098bc246bb06708",
+        "model": "gpt-6-luna",
+        "settings": {
+          "cli": "codex-cli 0.166.0",
+          "effort": "high",
+          "sandbox": "read-only"
+        },
+        "skill_digest": "sha256:dd21b0beb9f4f6f9f6718bca120a10a3c79cf8bb1b6045406f69ee82ce9f6db4"
+      },
+      "issues": [],
+      "label": "A",
+      "run_dir": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/baseline-20261104-v2",
+      "status": "FAIL"
+    },
+    "B": {
+      "cases": [
+        {
+          "artifact_dir": "cases/small-document",
+          "assertions": [
+            {
+              "expected": true,
+              "field": "ready",
+              "index": 0,
+              "observed": true,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "expected": "# 안내\n\n문서를 검토했습니다.\n재시도 횟수는 3회입니다.\n",
+              "field": "result",
+              "index": 1,
+              "observed": "# 안내\n\n문서를 검토했습니다.\n재시도 횟수는 3회입니다.\n",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "expected": [],
+              "field": "additional_work",
+              "index": 2,
+              "observed": [],
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "small-document",
+          "status": "PASS",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/expectation-source",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "ready",
+              "index": 0,
+              "observed": false,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            }
+          ],
+          "exit_code": 0,
+          "id": "expectation-source",
+          "status": "PASS",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/repeated-samples",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "ready",
+              "index": 0,
+              "observed": false,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "index": 1,
+              "literal": "381",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "text_contains"
+            }
+          ],
+          "exit_code": 0,
+          "id": "repeated-samples",
+          "status": "PASS",
+          "timed_out": false
+        },
+        {
+          "artifact_dir": "cases/reconciliation",
+          "assertions": [
+            {
+              "expected": false,
+              "field": "ready",
+              "index": 0,
+              "observed": false,
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "index": 1,
+              "literal": "R1",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "text_contains"
+            }
+          ],
+          "exit_code": 0,
+          "id": "reconciliation",
+          "status": "PASS",
+          "timed_out": false
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "wall_timeout_seconds_per_case": 180
+        },
+        "confirmed": true,
+        "fixture_digest": "sha256:37990f2b4c2cc11b466c3bb7a934aaf25e70a5051d3ae2281098bc246bb06708",
+        "model": "gpt-6-luna",
+        "settings": {
+          "cli": "codex-cli 0.166.0",
+          "effort": "high",
+          "sandbox": "read-only"
+        },
+        "skill_digest": "sha256:d65a775e9e889b04627e49ea55a67252710f1c435979439e86ac53207b5d5b69"
+      },
+      "issues": [],
+      "label": "B",
+      "run_dir": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/m3-execution/candidate",
+      "status": "PASS"
+    }
+  },
+  "schema_version": 1,
+  "status": "FAIL",
+  "suite_id": "harness-verification-quality-m1-v2"
+}

@@ -1,0 +1,5 @@
+# Historical evidence is identified by SHA-256; preserve its exact bytes on checkout.
+docs/verification/harness-verification-quality/** -text
+# CSV writer output uses CRLF; prompt captures intentionally end with a separator.
+docs/verification/harness-verification-quality/**/*.csv whitespace=cr-at-eol
+docs/verification/harness-verification-quality/**/prompt.txt whitespace=-blank-at-eof

@@ -1,0 +1,12 @@
+{
+  "scenario": "합성 할인 계산 검토",
+  "quantity": 2,
+  "unit_price_won": 1001,
+  "discount_percent": 15,
+  "implementation_output_won": 1701,
+  "test_expected_won": 1701,
+  "test_exit_code": 0,
+  "test_expected_origin": "구현 계산식을 테스트에서도 복사했다",
+  "rounding_policy": "운영 정책 원문은 제공되지 않았다. 품목별 절사인지 합계 후 절사인지 확인되지 않았다.",
+  "source_documents": []
+}

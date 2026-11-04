@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "ready": {"type": "boolean"},
+    "result": {"type": "string"},
+    "findings": {"type": "array", "items": {"type": "string"}},
+    "additional_work": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["ready", "result", "findings", "additional_work"],
+  "additionalProperties": false
+}

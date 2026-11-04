@@ -1,0 +1,106 @@
+{
+  "task_id": "TASK-20261104-4560e95349bc",
+  "milestone": "M4",
+  "checked_at": "2026-11-04T05:52:44.924456+00:00",
+  "repo": "/Users/jm/Documents/workspace/team2",
+  "head": "63668bbdf1f5f95dda98fc3b5ac4eae92c99873f",
+  "branch": "team2/harness-verification-quality",
+  "source_sha256": {
+    "tools/audit_sample_evidence.py": "2e6cd903d05da34a870bf531fbdf29412a4e7b7412d4f6c44e8af72371518ca5",
+    "tests/test_audit_sample_evidence.py": "44476f816176968ef10241ad9566858ca87c305a1c70d8cdb1d935c6cb06a993",
+    "docs/agents/verification.md": "b27b6572edea7683c6f2ffd149d4928da9acdd287a19b6837acbb07c29f20a56",
+    "docs/sprint/work-prep-note-template.md": "12094af8680b1113e3dae854a2c4814eaab4e5f8b665f967d3ecef01ba64865c",
+    "docs/code-review/personas/data-integrity.md": "54b355dacba54e4b07cb8a6d85bae9aba4e9cda63a2af134b5cb2a19f8bae5cd",
+    "docs/verification/harness-verification-quality/m4-execution/run_comparison.py": "c92b13f7801bec605f9adf3927738a91aee20efff85163f8adbceb1e5ae869c0",
+    "docs/verification/harness-verification-quality/m4-execution/contracts/artifact-candidate.txt": "393d0f25428786b7b71ec42abb782a4d426c03e35ddf273c5a51d96cebd70991",
+    "docs/verification/harness-verification-quality/m4-execution/expected.json": "f3207470802ed54eb162cd72c78eb0da56be31ceae3c016cc5ad4526a20c6446"
+  },
+  "acceptance": "PASS: paired observations, explicit defer decision, final regression and evidence preserved",
+  "decision": "defer",
+  "canonical_persona_unchanged": true,
+  "initial_model_runs": 6,
+  "confirmation_runs": 0,
+  "recorded_conditions_match": true,
+  "artifact_policy_digest_differs": true,
+  "automated_case_status": {
+    "A": {
+      "01": "PASS",
+      "02": "PASS",
+      "03": "PASS"
+    },
+    "B": {
+      "01": "PASS",
+      "02": "PASS",
+      "03": "PASS"
+    }
+  },
+  "manual_semantics": "all six outputs inspected against expected.json and raw ledger amounts/events; no additional B detection",
+  "M2_M3_final_regression": "same recorded results; source/input hashes matched",
+  "verification": {
+    "tests": {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "exit_code": 0,
+      "tests": 476,
+      "seconds": 26.881,
+      "skipped": 0
+    },
+    "tools-tests": {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/tests"
+      ],
+      "exit_code": 0,
+      "tests": 279,
+      "seconds": 43.965,
+      "skipped": 1
+    },
+    "harness-lint": {
+      "argv": [
+        "python3",
+        "tools/lint_harness_rules.py",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    "vault-lint": {
+      "argv": [
+        "python3",
+        "tools/lint_vault.py",
+        "--vault",
+        "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2",
+        "--files",
+        "wiki/projects/harness-verification-quality/plan.md",
+        "wiki/processes/daily/2026-11-04.md"
+      ],
+      "exit_code": 0
+    },
+    "diff-check": {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  },
+  "limitations": [
+    "One execution per case and method; no population-level quality claim.",
+    "Table readability for humans was not measured.",
+    "Wall time was affected by concurrent final tests and is not a controlled performance result.",
+    "Local changes only; no commit, merge, push, production DB or deployment."
+  ],
+  "all_plan_milestones_completed": true,
+  "plan_status": "done",
+  "current_worktree_status": " M docs/agents/verification.md\n M docs/skill-audit-baseline.md\n M docs/sprint/work-prep-note-template.md\n M tools/README.md\n?? docs/verification/harness-verification-quality/\n?? tests/test_audit_sample_evidence.py\n?? tools/audit_sample_evidence.py\n"
+}

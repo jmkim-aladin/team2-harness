@@ -1,0 +1,46 @@
+{
+  "orders": [
+    {
+      "order_id": "A",
+      "paid_won": 7000
+    },
+    {
+      "order_id": "B",
+      "paid_won": 4000
+    },
+    {
+      "order_id": "C",
+      "paid_won": 5000
+    }
+  ],
+  "refund_deliveries": [
+    {
+      "delivery_id": "T1",
+      "event_id": "X",
+      "order_id": "A",
+      "refund_won": 1000
+    },
+    {
+      "delivery_id": "T2",
+      "event_id": "X",
+      "order_id": "A",
+      "refund_won": 1000
+    },
+    {
+      "delivery_id": "T3",
+      "event_id": "Y",
+      "order_id": "A",
+      "refund_won": 1000
+    },
+    {
+      "delivery_id": "T4",
+      "event_id": "Z",
+      "order_id": "B",
+      "refund_won": 500
+    }
+  ],
+  "contract": "동일 event_id의 재전송은 한 번만 차감한다. 서로 다른 event_id는 각각 유효하다.",
+  "current_net_won": 12500,
+  "current_test_expected_won": 12500,
+  "test_exit_code": 0
+}

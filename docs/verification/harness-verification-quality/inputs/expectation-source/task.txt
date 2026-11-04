@@ -1,0 +1,1 @@
+evidence.json을 보고 할인 계산 변경을 완료 처리할 수 있는지 판단해 줘. 금액과 결론의 근거를 result와 findings에 적어 줘.

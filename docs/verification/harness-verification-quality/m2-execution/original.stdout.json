@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "status": "FAIL",
+  "identity_key": "scenario_id",
+  "inputs": {
+    "samples": {
+      "path": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/repeated-samples/samples.csv",
+      "sha256": "5ec3c9af3aa8b40371ab738520ea973bba29c4d52234a9296a16612d39c359b8"
+    },
+    "report": {
+      "path": "/Users/jm/Documents/workspace/team2/docs/verification/harness-verification-quality/inputs/repeated-samples/report.json",
+      "sha256": "00be0b44e4e54a7bb12978f2278e8394b67b816fb40a17db1db7440b5a3cf7b2"
+    }
+  },
+  "counts": {
+    "attempts": 2000,
+    "unique_scenarios": 381,
+    "duplicate_attempts": 1619,
+    "passed": 1800,
+    "failed": 100,
+    "excluded": 100,
+    "compared": 1900
+  },
+  "rates": {
+    "compared_denominator": 1900,
+    "compared_pass_rate": 0.9473684210526315,
+    "all_attempts_denominator": 2000,
+    "all_attempts_pass_rate": 0.9
+  },
+  "reported_metadata": {
+    "description": "서로 다른 무작위 시나리오 2,000개로 검증했다",
+    "seed": 20261104,
+    "claimed_unique_scenarios": 2000,
+    "claimed_pass_rate": 0.997,
+    "claim_origin": "검증 구현이 작성한 요약",
+    "data": "samples.csv"
+  },
+  "issues": [
+    {
+      "code": "unique-count-mismatch"
+    },
+    {
+      "code": "pass-rate-mismatch"
+    },
+    {
+      "code": "observed-failures"
+    },
+    {
+      "code": "excluded-samples"
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "conditions": {
+    "shared_equal": true,
+    "skill_digest_differs": true,
+    "status": "PASS"
+  },
+  "issues": [],
+  "limitations": [
+    "JSON assertions inspect the user-requested artifact; they do not prove that the artifact contents are an independent oracle.",
+    "The evaluator compares recorded runs and preserves raw artifacts; it does not reproduce the agent or infer hidden reasoning."
+  ],
+  "runs": {
+    "A": {
+      "cases": [
+        {
+          "artifact_dir": "cases/answer",
+          "assertions": [
+            {
+              "expected": "ok",
+              "field": "status",
+              "index": 0,
+              "observed": "ok",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "index": 1,
+              "literal": "## Evidence",
+              "path": "report.md",
+              "status": "PASS",
+              "type": "text_contains"
+            },
+            {
+              "index": 2,
+              "observed": "absent",
+              "path": "debug.log",
+              "status": "PASS",
+              "type": "file_absent"
+            }
+          ],
+          "exit_code": 0,
+          "id": "answer",
+          "status": "PASS",
+          "timed_out": false
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "max_tokens": 1000
+        },
+        "confirmed": true,
+        "fixture_digest": "sha256:fixture",
+        "model": "gpt-test",
+        "settings": {
+          "temperature": 0
+        },
+        "skill_digest": "sha256:skill-A"
+      },
+      "issues": [],
+      "label": "A",
+      "run_dir": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmprpflfxlt/a",
+      "status": "PASS"
+    },
+    "B": {
+      "cases": [
+        {
+          "artifact_dir": "cases/answer",
+          "assertions": [
+            {
+              "expected": "ok",
+              "field": "status",
+              "index": 0,
+              "observed": "ok",
+              "path": "result.json",
+              "status": "PASS",
+              "type": "json_field_equals"
+            },
+            {
+              "index": 1,
+              "literal": "## Evidence",
+              "path": "report.md",
+              "status": "PASS",
+              "type": "text_contains"
+            },
+            {
+              "index": 2,
+              "observed": "absent",
+              "path": "debug.log",
+              "status": "PASS",
+              "type": "file_absent"
+            }
+          ],
+          "exit_code": 0,
+          "id": "answer",
+          "status": "PASS",
+          "timed_out": false
+        }
+      ],
+      "conditions": {
+        "budget": {
+          "max_tokens": 1000
+        },
+        "confirmed": true,
+        "fixture_digest": "sha256:fixture",
+        "model": "gpt-test",
+        "settings": {
+          "temperature": 0
+        },
+        "skill_digest": "sha256:skill-B"
+      },
+      "issues": [],
+      "label": "B",
+      "run_dir": "/private/var/folders/gd/th3z9s8n71x6qjtgb6mr1vth0000gn/T/tmprpflfxlt/b",
+      "status": "PASS"
+    }
+  },
+  "schema_version": 1,
+  "status": "PASS",
+  "suite_id": "behavior-regression"
+}
+................................................................................오류: 산출물 경로는 repo 밖이어야 한다: /Users/jm/Documents/workspace/team2/gantt.html
+.............................................................................................................................................................................................................................................................................team2-agent: label skipped (environment): herdr/cmux 밖이라 라벨을 붙이지 않는다
+.team2-agent: label skipped (herdr tab): tab id missing for pane p-lead
+team2-agent: label skipped (herdr pane): herdr pane rename failed
+.........................team2-agent: label skipped (p-ticket): herdr pane rename failed
+.....................................................................................................
+----------------------------------------------------------------------
+Ran 476 tests in 13.509s
+
+OK
