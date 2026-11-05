@@ -700,6 +700,22 @@ v2 결과는 최신 1개·완료 후 60초·최대 32MiB payload를 메모리에
 
 운영판 분리 도구는 `python3 tools/db_prod_runtime.py build --source /후보/tools --root /비공개/runtime`으로 지문별 읽기 전용 번들을 준비한다. `launchagent --root /비공개/runtime`은 검토용 plist만 stdout에 출력한다. 설치·선택·launchd 등록·재시작은 별도 운영 반영이다. 승인된 계획 전환에서만 `activate --root /비공개/runtime --bundle /비공개/runtime/bundles/지문 --state /공통상태경로`로 선택하며, 실행기 lock·halted idle·active 없음·schema 호환을 확인한다. 구버전 rollback도 같은 조건과 호환 manifest가 필요하다. 실제 조회 CLI는 선택된 `/비공개/runtime/current/db_prod_client.py`를 사용한다. 모든 번들은 기존 공통 상태·socket·stop.d를 공유하고 기동 시 차단되며 과거 승인을 실행하지 않는다. 개발 디렉터리에서 새 `serve`를 직접 기동하면 번들 검증에서 거부한다.
 
+### 운영판 launchd 수명 (2026-11-05 등록)
+
+운영 실행기는 사용자 LaunchAgent `kr.co.aladin.team2-db`(`~/Library/LaunchAgents/kr.co.aladin.team2-db.plist`, 600)로 기동한다. plist는 `db_prod_runtime.py launchagent --root "$HOME/Library/Application Support/team2-db-runtime"` 출력 그대로이며 `current/db_prod_gateway.py serve`를 로그인 시 시작하고 종료 10초 뒤 다시 띄운다. 기동·재기동은 매번 `service_started_requires_operator_resume` 차단으로 시작하고 DB에 접속하지 않으므로, 다음 조회의 `preview`에 `resume_current_stop` action이 함께 표시된다. 이유: 재부팅·로그아웃 뒤에도 `stop`·watchdog이 닿는 실행기가 항상 있게 하되, 재기동이 차단 해제나 과거 승인 복원으로 이어지지 않게 한다.
+
+다른 실행기가 lock을 쥐고 있으면 launchd 쪽 `serve`는 원장을 건드리지 않고 종료·재시도한다. 그래서 수동 `start`는 launchd 등록 중에는 쓰지 않고 해제 후 롤백에서만 쓴다.
+
+| 작업 | 명령 (실행 전 `status`로 `active=null`, `phase=idle` 확인) |
+|---|---|
+| 등록 | 수동 실행기를 SIGTERM으로 종료 → `install -m 600 <검토한 plist> ~/Library/LaunchAgents/kr.co.aladin.team2-db.plist` → `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/kr.co.aladin.team2-db.plist` |
+| 상태 | `launchctl print gui/$(id -u)/kr.co.aladin.team2-db` (state·pid·runs·last exit code) + 운영판 `status` |
+| 계획 재시작 | `launchctl kickstart -k gui/$(id -u)/kr.co.aladin.team2-db` — SIGTERM으로 `service_shutdown` 차단 기록 후 재기동 |
+| 번들 교체 | `launchctl bootout gui/$(id -u)/kr.co.aladin.team2-db` → `activate --root … --bundle … --state …`(halted·idle·lock 해제 필요) → `launchctl bootstrap …`. bootout 없이 activate하면 KeepAlive가 다시 띄운 실행기가 lock을 쥐어 `gateway_must_be_stopped`로 거부된다 |
+| 해제·롤백 | `launchctl bootout gui/$(id -u)/kr.co.aladin.team2-db` → plist 삭제 → 필요 시 운영판 `db_prod_client.py start`로 수동 기동 |
+
+stdout·stderr는 `/dev/null`이다. 기동 실패는 `launchctl print`의 `last exit code`와 `runs` 증가로 판단한다. 실행기는 실패 원인을 일반 문구로만 출력하므로(자격증명·SQL 비노출) 원인 분석은 해제 후 사람이 진행한다.
+
 실행기 장애 후 active가 남으면 원장을 지우거나 강제 초기화하지 않는다. 복구도 observer SQL 전문·대상·시간·결과 범위를 새로 승인받는다. 기록된 worker는 PID·생성 시각으로 종료를 증명한다. 시작 실패로 worker 기록이 없으면 원 실행기의 PID·생성 시각을 대조해 종료를 두 번 확인하고, 그 사이 watchdog 유예 5초를 둔다. 이후 현재 UID의 모든 sqlcmd 프로세스가 없음을 Mac의 고정 ps 명령으로 입증해야 서버 관찰을 시작할 수 있다. 파싱 오류·불완전한 목록·조회 실패는 거부하며 서버 관찰 후에도 로컬 부재를 재확인한다. 로컬 증거와 서버 세션 0건 확인이 모두 있어야 슬롯을 정리한다. 복구 성공 뒤에도 종료 미확인·오류·재시작 안전 차단은 유지하며 사용자의 별도 `resume`과 새로운 조회 승인이 필요하다. 일반 `stop`의 확인된 idle 경로만 자동으로 다음 요청을 받는다. 재개 확인 이후 들어온 새 중단 요청은 우선한다.
 
 기본 설정은 `read_only_verified=false`로 `SELECT 1 AS connection_ok;`, 고정 10초 세션 확인 진단(`SESSION_VISIBILITY_PROBE_SQL`), 고정 30초 중단 시험(`SESSION_STOP_PROBE_SQL`)만 준비할 수 있다. 대기 진단은 지정된 시간 뒤 자기 세션 ID·프로그램명만 반환하며 매 실행 전문 승인·시간 상한·전역 슬롯·중단·종료 확인 규칙을 그대로 따른다. 실제 DB의 읽기 전용 권한·SP 변경/실행 거부·격리 설정을 확인한 뒤 개통한다. 종료 관찰에는 동일 계정이 서버 세션을 빠짐없이 볼 수 있는 DMV 권한이 필요하며 권한 부족이나 관찰 실패 시 종료를 확정하지 않고 차단한다. 에이전트가 DB 권한을 자동 확대하지 않는다.

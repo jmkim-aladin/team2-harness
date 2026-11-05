@@ -132,7 +132,7 @@ Q3 구현은 A에서 `query_jobs_v2`의 request/run/owner/instance 기록도 같
 
 런타임은 비공개 로컬의 digest별 immutable bundle로 설치하고 상태 원장·socket·stop.d·lock은 기존 공통 위치 하나를 사용한다. 개발 worktree의 파일 변경이 실행 중 운영판을 부분 갱신하지 않게 한다. 런타임 선택 symlink 교체는 승인된 배포에서만 한다. CLI는 현재 운영판과 protocol/capability를 확인한다.
 
-프로세스 관리는 macOS 사용자 LaunchAgent의 launchd를 재사용하는 설치안을 제공하되 설치·재시작은 별도 승인 대상이다. 재기동은 DB 접속이나 중단 해제를 뜻하지 않는다. 정상 idle 전환·완료 확인 뒤에만 계획 교체하고 active 작업을 업데이트 때문에 강제 종료하지 않는다.
+프로세스 관리는 macOS 사용자 LaunchAgent의 launchd를 재사용하는 설치안을 제공하되 설치·재시작은 별도 승인 대상이다. 2026-11-05 사용자 승인으로 `kr.co.aladin.team2-db`를 등록했다. 등록·교체·해제 절차는 `tools/README.md` §운영판 launchd 수명을 따른다. 재기동은 DB 접속이나 중단 해제를 뜻하지 않는다. 정상 idle 전환·완료 확인 뒤에만 계획 교체하고 active 작업을 업데이트 때문에 강제 종료하지 않는다.
 
 원장 변경은 로컬 SQLite additive migration으로 분리한다. production SQL Server schema·SP는 바꾸지 않는다. schema/capability가 맞지 않으면 오래된 binary로 원장을 열어 실행하지 않는다. rollback도 active 없음·종료 증거·호환성 확인 후 승인된 버전으로 전환하며 과거 승인은 복원하지 않는다.
 
