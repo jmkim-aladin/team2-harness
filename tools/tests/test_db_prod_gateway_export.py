@@ -175,6 +175,35 @@ class GatewayExportTests(unittest.TestCase):
         self.assertNotEqual(status["job_state"], "completed")
         self.assertEqual(fixtures.Backend.started, 0)
 
+    # --- review fixes (2026-11-05) ---------------------------------------
+    def test_untrusted_exports_root_is_refused_before_approval(self):
+        self.exports.mkdir(mode=0o755)
+        with self.assertRaises(Denied):
+            self.preview()
+
+    def test_csv_job_records_no_empty_memory_result(self):
+        review = self.preview(); self.submit(review); status = self.wait(review)
+        self.assertIsNone(status["result_digest"])
+        self.assertNotIn("output_bytes", status)
+        self.assertNotIn("output_sha256", status)
+
+    def test_rejection_reason_reaches_the_export_ledger(self):
+        review = self.preview(export=dict(EXPORT, max_file_bytes=12))
+        self.submit(review); status = self.wait(review)
+        self.assertEqual(status["export"]["state"], "failed")
+        self.assertEqual(status["export"]["reason"], "export_file_bytes_exceeded")
+
+    def test_audit_carries_no_result_digest_and_lineage_uses_the_run_epoch(self):
+        events = []
+        self.gateway.audit = type("A", (), {"write": lambda _s, event, **d: events.append((event, d))})()
+        review = self.preview(); self.submit(review); status = self.wait(review)
+        settled = [d for e, d in events if e == "export_settled"]
+        self.assertEqual(len(settled), 1)
+        self.assertNotIn("csv_sha256", settled[0]); self.assertNotIn("records", settled[0])
+        manifest = json.loads((Path(status["export"]["directory"]) / "manifest.json").read_text())
+        self.assertEqual(manifest["approval_digest"], review["approval_digest"])
+        self.assertEqual(manifest["epoch"], status["epoch"])
+
 
 if __name__ == "__main__":
     unittest.main()

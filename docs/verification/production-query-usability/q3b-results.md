@@ -46,3 +46,27 @@ E2E CSV 시나리오:
 - 실행기 교체가 필요하다(새 capability `csv_export`, 새 모듈). 절차: `tools/README.md` §운영판 launchd 수명 — `bootout` → `build` → `activate`(halted·idle·active 없음) → `bootstrap`. 사용자 승인 대상이다.
 - job schema 버전은 그대로이고 export 원장은 별도 테이블이라 이전 번들로 rollback해도 원장이 호환된다(이전 번들은 새 테이블을 무시).
 - 미확인: 운영 SQL Server에서 `FOR JSON`·`varchar(8000)` frame 동작(fixture는 SQL Server 2022 CU24·`sa`), 운영 계정 권한에서의 생성 batch 실행, 대용량(수백 MB) export 처리 시간·디스크 사용, macOS 외 플랫폼(공개 거부).
+
+## 마감 리뷰 반영 (2026-11-05, `/ad:code-review 2d28b98`)
+
+강도 위험. 메인 판정 + 보안 감사·데이터 정합성 페르소나(같은 벤더, 읽기 전용). 페르소나 발견 15건은 메인이 코드·실행으로 검증해 13건으로 병합했다(기각 0). 교차 모델 리뷰는 생략(기본값).
+
+| # | 결함 | 수정 |
+|---|---|---|
+| 1 | 열린 export 행이 있을 때 exports 디렉터리 삭제·권한 변경이면 reconcile 예외로 gateway 기동 실패(launchd 재시작 반복). 실행 재현 | reconcile은 파일시스템 상태로 예외를 던지지 않고 행만 분류 |
+| 2 | `export_unknown`인데 final이 없으면 `not_published`로 강등 | 증거 없이는 `export_unknown` 유지 |
+| 3 | rename 이후 기록 실패 시 abort가 `failed`로 덮어씀 | 공개 시도 뒤 abort는 `export_unknown`만 기록, 파일을 건드리지 않음 |
+| 4 | 루트 권한 문제가 승인 소비 뒤 드러나 `recovery_required` | `preview` 단계에서 플랫폼·루트 검사 |
+| 5 | CSV job 원장에 `output_bytes=0`·빈 sha | CSV receipt에서 메모리 결과 필드 제거 |
+| 6 | codec 거부 사유가 `query_not_completed`로만 기록 | `failure_reason()`을 원장 reason으로 |
+| 7 | `max_source_bytes` 기본 8배는 좁은 행에서 부족 → halt | 기본 64배 |
+| 8 | 괄호를 닫아 SELECT를 추가하면 단일 SELECT 검사 통과(쓰기는 `validate_read_sql`이 거부, 실행 확인) | 괄호·따옴표·주석 균형 검사 |
+| 9 | staging에 미리 있는 manifest를 검증 없이 공개 | 존재하면 거부 |
+| 10 | 감사 로그에 csv sha256·건수 | 감사에는 state·reason만 |
+| 11 | 공개 직전 루트 재확인 없음 | 루트·staging lstat 재확인, 신뢰 불가면 손대지 않고 미공개 |
+| 12 | lineage에 approval digest 없음, epoch를 worker에서 다시 읽음 | activation 시점 epoch·approval digest를 intent·manifest에 기록 |
+| 13 | 스프레드시트 수식 실행 위험 | 검토 화면 경고, README에 처리량 상한과 함께 명시 |
+
+안전 가정 입증(실행 확인): 생성 batch가 운영자 승인 DB 경로의 `validate_local_references`를 통과하고 3-part 참조는 거부. 괄호 탈출 UPDATE는 `validate_read_sql`이 거부. codec 최대 RSS는 stdout 250MiB에서 13MiB 유지, 단일 0.9MiB 행 22MiB(설계 §6 출시 조건). 처리량 약 8MiB/s.
+
+반영 뒤 검사: 신규 회귀 14건 red 관찰 후 green. export 관련 46건, tools 379건(1 skip), root 476건 OK. E2E 26/26 재통과(위 표의 q3b-e2e.json은 반영 뒤 실행본).

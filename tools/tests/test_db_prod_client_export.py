@@ -54,6 +54,7 @@ class ClientExportTests(unittest.TestCase):
         self.assertEqual(self.field(out, "export_spec_digest"), review["export_spec_digest"])
         self.assertIn("저장 위치: " + review["export_spec"]["artifact_directory"], out)
         self.assertIn("CSV로 저장", out)
+        self.assertIn("스프레드시트", out)
         self.assertIn("export_csv", self.field(out, "selected_actions"))
 
     def test_csv_options_are_rejected_without_csv_output(self):

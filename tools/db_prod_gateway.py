@@ -723,6 +723,8 @@ class Gateway:
             if 'sql' in request or not isinstance(export, dict) or not set(export) <= allowed:
                 raise Denied('export_spec_invalid')
             try:
+                # Local disk problems must surface before approval, not as a held slot after it.
+                export_codec.check_export_root(self.exports.root)
                 export_spec = export_codec.canonical_spec(
                     artifact_directory=str(self.exports.root / request_id), **export)
                 sql = export_codec.build_batch(request.get('select_sql'), export_spec)
@@ -881,9 +883,10 @@ class Gateway:
                     remove_stop_markers(self._latch_path(), review['stop_snapshot']['markers'])
                 _, markers = self._state_with_stop_markers()
                 self.approvals.activate(ticket, self._stop_markers)
+                lineage = dict(epoch=self.store.status()['epoch'], approval_digest=request['approval_digest'])
             self._record('approved', request_id=request_id, uid=uid, digest=request['approval_digest'],
                          source=request['approval_source'], selected_actions=actions)
-            self._start_job(entry, ticket)
+            self._start_job(entry, ticket, lineage)
             return dict(ok=True, status='accepted', request_id=request_id, run_id=ticket.run_id)
         except Exception:
             if ticket is not None:
@@ -907,7 +910,7 @@ class Gateway:
         if session is None:
             return
         if not (result and result.get('ok')):
-            session.abort('query_not_completed')
+            session.abort(session.failure_reason() or 'query_' + str((result or {}).get('status') or 'failed'))
             return
         try:
             session.finish()
@@ -919,10 +922,11 @@ class Gateway:
         except Exception:
             session.abort('export_failed')
             return
+        # Digests and counts stay in the export ledger/manifest, not in the general audit log.
         self._record('export_settled', request_id=session.request_id, state=outcome['state'],
-                     reason=outcome['reason'], records=outcome['records'], csv_sha256=outcome['csv_sha256'])
+                     reason=outcome['reason'])
 
-    def _start_job(self, entry, ticket):
+    def _start_job(self, entry, ticket, lineage):
         def work():
             receipts = []
             session = None
@@ -931,7 +935,8 @@ class Gateway:
                 if entry.get('export'):
                     session = export_codec.ExportSession(
                         self.exports, entry['export'], request_id=ticket.request_id, run_id=ticket.run_id,
-                        owner=entry['spec']['owner'], epoch=self.store.status()['epoch'])
+                        owner=entry['spec']['owner'], epoch=lineage['epoch'],
+                        approval_digest=lineage['approval_digest'])
                     with self.lock:
                         self.export_sessions[ticket.run_id] = session
                     session.open()
@@ -1222,6 +1227,12 @@ class Gateway:
                         request_id=request_id if ticket else None,
                         commit_ready=committed, committed=False)
                     delivered_run = receipt["run_id"]
+            if entry.get("export"):
+                # The CSV artifact carries its own digests; no empty memory result is recorded.
+                publish(dict(ok=True, status="completed", session_closed=True,
+                             runtime_fingerprint=RUNTIME_FINGERPRINT,
+                             completion_basis=completion_basis, **receipt))
+                return
             publish(dict(ok=True, status="completed", session_closed=True,
                          result_digest=fingerprint(dict(request_id=request_id, run_id=receipt['run_id'],
                              epoch=receipt['epoch'], sha256=hashlib.sha256(output).hexdigest())),
