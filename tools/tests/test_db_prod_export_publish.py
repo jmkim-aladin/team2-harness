@@ -37,7 +37,7 @@ class PublishTests(unittest.TestCase):
     def session(self, request_id=None):
         rid = request_id or self.request_id
         session = ex.ExportSession(self.ledger, self.spec(rid), request_id=rid, run_id="r" + rid[1:],
-                                   owner="uid:1", epoch=3)
+                                   owner="uid:1", epoch=3, approval_digest="d" * 64)
         session.open()
         return session
 
@@ -140,6 +140,83 @@ class PublishTests(unittest.TestCase):
                                   "4": "exported", "5": "export_unknown"})
         self.assertEqual(sorted(p.name for p in self.exports.iterdir()), ["1" * 32, "4" * 32, "5" * 32])
         self.assertEqual((self.exports / ("5" * 32) / "data.csv").read_bytes(), b"changed")
+
+    # --- review fixes (2026-11-05) ---------------------------------------
+    def open_rows(self):
+        exporting = self.session("1" * 32); exporting.feed(sqlcmd_stdout(SAMPLE)[:100])
+        complete = self.session("2" * 32); self.complete(complete)
+        unknown = self.session("3" * 32); self.complete(unknown)
+        self.ledger.mark("3" * 32, "export_unknown", "publish_state_unrecorded")
+        return exporting
+
+    def test_restart_survives_a_deleted_exports_root(self):
+        writing = self.open_rows()
+        writing.file.close()
+        import shutil
+        shutil.rmtree(self.exports)
+        ex.ExportLedger(self.store, self.exports)  # must not raise: the gateway has to boot
+        states = {r: self.ledger.status(r * 32)["state"] for r in "123"}
+        self.assertEqual(states, {"1": "failed", "2": "not_published", "3": "export_unknown"})
+
+    def test_restart_survives_an_untrusted_exports_root(self):
+        self.open_rows()
+        os.chmod(self.exports, 0o755)
+        ex.ExportLedger(self.store, self.exports)
+        for r in "123":
+            self.assertEqual(self.ledger.status(r * 32)["state"], "export_unknown")
+            self.assertEqual(self.ledger.status(r * 32)["reason"], "exports_root_untrusted")
+        self.assertTrue((self.exports / (".staging-" + "2" * 32)).exists(), "untrusted root is never modified")
+
+    def test_unknown_publication_stays_unknown_when_final_is_gone(self):
+        session = self.session(); self.complete(session); session.write_manifest()
+        ex.rename_no_replace(session.staging, session.final)
+        self.ledger.mark(self.request_id, "export_unknown", "publish_state_unrecorded")
+        import shutil
+        shutil.rmtree(session.final)
+        ex.ExportLedger(self.store, self.exports)
+        self.assertEqual(self.ledger.status(self.request_id)["state"], "export_unknown")
+
+    def test_abort_after_a_publish_attempt_never_claims_failure(self):
+        session = self.session(); self.complete(session)
+        original = self.ledger.mark
+        def broken(request_id, state, reason):
+            raise OSError("ledger unavailable")
+        self.ledger.mark = broken
+        try:
+            status = session.publish(gate=lambda: True)  # records nothing, but never raises past the rename
+        finally:
+            self.ledger.mark = original
+        self.assertNotEqual(status["state"], "exported")
+        session.abort("export_failed")  # e.g. a later step in the job thread failed
+        self.assertEqual(self.ledger.status(self.request_id)["state"], "export_unknown")
+        self.assertTrue(session.final.exists(), "a published artifact is never removed by abort")
+
+    def test_planted_manifest_is_refused(self):
+        session = self.session(); self.complete(session)
+        (session.staging / "manifest.json").write_text("{}")
+        with self.assertRaises(ex.ExportDenied):
+            session.publish(gate=lambda: True)
+        self.assertFalse(session.final.exists())
+
+    def test_root_is_rechecked_right_before_publication(self):
+        session = self.session(); self.complete(session)
+        os.chmod(self.exports, 0o755)
+        status = session.publish(gate=lambda: True)
+        self.assertNotEqual(status["state"], "exported")
+        self.assertFalse(session.final.exists())
+
+    def test_lineage_records_the_approval_digest_and_epoch(self):
+        session = self.session(); self.complete(session); session.publish(gate=lambda: True)
+        manifest = json.loads((session.final / "manifest.json").read_text())
+        self.assertEqual(manifest["approval_digest"], "d" * 64)
+        self.assertEqual(manifest["epoch"], 3)
+        self.assertEqual(self.ledger.status(self.request_id)["approval_digest"], "d" * 64)
+
+    def test_codec_reason_is_available_after_a_rejected_stream(self):
+        session = self.session()
+        with self.assertRaises(ex.ExportDenied):
+            session.feed(b"Lx\n")
+        self.assertEqual(session.failure_reason(), "frame_missing_header")
 
 
 if __name__ == "__main__":

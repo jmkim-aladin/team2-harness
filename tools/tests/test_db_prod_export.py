@@ -91,6 +91,18 @@ class SpecTests(unittest.TestCase):
             with self.assertRaises(ex.ExportDenied):
                 ex.build_batch(inner, spec())
 
+    def test_single_select_check_rejects_breaking_out_of_the_wrapper(self):
+        for inner in ("SELECT 1 AS a) SELECT name FROM sys.tables SELECT @x=(SELECT 1 AS a",
+                      "SELECT (1 AS a", "SELECT 1 AS a)", "SELECT N'unterminated", "SELECT 1 /* open",
+                      "SELECT [a FROM t"):
+            with self.subTest(inner=inner), self.assertRaises(ex.ExportDenied):
+                ex.build_batch(inner, spec())
+        ok = "SELECT N')(' AS s, [a)b] AS e, (1) AS n -- )\n/* ( */ FROM t WHERE x IN (1, (2))"
+        self.assertIn(ok, ex.build_batch(ok, spec()))
+
+    def test_default_source_cap_covers_narrow_rows(self):
+        self.assertEqual(spec()["spec"]["max_source_bytes"], 64 * (1 << 20) + (1 << 20))
+
 
 class CodecTests(unittest.TestCase):
     def test_values_survive_and_null_differs_from_empty(self):

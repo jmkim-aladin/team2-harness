@@ -83,6 +83,7 @@ def display_review(review):
             print("export_spec_digest: " + json.dumps(review["export_spec_digest"]))
             print("저장 위치: " + review["export_spec"]["artifact_directory"])
             export = " + 결과를 위 저장 위치에 CSV로 저장(SQL 재실행 없음)"
+            print("주의: 값은 원문 그대로 저장한다. 스프레드시트로 열면 =,+,-,@로 시작하는 값이 수식으로 실행될 수 있다")
         if "release_emergency_stop" in review["selected_actions"]:
             print("승인 동작: 표시한 긴급 중단을 해제하고 이 SQL을 1회 실행" + export)
         elif "resume_current_stop" in review["selected_actions"]:

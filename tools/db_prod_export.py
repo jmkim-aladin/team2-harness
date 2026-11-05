@@ -90,7 +90,8 @@ def canonical_spec(columns, *, purpose, max_file_bytes, max_record_bytes, max_ro
     )
     # sqlcmd stdout (hex frames + padding) bound; shown in the review like every other limit.
     spec["max_source_bytes"] = _positive(
-        max_source_bytes if max_source_bytes is not None else min(8 * spec["max_file_bytes"] + (1 << 20), MAX_SOURCE_BYTES),
+        # JSON repeats every key per row and hex-encodes UTF-16: narrow rows exceed 8x easily.
+        max_source_bytes if max_source_bytes is not None else min(64 * spec["max_file_bytes"] + (1 << 20), MAX_SOURCE_BYTES),
         MAX_SOURCE_BYTES, "export_source_limit_invalid")
     if artifact_directory is not None:
         if not isinstance(artifact_directory, str) or not artifact_directory.startswith("/"):
@@ -104,12 +105,55 @@ def spec_digest(spec):
                                      separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
+def _balanced(sql):
+    """Parentheses balance outside literals/comments; closing the wrapper early is refused."""
+    depth, i, n = 0, 0, len(sql)
+    while i < n:
+        if sql.startswith("--", i):
+            end = sql.find("\n", i)
+            i = n if end < 0 else end + 1
+        elif sql.startswith("/*", i):
+            nest, i = 1, i + 2
+            while i < n and nest:
+                if sql.startswith("/*", i):
+                    nest, i = nest + 1, i + 2
+                elif sql.startswith("*/", i):
+                    nest, i = nest - 1, i + 2
+                else:
+                    i += 1
+            if nest:
+                return False
+        elif sql[i] in "'\"[":
+            closing = "]" if sql[i] == "[" else sql[i]
+            i += 1
+            while i < n:
+                if sql[i] == closing:
+                    if i + 1 < n and sql[i + 1] == closing:
+                        i += 2
+                        continue
+                    break
+                i += 1
+            if i >= n:
+                return False
+            i += 1
+        else:
+            if sql[i] == "(":
+                depth += 1
+            elif sql[i] == ")":
+                depth -= 1
+                if depth < 0:
+                    return False
+            i += 1
+    return depth == 0
+
+
 def build_batch(select_sql, spec):
     """The complete batch the reviewer approves; nothing is added after approval."""
     if not isinstance(select_sql, str) or not select_sql.strip():
         raise ExportDenied("export_select_required")
     if ";" in select_sql or re.search(r"\bFOR\s+(JSON|XML|BROWSE)\b", select_sql, re.I) \
-            or re.search(r"^\s*GO\s*$", select_sql, re.I | re.M) or "\x00" in select_sql:
+            or re.search(r"^\s*GO\s*$", select_sql, re.I | re.M) or "\x00" in select_sql \
+            or not _balanced(select_sql):
         raise ExportDenied("export_select_single_statement")
     spec = spec["spec"] if "spec" in spec else spec
     if spec.get("frame_protocol") != FRAME_PROTOCOL:
@@ -413,6 +457,14 @@ def _private_root(root, *, create):
     return root
 
 
+def check_export_root(root):
+    """Pre-approval check: the platform can publish without replacing, and an existing root is private."""
+    if sys.platform != "darwin":
+        raise ExportDenied("no_replace_rename_unavailable")
+    if os.path.lexists(root):
+        _private_root(root, create=False)
+
+
 def _remove_owned_dir(path):
     """Remove only a real directory holding our two regular files (never follows links)."""
     if not os.path.lexists(path):
@@ -436,7 +488,8 @@ class ExportLedger:
         with store.transaction() as c:
             c.execute('''CREATE TABLE IF NOT EXISTS query_exports_v1 (
                 request_id TEXT PRIMARY KEY, owner TEXT NOT NULL, run_id TEXT NOT NULL, epoch INTEGER NOT NULL,
-                spec_digest TEXT NOT NULL, final TEXT NOT NULL, staging TEXT NOT NULL, state TEXT NOT NULL,
+                spec_digest TEXT NOT NULL, approval_digest TEXT NOT NULL,
+                final TEXT NOT NULL, staging TEXT NOT NULL, state TEXT NOT NULL,
                 reason TEXT, source_sha256 TEXT, source_bytes INTEGER, csv_sha256 TEXT, csv_bytes INTEGER,
                 records INTEGER, updated REAL NOT NULL)''')
         self.reconcile()
@@ -446,11 +499,12 @@ class ExportLedger:
             row = c.execute("SELECT * FROM query_exports_v1 WHERE request_id=?", (request_id,)).fetchone()
         return dict(row) if row else None
 
-    def intent(self, request_id, owner, run_id, epoch, spec_digest_value, final, staging):
+    def intent(self, request_id, owner, run_id, epoch, spec_digest_value, approval_digest, final, staging):
         with self.store.transaction() as c:
-            c.execute("INSERT INTO query_exports_v1 (request_id,owner,run_id,epoch,spec_digest,final,staging,state,updated)"
-                      " VALUES (?,?,?,?,?,?,?,'exporting',?)",
-                      (request_id, owner, run_id, epoch, spec_digest_value, str(final), str(staging), time.time()))
+            c.execute("INSERT INTO query_exports_v1 (request_id,owner,run_id,epoch,spec_digest,approval_digest,"
+                      "final,staging,state,updated) VALUES (?,?,?,?,?,?,?,?,'exporting',?)",
+                      (request_id, owner, run_id, epoch, spec_digest_value, approval_digest, str(final), str(staging),
+                       time.time()))
 
     def complete(self, request_id, stats):
         with self.store.transaction() as c:
@@ -467,26 +521,55 @@ class ExportLedger:
                       (state, reason, time.time(), request_id))
 
     def reconcile(self):
-        """After a restart nothing is published anew; only already-published artifacts are classified."""
+        """After a restart nothing is published anew; only already-published artifacts are classified.
+
+        Never raises for filesystem state: the gateway must boot so that stop,
+        status and new reviews stay available even if the user removed or
+        loosened the exports directory.
+        """
         with self.store.transaction() as c:
             rows = [dict(r) for r in c.execute(
                 "SELECT * FROM query_exports_v1 WHERE state IN (%s)" % ",".join("?" * len(OPEN_STATES)), OPEN_STATES)]
         if not rows:
             return
-        _private_root(self.root, create=False)
+        try:
+            _private_root(self.root, create=False)
+        except FileNotFoundError:
+            # Nothing can be published under a missing root; an uncertain publication stays uncertain.
+            for row in rows:
+                if row["state"] == "export_unknown":
+                    self.mark(row["request_id"], "export_unknown", "exports_root_missing")
+                else:
+                    self.mark(row["request_id"], "failed" if row["state"] == "exporting" else "not_published",
+                              "exports_root_missing")
+            return
+        except (OSError, ExportDenied):
+            for row in rows:
+                self.mark(row["request_id"], "export_unknown", "exports_root_untrusted")
+            return
         for row in rows:
-            final, staging = Path(row["final"]), Path(row["staging"])
-            if os.path.lexists(final):
-                verified = row["state"] != "exporting" and self._verify(final, row)
-                self.mark(row["request_id"], "exported" if verified else "export_unknown",
-                          "reconciled" if verified else "published_contents_unverified")
-                continue
             try:
-                _remove_owned_dir(staging)
-                reason = "gateway_restarted"
-            except ExportDenied:
-                reason = "gateway_restarted_staging_untrusted"
-            self.mark(row["request_id"], "not_published" if row["state"] != "exporting" else "failed", reason)
+                self._reconcile_row(row)
+            except Exception:
+                self.mark(row["request_id"], "export_unknown", "reconcile_failed")
+
+    def _reconcile_row(self, row):
+        final, staging = Path(row["final"]), Path(row["staging"])
+        if os.path.lexists(final):
+            verified = row["state"] != "exporting" and self._verify(final, row)
+            self.mark(row["request_id"], "exported" if verified else "export_unknown",
+                      "reconciled" if verified else "published_contents_unverified")
+            return
+        if row["state"] == "export_unknown":
+            # It may have been published and then moved by the user; never downgrade without evidence.
+            self.mark(row["request_id"], "export_unknown", "final_missing_after_uncertain_publish")
+            return
+        try:
+            _remove_owned_dir(staging)
+            reason = "gateway_restarted"
+        except (ExportDenied, OSError):
+            reason = "gateway_restarted_staging_untrusted"
+        self.mark(row["request_id"], "not_published" if row["state"] != "exporting" else "failed", reason)
 
     @staticmethod
     def _verify(final, row):
@@ -509,11 +592,13 @@ class ExportLedger:
 class ExportSession:
     """One approved export: private staging -> completion -> no-replace publication."""
 
-    def __init__(self, ledger, export_spec, *, request_id, run_id, owner, epoch):
+    def __init__(self, ledger, export_spec, *, request_id, run_id, owner, epoch, approval_digest):
         self.ledger = ledger
         self.spec = export_spec["spec"] if "spec" in export_spec else export_spec
         self.digest = spec_digest(self.spec)
         self.request_id, self.run_id, self.owner, self.epoch = request_id, run_id, owner, epoch
+        self.approval_digest = approval_digest
+        self.publish_attempted = False
         self.root = ledger.root
         self.final = self.root / request_id
         if Path(self.spec.get("artifact_directory", "")) != self.final:
@@ -525,7 +610,8 @@ class ExportSession:
 
     def open(self):
         _private_root(self.root, create=True)
-        self.ledger.intent(self.request_id, self.owner, self.run_id, self.epoch, self.digest, self.final, self.staging)
+        self.ledger.intent(self.request_id, self.owner, self.run_id, self.epoch, self.digest, self.approval_digest,
+                           self.final, self.staging)
         try:
             os.mkdir(self.staging, 0o700)
         except FileExistsError:
@@ -539,6 +625,10 @@ class ExportSession:
 
     def feed(self, chunk):
         self.codec.feed(chunk)
+
+    def failure_reason(self):
+        """The codec's fixed reason code when the stream was rejected, else None."""
+        return self.codec.failed if self.codec is not None else None
 
     def finish(self):
         stats = self.codec.finish()
@@ -559,9 +649,9 @@ class ExportSession:
             raise ExportDenied("export_incomplete")
         path = self.staging / "manifest.json"
         if os.path.lexists(path):
-            return
+            raise ExportDenied("export_manifest_unexpected")
         manifest = dict(format=FORMAT, spec=self.spec, spec_digest=self.digest, request_id=self.request_id,
-                        run_id=self.run_id, owner=self.owner, epoch=self.epoch,
+                        run_id=self.run_id, owner=self.owner, epoch=self.epoch, approval_digest=self.approval_digest,
                         created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(), **self.stats)
         data = json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8")
         fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
@@ -578,8 +668,18 @@ class ExportSession:
         self.write_manifest()
         if not gate():
             return self._discard("stopped_before_publish")
+        try:
+            _private_root(self.root, create=False)
+            info = os.lstat(self.staging)
+            if not _stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+                raise ExportDenied("export_staging_untrusted")
+        except (OSError, ExportDenied):
+            # Leave an untrusted tree untouched; the staging is never published.
+            self.ledger.mark(self.request_id, "not_published", "export_root_untrusted")
+            return self.ledger.status(self.request_id)
         if os.path.lexists(self.final):
             return self._discard("destination_exists")
+        self.publish_attempted = True
         try:
             rename_no_replace(self.staging, self.final)
         except FileExistsError:
@@ -605,9 +705,14 @@ class ExportSession:
                 pass
             self.file = None
         row = self.ledger.status(self.request_id)
+        if self.publish_attempted:
+            # The rename may have happened; never remove anything or claim failure.
+            if row is not None and row["state"] in ("exporting", "complete"):
+                self.ledger.mark(self.request_id, "export_unknown", "publish_outcome_unrecorded")
+            return
         try:
             _remove_owned_dir(self.staging)
-        except ExportDenied:
+        except (ExportDenied, OSError):
             reason = reason + "_staging_untrusted"
         if row is not None and row["state"] in ("exporting", "complete"):
             self.ledger.mark(self.request_id, "failed", reason)
