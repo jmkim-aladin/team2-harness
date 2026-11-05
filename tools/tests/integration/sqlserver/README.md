@@ -48,6 +48,10 @@ DDL/DML의 예상 거부는 명령 실패만으로 통과시키지 않고 SQL Se
 
 개발 실행기의 public 함수에 컨테이너 전용 transport와 임시 원장을 주입한다. 실제 CLI의 개발 서버 접속이나 호스트 sqlcmd 버전 호환성 검증은 별도다. 격리 수준 변경은 자신이 생성한 `IsolationFixture`에서만 수행하며 실제 운영 설정 변경을 뜻하지 않는다.
 
+## 운영 조회 전체 흐름 (Q4)
+
+`python3 tools/tests/integration/sqlserver/e2e_flow.py --report <경로>`는 실제 bundle·gateway `serve` 프로세스·client CLI 프로세스·host sqlcmd를 자체 loopback 컨테이너(공개 포트는 `127.0.0.1` 임시 포트)에 연결해 재개 후 조회·중복 접수·변경 SQL·새 중단·응답 유실·취소·시간 초과·worker/실행기 손실·복구를 검사한다. 자식 프로세스의 HOME과 socket을 임시 경로로 바꿔 운영 원장·`stop.d`·socket을 쓰지 않고, 운영 socket inode 불변을 함께 확인한다. 이유: 운영 실행기와 같은 Mac에서 돌려도 운영 상태를 바꾸지 않게 한다. 결과: [2026-11-05 Q4](../../../../docs/verification/production-query-usability/q4-results.md).
+
 ## 기록된 실행
 
 [2026-10-14 결과 JSON](../../../../docs/verification/sqlserver-db-access-2026-10-14.json): SQL Server 2022 `16.0.4250.1`, 40개 기대 결과 일치, 컨테이너 정리 완료. 비키 조건 150행 변경 가능성과 timeout의 exit code 0도 재현해 기록했다. 운영 개통 상태는 false다.

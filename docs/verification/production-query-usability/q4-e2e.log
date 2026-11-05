@@ -1,0 +1,26 @@
+Waiting for SQL Server: Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : Login timeout expired.
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : TCP Provider: Error code 0x2749.
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : A network-related or instance-specific error has occurred while establishing a connection to tcp:127.0.0.1,1433. Server is not found or not accessible. Check if instance name is correct and if SQL Server is configured to allow remote connections. For more information see SQL Server Books Online..
+SQL Server ready
+PASS boot: gateway starts halted without any DB connection
+PASS resume preview selects execute_once + resume_current_stop, connects nothing
+PASS resume + run: one approval resumes and returns the result
+PASS ready preview selects execute_once only
+PASS ready run returns result once
+PASS duplicate submit never re-executes
+PASS changed SQL: mismatched approval refused by client and gateway, nothing sent
+PASS new stop after review: approval refused, nothing sent
+PASS client loss: job completes, same-ID result delivered, SQL sent once
+PASS user stop: cancelled quickly, server session closed, auto-ready, no result
+PASS timeout: fails within the bound, session closed, block kept, next review includes resume
+PASS worker loss: no rerun, not reported as success, block kept
+PASS worker loss: server session eventually closed
+PASS gateway loss: restart is halted, job not completed, no rerun
+PASS gateway loss: watchdog fences the orphaned server session
+PASS gateway loss: new work is refused until recovery
+PASS gateway loss recovery: slot released through approved observer, block kept
+PASS final: one approval resumes and runs after recovery
+PASS every byte sent to sqlcmd was displayed in a review
+Test container removed
+PASS production socket untouched
+{"passed": 20, "failed": [], "error": null}
