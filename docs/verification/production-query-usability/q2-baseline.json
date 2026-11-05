@@ -1,0 +1,47 @@
+{
+  "task_id": "TASK-20261104-4560e95349bc",
+  "recorded_at": "2026-11-04T08:46:18.567280+00:00",
+  "environment": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "python": "3.9.6"
+  },
+  "worktree": "/Users/jm/Documents/workspace/team2-worktrees/production-query-usability",
+  "branch": "team2/production-query-usability",
+  "base_head": "ff0ca564cea38e1814677a235102d4512ac4cee9",
+  "uncommitted": true,
+  "runtime_fingerprint": "e5f08031954f6458db76c781eeea9ff6dbddd88494ec095de09c5cdbf4ce0582",
+  "file_sha256": {
+    "docs/production-db-emergency-stop.md": "504cdf9d72c54bcfba1dc4815f628a91cf6b0a13554bcd2ad1541d76fb029fd3",
+    "docs/production-query-request-flow.md": "25c6e1cfe550a29e1928f842519be78317358fa0a5f55827398c24625d5483bc",
+    "policies/production-db-access-policy.md": "8685db8ac40590e091bb26e15255850a5cb574dca6d524b7dcb45ab03030b7bd",
+    "tools/README.md": "cbc2117e2794f9ac8c74a7da6718a545baa672fc92ba73bedded01511e99225f",
+    "tools/db_prod_approval.py": "3e10410ab0da7a6af43d54eb2b1ec0990b198cc69050f8e2d70806c57a5e61cf",
+    "tools/db_prod_build_sqlcmd.py": "93d0e6df564ce902180dee3620af5ec7b0c17b2d1cad019f44c6142ef6fde5a0",
+    "tools/db_prod_client.py": "9961cbc9fb4fdbe36585fd7559edccc62372b269e8273fd6a002085f423031bb",
+    "tools/db_prod_diagnostics.py": "48289c0b8cbc55a1e1a0a8bb59db7ce51389809d8389728bada56f7521237bb0",
+    "tools/db_prod_gateway.py": "41c7fa5be8a51819f8527b0ec932eb55e199865fee7b67082658f2f11da759d9",
+    "tools/db_prod_profiles.py": "b9c7a16a0d716e6acb92ac6d7c5a2b09fac95acdc54101e1fdf2c06b9aeee31e",
+    "tools/db_prod_recovery.py": "c85a95914fdfe7e14293d14f3e291481beb2222cc5425ebdc389aef00e16d239",
+    "tools/db_prod_transport.py": "98639025078a6880fb164ec9c6ce106ea0be5919a75762afc05f347f617df701",
+    "tools/db_prod_watchdog.py": "939efdc1365f335ece6c92cc41a2f328b9da87db5503f545161f97519f4f739e",
+    "tools/db_query_control.py": "aa664b015c90f1ec8038b25f66c2cb1f195439e9ff9791024812c025205fbf1d",
+    "tools/tests/test_db_prod_approval.py": "96bd83d1c7cfe868ee7a11db6ed1e8a465563c209794c2280aef3ee8d30200cf"
+  },
+  "original": {
+    "path": "/Users/jm/Documents/workspace/team2",
+    "branch": "team2/harness-hook-context-audit",
+    "head": "ff0ca564cea38e1814677a235102d4512ac4cee9",
+    "tracked_diff": "",
+    "source_fingerprint": "57650f0d2969a969b79a3866628e4b0409bec3ee7764513217fdbb952cf348ed",
+    "expected_source_fingerprint": "57650f0d2969a969b79a3866628e4b0409bec3ee7764513217fdbb952cf348ed",
+    "untracked_preserved": "?? docs/production-query-request-flow.md\n?? docs/verification/harness-hook-context-audit/\n?? docs/verification/production-query-usability/\n?? shepherdr/\n?? tests/test_harness_hook_probe_fixture.py"
+  },
+  "verification": {
+    "root_suite": "q2-root-tests.txt",
+    "tools_suite": "q2-tools-tests.txt",
+    "final_narrow_suite": "q2-narrow-final.txt",
+    "checks": "q2-checks.json",
+    "final_checks": "q2-final-checks.json"
+  },
+  "next_action": "Q3: inspect this snapshot and uncommitted candidate, then implement stable bundle and detached jobs/fetch/ack. No production restart or DB action implicit."
+}

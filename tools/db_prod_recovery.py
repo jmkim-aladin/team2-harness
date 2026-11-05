@@ -33,7 +33,7 @@ from db_prod_watchdog import process_fingerprint
 RUN_ID_RE = re.compile(r"^[0-9a-f]{16,128}$")
 HEX_DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
 HOST_TAG_RE = re.compile(r"^[A-Za-z0-9_.-]{1,128}$")
-RECOVERABLE_PHASES = frozenset(("starting", "dispatching", "running", "finishing", "unconfirmed"))
+RECOVERABLE_PHASES = frozenset(("admitting", "starting", "dispatching", "running", "finishing", "unconfirmed"))
 # Kept as a compatibility alias for callers that imported the original name.
 ALLOWED_PHASES = RECOVERABLE_PHASES
 MIN_WATCHDOG_GRACE = 5.0
@@ -220,6 +220,10 @@ class RecoveryJournal:
     def path_for(self, run_id: str) -> Path:
         run_id = validate_run_id(run_id)
         return self.state_dir / f"{run_id}.json"
+
+    @staticmethod
+    def from_admission(run_id, metadata):
+        return JournalRecord(validate_run_id(run_id), _validate_metadata(metadata), None, None)
 
     def _record_from_dict(self, value: Mapping[str, Any], run_id: str) -> JournalRecord:
         if set(value) != {"schema", "run_id", "metadata", "worker"}:

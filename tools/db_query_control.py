@@ -260,12 +260,27 @@ class Supervisor:
             return dict(ok=False, status=str(error))
         except Exception:
             return dict(ok=False, status="control_unavailable")
+        return self._execute_reserved(run, backend=backend, sql=sql, timeout=timeout,
+                                      max_rows=max_rows, max_bytes=max_bytes, publish=publish,
+                                      deadline=time.monotonic()+timeout)
+
+    def execute_admitted(self, ticket, *, owner, target, backend, sql, timeout,
+                         max_rows=None, max_bytes=None, publish=None):
+        from db_prod_approval import AdmissionTicket, ApprovalLedger
+        if type(ticket) is not AdmissionTicket or type(ticket.ledger) is not ApprovalLedger or ticket.ledger.store.path != self.store.path:
+            raise Denied('admission_ticket_invalid_or_consumed')
+        run = ticket.ledger.claim_backend_start(ticket, dict(owner=owner, target=target, sql=sql,
+                                                            timeout=timeout, max_rows=max_rows, max_bytes=max_bytes))
+        return self._execute_reserved(run, backend=backend, sql=sql, timeout=timeout,
+                                      max_rows=max_rows, max_bytes=max_bytes, publish=publish,
+                                      deadline=ticket.deadline)
+
+    def _execute_reserved(self, run, *, backend, sql, timeout, max_rows, max_bytes, publish, deadline):
         successful, closed = False, False
         error = "query_failed"
         try:
             # Backend.start performs bounded connection setup only, never user
             # SQL. Backend methods must be bounded and dispatch nonblocking.
-            deadline = time.monotonic()+timeout
             identity = backend.start(run)
             if time.monotonic() >= deadline:
                 raise Denied("timeout")

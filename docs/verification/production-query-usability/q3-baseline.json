@@ -1,0 +1,48 @@
+{
+  "task_id": "TASK-20261104-4560e95349bc",
+  "recorded_at": "2026-11-04T09:20:41.230435+00:00",
+  "worktree": "/Users/jm/Documents/workspace/team2-worktrees/production-query-usability",
+  "branch": "team2/production-query-usability",
+  "base_head": "ff0ca564cea38e1814677a235102d4512ac4cee9",
+  "uncommitted": true,
+  "environment": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "python": "3.9.6"
+  },
+  "runtime_fingerprint": "bc58fd34acb395a7d639586989795f6c4db714fee88c2432b8970a2b868478cc",
+  "file_sha256": {
+    "docs/production-db-emergency-stop.md": "4d648c6f8b4e137d27876a6193e21ca86bc70d87ae9da38e0bdb88eadbb3b66c",
+    "docs/production-query-request-flow.md": "187a753145b5baeec13075fefdf8d36a60f71e56fe9b887ace1d451b80950b93",
+    "policies/production-db-access-policy.md": "78d0c59bacf31b83812c7571ccb7a0ac6145fa69e17abd87c9530477328de32b",
+    "tools/README.md": "a8487b5d637e15f6221583ad702303067b96a2e78a1e853b67212e3d9f522094",
+    "tools/db_prod_approval.py": "f2328258cf644d39d11bf7d7d3976e1e16f5c3c08aad0983c3fd01849fc5803c",
+    "tools/db_prod_build_sqlcmd.py": "93d0e6df564ce902180dee3620af5ec7b0c17b2d1cad019f44c6142ef6fde5a0",
+    "tools/db_prod_client.py": "907536795c727a50880bfd02918cb82ce444aede1fbb507869515ee887785adf",
+    "tools/db_prod_diagnostics.py": "48289c0b8cbc55a1e1a0a8bb59db7ce51389809d8389728bada56f7521237bb0",
+    "tools/db_prod_gateway.py": "daf0cbad92815e1a7118835ec38d5a83852213254724c4216185d5ee7425dcd3",
+    "tools/db_prod_jobs.py": "4ca7455fc05fd1674374d241fc46bb51b150312c8b899259223b63a4d87919f2",
+    "tools/db_prod_profiles.py": "b9c7a16a0d716e6acb92ac6d7c5a2b09fac95acdc54101e1fdf2c06b9aeee31e",
+    "tools/db_prod_recovery.py": "c85a95914fdfe7e14293d14f3e291481beb2222cc5425ebdc389aef00e16d239",
+    "tools/db_prod_runtime.py": "634bf51bedd5e2cc0764b426f5bd7e930e9fd032561d6d96933f2afd54bae3b0",
+    "tools/db_prod_transport.py": "98639025078a6880fb164ec9c6ce106ea0be5919a75762afc05f347f617df701",
+    "tools/db_prod_watchdog.py": "939efdc1365f335ece6c92cc41a2f328b9da87db5503f545161f97519f4f739e",
+    "tools/db_query_control.py": "aa664b015c90f1ec8038b25f66c2cb1f195439e9ff9791024812c025205fbf1d",
+    "tools/tests/test_db_prod_approval.py": "7e3019cb1478d5700e3226f087e6ef454c8943a7b83cb2875a3d24fb8ae28a70",
+    "tools/tests/test_db_prod_jobs.py": "f8fd4cd6cc6f3606e419681eeca2491416c03900aef7fcf0c049997ca18b7b50",
+    "tools/tests/test_db_prod_runtime.py": "14809a256e4fe86779b27df802469978cf0a206eb6d0e40651038293d2082dbf"
+  },
+  "q2_resume_snapshot": "all 15 Q2 file digests matched before Q3 changes",
+  "original": {
+    "path": "/Users/jm/Documents/workspace/team2",
+    "branch": "team2/harness-hook-context-audit",
+    "head": "ff0ca564cea38e1814677a235102d4512ac4cee9",
+    "tracked_diff": "",
+    "source_fingerprint": "57650f0d2969a969b79a3866628e4b0409bec3ee7764513217fdbb952cf348ed",
+    "expected_source_fingerprint": "57650f0d2969a969b79a3866628e4b0409bec3ee7764513217fdbb952cf348ed",
+    "untracked_preserved": "?? docs/production-query-request-flow.md\n?? docs/verification/harness-hook-context-audit/\n?? docs/verification/production-query-usability/\n?? shepherdr/\n?? tests/test_harness_hook_probe_fixture.py"
+  },
+  "checks": "q3-checks.json",
+  "final_checks": "q3-final-checks.json",
+  "current_difference": "Only documentation/evidence/vault bookkeeping after full suites; no product code or test changes.",
+  "next_action": "Q3b: inspect these hashes and uncommitted candidate; implement approved structured output, bounded CSV streaming and private atomic publication. No production install/restart/query implicit."
+}

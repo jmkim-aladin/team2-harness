@@ -29,7 +29,9 @@ import struct
 import threading
 import time
 
-from db_query_control import Store, Supervisor, Denied
+from db_query_control import Store, Supervisor, Denied, specification
+from db_prod_approval import ApprovalLedger, ReviewEnvelope, LedgerRecoveryJournal, MEMORY_MAX_BYTES
+from db_prod_jobs import JobLedger
 from db_prod_diagnostics import Diagnostics
 from db_prod_transport import DEFAULT_OBSERVER_TIMEOUT
 from db_prod_profiles import TARGETS, ProfileError, LocalKeychain, profile_digest
@@ -353,6 +355,11 @@ class Gateway:
         self.recovery_sleep = recovery_sleep
         self.recovery_session_observer = recovery_session_observer
         self.supervisor_factory = supervisor_factory
+        self.approvals = ApprovalLedger(store)
+        self.instance = secrets.token_hex(16)
+        self.jobs = JobLedger(store, self.instance)
+        self.workers = {}
+        self.recovery_journal = LedgerRecoveryJournal(self.recovery_journal, self.approvals)
         self.stop_lock_path = Path(store.path).parent / "stop.lock"
         self.gateway_pid = os.getpid()
         self.gateway_birth = process_fingerprint(self.gateway_pid)
@@ -666,6 +673,9 @@ class Gateway:
                 return dict(ok=False, status=str(error), run_id=plan["run_id"],
                             diagnostics=diagnostics, session_closed=False)
             self._record("recovery_completed", request_id=request_id, run_id=result["run_id"], digest=result["digest"])
+            with self.store.transaction() as connection:
+                connection.execute("UPDATE query_jobs_v2 SET phase='failed',terminal=1,updated=? WHERE run_id=? AND terminal=0",
+                                   (time.time(), result['run_id']))
             completed = True
             return result
         finally:
@@ -687,7 +697,14 @@ class Gateway:
                     self.recovery_pending[request_id]["executing"] = False
 
     def prepare(self, request, uid):
-        self._settle_cancel()
+        version = request.get('api_version', 1)
+        if type(version) is not int or version not in (1, 2):
+            raise Denied('unsupported_api_version')
+        v2 = version == 2
+        if not v2:
+            self._settle_cancel()
+        elif request.get('output_mode', 'memory') != 'memory':
+            raise Denied('output_mode_not_available')
         target, database, sql = (request.get(k) for k in ("target", "database", "sql"))
         settings = self.targets.get(target, {})
         if target not in TARGETS or not settings.get("enabled"):
@@ -713,7 +730,13 @@ class Gateway:
         if operator_authorized and not settings.get("read_only_verified"):
             validate_local_references(sql)
         limits = {key: request.get(key) for key in ("timeout", "max_rows", "max_bytes")}
-        if any(key not in request for key in limits):
+        if v2:
+            limits['max_bytes'] = request.get('max_bytes', MEMORY_MAX_BYTES)
+            if type(limits['max_bytes']) is not int or not 0 < limits['max_bytes'] <= MEMORY_MAX_BYTES:
+                raise Denied('v2_memory_limit_required')
+            if 'timeout' not in request:
+                raise Denied('explicit_limits_required')
+        elif any(key not in request for key in limits):
             raise Denied("explicit_limits_required")
         query_profile = self.vault.profile(target)
         observer_profile = query_profile
@@ -723,9 +746,14 @@ class Gateway:
         protocol = self.backend_type.review_sql(host_tag)
         binding = dict(target=target, database=database, host_tag=host_tag,
                        query_profile=profile_digest(query_profile), observer_profile=profile_digest(observer_profile),
-                       protocol=fingerprint(protocol), settings=fingerprint(settings), resource_max_bytes=RESOURCE_MAX_BYTES)
+                       protocol=fingerprint(protocol), settings=fingerprint(settings),
+                       resource_max_bytes=MEMORY_MAX_BYTES if v2 else RESOURCE_MAX_BYTES)
         spec = dict(owner="uid:"+str(uid), target=target+":"+fingerprint(binding), sql=sql, **limits)
-        prepared = self.store.prepare(**spec)
+        if v2:
+            payload, spec_hash = specification(**spec)
+            prepared = dict(id=secrets.token_hex(16), digest=spec_hash, review=payload)
+        else:
+            prepared = self.store.prepare(**spec)
         review = dict(prepared["review"], target=target, database=database,
                       read_access_basis=("verified_database_permissions" if settings.get("read_only_verified")
                                          else "operator_authorized_database_permissions_unverified" if operator_authorized
@@ -733,11 +761,35 @@ class Gateway:
                       indirect_object_dependencies_verified=False,
                       profile_fingerprint=binding["query_profile"], observer_fingerprint=binding["observer_profile"],
                       control_sql=protocol, output_limit_unit="physical_output_lines",
-                      resource_max_bytes=RESOURCE_MAX_BYTES,
+                      resource_max_bytes=binding['resource_max_bytes'],
                       host_tag=host_tag, request_id=prepared["id"], digest=prepared["digest"])
+        envelope = None
+        if v2:
+            with self._stop_lock():
+                state, markers = self._state_with_stop_markers()
+                if state['active'] is not None or state['phase'] != 'idle':
+                    raise Denied('active_session_requires_fencing_and_reconciliation')
+                actions = ['execute_once']
+                if state['halted']:
+                    actions.append('resume_current_stop')
+                    if ('emergency' in (state['reason'] or '') or any(not name.endswith('-cancel.marker') for name in markers)):
+                        actions.append('release_emergency_stop')
+                review.pop('digest')
+                review.update(api_version=2, runtime_fingerprint=RUNTIME_FINGERPRINT,
+                              selected_actions=sorted(actions), output_mode='memory',
+                              memory_limit_scope='output_payload_not_process_rss',
+                              observer_limits=dict(timeout=DEFAULT_OBSERVER_TIMEOUT,
+                                  max_rows=RECOVERY_OBSERVER_MAX_ROWS, max_bytes=RECOVERY_OBSERVER_MAX_BYTES),
+                              execution_spec_digest=spec_hash, policy_fingerprint=binding['settings'],
+                              stop_snapshot=dict(state=state, markers=list(markers)),
+                              created_at=time.time(), expires_at=time.time()+1800)
+                envelope = ReviewEnvelope.create(review)
+                self.approvals.register(envelope, spec)
+                review = envelope.review()
+                prepared['digest'] = review['approval_digest']
         entry = dict(uid=uid, spec=spec, review=review, prepared=prepared, target=target,
                      database=database, profiles=(query_profile, observer_profile), binding=binding,
-                     created=time.monotonic(), executing=False)
+                     created=time.monotonic(), executing=False, envelope=envelope)
         with self.lock:
             self.pending = {k:v for k,v in self.pending.items() if v["executing"] or time.monotonic()-v["created"] < 1800}
             if len(self.pending) >= 128:
@@ -747,6 +799,95 @@ class Gateway:
                      digest=prepared["digest"])
         return dict(ok=True, review=review)
 
+    def approve_submit(self, request, uid, *, publish, disconnected):
+        self._operator(uid)
+        request_id = request.get('request_id')
+        row = self.approvals.lookup(request_id, 'uid:'+str(uid))
+        actions = request.get('selected_actions')
+        if (not isinstance(actions, list) or actions != json.loads(row['actions'])
+                or request.get('approval_digest') != row['approval_digest']):
+            raise Denied('approval_actions_or_digest_mismatch')
+        if request.get('approval_source') not in ('human-terminal', 'explicit-user-chat'):
+            raise Denied('explicit_approval_source_required')
+        if row['status'] != 'preview':
+            return dict(self.job_status(request_id,uid), already_submitted=True)
+        with self.lock:
+            entry = self._owned(request_id, uid)
+            if entry.get('envelope') is None:
+                raise Denied('v2_review_required')
+            if entry['executing']:
+                return dict(ok=True, already_submitted=True, state='submitting', request_id=request_id)
+            entry['executing'] = True
+        ticket = None
+        try:
+            review = entry['envelope'].review()
+            _, spec_hash = specification(**entry['spec'])
+            if (review['approval_digest'] != row['approval_digest'] or review['execution_spec_digest'] != spec_hash
+                    or time.monotonic()-entry['created'] >= 1800
+                    or review['runtime_fingerprint'] != RUNTIME_FINGERPRINT
+                    or fingerprint(self.targets.get(entry['target'])) != entry['binding']['settings']
+                    or profile_digest(self.vault.profile(entry['target'])) != entry['binding']['query_profile']
+                    or fingerprint(self.backend_type.review_sql(entry['binding']['host_tag'])) != entry['binding']['protocol']):
+                raise Denied('configuration_changed_new_approval_required')
+            metadata = dict(target=entry['target'], database=entry['database'],
+                            host_tag=entry['binding']['host_tag'], profile_digest=entry['binding']['query_profile'],
+                            gateway_pid=self.gateway_pid, gateway_birth=self.gateway_birth)
+            # Validate durable recovery metadata before consuming the approval.
+            RecoveryJournal.from_admission('0'*32, metadata)
+            with self._stop_lock():
+                state, markers = self._state_with_stop_markers()
+                ticket = self.approvals.admit(request_id, request['approval_digest'], actions,
+                    request['approval_source'], entry['spec'], markers, self.instance, metadata)
+                if ticket is None:
+                    return dict(ok=True, already_submitted=True, request_id=request_id)
+                if review['stop_snapshot']['state']['halted']:
+                    remove_stop_markers(self._latch_path(), review['stop_snapshot']['markers'])
+                _, markers = self._state_with_stop_markers()
+                self.approvals.activate(ticket, self._stop_markers)
+            self._record('approved', request_id=request_id, uid=uid, digest=request['approval_digest'],
+                         source=request['approval_source'], selected_actions=actions)
+            self._start_job(entry, ticket)
+            return dict(ok=True, status='accepted', request_id=request_id, run_id=ticket.run_id)
+        except Exception:
+            if ticket is not None:
+                self.store.stop('admission_failed', preserve_halt=True)
+                self.jobs.fail(ticket.request_id)
+                with self.lock:
+                    self.workers.pop(ticket.run_id,None)
+            raise
+        finally:
+            with self.lock:
+                entry['executing'] = False
+
+    def _start_job(self, entry, ticket):
+        def work():
+            receipts = []
+            try:
+                result = self.execute(entry, publish=receipts.append, disconnected=None, ticket=ticket)
+                self.approvals.complete(ticket, result)
+                with self.store.transaction() as c:
+                    with self.lock:
+                        item = self.results.get(ticket.run_id)
+                        available = bool(item and item.get('committed') and not stop_latched(self._latch_path()))
+                        self.jobs.finish(c, ticket.request_id, result, receipts[0] if receipts else {}, available)
+            except Exception:
+                try:
+                    self.store.stop('job_failed', preserve_halt=True)
+                    self.jobs.fail(ticket.request_id)
+                except Exception:
+                    try: create_stop_marker(self._latch_path(), reason='job_state_unavailable')
+                    except Exception: pass
+                finally:
+                    with self.lock:
+                        self.results.pop(ticket.run_id, None)
+            finally:
+                with self.lock:
+                    self.workers.pop(ticket.run_id, None)
+        worker = threading.Thread(target=work, name='db-job-'+ticket.run_id[:8], daemon=True)
+        with self.lock:
+            self.workers[ticket.run_id] = worker
+        worker.start()
+
     def handle(self, request, uid, *, publish=None, disconnected=None):
         if uid not in self.allowed_uids:
             raise Denied("caller_not_authorized")
@@ -755,7 +896,8 @@ class Gateway:
             self._settle_cancel()
             state, markers = self._state_with_stop_markers()
             return dict(ok=True, halted=bool(state["halted"]), active=state["active"], phase=state["phase"],
-                        runtime_fingerprint=RUNTIME_FINGERPRINT,
+                        runtime_fingerprint=RUNTIME_FINGERPRINT, api_versions=[1, 2],
+                        capabilities=['detached_jobs','repeatable_fetch','durable_ack'],
                         reason=state["reason"], epoch=state["epoch"],
                         stop_generation=self._stop_generation(state), stop_markers=list(markers))
         if action == "settle_cancel":
@@ -834,6 +976,12 @@ class Gateway:
             return self.recovery_execute(request.get("recovery_request_id", request.get("request_id")), uid)
         if action == "prepare":
             return self.prepare(request, uid)
+        if action == 'approve_submit':
+            return self.approve_submit(request, uid, publish=publish, disconnected=disconnected)
+        if action == 'job_status':
+            return self.job_status(request.get('request_id'), uid)
+        if action in ('fetch_result', 'ack_result'):
+            return self.deliver_result(request, uid, publish=publish)
         if action == "fetch":
             return self.fetch(request, uid, publish=publish)
         request_id = request.get("request_id")
@@ -841,7 +989,9 @@ class Gateway:
             entry = self._owned(request_id, uid)
         if action == "review":
             self._operator(uid)
-            return dict(ok=True, review=entry["review"])
+            return dict(ok=True, review=entry['envelope'].review() if entry.get('envelope') else entry['review'])
+        if entry.get('envelope'):
+            raise Denied('v2_requires_approve_submit')
         if action == "approve":
             self._operator(uid)
             source = request.get("approval_source")
@@ -862,18 +1012,18 @@ class Gateway:
             with self.lock:
                 self.pending.pop(request_id, None)
 
-    def execute(self, entry, *, publish, disconnected):
+    def execute(self, entry, *, publish, disconnected, ticket=None):
         request_id = entry["prepared"]["id"]
         target = entry["target"]
         if fingerprint(self.targets.get(target)) != entry["binding"]["settings"]:
             raise Denied("configuration_changed_new_approval_required")
 
-        deadline = time.monotonic() + entry["spec"]["timeout"]
+        deadline = ticket.deadline if ticket else time.monotonic() + entry["spec"]["timeout"]
 
         def check_start(run):
             if time.monotonic() >= deadline:
                 raise Denied("timeout")
-            if self.store.status()["halted"]:
+            if self._state_with_stop_markers()[0]["halted"]:
                 raise Denied("operator_stop")
 
         def publish_recovery_journal(run):
@@ -918,10 +1068,12 @@ class Gateway:
 
         def factory():
             query = self.vault.credentials(target, entry["profiles"][0])
+            check_start(ticket.run_id if ticket else None)
             observer = query
+            remaining = min(entry['spec']['timeout'], max(.001, deadline-time.monotonic()))
             return self.backend_type(query, entry["database"], observer_credentials=observer,
-                                     host_tag=entry["binding"]["host_tag"], query_timeout=entry["spec"]["timeout"],
-                                     startup_timeout=min(5, entry["spec"]["timeout"]),
+                                     host_tag=entry["binding"]["host_tag"], query_timeout=remaining if ticket else entry["spec"]["timeout"],
+                                     startup_timeout=min(5, remaining) if ticket else min(5, entry["spec"]["timeout"]),
                                      observer_timeout=DEFAULT_OBSERVER_TIMEOUT)
 
         backend = LazyBackend(
@@ -976,17 +1128,23 @@ class Gateway:
                 self.results.clear()
                 self.results[receipt["run_id"]] = dict(uid=entry["uid"], epoch=receipt["epoch"],
                     data=output, offset=0, expires=time.monotonic()+60,
+                    request_id=request_id if ticket else None,
                     commit_ready=committed, committed=False)
                 delivered_run = receipt["run_id"]
             publish(dict(ok=True, status="completed", session_closed=True,
+                         result_digest=fingerprint(dict(request_id=request_id, run_id=receipt['run_id'],
+                             epoch=receipt['epoch'], sha256=hashlib.sha256(output).hexdigest())),
                          runtime_fingerprint=RUNTIME_FINGERPRINT,
                          completion_basis=completion_basis,
                          output_bytes=len(output), output_sha256=hashlib.sha256(output).hexdigest(), **receipt))
 
         result = None
         try:
-            result = self.supervisor_factory(self.store).execute(**entry["spec"], backend=backend,
-                                                                 approval_id=request_id, publish=deliver)
+            supervisor = self.supervisor_factory(self.store)
+            if ticket:
+                result = supervisor.execute_admitted(ticket, **entry['spec'], backend=backend, publish=deliver)
+            else:
+                result = supervisor.execute(**entry['spec'], backend=backend, approval_id=request_id, publish=deliver)
         finally:
             # Store.finish publishes a small receipt while holding its transaction.
             # Plaintext stays gated until execute returns after a successful commit.
@@ -1014,11 +1172,84 @@ class Gateway:
                 self._settle_cancel()
         return result
 
+    def _refresh_result(self, c, row):
+        if row['result_state'] != 'available':
+            return
+        state = self.store._state(c)
+        item = self.results.get(row['run_id'])
+        reason = None
+        if state['halted'] or state['epoch'] != row['epoch'] or stop_latched(self._latch_path()):
+            reason = 'stopped'
+        elif item is None:
+            reason = 'superseded' if row['instance'] == self.instance else 'lost_on_restart'
+        elif item['expires'] <= time.monotonic():
+            reason = 'expired'
+        if reason:
+            c.execute('UPDATE query_jobs_v2 SET result_state=?,updated=? WHERE id=?',
+                      (reason, time.time(), row['id']))
+            row['result_state'] = reason
+            self.results.pop(row['run_id'], None)
+
+    def job_status(self, request_id, uid):
+        owner = 'uid:'+str(uid)
+        with self.store.transaction() as c:
+            try:
+                row = self.jobs.owned(c, request_id, owner)
+            except Denied:
+                approval = c.execute('SELECT owner,status FROM query_approval_v2 WHERE id=?', (request_id,)).fetchone()
+                if approval and approval['owner'] == owner and approval['status'] == 'preview':
+                    with self.lock:
+                        present = request_id in self.pending
+                    return dict(ok=True, request_id=request_id, job_state='preview' if present else 'preview_lost',
+                                result_state='none', next_action='new_review_required' if not present else 'explicit_approval_required')
+                raise
+            with self.lock:
+                self._refresh_result(c, row)
+        result = self.jobs.status(request_id, owner)
+        result['next_action'] = ('fetch_result' if result['result_state'] == 'available' else
+            'recovery_review_required' if result['job_state'] == 'recovery_required' else
+            'query_status' if result['job_state'] not in ('completed','failed','unknown','preview_lost') else 'none')
+        return result
+
+    def deliver_result(self, request, uid, *, publish):
+        with self.store.transaction() as c:
+            row = self.jobs.owned(c, request.get('request_id'), 'uid:'+str(uid))
+            if request.get('result_digest') != row['result_digest'] or type(request.get('epoch')) is not int or request['epoch'] != row['epoch']:
+                raise Denied('result_identity_mismatch')
+            if request['action'] == 'ack_result' and row['result_state'] == 'delivered':
+                return dict(ok=True, already_delivered=True, result_state='delivered')
+            with self.lock:
+                self._refresh_result(c, row)
+                if row['result_state'] != 'available':
+                    raise Denied('result_unavailable_or_stopped')
+                item = self.results.get(row['run_id'])
+                if item is None or not item.get('committed') or item['uid'] != uid:
+                    raise Denied('result_unavailable_or_stopped')
+                if request['action'] == 'ack_result':
+                    c.execute("UPDATE query_jobs_v2 SET result_state='delivered',updated=? WHERE id=?", (time.time(), row['id']))
+                else:
+                    offset = request.get('offset')
+                    if type(offset) is not int or not 0 <= offset <= len(item['data']) or publish is None:
+                        raise Denied('result_offset_mismatch')
+                    data = item['data'][offset:offset+RESULT_CHUNK_BYTES]
+                    end = offset+len(data)
+                    publish(dict(ok=True, request_id=row['id'], result_digest=row['result_digest'],
+                        epoch=row['epoch'], offset=offset, next_offset=end, final=end==len(item['data']),
+                        data_base64=base64.b64encode(data).decode('ascii')))
+                    return dict(ok=True)
+        # The delivered tombstone commit precedes clearing plaintext. Concurrent
+        # fetch/ack observes the durable decision even if cleanup or reply fails.
+        with self.lock:
+            self.results.pop(row['run_id'], None)
+        return dict(ok=True, result_state='delivered', already_delivered=False)
+
     def fetch(self, request, uid, *, publish):
         # Each small, nonblocking delivery is serialized against stop. A client
         # renders results only after all chunks and the final digest match.
         with self.lock:
             pending = self.results.get(request.get("run_id"))
+            if pending and pending.get('request_id'):
+                raise Denied('v2_result_requires_identity_and_ack')
             ready = pending.get("commit_ready") if pending and pending["uid"] == uid else None
         # Never wait while holding the coordinator transaction or gateway lock.
         if ready is not None and not ready.wait(timeout=1):
@@ -1101,6 +1332,8 @@ class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
 
 def serve():
     from db_prod_transport import SqlcmdBackend
+    from db_prod_runtime import verify_bundle
+    verify_bundle(INSTALL)
     if os.geteuid() == 0:
         raise Denied("run_as_current_user_not_root")
     config = json.loads((STATE / "config.json").read_text())

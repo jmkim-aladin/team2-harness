@@ -1,0 +1,83 @@
+[
+  {
+    "check": "q2-narrow-final",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/tests",
+      "-p",
+      "test_db_prod_approval.py"
+    ],
+    "started_at": "2026-11-04T08:45:45.191128+00:00",
+    "exit_code": 0,
+    "seconds": 1.955,
+    "log": "q2-narrow-final.txt"
+  },
+  {
+    "check": "q2-vault-lint",
+    "command": [
+      "python3",
+      "tools/lint_vault.py",
+      "--vault",
+      "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2",
+      "--files",
+      "wiki/projects/production-query-usability/plan.md",
+      "wiki/processes/daily/2026-11-04.md"
+    ],
+    "started_at": "2026-11-04T08:45:47.147497+00:00",
+    "exit_code": 0,
+    "seconds": 0.06,
+    "log": "q2-vault-lint.txt"
+  },
+  {
+    "check": "q2-secret-scan",
+    "command": [
+      "python3",
+      "tools/secret_scan.py",
+      "tools/db_prod_approval.py",
+      "tools/db_prod_client.py",
+      "tools/db_prod_gateway.py",
+      "tools/db_prod_recovery.py",
+      "tools/db_query_control.py",
+      "tools/tests/test_db_prod_approval.py",
+      "policies/production-db-access-policy.md",
+      "docs/production-db-emergency-stop.md",
+      "docs/production-query-request-flow.md",
+      "tools/README.md",
+      "docs/verification/production-query-usability",
+      "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/projects/production-query-usability/plan.md",
+      "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/daily/2026-11-04.md"
+    ],
+    "started_at": "2026-11-04T08:45:47.208299+00:00",
+    "exit_code": 0,
+    "seconds": 0.071,
+    "log": "q2-secret-scan.txt"
+  },
+  {
+    "check": "q2-harness-lint-final",
+    "command": [
+      "python3",
+      "tools/lint_harness_rules.py",
+      "--check"
+    ],
+    "started_at": "2026-11-04T08:45:47.279739+00:00",
+    "exit_code": 0,
+    "seconds": 0.334,
+    "log": "q2-harness-lint-final.txt"
+  },
+  {
+    "check": "q2-diff-check-final",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "started_at": "2026-11-04T08:45:47.613807+00:00",
+    "exit_code": 0,
+    "seconds": 0.031,
+    "log": "q2-diff-check-final.txt"
+  }
+]

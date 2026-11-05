@@ -12,6 +12,7 @@ import sys
 import time
 
 INSTALL = Path(__file__).resolve().parent
+sys.path.insert(0, str(INSTALL))
 STATE = Path.home() / "Library/Application Support/team2-db"
 SOCKET = str(Path("/tmp") / ("team2-db-" + str(os.getuid())) / "query.sock")
 STOP_MARKERS = STATE / "stop.d"
@@ -20,14 +21,18 @@ SAFE_CLIENT_ERRORS = frozenset((
     "gateway_restart_required", "result_delivery_incomplete", "result_delivery_invalid",
     "result_digest_mismatch", "incomplete_gateway_response", "response_too_large",
     "result_unavailable_or_stopped", "result_commit_pending", "result_offset_mismatch",
+    "v2_review_required", "approved_digest_mismatch", "operator_terminal_required",
+    'job_unknown_or_expired', 'result_identity_mismatch', 'result_ack_unconfirmed',
 ))
 
 
-def require_current_gateway():
+def require_current_gateway(*, require_jobs=False):
     from db_prod_gateway import current_source_fingerprint
     status = rpc(dict(action="status"))
     if not status.get("ok") or status.get("runtime_fingerprint") != current_source_fingerprint():
         raise RuntimeError("gateway_restart_required")
+    if require_jobs and not {'detached_jobs','repeatable_fetch','durable_ack'} <= set(status.get('capabilities', [])):
+        raise RuntimeError('gateway_restart_required')
 
 
 def safe_client_error(error):
@@ -61,7 +66,20 @@ def display_review(review):
     print(json.dumps(review["sql"], ensure_ascii=False))
     print("\n연결 준비 SQL(JSON 표기):")
     print(json.dumps(review["control_sql"]["setup_sql"], ensure_ascii=False))
-    print("비정상 종료 확인 SQL: 사용자 요청으로 표시 생략; 조건부 실행과 승인 digest 연결은 유지합니다.")
+    print("\n조건부 종료 확인 SQL(JSON 표기):")
+    print(json.dumps(review["control_sql"]["observer_sql"], ensure_ascii=False))
+    print("실행 조건: " + str(review["control_sql"].get("observer_when", "cancellation_or_uncertain_completion_only")))
+    if review.get("api_version") == 2:
+        for key in ("api_version", "runtime_fingerprint", "selected_actions", "stop_snapshot",
+                    "envelope_digest", "approval_digest", "expires_at", "output_mode",
+                    'observer_limits', 'memory_limit_scope'):
+            print(key + ": " + json.dumps(review.get(key), ensure_ascii=False))
+        if "release_emergency_stop" in review["selected_actions"]:
+            print("승인 동작: 표시한 긴급 중단을 해제하고 이 SQL을 1회 실행")
+        elif "resume_current_stop" in review["selected_actions"]:
+            print("승인 동작: 표시한 중단을 해제하고 이 SQL을 1회 실행")
+        else:
+            print("승인 동작: 표시한 SQL을 1회 실행 (중단 해제 없음)")
 
 
 def display_recovery_review(review):
@@ -175,21 +193,86 @@ def positive_limit(value):
     return number
 
 
+def fetch_output(result):
+    if not result.get('ok') or not result.get('session_closed') or result.get('already_submitted'):
+        return result
+    output = bytearray()
+    while True:
+        chunk = rpc(dict(action='fetch', run_id=result['run_id'], offset=len(output)))
+        if not chunk.get('ok') and chunk.get('status') in SAFE_CLIENT_ERRORS:
+            raise RuntimeError(chunk['status'])
+        if not chunk.get('ok') or chunk.get('offset') != len(output):
+            raise RuntimeError('result_delivery_incomplete')
+        output.extend(base64.b64decode(chunk['data_base64'], validate=True))
+        if len(output) > result['output_bytes'] or len(output) != chunk['next_offset']:
+            raise RuntimeError('result_delivery_invalid')
+        if chunk['final']:
+            break
+    if len(output) != result['output_bytes'] or hashlib.sha256(output).hexdigest() != result['output_sha256']:
+        raise RuntimeError('result_digest_mismatch')
+    result['output'] = output.decode('utf-8', errors='replace')
+    return result
+
+
+def receive_job(request_id, *, wait=True):
+    deadline = time.monotonic()+75
+    while True:
+        status = rpc(dict(action='job_status', request_id=request_id))
+        if status.get('ok') and status.get('job_state') not in (
+                'completed','failed','unknown','recovery_required','preview','preview_lost',
+                'admitting','starting','dispatching','running','finishing','unconfirmed'):
+            raise RuntimeError('result_delivery_invalid')
+        if (not status.get('ok') or status.get('job_state') in ('completed','failed','unknown','recovery_required','preview','preview_lost')
+                or not wait or time.monotonic() >= deadline):
+            break
+        time.sleep(.1)
+    if status.get('result_state') != 'available':
+        return status
+    identity = dict(request_id=request_id, result_digest=status['result_digest'], epoch=status['epoch'])
+    length, output = status['output_bytes'], bytearray()
+    if type(length) is not int or not 0 <= length <= 32*1024*1024:
+        raise RuntimeError('result_delivery_invalid')
+    while True:
+        chunk = rpc(dict(action='fetch_result', offset=len(output), **identity))
+        if (not chunk.get('ok') or any(chunk.get(k) != v for k,v in identity.items())
+                or type(chunk.get('offset')) is not int or chunk['offset'] != len(output)):
+            raise RuntimeError('result_delivery_invalid')
+        data = base64.b64decode(chunk['data_base64'], validate=True)
+        if len(data) > 2048 or len(output)+len(data) > length or chunk.get('next_offset') != len(output)+len(data):
+            raise RuntimeError('result_delivery_invalid')
+        output.extend(data)
+        if chunk.get('final') is True:
+            break
+        if not data:
+            raise RuntimeError('result_delivery_incomplete')
+    if len(output) != length or hashlib.sha256(output).hexdigest() != status['output_sha256']:
+        raise RuntimeError('result_digest_mismatch')
+    # A lost ack reply may be repeated; never submit SQL again here.
+    try:
+        ack = rpc(dict(action='ack_result', **identity))
+    except (OSError, RuntimeError, ValueError):
+        ack = rpc(dict(action='ack_result', **identity))
+    if not ack.get('ok'):
+        raise RuntimeError('result_ack_unconfirmed')
+    return dict(status, result_state='delivered', output=output.decode('utf-8',errors='replace'))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="action", required=True)
-    prepare = sub.add_parser("prepare", help="SQL은 stdin으로 입력; DB 연결 없음")
-    prepare.add_argument("--target", choices=("lego-prod", "cool-prod"), required=True)
-    prepare.add_argument("--database", required=True)
-    prepare.add_argument("--timeout", type=float, required=True)
-    prepare.add_argument("--max-rows", type=positive_limit, default=None,
-                         help="기본 unlimited; 결과 행 수 제한 없음")
-    prepare.add_argument("--max-bytes", type=positive_limit, default=None,
-                         help="기본 unlimited; 결과 전체 용량 제한 없음")
-    for name in ("review", "approve", "execute"):
+    for name in ('prepare', 'preview'):
+        prepare = sub.add_parser(name, help='SQL은 stdin; preview는 v2 접속 없는 재개 포함 검토')
+        prepare.add_argument('--target', choices=('lego-prod', 'cool-prod'), required=True)
+        prepare.add_argument('--database', required=True)
+        prepare.add_argument('--timeout', type=float, required=True)
+        prepare.add_argument('--max-rows', type=positive_limit, default=None, help='기본 unlimited')
+        prepare.add_argument('--max-bytes', type=positive_limit,
+                             default=32*1024*1024 if name == 'preview' else None,
+                             help='preview 기본/최대 32MiB; prepare 기본 unlimited')
+    for name in ("review", "approve", "execute", 'run', 'job-status', 'result'):
         command = sub.add_parser(name)
         command.add_argument("request_id")
-        if name == "approve":
+        if name in ('approve', 'run'):
             command.add_argument("--from-chat-digest", help="사용자가 이 전문을 명시 승인한 뒤에만 에이전트가 전달")
     sub.add_parser("recovery-prepare")
     recovery_review = sub.add_parser("recovery-review")
@@ -203,8 +286,8 @@ def main():
         sub.add_parser(name)
     args = parser.parse_args()
     try:
-        if args.action in ("prepare", "approve", "execute"):
-            require_current_gateway()
+        if args.action in ("prepare", "approve", "execute", 'preview', 'run'):
+            require_current_gateway(require_jobs=args.action in ('preview','run'))
         if args.action in ("emergency-stop", "stop"):
             result = emergency_stop(persistent=args.action == "emergency-stop")
         elif args.action == "init":
@@ -278,36 +361,60 @@ def main():
             result = rpc(dict(action="resume", expected_epoch=expected_epoch,
                               expected_stop_generation=expected_generation,
                               expected_stop_markers=expected_markers))
-        elif args.action == "prepare":
+        elif args.action in ('prepare', 'preview'):
             sql = sys.stdin.read(1024 * 1024 + 1)
             if len(sql.encode("utf-8")) > 1024 * 1024:
                 raise RuntimeError("sql_too_large")
-            result = rpc(dict(action="prepare", target=args.target, database=args.database,
+            result = rpc(dict(action="prepare", api_version=2 if args.action == 'preview' else 1,
+                              target=args.target, database=args.database,
                               sql=sql, timeout=args.timeout, max_rows=args.max_rows, max_bytes=args.max_bytes))
+            if args.action == 'preview' and result.get('ok'):
+                display_review(result['review'])
+        elif args.action == 'run':
+            result = rpc(dict(action='review', request_id=args.request_id))
+            if not result.get('ok'):
+                print(json.dumps(result, ensure_ascii=False)); return 1
+            review = result['review']
+            if review.get('api_version') != 2:
+                raise RuntimeError('v2_review_required')
+            display_review(review)
+            source = 'human-terminal'
+            if args.from_chat_digest:
+                if args.from_chat_digest != review['approval_digest']:
+                    raise RuntimeError('approved_digest_mismatch')
+                source = 'explicit-user-chat'
+            else:
+                if not sys.stdin.isatty():
+                    raise RuntimeError('operator_terminal_required')
+                expected = 'APPROVE ' + review['approval_digest'][:12]
+                if input('표시된 모든 동작과 SQL을 1회 승인하려면 '+expected+' 입력: ') != expected:
+                    return 1
+            try:
+                result = rpc(dict(action='approve_submit', request_id=args.request_id,
+                    approval_digest=review['approval_digest'], selected_actions=review['selected_actions'], approval_source=source))
+            except (OSError, RuntimeError, ValueError):
+                # Submission is ambiguous. Resolve the same ID, without replay.
+                try:
+                    result = receive_job(args.request_id)
+                except (OSError, RuntimeError, ValueError):
+                    result = dict(ok=False, status='submission_unknown', request_id=args.request_id,
+                                  next_action='job-status; never resubmit automatically')
+            else:
+                if result.get('ok'):
+                    result = receive_job(args.request_id)
+        elif args.action in ('job-status', 'result'):
+            result = receive_job(args.request_id) if args.action == 'result' else rpc(dict(action='job_status', request_id=args.request_id))
         elif args.action == "execute":
-            result = rpc(dict(action="execute", request_id=args.request_id))
-            if result.get("ok") and result.get("session_closed"):
-                output = bytearray()
-                while True:
-                    chunk = rpc(dict(action="fetch", run_id=result["run_id"], offset=len(output)))
-                    if not chunk.get("ok") and chunk.get("status") in SAFE_CLIENT_ERRORS:
-                        raise RuntimeError(chunk["status"])
-                    if not chunk.get("ok") or chunk.get("offset") != len(output):
-                        raise RuntimeError("result_delivery_incomplete")
-                    output.extend(base64.b64decode(chunk["data_base64"], validate=True))
-                    if len(output) > result["output_bytes"] or len(output) != chunk["next_offset"]:
-                        raise RuntimeError("result_delivery_invalid")
-                    if chunk["final"]:
-                        break
-                if len(output) != result["output_bytes"] or hashlib.sha256(output).hexdigest() != result["output_sha256"]:
-                    raise RuntimeError("result_digest_mismatch")
-                result["output"] = output.decode("utf-8", errors="replace")
+            result = fetch_output(rpc(dict(action="execute", request_id=args.request_id)))
         else:
             result = rpc(dict(action=args.action))
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result.get("ok") else 1
     except KeyboardInterrupt:
-        print("취소 요청: 연결 종료를 실행기가 감지합니다. stop/status로 서버 종료 상태를 확인하세요.", file=sys.stderr)
+        if args.action in ('run','result'):
+            print('결과 대기만 중단했습니다. 작업은 유지됩니다. job-status/result로 이어받거나 stop으로 조회를 중단하세요.',file=sys.stderr)
+        else:
+            print("취소 요청: 연결 종료를 실행기가 감지합니다. stop/status로 서버 종료 상태를 확인하세요.", file=sys.stderr)
         return 130
     except Exception as error:
         print("실행기 요청 실패: " + safe_client_error(error)
