@@ -1,0 +1,345 @@
+{
+  "started_at": "2026-11-05T02:24:23.476493+00:00",
+  "host_arch": "arm64",
+  "requested_image": "mcr.microsoft.com/mssql/server:2022-CU24-GDR1-ubuntu-22.04",
+  "checks": [],
+  "observations": [],
+  "production_ready": false,
+  "scope": "Q4 end-to-end: bundle + gateway process + client CLI + host sqlcmd on owned loopback SQL Server",
+  "image_id": "sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905",
+  "image_digests": [
+    "mcr.microsoft.com/mssql/server@sha256:2dca9ee5cd5316952d9b6ef4a0c088ac95b55e3502accdda0fc12ad6ede7b905"
+  ],
+  "image_arch": "amd64",
+  "server_version": "Microsoft SQL Server 2022 (RTM-CU24-GDR) (KB5083252) - 16.0.4250.1 (X64) \n\tMar 13 2026 00:15:17 \n\tCopyright (C) 2022 Microsoft Corporation\n\tDeveloper Edition (64-bit) on Linux (Ubuntu 22.04.5 LTS) <X64>",
+  "container_removed": true,
+  "q4_checks": [
+    {
+      "name": "boot: gateway starts halted without any DB connection",
+      "passed": true,
+      "status": {
+        "ok": true,
+        "halted": true,
+        "active": null,
+        "phase": "idle",
+        "runtime_fingerprint": "bc58fd34acb395a7d639586989795f6c4db714fee88c2432b8970a2b868478cc",
+        "api_versions": [
+          1,
+          2
+        ],
+        "capabilities": [
+          "detached_jobs",
+          "repeatable_fetch",
+          "durable_ack"
+        ],
+        "reason": "service_started_requires_operator_resume",
+        "epoch": 1,
+        "stop_generation": 1,
+        "stop_markers": []
+      }
+    },
+    {
+      "name": "resume preview selects execute_once + resume_current_stop, connects nothing",
+      "passed": true,
+      "actions": [
+        "execute_once",
+        "resume_current_stop"
+      ]
+    },
+    {
+      "name": "resume + run: one approval resumes and returns the result",
+      "passed": true,
+      "job_state": "completed",
+      "status": {
+        "ok": true,
+        "halted": false,
+        "active": null,
+        "phase": "idle",
+        "runtime_fingerprint": "bc58fd34acb395a7d639586989795f6c4db714fee88c2432b8970a2b868478cc",
+        "api_versions": [
+          1,
+          2
+        ],
+        "capabilities": [
+          "detached_jobs",
+          "repeatable_fetch",
+          "durable_ack"
+        ],
+        "reason": "service_started_requires_operator_resume",
+        "epoch": 2,
+        "stop_generation": null,
+        "stop_markers": []
+      }
+    },
+    {
+      "name": "ready preview selects execute_once only",
+      "passed": true,
+      "actions": [
+        "execute_once"
+      ]
+    },
+    {
+      "name": "ready run returns result once",
+      "passed": true
+    },
+    {
+      "name": "duplicate submit never re-executes",
+      "passed": true,
+      "exit": 0,
+      "result": {
+        "ok": true,
+        "request_id": "14db5b137a9f08c501afe24b6a44555c",
+        "run_id": "28dfa53c0db251575392412f3663c954",
+        "job_state": "completed",
+        "result_state": "delivered",
+        "result_digest": "7a04fa62ecb7975ab838c33958ea5b48d994a64f58e1e406274eb0e766628342",
+        "outcome": {
+          "ok": true,
+          "status": "completed",
+          "run_id": "28dfa53c0db251575392412f3663c954",
+          "session_closed": true
+        },
+        "epoch": 2,
+        "output_bytes": 11,
+        "output_sha256": "52b671eead98708fdf532b471b39da3e79fe0bf55a9d2385121abefb49f7e892",
+        "completion_basis": "normal_exit",
+        "next_action": "none"
+      }
+    },
+    {
+      "name": "changed SQL: mismatched approval refused by client and gateway, nothing sent",
+      "passed": true,
+      "gateway": {
+        "ok": false,
+        "status": "approval_actions_or_digest_mismatch"
+      }
+    },
+    {
+      "name": "new stop after review: approval refused, nothing sent",
+      "passed": true,
+      "result": {
+        "ok": false,
+        "status": "resume_confirmation_changed"
+      }
+    },
+    {
+      "name": "client loss: job completes, same-ID result delivered, SQL sent once",
+      "passed": true,
+      "job_state": "completed",
+      "result_state": "delivered"
+    },
+    {
+      "name": "user stop: cancelled quickly, server session closed, auto-ready, no result",
+      "passed": true,
+      "parts": {
+        "fast": true,
+        "no_result": true,
+        "job_failed": true,
+        "closed": true,
+        "ready": true,
+        "sent_once": true
+      },
+      "elapsed": 0.27,
+      "exit": 0,
+      "status": {
+        "ok": true,
+        "halted": false,
+        "active": null,
+        "phase": "idle",
+        "runtime_fingerprint": "bc58fd34acb395a7d639586989795f6c4db714fee88c2432b8970a2b868478cc",
+        "api_versions": [
+          1,
+          2
+        ],
+        "capabilities": [
+          "detached_jobs",
+          "repeatable_fetch",
+          "durable_ack"
+        ],
+        "reason": "operator_cancel_completed",
+        "epoch": 6,
+        "stop_generation": null,
+        "stop_markers": []
+      }
+    },
+    {
+      "name": "timeout: fails within the bound, session closed, block kept, next review includes resume",
+      "passed": true,
+      "parts": {
+        "job_failed": true,
+        "bounded": true,
+        "no_result": true,
+        "closed": true,
+        "blocked": true,
+        "next_has_resume": true,
+        "sent_once": true
+      },
+      "elapsed": 3.37,
+      "exit": 0,
+      "status": {
+        "ok": true,
+        "halted": true,
+        "active": null,
+        "phase": "idle",
+        "runtime_fingerprint": "bc58fd34acb395a7d639586989795f6c4db714fee88c2432b8970a2b868478cc",
+        "api_versions": [
+          1,
+          2
+        ],
+        "capabilities": [
+          "detached_jobs",
+          "repeatable_fetch",
+          "durable_ack"
+        ],
+        "reason": "timeout",
+        "epoch": 7,
+        "stop_generation": 7,
+        "stop_markers": [
+          "stop-aa3907a5d3764153054026ee245a5078.marker"
+        ]
+      }
+    },
+    {
+      "name": "worker loss: no rerun, not reported as success, block kept",
+      "passed": true,
+      "parts": {
+        "no_result": true,
+        "sent_once": true,
+        "blocked": true,
+        "not_success": true
+      },
+      "exit": 0,
+      "job_state": "failed",
+      "status": {
+        "ok": true,
+        "halted": true,
+        "active": null,
+        "phase": "idle",
+        "runtime_fingerprint": "bc58fd34acb395a7d639586989795f6c4db714fee88c2432b8970a2b868478cc",
+        "api_versions": [
+          1,
+          2
+        ],
+        "capabilities": [
+          "detached_jobs",
+          "repeatable_fetch",
+          "durable_ack"
+        ],
+        "reason": "query_failed",
+        "epoch": 9,
+        "stop_generation": 9,
+        "stop_markers": [
+          "stop-53c53866df314cf4c7cdc86b53c4cbf6.marker"
+        ]
+      }
+    },
+    {
+      "name": "worker loss: server session eventually closed",
+      "passed": true
+    },
+    {
+      "name": "gateway loss: restart is halted, job not completed, no rerun",
+      "passed": true,
+      "parts": {
+        "blocked": true,
+        "not_success": true,
+        "recovery": true,
+        "sent_once": true,
+        "client_no_result": true
+      },
+      "exit": 1,
+      "job": {
+        "ok": true,
+        "request_id": "7d8302f5ffd85fe2ec29f30deb9d4d4a",
+        "run_id": "2bbddb9ae531a940224e1eed1ad90771",
+        "job_state": "recovery_required",
+        "result_state": "none",
+        "result_digest": null,
+        "outcome": null,
+        "next_action": "recovery_review_required"
+      },
+      "status": {
+        "ok": true,
+        "halted": true,
+        "active": "2bbddb9ae531a940224e1eed1ad90771",
+        "phase": "running",
+        "runtime_fingerprint": "bc58fd34acb395a7d639586989795f6c4db714fee88c2432b8970a2b868478cc",
+        "api_versions": [
+          1,
+          2
+        ],
+        "capabilities": [
+          "detached_jobs",
+          "repeatable_fetch",
+          "durable_ack"
+        ],
+        "reason": "service_started_requires_operator_resume",
+        "epoch": 11,
+        "stop_generation": 11,
+        "stop_markers": []
+      }
+    },
+    {
+      "name": "gateway loss: watchdog fences the orphaned server session",
+      "passed": true
+    },
+    {
+      "name": "gateway loss: new work is refused until recovery",
+      "passed": true
+    },
+    {
+      "name": "gateway loss recovery: slot released through approved observer, block kept",
+      "passed": true,
+      "recovery": {
+        "approved": {
+          "ok": true,
+          "recovery_request_id": "12fbac60e0a18023adc60f7296df501e"
+        },
+        "executed": {
+          "ok": true,
+          "status": "recovered",
+          "run_id": "2bbddb9ae531a940224e1eed1ad90771",
+          "digest": "7c9b6cad8d92c50bc73f4ec137518a8c98c100637cf591b0814035ee908557d0",
+          "halted": true,
+          "active": null,
+          "phase": "idle"
+        }
+      },
+      "status": {
+        "ok": true,
+        "halted": true,
+        "active": null,
+        "phase": "idle",
+        "runtime_fingerprint": "bc58fd34acb395a7d639586989795f6c4db714fee88c2432b8970a2b868478cc",
+        "api_versions": [
+          1,
+          2
+        ],
+        "capabilities": [
+          "detached_jobs",
+          "repeatable_fetch",
+          "durable_ack"
+        ],
+        "reason": "reconciled_still_stopped",
+        "epoch": 12,
+        "stop_generation": 12,
+        "stop_markers": []
+      }
+    },
+    {
+      "name": "final: one approval resumes and runs after recovery",
+      "passed": true
+    },
+    {
+      "name": "every byte sent to sqlcmd was displayed in a review",
+      "passed": true,
+      "reason": "ok",
+      "processes": 12
+    },
+    {
+      "name": "production socket untouched",
+      "passed": true
+    }
+  ],
+  "error": null
+}
