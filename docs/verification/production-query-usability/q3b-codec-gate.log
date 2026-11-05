@@ -1,0 +1,14 @@
+Waiting for SQL Server: Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : Login timeout expired.
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : TCP Provider: Error code 0x2749.
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : A network-related or instance-specific error has occurred while establishing a connection to tcp:127.0.0.1,1433. Server is not found or not accessible. Check if instance name is correct and if SQL Server is configured to allow remote connections. For more information see SQL Server Books Online..
+SQL Server ready
+poll True failure None stdout 816103
+{'records': 3, 'csv_bytes': 600220, 'csv_sha256': 'e47aec8fbec28866c38b76289d31e42aa6e8adc0fd0b90a3c574bd3c920b4ba8', 'source_bytes': 400682, 'source_sha256': '718121dcbae20a5f9dcec0ea557c4d8cf5bcfb9da90a64162b4f674522c17569'}
+['id', 's', 'n', 'e', 'd', 'flag', 'dt', 'longv']
+['1', '\\\\N', '0', '\\\\x', '-0.000001', 'false', '\\N', '<200000 chars>']
+['3', 'a,"b"', '\\N', '', '12345678901234567890.123456', 'true', '2026-11-05T09:10:11.1234567', '한글\r\n개행']
+['9223372036854775807', '\\N', '-2147483648', '\\N', '\\N', '\\N', '0001-01-01T00:00:00', '']
+poll True failure None stdout 16003
+{'records': 0, 'csv_bytes': 26, 'csv_sha256': 'f295b52ce2e2ada69ef4229d55b83a19762df7e83bfc8ad6a5e76d81c98d4361', 'source_bytes': 4, 'source_sha256': '5ee9173b1b564e61afd2359a897c180b5ea83875a91a28537df4202aad4b3aa7'} [['id', 's', 'n', 'e', 'd', 'flag', 'dt', 'longv']]
+GATE PASS
+Test container removed

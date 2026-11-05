@@ -432,6 +432,9 @@ class SqlcmdBackend:
         self._failure_reason: Optional[str] = None
         self._stderr_seen = False
         self._result = bytearray()
+        # CSV mode: approved stdout goes to a bounded export sink, never to memory.
+        self._stream_sink: Any = None
+        self.stream_failure: Optional[str] = None
         self._output_bytes_seen = 0
         self._newline_count = 0
         self._line_has_bytes = False
@@ -524,6 +527,14 @@ class SqlcmdBackend:
         except Exception:
             self._mark_failure("worker_output_failed")
 
+    def attach_stream_sink(self, sink: Any) -> None:
+        """Route the approved query's stdout to ``sink.feed`` (CSV export mode)."""
+
+        with self._state_lock:
+            if self._dispatch_started or self._stream_sink is not None or not callable(getattr(sink, "feed", None)):
+                raise TransportError("stream_sink_rejected")
+            self._stream_sink = sink
+
     def _record_stdout(self, chunk: bytes) -> None:
         with self._state_lock:
             if not self._ready.is_set():
@@ -538,6 +549,14 @@ class SqlcmdBackend:
                 return
             self._record_output_bytes(len(chunk))
             if self._failure_reason is not None:
+                return
+            if self._stream_sink is not None:
+                try:
+                    self._stream_sink.feed(chunk)
+                except Exception as error:
+                    # The sink owns the reason code; no result bytes are logged.
+                    self.stream_failure = str(error)[:64] or type(error).__name__
+                    self._failure_reason = "export_stream_rejected"
                 return
             self._result.extend(chunk)
             self._newline_count += chunk.count(b"\n")

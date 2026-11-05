@@ -32,6 +32,7 @@ import time
 from db_query_control import Store, Supervisor, Denied, specification
 from db_prod_approval import ApprovalLedger, ReviewEnvelope, LedgerRecoveryJournal, MEMORY_MAX_BYTES
 from db_prod_jobs import JobLedger
+import db_prod_export as export_codec
 from db_prod_diagnostics import Diagnostics
 from db_prod_transport import DEFAULT_OBSERVER_TIMEOUT
 from db_prod_profiles import TARGETS, ProfileError, LocalKeychain, profile_digest
@@ -341,6 +342,7 @@ class Gateway:
         recovery_sleep=time.sleep,
         recovery_session_observer=None,
         supervisor_factory=Supervisor,
+        exports_root=None,
     ):
         self.store, self.vault, self.audit = store, vault, audit
         self.targets, self.allowed_uids = targets, set(allowed_uids)
@@ -358,6 +360,9 @@ class Gateway:
         self.approvals = ApprovalLedger(store)
         self.instance = secrets.token_hex(16)
         self.jobs = JobLedger(store, self.instance)
+        # Restart reconciliation classifies earlier exports; it never publishes or re-queries.
+        self.exports = export_codec.ExportLedger(store, exports_root or Path(store.path).parent / "exports")
+        self.export_sessions = {}
         self.workers = {}
         self.recovery_journal = LedgerRecoveryJournal(self.recovery_journal, self.approvals)
         self.stop_lock_path = Path(store.path).parent / "stop.lock"
@@ -701,11 +706,32 @@ class Gateway:
         if type(version) is not int or version not in (1, 2):
             raise Denied('unsupported_api_version')
         v2 = version == 2
+        mode = request.get('output_mode', 'memory')
+        if mode not in ('memory', 'csv') or (mode == 'csv' and not v2):
+            raise Denied('output_mode_not_available')
         if not v2:
             self._settle_cancel()
-        elif request.get('output_mode', 'memory') != 'memory':
-            raise Denied('output_mode_not_available')
-        target, database, sql = (request.get(k) for k in ("target", "database", "sql"))
+        csv_mode = mode == 'csv'
+        request_id = secrets.token_hex(16)
+        target, database = request.get("target"), request.get("database")
+        export_spec = None
+        if csv_mode:
+            # The reviewer approves the complete generated batch and the exact spec;
+            # nothing is wrapped or re-queried after approval.
+            export = request.get('export')
+            allowed = {'columns', 'purpose', 'max_file_bytes', 'max_record_bytes', 'max_rows', 'max_source_bytes'}
+            if 'sql' in request or not isinstance(export, dict) or not set(export) <= allowed:
+                raise Denied('export_spec_invalid')
+            try:
+                export_spec = export_codec.canonical_spec(
+                    artifact_directory=str(self.exports.root / request_id), **export)
+                sql = export_codec.build_batch(request.get('select_sql'), export_spec)
+            except export_codec.ExportDenied as error:
+                raise Denied(str(error)) from None
+            except TypeError:
+                raise Denied('export_spec_invalid') from None
+        else:
+            sql = request.get("sql")
         settings = self.targets.get(target, {})
         if target not in TARGETS or not settings.get("enabled"):
             raise Denied("target_not_enabled")
@@ -730,7 +756,12 @@ class Gateway:
         if operator_authorized and not settings.get("read_only_verified"):
             validate_local_references(sql)
         limits = {key: request.get(key) for key in ("timeout", "max_rows", "max_bytes")}
-        if v2:
+        if csv_mode:
+            limits['max_rows'] = None
+            limits['max_bytes'] = export_spec['spec']['max_source_bytes']
+            if 'timeout' not in request:
+                raise Denied('explicit_limits_required')
+        elif v2:
             limits['max_bytes'] = request.get('max_bytes', MEMORY_MAX_BYTES)
             if type(limits['max_bytes']) is not int or not 0 < limits['max_bytes'] <= MEMORY_MAX_BYTES:
                 raise Denied('v2_memory_limit_required')
@@ -747,11 +778,14 @@ class Gateway:
         binding = dict(target=target, database=database, host_tag=host_tag,
                        query_profile=profile_digest(query_profile), observer_profile=profile_digest(observer_profile),
                        protocol=fingerprint(protocol), settings=fingerprint(settings),
-                       resource_max_bytes=MEMORY_MAX_BYTES if v2 else RESOURCE_MAX_BYTES)
+                       resource_max_bytes=(export_spec['spec']['max_source_bytes'] if csv_mode
+                                           else MEMORY_MAX_BYTES if v2 else RESOURCE_MAX_BYTES))
+        if csv_mode:
+            binding['export'] = export_spec['digest']
         spec = dict(owner="uid:"+str(uid), target=target+":"+fingerprint(binding), sql=sql, **limits)
         if v2:
             payload, spec_hash = specification(**spec)
-            prepared = dict(id=secrets.token_hex(16), digest=spec_hash, review=payload)
+            prepared = dict(id=request_id, digest=spec_hash, review=payload)
         else:
             prepared = self.store.prepare(**spec)
         review = dict(prepared["review"], target=target, database=database,
@@ -769,27 +803,30 @@ class Gateway:
                 state, markers = self._state_with_stop_markers()
                 if state['active'] is not None or state['phase'] != 'idle':
                     raise Denied('active_session_requires_fencing_and_reconciliation')
-                actions = ['execute_once']
+                actions = ['execute_once'] + (['export_csv'] if csv_mode else [])
                 if state['halted']:
                     actions.append('resume_current_stop')
                     if ('emergency' in (state['reason'] or '') or any(not name.endswith('-cancel.marker') for name in markers)):
                         actions.append('release_emergency_stop')
                 review.pop('digest')
                 review.update(api_version=2, runtime_fingerprint=RUNTIME_FINGERPRINT,
-                              selected_actions=sorted(actions), output_mode='memory',
-                              memory_limit_scope='output_payload_not_process_rss',
+                              selected_actions=sorted(actions), output_mode=mode,
+                              memory_limit_scope=('export_file_record_and_source_limits' if csv_mode
+                                                  else 'output_payload_not_process_rss'),
                               observer_limits=dict(timeout=DEFAULT_OBSERVER_TIMEOUT,
                                   max_rows=RECOVERY_OBSERVER_MAX_ROWS, max_bytes=RECOVERY_OBSERVER_MAX_BYTES),
                               execution_spec_digest=spec_hash, policy_fingerprint=binding['settings'],
                               stop_snapshot=dict(state=state, markers=list(markers)),
                               created_at=time.time(), expires_at=time.time()+1800)
+                if csv_mode:
+                    review.update(export_spec=export_spec['spec'], export_spec_digest=export_spec['digest'])
                 envelope = ReviewEnvelope.create(review)
                 self.approvals.register(envelope, spec)
                 review = envelope.review()
                 prepared['digest'] = review['approval_digest']
         entry = dict(uid=uid, spec=spec, review=review, prepared=prepared, target=target,
                      database=database, profiles=(query_profile, observer_profile), binding=binding,
-                     created=time.monotonic(), executing=False, envelope=envelope)
+                     created=time.monotonic(), executing=False, envelope=envelope, export=export_spec)
         with self.lock:
             self.pending = {k:v for k,v in self.pending.items() if v["executing"] or time.monotonic()-v["created"] < 1800}
             if len(self.pending) >= 128:
@@ -859,18 +896,61 @@ class Gateway:
             with self.lock:
                 entry['executing'] = False
 
+    def _export_gate(self, epoch):
+        """Publication requires no stop latch, no halt and the run's own epoch."""
+        if stop_latched(self._latch_path()):
+            return False
+        state = self.store.status()
+        return not state['halted'] and state['epoch'] == epoch
+
+    def _settle_export(self, session, result, receipt):
+        if session is None:
+            return
+        if not (result and result.get('ok')):
+            session.abort('query_not_completed')
+            return
+        try:
+            session.finish()
+            session.commit_completion()
+            outcome = session.publish(gate=lambda: self._export_gate(receipt.get('epoch')))
+        except export_codec.ExportDenied as error:
+            session.abort(str(error))
+            return
+        except Exception:
+            session.abort('export_failed')
+            return
+        self._record('export_settled', request_id=session.request_id, state=outcome['state'],
+                     reason=outcome['reason'], records=outcome['records'], csv_sha256=outcome['csv_sha256'])
+
     def _start_job(self, entry, ticket):
         def work():
             receipts = []
+            session = None
+            result = None
             try:
+                if entry.get('export'):
+                    session = export_codec.ExportSession(
+                        self.exports, entry['export'], request_id=ticket.request_id, run_id=ticket.run_id,
+                        owner=entry['spec']['owner'], epoch=self.store.status()['epoch'])
+                    with self.lock:
+                        self.export_sessions[ticket.run_id] = session
+                    session.open()
                 result = self.execute(entry, publish=receipts.append, disconnected=None, ticket=ticket)
                 self.approvals.complete(ticket, result)
+                # Settle the export before the job turns terminal, so a client that sees
+                # "completed" also sees the final export state (never exporting/complete).
+                self._settle_export(session, result, receipts[0] if receipts else {})
+                session = None
                 with self.store.transaction() as c:
                     with self.lock:
                         item = self.results.get(ticket.run_id)
                         available = bool(item and item.get('committed') and not stop_latched(self._latch_path()))
-                        self.jobs.finish(c, ticket.request_id, result, receipts[0] if receipts else {}, available)
+                        self.jobs.finish(c, ticket.request_id, result, receipts[0] if receipts else {}, available,
+                                         memory_result=entry.get('export') is None)
             except Exception:
+                if session is not None:
+                    try: session.abort('job_failed')
+                    except Exception: pass
                 try:
                     self.store.stop('job_failed', preserve_halt=True)
                     self.jobs.fail(ticket.request_id)
@@ -883,6 +963,7 @@ class Gateway:
             finally:
                 with self.lock:
                     self.workers.pop(ticket.run_id, None)
+                    self.export_sessions.pop(ticket.run_id, None)
         worker = threading.Thread(target=work, name='db-job-'+ticket.run_id[:8], daemon=True)
         with self.lock:
             self.workers[ticket.run_id] = worker
@@ -897,7 +978,7 @@ class Gateway:
             state, markers = self._state_with_stop_markers()
             return dict(ok=True, halted=bool(state["halted"]), active=state["active"], phase=state["phase"],
                         runtime_fingerprint=RUNTIME_FINGERPRINT, api_versions=[1, 2],
-                        capabilities=['detached_jobs','repeatable_fetch','durable_ack'],
+                        capabilities=['detached_jobs','repeatable_fetch','durable_ack','csv_export'],
                         reason=state["reason"], epoch=state["epoch"],
                         stop_generation=self._stop_generation(state), stop_markers=list(markers))
         if action == "settle_cancel":
@@ -1071,10 +1152,18 @@ class Gateway:
             check_start(ticket.run_id if ticket else None)
             observer = query
             remaining = min(entry['spec']['timeout'], max(.001, deadline-time.monotonic()))
-            return self.backend_type(query, entry["database"], observer_credentials=observer,
+            instance = self.backend_type(query, entry["database"], observer_credentials=observer,
                                      host_tag=entry["binding"]["host_tag"], query_timeout=remaining if ticket else entry["spec"]["timeout"],
                                      startup_timeout=min(5, remaining) if ticket else min(5, entry["spec"]["timeout"]),
                                      observer_timeout=DEFAULT_OBSERVER_TIMEOUT)
+            if entry.get("export"):
+                with self.lock:
+                    session = self.export_sessions.get(ticket.run_id) if ticket else None
+                attach = getattr(instance, "attach_stream_sink", None)
+                if session is None or not callable(attach):
+                    raise Denied("csv_transport_unsupported")
+                attach(session)
+            return instance
 
         backend = LazyBackend(
             factory,
@@ -1123,14 +1212,16 @@ class Gateway:
                          completion_basis=completion_basis)
             if publish is None:
                 raise Denied("result_sink_required")
-            with self.lock:
-                # Only one unread result retained; no plaintext result files.
-                self.results.clear()
-                self.results[receipt["run_id"]] = dict(uid=entry["uid"], epoch=receipt["epoch"],
-                    data=output, offset=0, expires=time.monotonic()+60,
-                    request_id=request_id if ticket else None,
-                    commit_ready=committed, committed=False)
-                delivered_run = receipt["run_id"]
+            if not entry.get("export"):
+                # CSV mode streams to its export sink; only memory mode keeps a result.
+                with self.lock:
+                    # Only one unread result retained; no plaintext result files.
+                    self.results.clear()
+                    self.results[receipt["run_id"]] = dict(uid=entry["uid"], epoch=receipt["epoch"],
+                        data=output, offset=0, expires=time.monotonic()+60,
+                        request_id=request_id if ticket else None,
+                        commit_ready=committed, committed=False)
+                    delivered_run = receipt["run_id"]
             publish(dict(ok=True, status="completed", session_closed=True,
                          result_digest=fingerprint(dict(request_id=request_id, run_id=receipt['run_id'],
                              epoch=receipt['epoch'], sha256=hashlib.sha256(output).hexdigest())),
@@ -1206,6 +1297,12 @@ class Gateway:
             with self.lock:
                 self._refresh_result(c, row)
         result = self.jobs.status(request_id, owner)
+        export = self.exports.status(request_id)
+        if export is not None and export['owner'] == owner:
+            info = {k: export[k] for k in ('state', 'reason', 'records', 'csv_bytes', 'csv_sha256', 'spec_digest')}
+            if export['state'] in ('exported', 'export_unknown'):
+                info['directory'] = export['final']
+            result['export'] = info
         result['next_action'] = ('fetch_result' if result['result_state'] == 'available' else
             'recovery_review_required' if result['job_state'] == 'recovery_required' else
             'query_status' if result['job_state'] not in ('completed','failed','unknown','preview_lost') else 'none')

@@ -65,7 +65,7 @@ class JobLedger:
                 result.update(json.loads(row['result_meta']))
             return result
 
-    def finish(self, c, request_id, result, receipt, available):
+    def finish(self, c, request_id, result, receipt, available, memory_result=True):
         row = c.execute('SELECT * FROM query_jobs_v2 WHERE id=?', (request_id,)).fetchone()
         if row is None or row['instance'] != self.instance or row['terminal']:
             raise Denied('job_owner_changed')
@@ -76,6 +76,8 @@ class JobLedger:
         delivery = 'available' if result.get('ok') and available else 'superseded' if result.get('ok') else 'none'
         if state['halted'] or state['epoch'] != meta.get('epoch', state['epoch']):
             delivery = 'stopped' if result.get('ok') else 'none'
+        if not memory_result:
+            delivery = 'none'
         c.execute('''UPDATE query_jobs_v2 SET phase=?,outcome=?,result_state=?,result_digest=?,result_meta=?,
                      epoch=?,updated=?,terminal=? WHERE id=?''',
                   (phase, json.dumps(summary), delivery, receipt.get('result_digest'), json.dumps(meta),

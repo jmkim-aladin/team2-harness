@@ -15,6 +15,8 @@ seams are replaced, all inside child processes:
 No production profile, Keychain item, socket, ledger or database is used.
 """
 import argparse
+import csv
+import io
 import json
 import os
 from pathlib import Path
@@ -195,6 +197,21 @@ class Flow:
         return self.rpc(dict(action="status"))
 
     # -- review / run ---------------------------------------------------
+    def preview_csv(self, select, columns, *, max_file_bytes=1 << 20, timeout=30):
+        code, out, err = self.cli("preview", "--target", "lego-prod", "--database", "master", "--timeout", str(timeout),
+                                  "--output", "csv", "--columns", columns, "--purpose", "Q4 E2E 검증",
+                                  "--max-file-bytes", str(max_file_bytes), stdin=select)
+        if code:
+            raise RuntimeError("csv preview failed: " + (out + err)[-1500:])
+        review = final_json(out)["review"]
+        return dict(text=out, review=review, id=review["request_id"], digest=review["approval_digest"],
+                    actions=review["selected_actions"], tag=review["host_tag"],
+                    directory=Path(review["export_spec"]["artifact_directory"]))
+
+    def exports(self):
+        root = self.state / "exports"
+        return sorted(p.name for p in root.iterdir()) if root.exists() else []
+
     def preview(self, sql, timeout=30):
         code, out, err = self.cli("preview", "--target", "lego-prod", "--database", "master",
                                   "--timeout", str(timeout), stdin=sql)
@@ -352,6 +369,62 @@ def scenarios(flow):
     flow.check("new stop after review: approval refused, nothing sent",
                code != 0 and flow.sends_of("q4-경쟁") == 0, result=result)
 
+    # 5b. CSV export: the generated batch is reviewed, run once, and published once
+    select = ("SELECT v.id, v.s, v.n FROM (VALUES (CAST(2 AS bigint), N'a,\"b\"' + NCHAR(13) + NCHAR(10) + N'한글', "
+              "CAST(NULL AS int)), (CAST(1 AS bigint), N'\\N', 0)) AS v(id, s, n) ORDER BY v.id")
+    p = flow.preview_csv(select, "id:number,s:string,n:number"); previews.append(p)
+    code, result, _ = flow.run(p)
+    export = (result or {}).get("export") or {}
+    final = p["directory"]
+    rows = []
+    if (final / "data.csv").is_file():
+        rows = list(csv.reader(io.StringIO((final / "data.csv").read_bytes().decode("utf-8"), newline="")))
+    manifest = json.loads((final / "manifest.json").read_text()) if (final / "manifest.json").is_file() else {}
+    parts = dict(exit0=code == 0, exported=export.get("state") == "exported", action="export_csv" in p["actions"],
+                 values=rows == [["id", "s", "n"], ["1", "\\\\N", "0"], ["2", 'a,"b"\r\n한글', "\\N"]],
+                 manifest=manifest.get("spec_digest") == p["review"]["export_spec_digest"] and manifest.get("records") == 2,
+                 private=oct(final.stat().st_mode & 0o777) == "0o700" if final.exists() else False,
+                 batch_once=flow.sends_of(p["review"]["sql"]) == 1, no_staging=flow.exports() == [p["id"]])
+    flow.check("csv export: reviewed batch runs once, values preserved, private artifact published",
+               all(parts.values()), parts=parts, exit=code, export=export)
+
+    # 5c. CSV file limit: refused while streaming, nothing published, block kept
+    p = flow.preview_csv(select, "id:number,s:string,n:number", max_file_bytes=12); previews.append(p)
+    code, result, _ = flow.run(p)
+    s = flow.status()
+    parts = dict(exit_nonzero=code != 0, failed=((result or {}).get("export") or {}).get("state") == "failed",
+                 nothing=not p["directory"].exists() and len(flow.exports()) == 1,
+                 closed=flow.wait_sessions_closed(p["tag"]), blocked=s["halted"])
+    flow.check("csv file limit: refused mid-stream, no artifact, session closed, block kept",
+               all(parts.values()), parts=parts, exit=code, status=s)
+
+    # 5d. existing destination: never overwritten
+    p = flow.preview_csv(select, "id:number,s:string,n:number"); previews.append(p)
+    p["directory"].mkdir(mode=0o700)
+    (p["directory"] / "mine.txt").write_text("keep")
+    code, result, _ = flow.run(p)
+    export = (result or {}).get("export") or {}
+    parts = dict(exit_nonzero=code != 0, not_published=export.get("state") == "not_published",
+                 reason=export.get("reason") == "destination_exists",
+                 untouched=sorted(x.name for x in p["directory"].iterdir()) == ["mine.txt"],
+                 no_staging=not any(name.startswith(".staging") for name in flow.exports()))
+    flow.check("csv existing destination: left untouched, nothing published", all(parts.values()), parts=parts)
+
+    # 5e. user stop during a long CSV query
+    heavy = ("SELECT COUNT_BIG(*) AS c FROM sys.all_objects AS a CROSS JOIN sys.all_objects AS b "
+             "CROSS JOIN sys.all_objects AS c")
+    p = flow.preview_csv(heavy, "c:number"); previews.append(p)
+    proc = flow.cli_bg("run", p["id"], "--from-chat-digest", p["digest"])
+    flow.wait_dispatch(p["review"]["sql"])
+    flow.cli("stop")
+    out, _ = proc.communicate(timeout=60)
+    result = final_json(out)
+    parts = dict(exit_nonzero=proc.returncode != 0, failed=(result.get("export") or {}).get("state") == "failed",
+                 nothing=not p["directory"].exists() and not any(n.startswith(".staging") for n in flow.exports()),
+                 closed=flow.wait_sessions_closed(p["tag"]))
+    flow.check("csv user stop: cancelled, staging removed, nothing published", all(parts.values()),
+               parts=parts, job_state=result.get("job_state"))
+
     # 6. response loss: client dies after submit, job keeps ownership, same ID resumes
     sql = "WAITFOR DELAY '00:00:06';\nSELECT N'q4-유실' AS v;\n"
     p = flow.preview(sql); previews.append(p)
@@ -449,12 +522,42 @@ def scenarios(flow):
                    s["active"] is None and s["phase"] == "idle" and s["halted"],
                    recovery=dict(approved=recovery["approved"], executed=recovery["executed"]), status=s)
 
+    # 10b. gateway loss during a CSV export: restart reconciles, never publishes staging
+    s = flow.status()
+    p = flow.preview_csv(heavy, "c:number", timeout=60); previews.append(p)
+    sent_before = flow.sends_of(p["review"]["sql"])  # 5e ran the same generated batch
+    proc = flow.cli_bg("run", p["id"], "--from-chat-digest", p["digest"])
+    flow.wait_dispatch(p["review"]["sql"])
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline and not any(n.startswith(".staging") for n in flow.exports()):
+        time.sleep(0.05)
+    staged = any(n.startswith(".staging") for n in flow.exports())
+    flow.stop_gateway(signal.SIGKILL)
+    proc.communicate(timeout=90)
+    closed = flow.wait_sessions_closed(p["tag"], timeout=40)
+    flow.start_gateway()
+    job = flow.rpc(dict(action="job_status", request_id=p["id"]))
+    export = job.get("export") or {}
+    parts = dict(staged_before_kill=staged, fenced=closed, export_failed=export.get("state") == "failed",
+                 reconciled=export.get("reason") == "gateway_restarted",
+                 nothing=not p["directory"].exists() and not any(n.startswith(".staging") for n in flow.exports()),
+                 not_success=job.get("job_state") != "completed",
+                 sent_once=flow.sends_of(p["review"]["sql"]) - sent_before == 1)
+    flow.check("csv gateway loss: restart discards staging, publishes nothing, no rerun",
+               all(parts.values()), parts=parts, job=job)
+    if flow.status()["active"] is not None:
+        flow.recover()
+
     # 11. after all failures, the normal one-approval path still works and nothing was replayed
     sql = "SELECT N'q4-마지막' AS v;\n"
     p = flow.preview(sql); previews.append(p)
     code, result, _ = flow.run(p)
     flow.check("final: one approval resumes and runs after recovery",
                code == 0 and "q4-마지막" in result.get("output", "") and flow.sends_of(sql) == 1)
+    exits = {r["name"].split(":")[0]: r.get("exit") for r in flow.results
+             if r["name"].startswith(("user stop:", "timeout:", "worker loss: no rerun"))}
+    flow.check("failed jobs exit nonzero (Q4 finding 1 fixed)",
+               len(exits) == 3 and all(code not in (0, None) for code in exits.values()), exits=exits)
     ok, why = flow.displayed_only(previews)
     flow.check("every byte sent to sqlcmd was displayed in a review", ok, reason=why,
                processes=len(flow.sent_entries()))
