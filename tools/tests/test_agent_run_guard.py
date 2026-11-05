@@ -255,16 +255,11 @@ class ProductionDbTests(GuardFixture):
 
 
 class HumanSessionTests(GuardFixture):
-    def test_push_and_pr_create_ask(self):
+    def test_human_session_not_judged(self):
+        """사람 세션의 푸시·PR 확인은 대화에서 받는다 — 훅이 다시 묻지 않는다."""
         for command in ["git push", f"git push origin {FEATURE}", "rtk git push", "gh pr create --fill",
-                        "gh pr new", "gh pr -R o/r create", "cd x && git -C y push --force"]:
-            with self.subTest(command=command):
-                decision, reason = self.decide(command, {})
-                self.assertEqual(decision, "ask")
-                self.assertIn("사용자 확인", reason)
-
-    def test_other_commands_silent(self):
-        for command in ["git status", "gh pr merge 1", "gh pr view 1", "git stash push", YT_POST,
+                        "gh pr new", "gh pr -R o/r create", "cd x && git -C y push --force",
+                        "git status", "gh pr merge 1", "gh pr view 1", "git stash push", YT_POST,
                         "echo 'unterminated"]:
             with self.subTest(command=command):
                 self.assertIsNone(self.decide(command, {}))
@@ -320,9 +315,9 @@ class HookProtocolTests(GuardFixture):
 
     def test_matrix(self):
         cases = [  # (명령, 사람 세션, 승인 전 에이전트, 승인 후 에이전트)
-            (f"git push -u origin {FEATURE}", "ask", "deny", None),
-            ("git push origin develop", "ask", "deny", "deny"),
-            ("gh pr create --draft --base develop", "ask", "deny", None),
+            (f"git push -u origin {FEATURE}", None, "deny", None),
+            ("git push origin develop", None, "deny", "deny"),
+            ("gh pr create --draft --base develop", None, "deny", None),
             ("gh pr merge 7 --squash", None, "deny", "deny"),
             (YT_POST, None, "deny", "deny"),
             ("python3 tools/db_prod_client.py status", None, "deny", "deny"),
@@ -334,18 +329,19 @@ class HookProtocolTests(GuardFixture):
                 with self.subTest(command=command, session=label):
                     self.assertEqual(self.run_hook(command, env), want)
 
-    def test_human_prefilter_skips_python(self):
+    def test_human_session_skips_python(self):
         broken = self.tmp / "broken/.claude/hooks"
         broken.mkdir(parents=True)
         shutil.copy2(HOOK, broken / HOOK.name)
-        event = json.dumps({"tool_name": "Bash", "tool_input": {"command": "ls -la"},
-                            "transcript_path": "/Users/x/.claude/projects/p/s.jsonl"})
         base = {k: v for k, v in os.environ.items() if not k.startswith("PAPERCLIP_")}
-        with mock.patch.dict(os.environ, {}):
-            result = subprocess.run(["bash", "-x", str(broken / HOOK.name)], input=event, text=True,
-                                    capture_output=True, env=base, check=True)
-        self.assertEqual(result.stdout, "")
-        self.assertNotIn("python3", result.stderr)  # 접두 필터에서 끝난다
+        for command in ["ls -la", "git push origin main"]:
+            event = json.dumps({"tool_name": "Bash", "tool_input": {"command": command},
+                                "transcript_path": "/Users/x/.claude/projects/p/s.jsonl"})
+            with self.subTest(command=command):
+                result = subprocess.run(["bash", "-x", str(broken / HOOK.name)], input=event, text=True,
+                                        capture_output=True, env=base, check=True)
+                self.assertEqual(result.stdout, "")
+                self.assertNotIn("python3", result.stderr)  # 첫 줄 env 검사에서 끝난다
 
 
 if __name__ == "__main__":

@@ -14,8 +14,8 @@
                   소켓 인증은 peer UID 뿐이고 chat digest 는 비대화 실행이 스스로 만들 수 있어서다.
                   소스 읽기(cat·grep·sed)는 허용, 개발 sqlcmd 읽기 스크립트는 sqlcmd-readonly 훅이 판정한다.
   승인 env 는 훅 프로세스(= Claude 프로세스) env 에서 읽는다. 에이전트가 Bash 에서 export 해도 판정은 바뀌지 않는다.
-사람 세션 (PAPERCLIP_RUN_ID 없음): git push·gh pr create 에 ask 를 돌려준다.
-  정적 permissions.ask 로 두지 않는 이유 — 훅 allow 는 ask 규칙을 넘지 못해 승인된 에이전트까지 막힌다.
+사람 세션 (PAPERCLIP_RUN_ID 없음): 판정하지 않는다. 푸시·PR 확인은 대화에서 커밋·머지와 한 번에 받는다.
+  근거: 2026-11-05 채팅 승인 뒤 훅 ask 가 다시 떠 이중 확인 — 사용자 "두번 하게 하지 말아줘".
 
 경계: Bash 문자열 판정은 보안 경계가 아니다. git/gh 별칭, 스크립트 파일 안 호출, 명령 밖 변수는 놓칠 수 있다.
   셸 래핑(sh -c, eval, 따옴표 안) 속 push·PR 생성은 해석하지 않고 에이전트 실행에서 막는다.
@@ -575,35 +575,17 @@ def _agent_bash(command, cwd, env):
     return None
 
 
-def _human_bash(command, cwd):
-    labels = []
-    if PUSH_RE.search(command):
-        labels.append("git push")
-    if PR_CREATE_RE.search(command):
-        labels.append("gh pr create")
-    try:
-        for item in _scan(command, cwd):
-            label = "git push" if item[0] == "push" else (
-                "gh pr create" if item[1] == "pr" and item[2] in ("create", "new") else None)
-            if label and label not in labels:
-                labels.append(label)
-    except ValueError:
-        pass
-    if not labels:
-        return None
-    return ("ask", f"사용자 확인 필요: {', '.join(labels)} — 푸시·PR 생성은 사용자 확인 후 실행한다 (AI 사용 정책).")
-
-
 def decide(event, env):
     """(decision, reason) 또는 None."""
-    agent = bool(env.get(RUN_ENV))
+    if not env.get(RUN_ENV):
+        return None
     tool = event.get("tool_name") or ""
     payload = event.get("tool_input")
     if not isinstance(payload, dict):
         raise ValueError("tool_input")
     if tool.startswith("mcp__"):
         name = tool.casefold()
-        if agent and "youtrack" in name and _YT_MCP_WRITE.search(name.split("__", 2)[-1]):
+        if "youtrack" in name and _YT_MCP_WRITE.search(name.split("__", 2)[-1]):
             return ("deny", f"{PREFIX} YouTrack 쓰기 금지 (도구: {tool}). "
                             "YouTrack→Paperclip 단방향이므로 결과는 Paperclip 보고로 남길 것.")
         return None
@@ -614,8 +596,6 @@ def decide(event, env):
         raise ValueError("command")
     command = re.sub(r"\\\r?\n", " ", command)  # 줄 연속은 한 명령이다
     cwd = event.get("cwd") or os.getcwd()
-    if not agent:
-        return _human_bash(command, cwd)
     reason = _agent_bash(command, cwd, env)
     return ("deny", reason) if reason else None
 
