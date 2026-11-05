@@ -1,0 +1,80 @@
+{
+  "task_id": "TASK-20261104-4560e95349bc",
+  "captured_at": "2026-11-04T07:50:49.478050+00:00",
+  "repo": "/Users/jm/Documents/workspace/team2",
+  "head": "ff0ca564cea38e1814677a235102d4512ac4cee9",
+  "branch": "team2/harness-hook-context-audit",
+  "python": "3.9.6",
+  "platform": "Darwin 25.6.0",
+  "current_code": [
+    {
+      "path": "/Users/jm/Documents/workspace/team2/tools/db_query_control.py",
+      "sha256": "5c76ed3fce49348e7200ffdc27823ea682eba5ed6ba3b9656fbd1e5501b5ca12",
+      "matches_head": true
+    },
+    {
+      "path": "/Users/jm/Documents/workspace/team2/tools/db_prod_gateway.py",
+      "sha256": "2c19cd86f5f0c4731c776f36bfae3e6f2e07917f5d454d7d5be6d2f0a201c3c2",
+      "matches_head": true
+    },
+    {
+      "path": "/Users/jm/Documents/workspace/team2/tools/db_prod_client.py",
+      "sha256": "a16a2ed75689fc311f3daf106713c217e178c3b4fb8880f766ebf464680b25a0",
+      "matches_head": true
+    },
+    {
+      "path": "/Users/jm/Documents/workspace/team2/tools/db_prod_transport.py",
+      "sha256": "98639025078a6880fb164ec9c6ce106ea0be5919a75762afc05f347f617df701",
+      "matches_head": true
+    },
+    {
+      "path": "/Users/jm/Documents/workspace/team2/tools/db_prod_watchdog.py",
+      "sha256": "939efdc1365f335ece6c92cc41a2f328b9da87db5503f545161f97519f4f739e",
+      "matches_head": true
+    },
+    {
+      "path": "/Users/jm/Documents/workspace/team2/tools/db_prod_recovery.py",
+      "sha256": "ae8a93cdcda89e1b06d29d1cb02f8ffac64807d3341bd67892812a34737f2043",
+      "matches_head": true
+    }
+  ],
+  "reused_verification": {
+    "source": "/Users/jm/Documents/workspace/team2/docs/verification/harness-hook-context-audit/h2-checks.json",
+    "reason": "Q1 changes design documents only; all six production code files exactly match the HEAD used by H2 full verification; test logs and exit statuses inspected. No new implementation runtime claims.",
+    "suites": [
+      {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests"
+        ],
+        "tests": 478,
+        "skipped": 0,
+        "returncode": 0,
+        "log": "h2-suite-1.txt"
+      },
+      {
+        "command": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tools/tests"
+        ],
+        "tests": 279,
+        "skipped": 1,
+        "returncode": 0,
+        "log": "h2-suite-2.txt"
+      }
+    ]
+  },
+  "limitations": [
+    "New v2 admission/job/fetch/export paths are not implemented or runtime verified.",
+    "No production DB connection, resume, service restart, or installation was performed in Q1.",
+    "Existing untracked H1/H2 artifacts, fixture test and shepherdr are preserved."
+  ]
+}

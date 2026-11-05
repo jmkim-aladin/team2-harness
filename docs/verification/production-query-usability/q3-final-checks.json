@@ -1,0 +1,70 @@
+[
+  {
+    "check": "q3-vault-lint",
+    "command": [
+      "python3",
+      "tools/lint_vault.py",
+      "--vault",
+      "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2",
+      "--files",
+      "wiki/projects/production-query-usability/plan.md",
+      "wiki/processes/daily/2026-11-04.md"
+    ],
+    "started_at": "2026-11-04T09:20:11.522467+00:00",
+    "exit_code": 0,
+    "seconds": 0.064,
+    "log": "q3-vault-lint.txt"
+  },
+  {
+    "check": "q3-secret-scan",
+    "command": [
+      "python3",
+      "tools/secret_scan.py",
+      "tools/db_prod_approval.py",
+      "tools/db_prod_client.py",
+      "tools/db_prod_gateway.py",
+      "tools/db_prod_jobs.py",
+      "tools/db_prod_runtime.py",
+      "tools/db_prod_recovery.py",
+      "tools/db_query_control.py",
+      "tools/tests/test_db_prod_approval.py",
+      "tools/tests/test_db_prod_jobs.py",
+      "tools/tests/test_db_prod_runtime.py",
+      "tools/README.md",
+      "policies/production-db-access-policy.md",
+      "docs/production-db-emergency-stop.md",
+      "docs/production-query-request-flow.md",
+      "docs/verification/production-query-usability",
+      "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/projects/production-query-usability/plan.md",
+      "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/processes/daily/2026-11-04.md"
+    ],
+    "started_at": "2026-11-04T09:20:11.587604+00:00",
+    "exit_code": 0,
+    "seconds": 0.077,
+    "log": "q3-secret-scan.txt"
+  },
+  {
+    "check": "q3-harness-lint-final",
+    "command": [
+      "python3",
+      "tools/lint_harness_rules.py",
+      "--check"
+    ],
+    "started_at": "2026-11-04T09:20:11.664966+00:00",
+    "exit_code": 0,
+    "seconds": 0.317,
+    "log": "q3-harness-lint-final.txt"
+  },
+  {
+    "check": "q3-diff-check-final",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "started_at": "2026-11-04T09:20:11.982662+00:00",
+    "exit_code": 0,
+    "seconds": 0.032,
+    "log": "q3-diff-check-final.txt"
+  }
+]

@@ -1,0 +1,49 @@
+{
+  "status": "implementation_test_plan_not_execution_results",
+  "existing_test_symbols_verified": {
+    "tools/tests/test_db_query_control.py": [
+      "test_approval_binds_full_sql_target_owner_and_limits_and_is_one_use",
+      "test_stop_before_dispatch_prevents_sql_submission",
+      "test_distinct_agent_processes_cannot_both_acquire_slot"
+    ],
+    "tools/tests/test_db_prod_gateway.py": [
+      "test_prepare_does_not_read_password_or_connect",
+      "test_resume_requires_fresh_epoch_and_does_not_clear_new_stop",
+      "test_finish_commit_failure_never_releases_plaintext",
+      "test_replay_never_reconnects"
+    ],
+    "tools/tests/test_db_prod_transport.py": [
+      "test_dispatch_writes_approved_sql_exactly_once_and_returns_result",
+      "test_startup_and_query_write_all_handles_short_raw_pipe_writes",
+      "test_closed_failure_is_latched_to_one_observer_call"
+    ]
+  },
+  "new_required_seams": {
+    "Q2": [
+      "render exact user/setup/conditional SQL vs immutable envelope",
+      "state-specific exact selected_actions and approval_digest mismatch rejection",
+      "A/B/C stop+marker+disk failure and process crash",
+      "admitting record recovery after creator fencing",
+      "one-use AdmissionTicket and no second backend start",
+      "fixed admission deadline includes thread/setup delay",
+      "same request duplicate vs different digest vs global busy"
+    ],
+    "Q3": [
+      "lost submit response queries original ID; no SQL replay",
+      "client detach vs gateway/worker death",
+      "32MiB displayed payload cap; no hidden v1 change",
+      "immutable chunk refetch and full digest verify",
+      "durable ack then memory cleanup crash; repeated ack",
+      "new stop/epoch/expired/superseded/lost cache refuses bytes"
+    ],
+    "Q3b": [
+      "server-owned exact export spec; client path/columns cannot override",
+      "HEX/UTF-16/JSON token splits, typed values, NULL vs empty, zero rows",
+      "streaming record/file budget and memory growth",
+      "CSV+manifest directory atomic no-replace publication",
+      "stop before publication, crash after publication, disk/fsync/partial output",
+      "plain-text old result remains not_exportable; new query has new lineage"
+    ]
+  },
+  "note": "This map verifies referenced existing test symbols only. Existing behavior checks are reused from baseline logs; the new v2 cases remain implementation/release gates."
+}

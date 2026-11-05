@@ -671,6 +671,10 @@ python3 tools/db_query_control.py --state /관리영역/query-control.sqlite3 st
 | `init` | 소유자 전용 디렉터리·초기 차단 원장·설정·Swift 키체인 helper 준비. DB 접속 없음 |
 | `start` | 로컬 Unix 소켓 실행기 시작. DB 접속 없음. 종료 미확인·오류·`emergency-stop` 차단은 재시작 뒤에도 유지 |
 | `status` | 차단 여부·활성 실행·phase 표시 |
+| `preview --target ... --database ... --timeout 30` | v2 SQL을 stdin으로 받아 접속 없이 전문·조건·재개 동작·digest 표시. 차단 중 검토 가능, 메모리 결과 기본/최대 32MiB |
+| `run <요청ID>` | v2 전문과 정확한 action을 다시 표시해 한 번 명시 승인 후 재개·승인 소비·단일 실행권·1회 실행 연결. 별도 RESUME 입력 불필요 |
+| `job-status <요청ID>` | 기존 작업·결과 상태와 다음 행동 조회. SQL 실행 없음 |
+| `result <요청ID>` | 같은 사용자·중단 세대의 기존 결과를 이어받고 전체 길이·SHA-256 확인 후 ack. SQL 실행 없음 |
 | `resume` | `emergency-stop` 또는 종료 미확인·오류·재시작 차단을 사용자 터미널의 `RESUME` 확인 후 해제 |
 | `prepare --target lego-prod --database <DB> --timeout 60 --max-rows 100 --max-bytes 102400` | stdin SQL과 대상·내부 제어 SQL·한도를 묶어 검토 요청 생성. 비밀번호 조회와 DB 접속 없음 |
 | `review <요청ID>` | 승인할 SQL 전문과 조건 표시 |
@@ -683,6 +687,14 @@ python3 tools/db_query_control.py --state /관리영역/query-control.sqlite3 st
 
 채팅에서 사용자가 표시된 전문을 명시 승인한 경우에만 에이전트가 `approve <요청ID> --from-chat-digest <전체digest>`로 응답을 전달한다. 이 옵션 자체가 사용자의 승인을 증명하지는 않으며 에이전트의 자가 승인에 사용할 수 없다. SQL·대상·프로파일·한도 변경, 실패·재시도에는 새 승인이 필요하다. 준비 요청은 30분 유효하고 실행은 최대 60초, 모든 대상 합계 동시 1개다.
 
+새 단일 승인 흐름은 v2 `preview` → 사용자 검토·명시 승인 → `run <요청ID> --from-chat-digest <전체approval_digest>`다. 전문은 사용자·준비·조건부 종료 확인 SQL 모두를 포함하며, 긴급 중단 해제가 필요하면 action에도 표시한다. 에이전트는 실제 명시 응답을 받은 뒤에만 `run`으로 전달한다. 검토 내용·동작·중단 세대 변경은 재검토 대상이다. 도구 출력이 잘려 전문을 확인할 수 없으면 승인 요청 전에 완전한 검토 자료를 제공한다.
+
+v2는 기존 v1 `prepare`·`approve`·`execute`·독립 `resume`을 우회로로 사용하지 않는다. 새 경로의 모드·한도가 지원되지 않으면 준비 단계에서 거부한다. 코드·격리 검사 완료는 서비스 설치·재시작 완료가 아니며, `gateway_restart_required`일 때 자동 재시작하지 않는다. Q3 후보는 접수 commit 뒤 작업을 gateway 소유 thread로 실행하고 `run`이 상태·결과를 기다린다. Ctrl+C는 결과 대기만 끝내므로 SQL 중단은 `stop`을 사용한다. 접수 응답이 유실되면 동일 ID의 상태만 조회하며 SQL을 다시 제출하지 않는다. Q3b의 CSV는 아직 지원하지 않는다.
+
+v2 결과는 최신 1개·완료 후 60초·최대 32MiB payload를 메모리에 보관한다. 같은 offset의 `fetch_result`는 같은 bytes를 반환하고, ack는 전달 완료를 SQLite에 먼저 기록한 뒤 메모리를 정리한다. 결과 읽기로 TTL을 연장하지 않는다. 새 중단·만료·다음 결과·실행기 소실은 각각 stopped/expired/superseded/lost_on_restart로 표시하며 재조회로 대체하지 않는다. 전달 완료 metadata는 30일 이내에만 반복 확인하고 미종결·복구 필요 작업은 기한으로 정리하지 않는다.
+
+운영판 분리 도구는 `python3 tools/db_prod_runtime.py build --source /후보/tools --root /비공개/runtime`으로 지문별 읽기 전용 번들을 준비한다. `launchagent --root /비공개/runtime`은 검토용 plist만 stdout에 출력한다. 설치·선택·launchd 등록·재시작은 별도 운영 반영이다. 승인된 계획 전환에서만 `activate --root /비공개/runtime --bundle /비공개/runtime/bundles/지문 --state /공통상태경로`로 선택하며, 실행기 lock·halted idle·active 없음·schema 호환을 확인한다. 구버전 rollback도 같은 조건과 호환 manifest가 필요하다. 실제 조회 CLI는 선택된 `/비공개/runtime/current/db_prod_client.py`를 사용한다. 모든 번들은 기존 공통 상태·socket·stop.d를 공유하고 기동 시 차단되며 과거 승인을 실행하지 않는다. 개발 디렉터리에서 새 `serve`를 직접 기동하면 번들 검증에서 거부한다.
+
 실행기 장애 후 active가 남으면 원장을 지우거나 강제 초기화하지 않는다. 복구도 observer SQL 전문·대상·시간·결과 범위를 새로 승인받는다. 기록된 worker는 PID·생성 시각으로 종료를 증명한다. 시작 실패로 worker 기록이 없으면 원 실행기의 PID·생성 시각을 대조해 종료를 두 번 확인하고, 그 사이 watchdog 유예 5초를 둔다. 이후 현재 UID의 모든 sqlcmd 프로세스가 없음을 Mac의 고정 ps 명령으로 입증해야 서버 관찰을 시작할 수 있다. 파싱 오류·불완전한 목록·조회 실패는 거부하며 서버 관찰 후에도 로컬 부재를 재확인한다. 로컬 증거와 서버 세션 0건 확인이 모두 있어야 슬롯을 정리한다. 복구 성공 뒤에도 종료 미확인·오류·재시작 안전 차단은 유지하며 사용자의 별도 `resume`과 새로운 조회 승인이 필요하다. 일반 `stop`의 확인된 idle 경로만 자동으로 다음 요청을 받는다. 재개 확인 이후 들어온 새 중단 요청은 우선한다.
 
 기본 설정은 `read_only_verified=false`로 `SELECT 1 AS connection_ok;`, 고정 10초 세션 확인 진단(`SESSION_VISIBILITY_PROBE_SQL`), 고정 30초 중단 시험(`SESSION_STOP_PROBE_SQL`)만 준비할 수 있다. 대기 진단은 지정된 시간 뒤 자기 세션 ID·프로그램명만 반환하며 매 실행 전문 승인·시간 상한·전역 슬롯·중단·종료 확인 규칙을 그대로 따른다. 실제 DB의 읽기 전용 권한·SP 변경/실행 거부·격리 설정을 확인한 뒤 개통한다. 종료 관찰에는 동일 계정이 서버 세션을 빠짐없이 볼 수 있는 DMV 권한이 필요하며 권한 부족이나 관찰 실패 시 종료를 확정하지 않고 차단한다. 에이전트가 DB 권한을 자동 확대하지 않는다.
@@ -691,7 +703,7 @@ python3 tools/db_query_control.py --state /관리영역/query-control.sqlite3 st
 
 `db_prod_diagnostics.py`는 stdout·stderr를 합쳐 단계당 최대 8 KiB만 메모리에 수집한다. 알려진 SQL 오류 번호와 고정 설명만 응답·감사 로그로 내보내며 주소·계정·비밀번호·SQL·결과가 섞일 수 있는 오류 원문은 저장하지 않는다. 모르는 메시지는 원문 비공개와 잘림 여부를 표시한다. 조회 결과 stdout은 진단 수집에서 제외한다. 이전 실패의 상세 오류는 복원할 수 없다. 진단 보완은 로컬 합성 테스트로 검증하고 사용자 재시도 요청에 따라 실행기에 반영했다. 복구 준비에서 발견한 정상 SQL 줄바꿈 거부도 수정했으며, 접속 진단과 30초 중단 시험에서 종료 확인 및 슬롯 자동 정리를 검증했다. 일반 운영 조회는 읽기 전용 권한 검증 후 별도 개통한다.
 
-2026-10-15 사용자 요청으로 `--max-rows`와 `--max-bytes`는 기본 unlimited이며 기존 8 MiB 누적 결과 제한도 제거했다. 기본 조회 한도는 실행 시간뿐이다. 결과는 메모리에서 최대 60초 보관하고 2 KiB씩 전달한 뒤 전체 길이·해시를 검증하여 표시한다. 전송 청크 크기는 결과 총량 제한이 아니다. 중단·실패 시 미반환 결과는 폐기한다. 자동 비정상 종료 확인 SQL은 사용자 요청으로 승인 화면에서 반복 표시하지 않으며 조건부 실행과 digest 연결을 유지한다. 키체인 값·SQL 원문·원본 결과는 감사 원장에 저장하지 않는다.
+2026-10-15 사용자 요청으로 v1 `--max-rows`와 `--max-bytes`는 기본 unlimited이며 기존 8 MiB 누적 결과 제한도 제거했다. v1 기본 조회 한도는 실행 시간뿐이다. 결과는 메모리에서 최대 60초 보관하고 2 KiB씩 전달한 뒤 전체 길이·해시를 검증하여 표시한다. 전송 청크 크기는 결과 총량 제한이 아니다. 중단·실패 시 미반환 결과는 폐기한다. 2026-11-04 요청으로 사용자·준비·조건부 종료 확인 SQL을 모두 승인 화면에 공개하며 v2는 기본·최대 32MiB payload를 적용한다. 키체인 값·SQL 원문·원본 결과는 감사 원장에 저장하지 않는다.
 
 `db_prod_profiles.py`·`db_prod_keychain.swift`는 정확한 UTF-8 JSON과 키체인 값을 파이프로 읽는다. `db_prod_transport.py`는 사용자 승인에 따라 `-N true -C`로 TLS 암호화를 필수 적용하고 서버 인증서 검증을 생략하는 sqlcmd 자식 프로세스, `db_prod_watchdog.py`는 독립 중단·heartbeat 감시를 맡는다. `Ctrl+C`나 프로세스 종료만으로 서버 종료를 확정하지 않는다. 현재 Mac의 sqlcmd와 운영 서버 조합은 접속 진단·30초 중단 시험에서 TLS 접속과 세션 종료 확인까지 성공했으며, 일반 조회 권한 검증은 남아 있다.
 

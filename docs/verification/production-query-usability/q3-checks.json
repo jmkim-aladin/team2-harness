@@ -1,0 +1,76 @@
+[
+  {
+    "check": "q3-root-tests",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests"
+    ],
+    "started_at": "2026-11-04T09:17:43.323053+00:00",
+    "exit_code": 0,
+    "seconds": 9.655,
+    "log": "q3-root-tests.txt"
+  },
+  {
+    "check": "q3-tools-tests",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/tests"
+    ],
+    "started_at": "2026-11-04T09:17:52.978688+00:00",
+    "exit_code": 0,
+    "seconds": 18.794,
+    "log": "q3-tools-tests.txt"
+  },
+  {
+    "check": "q3-pycompile",
+    "command": [
+      "python3",
+      "-m",
+      "py_compile",
+      "tools/db_prod_approval.py",
+      "tools/db_prod_jobs.py",
+      "tools/db_prod_runtime.py",
+      "tools/db_prod_client.py",
+      "tools/db_prod_gateway.py",
+      "tools/tests/test_db_prod_approval.py",
+      "tools/tests/test_db_prod_jobs.py",
+      "tools/tests/test_db_prod_runtime.py"
+    ],
+    "started_at": "2026-11-04T09:18:11.773089+00:00",
+    "exit_code": 0,
+    "seconds": 0.07,
+    "log": "q3-pycompile.txt"
+  },
+  {
+    "check": "q3-harness-lint",
+    "command": [
+      "python3",
+      "tools/lint_harness_rules.py",
+      "--check"
+    ],
+    "started_at": "2026-11-04T09:18:11.843508+00:00",
+    "exit_code": 0,
+    "seconds": 0.297,
+    "log": "q3-harness-lint.txt"
+  },
+  {
+    "check": "q3-diff-check",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "started_at": "2026-11-04T09:18:12.141200+00:00",
+    "exit_code": 0,
+    "seconds": 0.035,
+    "log": "q3-diff-check.txt"
+  }
+]
