@@ -26,6 +26,7 @@ FRAME_WIDTH = 8000           # sqlcmd pads every row to the column width
 MAX_FILE_BYTES = 1 << 30
 MAX_RECORD_BYTES = 16 << 20
 MAX_ROWS = 10 ** 9
+MAX_SOURCE_BYTES = 1 << 33
 NULL_TOKEN = "\\N"
 COLUMN_TYPES = ("string", "number", "boolean")
 _COLUMN_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,127}\Z")
@@ -54,7 +55,7 @@ def _positive(value, upper, reason, *, allow_none=False):
 
 
 def canonical_spec(columns, *, purpose, max_file_bytes, max_record_bytes, max_rows,
-                   artifact_directory=None):
+                   max_source_bytes=None, artifact_directory=None):
     """Return ``dict(spec=..., digest=...)``; the digest binds every field."""
     if not isinstance(columns, list) or not columns:
         raise ExportDenied("export_columns_required")
@@ -87,6 +88,10 @@ def canonical_spec(columns, *, purpose, max_file_bytes, max_record_bytes, max_ro
         max_record_bytes=_positive(max_record_bytes, MAX_RECORD_BYTES, "export_record_limit_invalid"),
         max_rows=_positive(max_rows, MAX_ROWS, "export_row_limit_invalid", allow_none=True),
     )
+    # sqlcmd stdout (hex frames + padding) bound; shown in the review like every other limit.
+    spec["max_source_bytes"] = _positive(
+        max_source_bytes if max_source_bytes is not None else min(8 * spec["max_file_bytes"] + (1 << 20), MAX_SOURCE_BYTES),
+        MAX_SOURCE_BYTES, "export_source_limit_invalid")
     if artifact_directory is not None:
         if not isinstance(artifact_directory, str) or not artifact_directory.startswith("/"):
             raise ExportDenied("export_directory_invalid")
@@ -347,3 +352,267 @@ class CsvExport:
         self.sink.write(data)
         self.csv_hash.update(data)
         self.csv_bytes += len(data)
+
+
+# ---------------------------------------------------------------------------
+# Staging, durable completion, publication and reconciliation
+# ---------------------------------------------------------------------------
+import ctypes  # noqa: E402
+import ctypes.util  # noqa: E402
+import datetime  # noqa: E402
+import errno as _errno  # noqa: E402
+import os  # noqa: E402
+import stat as _stat  # noqa: E402
+import sys  # noqa: E402
+import time  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+RENAME_EXCL = 0x00000004
+OPEN_STATES = ("exporting", "complete", "export_unknown")
+_libc = None
+
+
+def rename_no_replace(source, destination):
+    """Atomic directory rename that fails with FileExistsError instead of replacing."""
+    global _libc
+    if sys.platform != "darwin":
+        raise ExportDenied("no_replace_rename_unavailable")
+    if _libc is None:
+        _libc = ctypes.CDLL(ctypes.util.find_library("c"), use_errno=True)
+        _libc.renamex_np.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+    if _libc.renamex_np(os.fsencode(str(source)), os.fsencode(str(destination)), RENAME_EXCL) != 0:
+        code = ctypes.get_errno()
+        if code == _errno.EEXIST:
+            raise FileExistsError(code, os.strerror(code), str(destination))
+        raise OSError(code, os.strerror(code), str(destination))
+
+
+def _fsync_dir(path):
+    fd = os.open(str(path), os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def _sha256_file(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _private_root(root, *, create):
+    root = Path(root)
+    if create and not os.path.lexists(root):
+        os.mkdir(root, 0o700)
+    info = os.lstat(root)
+    if (not _stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077):
+        raise ExportDenied("export_root_untrusted")
+    return root
+
+
+def _remove_owned_dir(path):
+    """Remove only a real directory holding our two regular files (never follows links)."""
+    if not os.path.lexists(path):
+        return
+    info = os.lstat(path)
+    if not _stat.S_ISDIR(info.st_mode):
+        raise ExportDenied("export_staging_untrusted")
+    for name in os.listdir(path):
+        child = Path(path) / name
+        if name not in ("data.csv", "manifest.json") or not _stat.S_ISREG(os.lstat(child).st_mode):
+            raise ExportDenied("export_staging_untrusted")
+        os.unlink(child)
+    os.rmdir(path)
+
+
+class ExportLedger:
+    """Export lineage and state. Holds digests and counts, never result values or SQL."""
+
+    def __init__(self, store, exports_root):
+        self.store, self.root = store, Path(exports_root)
+        with store.transaction() as c:
+            c.execute('''CREATE TABLE IF NOT EXISTS query_exports_v1 (
+                request_id TEXT PRIMARY KEY, owner TEXT NOT NULL, run_id TEXT NOT NULL, epoch INTEGER NOT NULL,
+                spec_digest TEXT NOT NULL, final TEXT NOT NULL, staging TEXT NOT NULL, state TEXT NOT NULL,
+                reason TEXT, source_sha256 TEXT, source_bytes INTEGER, csv_sha256 TEXT, csv_bytes INTEGER,
+                records INTEGER, updated REAL NOT NULL)''')
+        self.reconcile()
+
+    def status(self, request_id):
+        with self.store.transaction() as c:
+            row = c.execute("SELECT * FROM query_exports_v1 WHERE request_id=?", (request_id,)).fetchone()
+        return dict(row) if row else None
+
+    def intent(self, request_id, owner, run_id, epoch, spec_digest_value, final, staging):
+        with self.store.transaction() as c:
+            c.execute("INSERT INTO query_exports_v1 (request_id,owner,run_id,epoch,spec_digest,final,staging,state,updated)"
+                      " VALUES (?,?,?,?,?,?,?,'exporting',?)",
+                      (request_id, owner, run_id, epoch, spec_digest_value, str(final), str(staging), time.time()))
+
+    def complete(self, request_id, stats):
+        with self.store.transaction() as c:
+            changed = c.execute("UPDATE query_exports_v1 SET state='complete',source_sha256=?,source_bytes=?,"
+                                "csv_sha256=?,csv_bytes=?,records=?,updated=? WHERE request_id=? AND state='exporting'",
+                                (stats["source_sha256"], stats["source_bytes"], stats["csv_sha256"], stats["csv_bytes"],
+                                 stats["records"], time.time(), request_id)).rowcount
+        if changed != 1:
+            raise ExportDenied("export_completion_state_invalid")
+
+    def mark(self, request_id, state, reason):
+        with self.store.transaction() as c:
+            c.execute("UPDATE query_exports_v1 SET state=?,reason=?,updated=? WHERE request_id=?",
+                      (state, reason, time.time(), request_id))
+
+    def reconcile(self):
+        """After a restart nothing is published anew; only already-published artifacts are classified."""
+        with self.store.transaction() as c:
+            rows = [dict(r) for r in c.execute(
+                "SELECT * FROM query_exports_v1 WHERE state IN (%s)" % ",".join("?" * len(OPEN_STATES)), OPEN_STATES)]
+        if not rows:
+            return
+        _private_root(self.root, create=False)
+        for row in rows:
+            final, staging = Path(row["final"]), Path(row["staging"])
+            if os.path.lexists(final):
+                verified = row["state"] != "exporting" and self._verify(final, row)
+                self.mark(row["request_id"], "exported" if verified else "export_unknown",
+                          "reconciled" if verified else "published_contents_unverified")
+                continue
+            try:
+                _remove_owned_dir(staging)
+                reason = "gateway_restarted"
+            except ExportDenied:
+                reason = "gateway_restarted_staging_untrusted"
+            self.mark(row["request_id"], "not_published" if row["state"] != "exporting" else "failed", reason)
+
+    @staticmethod
+    def _verify(final, row):
+        try:
+            info = os.lstat(final)
+            names = sorted(os.listdir(final))
+            if not _stat.S_ISDIR(info.st_mode) or names != ["data.csv", "manifest.json"]:
+                return False
+            for name in names:
+                if not _stat.S_ISREG(os.lstat(final / name).st_mode):
+                    return False
+            manifest = json.loads((final / "manifest.json").read_text(encoding="utf-8"))
+            return (manifest.get("spec_digest") == row["spec_digest"] == spec_digest(manifest.get("spec", {}))
+                    and manifest.get("csv_sha256") == row["csv_sha256"] == _sha256_file(final / "data.csv")
+                    and manifest.get("request_id") == row["request_id"])
+        except (OSError, ValueError):
+            return False
+
+
+class ExportSession:
+    """One approved export: private staging -> completion -> no-replace publication."""
+
+    def __init__(self, ledger, export_spec, *, request_id, run_id, owner, epoch):
+        self.ledger = ledger
+        self.spec = export_spec["spec"] if "spec" in export_spec else export_spec
+        self.digest = spec_digest(self.spec)
+        self.request_id, self.run_id, self.owner, self.epoch = request_id, run_id, owner, epoch
+        self.root = ledger.root
+        self.final = self.root / request_id
+        if Path(self.spec.get("artifact_directory", "")) != self.final:
+            raise ExportDenied("export_directory_mismatch")
+        self.staging = self.root / (".staging-" + request_id)
+        self.file = None
+        self.codec = None
+        self.stats = None
+
+    def open(self):
+        _private_root(self.root, create=True)
+        self.ledger.intent(self.request_id, self.owner, self.run_id, self.epoch, self.digest, self.final, self.staging)
+        try:
+            os.mkdir(self.staging, 0o700)
+        except FileExistsError:
+            self.ledger.mark(self.request_id, "failed", "export_staging_exists")
+            raise ExportDenied("export_staging_exists") from None
+        fd = os.open(str(self.staging / "data.csv"),
+                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
+        self.file = os.fdopen(fd, "wb")
+        self.codec = CsvExport(self.spec, self.file)
+        return self
+
+    def feed(self, chunk):
+        self.codec.feed(chunk)
+
+    def finish(self):
+        stats = self.codec.finish()
+        self.file.flush()
+        os.fsync(self.file.fileno())
+        self.file.close()
+        self.file = None
+        self.stats = stats
+        return stats
+
+    def commit_completion(self):
+        if self.stats is None:
+            raise ExportDenied("export_incomplete")
+        self.ledger.complete(self.request_id, self.stats)
+
+    def write_manifest(self):
+        if self.stats is None:
+            raise ExportDenied("export_incomplete")
+        path = self.staging / "manifest.json"
+        if os.path.lexists(path):
+            return
+        manifest = dict(format=FORMAT, spec=self.spec, spec_digest=self.digest, request_id=self.request_id,
+                        run_id=self.run_id, owner=self.owner, epoch=self.epoch,
+                        created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(), **self.stats)
+        data = json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8")
+        fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        _fsync_dir(self.staging)
+
+    def publish(self, gate):
+        row = self.ledger.status(self.request_id)
+        if self.stats is None or row is None or row["state"] != "complete":
+            raise ExportDenied("export_incomplete")
+        self.write_manifest()
+        if not gate():
+            return self._discard("stopped_before_publish")
+        if os.path.lexists(self.final):
+            return self._discard("destination_exists")
+        try:
+            rename_no_replace(self.staging, self.final)
+        except FileExistsError:
+            return self._discard("destination_exists")
+        except OSError:
+            self.ledger.mark(self.request_id, "export_unknown", "publish_rename_failed")
+            return self.ledger.status(self.request_id)
+        try:
+            _fsync_dir(self.root)
+            self.ledger.mark(self.request_id, "exported", None)
+        except Exception:
+            try:
+                self.ledger.mark(self.request_id, "export_unknown", "publish_state_unrecorded")
+            except Exception:
+                pass
+        return self.ledger.status(self.request_id)
+
+    def abort(self, reason):
+        if self.file is not None:
+            try:
+                self.file.close()
+            except OSError:
+                pass
+            self.file = None
+        row = self.ledger.status(self.request_id)
+        try:
+            _remove_owned_dir(self.staging)
+        except ExportDenied:
+            reason = reason + "_staging_untrusted"
+        if row is not None and row["state"] in ("exporting", "complete"):
+            self.ledger.mark(self.request_id, "failed", reason)
+
+    def _discard(self, reason):
+        _remove_owned_dir(self.staging)
+        self.ledger.mark(self.request_id, "not_published", reason)
+        return self.ledger.status(self.request_id)

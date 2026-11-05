@@ -138,6 +138,14 @@ Q3 구현은 A에서 `query_jobs_v2`의 request/run/owner/instance 기록도 같
 
 ## 6. 필요한 경우 CSV 저장 — Q3b
 
+구현 결정(2026-11-05, `tools/db_prod_export.py`):
+
+- host go-sqlcmd가 `(max)` 타입 열을 256자에서 오류 없이 자르는 것을 실측했다. frame은 비-max `varchar(8000)`, 3999바이트(hex 7998자)로 고정하고 header `L<bytes>`와 "마지막을 뺀 frame은 가득 참"으로 잘림을 거부한다.
+- 검토 봉투에는 사용자 SELECT를 감싼 생성 batch 전문과 export spec 전체(컬럼·타입·NULL 표기·한도·`max_source_bytes`·저장 위치)를 넣는다. spec digest는 binding과 envelope 양쪽에 결속된다.
+- export 원장은 별도 additive 테이블 `query_exports_v1`(job schema 버전 불변 — 이전 번들 rollback 호환)이다. 상태는 exporting → complete → exported / not_published / failed / export_unknown.
+- job은 export가 정착한 뒤에만 terminal이 된다. client가 `completed`를 보면 export 최종 상태도 함께 본다.
+- 공개는 macOS `renamex_np(RENAME_EXCL)`이다. 다른 플랫폼은 거부한다.
+
 사용자는 필요한 결과를 CSV로 저장해 개발에 참고하는 것을 허용했다. 기본 메모리 보관의 **명시적 파일 반출 예외**이며 모든 조회 결과의 자동 저장이 아니다. 저장 모드·컬럼·용도·비공개 로컬 경로를 검토 자료에 포함한다. 원본은 Git·공개 저장소·자동 동기화 위키에 두지 않는다.
 
 canonical export spec 전체(형식 버전·정확한 컬럼/순서/타입·NULL codec·고정 base directory·서버 생성 artifact 이름·용도)를 검토 봉투 digest에 포함하고 원장에 spec digest를 보존한다. export는 client가 보낸 경로·컬럼을 실행에 사용하지 않고 서버가 보관한 봉투에서 파생한다. client는 request ID·result digest·export spec digest만 참조하며 정확히 일치하지 않으면 거부한다. 봉투가 사라지면 metadata만으로 반출 사양을 재구성하지 않는다.

@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from db_prod_jobs import SCHEMA_VERSION
 from db_query_control import Denied, Store
 
-CAPABILITIES = ['detached_jobs', 'repeatable_fetch', 'durable_ack']
+CAPABILITIES = ['detached_jobs', 'repeatable_fetch', 'durable_ack', 'csv_export']
 
 
 def _encoded(value):

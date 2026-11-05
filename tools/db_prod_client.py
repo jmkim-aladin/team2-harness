@@ -26,12 +26,14 @@ SAFE_CLIENT_ERRORS = frozenset((
 ))
 
 
-def require_current_gateway(*, require_jobs=False):
+def require_current_gateway(*, require_jobs=False, require_csv=False):
     from db_prod_gateway import current_source_fingerprint
     status = rpc(dict(action="status"))
     if not status.get("ok") or status.get("runtime_fingerprint") != current_source_fingerprint():
         raise RuntimeError("gateway_restart_required")
     if require_jobs and not {'detached_jobs','repeatable_fetch','durable_ack'} <= set(status.get('capabilities', [])):
+        raise RuntimeError('gateway_restart_required')
+    if require_csv and 'csv_export' not in status.get('capabilities', []):
         raise RuntimeError('gateway_restart_required')
 
 
@@ -74,12 +76,19 @@ def display_review(review):
                     "envelope_digest", "approval_digest", "expires_at", "output_mode",
                     'observer_limits', 'memory_limit_scope'):
             print(key + ": " + json.dumps(review.get(key), ensure_ascii=False))
+        export = ""
+        if review.get("output_mode") == "csv":
+            # The complete export contract is part of what the user approves.
+            print("export_spec: " + json.dumps(review["export_spec"], ensure_ascii=False))
+            print("export_spec_digest: " + json.dumps(review["export_spec_digest"]))
+            print("저장 위치: " + review["export_spec"]["artifact_directory"])
+            export = " + 결과를 위 저장 위치에 CSV로 저장(SQL 재실행 없음)"
         if "release_emergency_stop" in review["selected_actions"]:
-            print("승인 동작: 표시한 긴급 중단을 해제하고 이 SQL을 1회 실행")
+            print("승인 동작: 표시한 긴급 중단을 해제하고 이 SQL을 1회 실행" + export)
         elif "resume_current_stop" in review["selected_actions"]:
-            print("승인 동작: 표시한 중단을 해제하고 이 SQL을 1회 실행")
+            print("승인 동작: 표시한 중단을 해제하고 이 SQL을 1회 실행" + export)
         else:
-            print("승인 동작: 표시한 SQL을 1회 실행 (중단 해제 없음)")
+            print("승인 동작: 표시한 SQL을 1회 실행 (중단 해제 없음)" + export)
 
 
 def display_recovery_review(review):
@@ -184,6 +193,23 @@ def start():
     raise RuntimeError("gateway_start_failed")
 
 
+def export_columns(value):
+    columns = []
+    for item in value.split(","):
+        name, _, kind = item.strip().partition(":")
+        if not name or kind not in ("string", "number", "boolean"):
+            raise argparse.ArgumentTypeError("name:type 목록 (type은 string|number|boolean)")
+        columns.append(dict(name=name, type=kind))
+    return columns
+
+
+def positive_int(value):
+    number = int(value)
+    if number <= 0:
+        raise argparse.ArgumentTypeError("양수를 입력하세요")
+    return number
+
+
 def positive_limit(value):
     if value == "unlimited":
         return None
@@ -269,6 +295,14 @@ def main():
         prepare.add_argument('--max-bytes', type=positive_limit,
                              default=32*1024*1024 if name == 'preview' else None,
                              help='preview 기본/최대 32MiB; prepare 기본 unlimited')
+        if name == 'preview':
+            prepare.add_argument('--output', choices=('memory', 'csv'), default='memory',
+                                 help='csv: stdin은 SELECT 하나, 결과를 승인된 위치에 CSV로 저장')
+            prepare.add_argument('--columns', type=export_columns, help='csv 컬럼 name:type,... (순서 고정)')
+            prepare.add_argument('--purpose', help='csv 용도 (manifest에 기록)')
+            prepare.add_argument('--max-file-bytes', type=positive_int, help='csv 파일 byte 상한 (필수)')
+            prepare.add_argument('--max-record-bytes', type=positive_int, default=1 << 20, help='csv 한 행 byte 상한')
+            prepare.add_argument('--max-source-bytes', type=positive_int, help='sqlcmd 출력 byte 상한 (기본: 파일 상한에서 계산)')
     for name in ("review", "approve", "execute", 'run', 'job-status', 'result'):
         command = sub.add_parser(name)
         command.add_argument("request_id")
@@ -285,9 +319,16 @@ def main():
     for name in ("init", "start", "status", "stop", "resume", "emergency-stop"):
         sub.add_parser(name)
     args = parser.parse_args()
+    if args.action == 'preview':
+        csv_options = (args.columns, args.purpose, args.max_file_bytes, args.max_source_bytes)
+        if args.output == 'csv' and None in csv_options[:3]:
+            parser.error('--output csv에는 --columns, --purpose, --max-file-bytes가 필요합니다')
+        if args.output != 'csv' and any(value is not None for value in csv_options):
+            parser.error('CSV 옵션은 --output csv와 함께만 사용합니다')
     try:
         if args.action in ("prepare", "approve", "execute", 'preview', 'run'):
-            require_current_gateway(require_jobs=args.action in ('preview','run'))
+            require_current_gateway(require_jobs=args.action in ('preview','run'),
+                                    require_csv=args.action == 'preview' and args.output == 'csv')
         if args.action in ("emergency-stop", "stop"):
             result = emergency_stop(persistent=args.action == "emergency-stop")
         elif args.action == "init":
@@ -365,9 +406,17 @@ def main():
             sql = sys.stdin.read(1024 * 1024 + 1)
             if len(sql.encode("utf-8")) > 1024 * 1024:
                 raise RuntimeError("sql_too_large")
-            result = rpc(dict(action="prepare", api_version=2 if args.action == 'preview' else 1,
-                              target=args.target, database=args.database,
-                              sql=sql, timeout=args.timeout, max_rows=args.max_rows, max_bytes=args.max_bytes))
+            if args.action == 'preview' and args.output == 'csv':
+                export = dict(columns=args.columns, purpose=args.purpose, max_file_bytes=args.max_file_bytes,
+                              max_record_bytes=args.max_record_bytes, max_rows=args.max_rows)
+                if args.max_source_bytes is not None:
+                    export['max_source_bytes'] = args.max_source_bytes
+                result = rpc(dict(action="prepare", api_version=2, output_mode='csv', target=args.target,
+                                  database=args.database, select_sql=sql, timeout=args.timeout, export=export))
+            else:
+                result = rpc(dict(action="prepare", api_version=2 if args.action == 'preview' else 1,
+                                  target=args.target, database=args.database,
+                                  sql=sql, timeout=args.timeout, max_rows=args.max_rows, max_bytes=args.max_bytes))
             if args.action == 'preview' and result.get('ok'):
                 display_review(result['review'])
         elif args.action == 'run':
@@ -409,6 +458,12 @@ def main():
         else:
             result = rpc(dict(action=args.action))
         print(json.dumps(result, ensure_ascii=False, indent=2))
+        if args.action in ('run', 'result'):
+            # ok means the RPC worked; the exit code reports the job (and export) outcome.
+            export = result.get('export')
+            succeeded = (result.get('ok') and result.get('job_state', 'completed') == 'completed'
+                         and (export is None or export.get('state') == 'exported'))
+            return 0 if succeeded else 1
         return 0 if result.get("ok") else 1
     except KeyboardInterrupt:
         if args.action in ('run','result'):
