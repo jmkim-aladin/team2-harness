@@ -6,7 +6,7 @@
 
 Q3 후보의 `run`·`result`에서 Ctrl+C는 결과 대기만 끝내며 실행 중 조회는 유지한다. 조회 자체를 중단하려면 기존 `stop` 또는 긴급 중단을 사용한다. `job-status`·`result`는 기존 작업만 확인·이어받고 SQL을 재실행하지 않는다. 이는 운영 설치 전 후보의 동작이며 기존 v1 연결 종료·취소 의미는 유지한다.
 
-재개 방식: 독립 `resume`은 기존 TTY 확인을 유지한다. v2 호환 실행기의 `preview`·`run`은 정확한 중단 상태와 SQL 전문을 함께 검토해 “표시한 중단 해제 + 이 SQL 1회 실행”을 한 번 명시 승인할 수 있다. 긴급 중단 해제는 별도 action으로 표시하며 새 epoch·marker가 생기면 거부한다. 아래의 명시적 재개는 두 경로를 포함한다. v2 검토 초안은 차단 중에도 가능하지만 승인 없이 중단 해제·접속·SQL 실행은 하지 않는다. 상위 계약은 [운영 DB 접근 정책](../policies/production-db-access-policy.md)의 v2 단일 승인 절을 따른다.
+재개 방식: 기본 경로는 v2 운영판의 `preview`·`run`이다(2026-11-05 반영). 정확한 중단 상태와 SQL 전문을 함께 검토해 “표시한 중단 해제 + 이 SQL 1회 실행”을 한 번 명시 승인한다. 긴급 중단 해제는 별도 action으로 표시하며 새 epoch·marker가 생기면 거부한다. 독립 `resume`은 기존 TTY 확인을 유지하는 대체 경로로, 사용자가 직접 요청할 때만 쓴다. 아래의 명시적 재개는 두 경로를 포함한다. v2 검토 초안은 차단 중에도 가능하지만 승인 없이 중단 해제·접속·SQL 실행은 하지 않는다. 상위 계약은 [운영 DB 접근 정책](../policies/production-db-access-policy.md)의 v2 단일 승인 절을 따른다.
 
 | 조작 | 효과 |
 |---|---|
@@ -17,7 +17,7 @@ Q3 후보의 `run`·`result`에서 Ctrl+C는 결과 대기만 끝내며 실행 �
 | 상태 확인 | 차단 시각·범위·종료 확인 수·남은 세션 수·확인 실패 원인 표시 |
 | 명시적 재개 | `emergency-stop` 또는 종료 미확인·오류·재시작 차단을 사용자가 상태 확인 후 해제. 이전 조회와 승인은 자동 복원하지 않음 |
 
-현재 계정에서 일반 취소는 `python3 /Users/jm/Documents/workspace/team2/tools/db_prod_client.py stop`으로 요청한다. 추가 승인·사유 입력·에이전트 응답은 선행 조건으로 두지 않는다. 원장 잠금이나 실행기 응답을 기다리기 전에 독립 중단 파일을 영속화하고 watchdog이 소유한 sqlcmd 프로세스를 취소한다. `status`로 `active`·`phase`·서버 종료 확인을 확인한다. 오류 없는 사용자 취소에서 종료가 확인되고 `active=null`, `phase=idle`이면 일반 취소 latch가 자동 해제된다. 오류·timeout은 종료가 확인돼도 active 슬롯만 정리하고 차단을 유지하므로 `resume`이 필요하다. `emergency-stop`은 같은 취소 절차 뒤에도 지속 차단을 남기며, `resume`이 필요하다. 개통 전 사용자가 직접 시험한다.
+현재 계정에서 일반 취소는 운영판 CLI `python3 "/Users/jm/Library/Application Support/team2-db-runtime/current/db_prod_client.py" stop`으로 요청한다. 운영판 경로가 없거나 시작하지 못하면 저장소의 `tools/db_prod_client.py stop`으로 같은 중단 파일을 기록한다. 추가 승인·사유 입력·에이전트 응답은 선행 조건으로 두지 않는다. 원장 잠금이나 실행기 응답을 기다리기 전에 독립 중단 파일을 영속화하고 watchdog이 소유한 sqlcmd 프로세스를 취소한다. `status`로 `active`·`phase`·서버 종료 확인을 확인한다. 오류 없는 사용자 취소에서 종료가 확인되고 `active=null`, `phase=idle`이면 일반 취소 latch가 자동 해제된다. 오류·timeout은 종료가 확인돼도 active 슬롯만 정리하고 차단을 유지하므로 명시적 재개가 필요하다. `emergency-stop`은 같은 취소 절차 뒤에도 지속 차단을 남기며, 긴급 중단 해제 action을 포함한 명시적 재개가 필요하다. 개통 전 사용자가 직접 시험한다.
 
 ## sqlcmd와 중단 제어의 관계
 

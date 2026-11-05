@@ -662,9 +662,9 @@ python3 tools/db_query_control.py --state /관리영역/query-control.sqlite3 st
 
 ## db_prod_client.py — 현재 계정용 운영 조회 실행기
 
-상태: 접속 진단·30초 사용자 중단 시험 성공, 일반 운영 조회는 읽기 전용 권한 검증 전(2026-10-15). 중단 시험은 서버 세션 종료(`session_closed=true`)와 `active=null`, `phase=idle`까지 확인했다. 실행은 `sqlcmd`, 자격증명은 현재 사용자의 로그인 키체인을 사용한다. 별도 macOS 서비스 계정을 만들지 않는다. 같은 계정의 모든 에이전트가 `~/Library/Application Support/team2-db` 원장과 `/tmp/team2-db-<uid>/query.sock`을 공유한다. 같은 UID에 대한 변조 방지나 사람과 에이전트의 OS 권한 분리는 제공하지 않는다.
+상태: 2026-11-05 v2 운영판(지문별 번들 `~/Library/Application Support/team2-db-runtime/current`) 기동, `preview → 승인 → run` 첫 실사용 완료. 개통 범위와 읽기 전용 권한 검증 상태는 [운영 DB 접근 정책](../policies/production-db-access-policy.md)을 따른다. 2026-10-15 접속 진단·30초 사용자 중단 시험 성공. 중단 시험은 서버 세션 종료(`session_closed=true`)와 `active=null`, `phase=idle`까지 확인했다. 실행은 `sqlcmd`, 자격증명은 현재 사용자의 로그인 키체인을 사용한다. 별도 macOS 서비스 계정을 만들지 않는다. 같은 계정의 모든 에이전트가 `~/Library/Application Support/team2-db` 원장과 `/tmp/team2-db-<uid>/query.sock`을 공유한다. 같은 UID에 대한 변조 방지나 사람과 에이전트의 OS 권한 분리는 제공하지 않는다.
 
-아래는 이후 사용을 위한 명령 설명이며 현재 실행 지시가 아니다. 저장소 루트에서 `python3 tools/db_prod_client.py <명령>`으로 사용한다.
+아래는 명령 설명이며 실행 지시가 아니다. 운영 조회·상태·중단은 실행 중인 실행기와 같은 판인 운영판 CLI `python3 "$HOME/Library/Application Support/team2-db-runtime/current/db_prod_client.py" <명령>`으로 사용한다. 저장소의 `tools/db_prod_client.py`는 개발·검사용 원본이며, 운영판이 없을 때 `stop`을 거는 대체 경로로만 쓴다. 기본 조회 흐름은 `preview` → 사용자 명시 승인 → `run`이다.
 
 | 명령 | 동작 |
 |---|---|
@@ -675,21 +675,26 @@ python3 tools/db_query_control.py --state /관리영역/query-control.sqlite3 st
 | `run <요청ID>` | v2 전문과 정확한 action을 다시 표시해 한 번 명시 승인 후 재개·승인 소비·단일 실행권·1회 실행 연결. 별도 RESUME 입력 불필요 |
 | `job-status <요청ID>` | 기존 작업·결과 상태와 다음 행동 조회. SQL 실행 없음 |
 | `result <요청ID>` | 같은 사용자·중단 세대의 기존 결과를 이어받고 전체 길이·SHA-256 확인 후 ack. SQL 실행 없음 |
-| `resume` | `emergency-stop` 또는 종료 미확인·오류·재시작 차단을 사용자 터미널의 `RESUME` 확인 후 해제 |
-| `prepare --target lego-prod --database <DB> --timeout 60 --max-rows 100 --max-bytes 102400` | stdin SQL과 대상·내부 제어 SQL·한도를 묶어 검토 요청 생성. 비밀번호 조회와 DB 접속 없음 |
-| `review <요청ID>` | 승인할 SQL 전문과 조건 표시 |
-| `approve <요청ID>` | 전문 표시 후 사용자 터미널에서 digest 확인 입력 |
-| `execute <요청ID>` | 승인 1회 소비 후 접속·실행·서버 세션 종료 확인·결과 전달 |
 | `stop` | 독립 중단 파일부터 영속화하고 활성 조회를 취소하며 기존 승인 무효화. 오류 없는 사용자 취소에서 서버 종료 확인과 `active=null`, `phase=idle` 뒤 다음 요청 준비를 자동 허용 |
 | `emergency-stop` | 독립 중단 파일부터 영속화하고 활성 조회를 취소하며 기존 승인 무효화. 서버 종료 확인 뒤에도 전체 차단을 유지 |
 | `recovery-prepare` / `recovery-review <요청ID>` | 남은 활성 실행의 종료 확인 SQL과 대상·한도를 준비·표시. DB 접속 없음 |
-| `recovery-approve <요청ID>` / `recovery-execute <요청ID>` | 새 명시 승인 후 종료된 worker의 서버 세션을 관찰. 복구 성공 뒤에도 안전 차단은 유지하며 별도 `resume` 필요 |
+| `recovery-approve <요청ID>` / `recovery-execute <요청ID>` | 새 명시 승인 후 종료된 worker의 서버 세션을 관찰. 복구 성공 뒤에도 안전 차단은 유지하며, 다음 `preview`가 재개 action을 포함해 검토 |
 
-채팅에서 사용자가 표시된 전문을 명시 승인한 경우에만 에이전트가 `approve <요청ID> --from-chat-digest <전체digest>`로 응답을 전달한다. 이 옵션 자체가 사용자의 승인을 증명하지는 않으며 에이전트의 자가 승인에 사용할 수 없다. SQL·대상·프로파일·한도 변경, 실패·재시도에는 새 승인이 필요하다. 준비 요청은 30분 유효하고 실행은 최대 60초, 모든 대상 합계 동시 1개다.
+이전 v1 경로는 기본 조회·재개 안내에 쓰지 않는다. v2가 거부한 요청을 v1로 우회하지 않는다.
+
+| v1 명령 | 동작 |
+|---|---|
+| `resume` | `emergency-stop` 또는 종료 미확인·오류·재시작 차단을 사용자 터미널의 `RESUME` 확인 후 해제. 사용자가 직접 요청할 때만 쓰는 대체 경로 |
+| `prepare --target lego-prod --database <DB> --timeout 60 --max-rows 100 --max-bytes 102400` | stdin SQL과 대상·내부 제어 SQL·한도를 묶어 검토 요청 생성. 비밀번호 조회와 DB 접속 없음. 차단 중 거부 |
+| `review <요청ID>` | 승인할 SQL 전문과 조건 표시 |
+| `approve <요청ID>` | 전문 표시 후 사용자 터미널에서 digest 확인 입력 |
+| `execute <요청ID>` | 승인 1회 소비 후 접속·실행·서버 세션 종료 확인·결과 전달 |
+
+채팅에서 사용자가 표시된 전문을 명시 승인한 경우에만 에이전트가 응답을 전달한다(v2 `run <요청ID> --from-chat-digest <전체approval_digest>`, v1은 `approve`). 이 옵션 자체가 사용자의 승인을 증명하지는 않으며 에이전트의 자가 승인에 사용할 수 없다. SQL·대상·프로파일·한도 변경, 실패·재시도에는 새 승인이 필요하다. 준비 요청은 30분 유효하고 실행은 최대 60초, 모든 대상 합계 동시 1개다.
 
 새 단일 승인 흐름은 v2 `preview` → 사용자 검토·명시 승인 → `run <요청ID> --from-chat-digest <전체approval_digest>`다. 전문은 사용자·준비·조건부 종료 확인 SQL 모두를 포함하며, 긴급 중단 해제가 필요하면 action에도 표시한다. 에이전트는 실제 명시 응답을 받은 뒤에만 `run`으로 전달한다. 검토 내용·동작·중단 세대 변경은 재검토 대상이다. 도구 출력이 잘려 전문을 확인할 수 없으면 승인 요청 전에 완전한 검토 자료를 제공한다.
 
-v2는 기존 v1 `prepare`·`approve`·`execute`·독립 `resume`을 우회로로 사용하지 않는다. 새 경로의 모드·한도가 지원되지 않으면 준비 단계에서 거부한다. 코드·격리 검사 완료는 서비스 설치·재시작 완료가 아니며, `gateway_restart_required`일 때 자동 재시작하지 않는다. Q3 후보는 접수 commit 뒤 작업을 gateway 소유 thread로 실행하고 `run`이 상태·결과를 기다린다. Ctrl+C는 결과 대기만 끝내므로 SQL 중단은 `stop`을 사용한다. 접수 응답이 유실되면 동일 ID의 상태만 조회하며 SQL을 다시 제출하지 않는다. Q3b의 CSV는 아직 지원하지 않는다.
+v2는 기존 v1 `prepare`·`approve`·`execute`·독립 `resume`을 우회로로 사용하지 않는다. 새 경로의 모드·한도가 지원되지 않으면 준비 단계에서 거부한다. 코드·격리 검사 완료는 서비스 설치·재시작 완료가 아니며, `gateway_restart_required`일 때 자동 재시작하지 않는다. 운영판(2026-11-05 반영)은 접수 commit 뒤 작업을 gateway 소유 thread로 실행하고 `run`이 상태·결과를 기다린다. Ctrl+C는 결과 대기만 끝내므로 SQL 중단은 `stop`을 사용한다. 접수 응답이 유실되면 동일 ID의 상태만 조회하며 SQL을 다시 제출하지 않는다. Q3b의 CSV는 아직 지원하지 않는다.
 
 v2 결과는 최신 1개·완료 후 60초·최대 32MiB payload를 메모리에 보관한다. 같은 offset의 `fetch_result`는 같은 bytes를 반환하고, ack는 전달 완료를 SQLite에 먼저 기록한 뒤 메모리를 정리한다. 결과 읽기로 TTL을 연장하지 않는다. 새 중단·만료·다음 결과·실행기 소실은 각각 stopped/expired/superseded/lost_on_restart로 표시하며 재조회로 대체하지 않는다. 전달 완료 metadata는 30일 이내에만 반복 확인하고 미종결·복구 필요 작업은 기한으로 정리하지 않는다.
 

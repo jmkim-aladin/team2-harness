@@ -248,7 +248,7 @@ work-prep은 개발 그룹의 허브다 — 출력이 다음 동사를 지목해
 **확인 필수 항목**:
 
 - **개발 사전 동의 범위 밖 변경, staging 변경, DDL/SP/권한 변경**: SQL 전문(민감값은 보호 경로) + 영향 row + 복구 방법 후 확인 (§11) — 대량 변경·스키마 변경의 영향을 검토한다
-- 운영(prod) DB 조회: [운영 DB 접근 정책](../../../policies/production-db-access-policy.md)의 개통·작업 승인 후 전용 경로에서만 수행한다. 현재 미개통이다. 운영 변경은 기존 DB 변경 절차, 데이터 추출은 [data-request-policy.md](../../../policies/data-request-policy.md)도 따른다 — 조회와 변경·반출 권한을 분리한다
+- 운영(prod) DB 조회: [운영 DB 접근 정책](../../../policies/production-db-access-policy.md)의 개통 범위에서 운영판 실행기로만 수행한다 — SQL 전문을 `preview`로 보여주고 사용자 명시 승인 1회 뒤 `run`한다. 운영 변경은 기존 DB 변경 절차, 데이터 추출은 [data-request-policy.md](../../../policies/data-request-policy.md)도 따른다 — 조회와 변경·반출 권한을 분리한다
 - 브랜치 생성, git 명령, YouTrack 변경: **하지 않는다** — 제안만
 
 > 환경별 사전 동의 범위는 [local-credentials-policy.md](../../../policies/local-credentials-policy.md) §"dev/staging DB 읽기 쿼리: 사전 동의"·§"개발 DB 데이터 입력·수정·삭제"가 SoT다.
