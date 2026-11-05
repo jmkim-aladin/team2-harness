@@ -110,8 +110,8 @@ unset PW
 
 | target / 비밀번호 service | 접속 정보 service | 상태 |
 |---|---|---|
-| `cool-prod` | `cool-prod-profile` | 미개통 |
-| `lego-prod` | `lego-prod-profile` | 비밀번호 키체인 저장 완료(사용자 확인), 미개통 |
+| `cool-prod` | `cool-prod-profile` | 개통(범위는 운영 DB 접근 정책) |
+| `lego-prod` | `lego-prod-profile` | 비밀번호 키체인 저장 완료(사용자 확인), 개통(범위는 운영 DB 접근 정책) |
 
 복사용 빈 JSON 양식은 사용자 지정 위치인 `/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/projects/production-db-access/production-db-access.md`에 둔다. 2026-10-15 사용자 요청에 따라 위키의 허용 DB 목록은 제거하고 등록 양식과 사용 안내만 유지한다.
 
@@ -173,7 +173,7 @@ dev/staging DB 대상의 **읽기 전용 쿼리**(`SELECT`/`EXPLAIN`/`SHOW`/스�
 **여전히 확인 필수**인 항목:
 
 - `MERGE/DDL/SP/권한 변경`, staging의 모든 데이터 변경, 위 개발 사전 동의 범위를 벗어난 변경 — SQL 전문(민감값은 보호 경로) + 예상 건수 + 복구 방법을 보여주고 확인.
-- 운영(prod) DB — [운영 DB 접근 정책](./production-db-access-policy.md)의 개통·작업 승인 경로로 다룬다. 현재 미개통이며 데이터 추출은 [data-request-policy.md](./data-request-policy.md)도 함께 따른다.
+- 운영(prod) DB — [운영 DB 접근 정책](./production-db-access-policy.md)의 개통·작업 승인 경로로 다룬다. 개통 범위는 그 정책을 따르며 데이터 추출은 [data-request-policy.md](./data-request-policy.md)도 함께 따른다.
 - 결과 row 수가 폭주(>10만)할 가능성이 있는 SELECT — 사전에 카운트 쿼리로 가늠 후 본 쿼리 실행.
 - 위키/노트에 결과 row dump를 남기는 행위 — 항상 요약(스키마/카운트/대표 패턴)만.
 

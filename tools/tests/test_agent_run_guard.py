@@ -225,6 +225,11 @@ class ProductionDbTests(GuardFixture):
         "python3 -c \"import subprocess; subprocess.run(['python3', 'tools/db_prod_client.py', 'status'])\"",
         "swiftc tools/db_prod_keychain.swift -o /tmp/k",
         '"$HOME/Library/Application Support/team2-db/db-prod-keychain"',
+        # 운영판 번들 CLI — 문서·/ad:db-stop 이 안내하는 기본 경로
+        'python3 "/Users/jm/Library/Application Support/team2-db-runtime/current/db_prod_client.py" stop',
+        'python3 "$HOME/Library/Application Support/team2-db-runtime/current/db_prod_client.py" preview '
+        '--target cool-prod --database WebCatalog --timeout 30 < /tmp/q.sql',
+        "python3 ~/Library/Application\\ Support/team2-db-runtime/current/db_prod_client.py run abc",
     ]
     ALLOW = [
         "cat tools/db_prod_client.py", 'grep -n "def main" tools/db_prod_gateway.py',
