@@ -22,14 +22,15 @@ team2-agent herdr label DEV2-6509 "정산 배치 재처리" --pane p-abc123   # 
 
 | 면 | 라벨 | 예 |
 |---|---|---|
-| tab / cmux surface | 티켓번호(또는 work-id)만, 없으면 `NO-TICKET` | `DEV2-6509` |
+| tab / cmux surface | `{티켓} - {제목}`, 티켓이 없으면 `{제목}`. 제목 없이 붙이면 티켓번호만, 둘 다 없으면 `NO-TICKET` | `DEV2-6509 - 정산 배치 재처리`, `훅 디버깅` |
 | lead pane (ticket-lead / work-lead) | `{티켓} — {제목}` | `DEV2-6509 — 정산 배치 재처리` |
 | peer / role / worker pane | `{티켓}/{에이전트명} — {업무}` | `DEV2-6509/reviewer — 리뷰`, `NO-TICKET/orch-worker-1 — 훅 디버깅` |
 | herdr agent 이름 | 기존 규약 유지 (`ticket-DEV2-6509`, `orch-worker-1`, `claude0`, `codex1`) | 변경하지 않는다 |
 
 - 제목·업무는 한 줄, 60자에서 말줄임한다 — pane 폭을 넘으면 앞부분까지 잘려 읽을 수 없다.
 - 티켓·work-id가 없으면 `NO-TICKET` — 빈 자리를 남기면 무슨 작업인지 못 읽는다.
-- tab 라벨은 `ticket_tab_label()` 출력과 정확히 같다 — `herdr close`/`tickets`가 이 문자열로 탭을 찾기 때문에 어긋나면 종료 대상 탭을 못 찾는다.
+- tab 라벨의 앞부분은 `ticket_tab_label()` 출력(티켓번호)과 같다. `herdr close`/`tickets`는 정확히 같은 탭을 먼저, 없으면 `{티켓} - ` 접두 탭을 찾는다(`tab_by_label`) — 제목을 붙여도 종료·재사용 대상 탭을 잃지 않는다.
+- 탭 제목은 여러 탭 사이에서 무슨 일인지 바로 읽히도록 티켓번호와 제목을 함께 둔다(2026-11-06 사용자 요청). 구분자는 pane의 ` — `와 달리 ` - `다.
 
 ## agent 이름은 라우팅 주소다
 
@@ -62,7 +63,7 @@ team2-agent herdr label DEV2-6509 "정산 배치 재처리" --pane p-abc123   # 
 
 ```bash
 herdr pane get "$HERDR_PANE_ID"            # → .result.pane.tab_id
-herdr tab rename "$TAB_ID" "DEV2-6509"
+herdr tab rename "$TAB_ID" "DEV2-6509 - 정산 배치 재처리"
 herdr pane rename "$HERDR_PANE_ID" "DEV2-6509 — 정산 배치 재처리"
-cmux rename-tab --surface "$CMUX_SURFACE_ID" "DEV2-6509"
+cmux rename-tab --surface "$CMUX_SURFACE_ID" "DEV2-6509 - 정산 배치 재처리"
 ```

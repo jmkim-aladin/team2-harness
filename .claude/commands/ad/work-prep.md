@@ -175,7 +175,7 @@ team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-tick
 | 담당자 | {fullName ({login})} |
 | 위키 노트 | $LOCAL_WIKI_PATH/wiki/processes/tickets/dev2-{nnnn}.md (생성/갱신) |
 | Daily 아젠다 | $LOCAL_WIKI_PATH/wiki/processes/daily/{YYYY-MM-DD}.md (추가/스킵) |
-| cmux/herdr 라벨 | DEV2-{NNNN} (변경/스킵 — 외부 환경이면 스킵, §9) |
+| cmux/herdr 라벨 | DEV2-{NNNN} - {제목} (변경/스킵 — 외부 환경이면 스킵, §9) |
 | 제안 브랜치 | feature/DEV2-{NNNN} (미생성) |
 | 제안 커밋 prefix | [DEV2-{NNNN}] |
 | 강도 | {가벼움/보통/무거움/위험} — {판정 단서} |
