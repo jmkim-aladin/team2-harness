@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import shutil
 import stat
@@ -2641,7 +2642,10 @@ class Team2AgentTests(unittest.TestCase):
 
     def test_label_strings_follow_ticket_agent_task_schema(self) -> None:
         self.assertEqual(agent.tab_label_for("DEV2-6509"), "DEV2-6509")
+        self.assertEqual(agent.tab_label_for("DEV2-6509", "정산 배치 재처리"), "DEV2-6509 - 정산 배치 재처리")
+        self.assertEqual(agent.tab_label_for("", "훅 디버깅"), "훅 디버깅")
         self.assertEqual(agent.tab_label_for(""), "NO-TICKET")
+        self.assertEqual(len(agent.tab_label_for("", "가" * 80)), 60)
         self.assertEqual(agent.pane_label_for("DEV2-6509", summary="정산 배치 재처리"), "DEV2-6509 — 정산 배치 재처리")
         self.assertEqual(agent.pane_label_for("DEV2-6509", summary="리뷰", agent="reviewer"), "DEV2-6509/reviewer — 리뷰")
         self.assertEqual(agent.pane_label_for("", summary="훅 디버깅", agent="orch-worker-1"), "NO-TICKET/orch-worker-1 — 훅 디버깅")
@@ -2689,7 +2693,7 @@ class Team2AgentTests(unittest.TestCase):
             seen,
             [
                 ["herdr", "pane", "get", "p-lead"],
-                ["herdr", "tab", "rename", "t-6509", "DEV2-6509"],
+                ["herdr", "tab", "rename", "t-6509", "DEV2-6509 - 정산 배치 재처리"],
                 ["herdr", "pane", "rename", "p-lead", "DEV2-6509 — 정산 배치 재처리"],
             ],
         )
@@ -2707,7 +2711,7 @@ class Team2AgentTests(unittest.TestCase):
             code = agent.run(["herdr", "label", "--no-ticket", "훅 디버깅"], config=config, runner=runner)
 
         self.assertEqual(code, 0)
-        self.assertEqual(seen, [["cmux", "rename-tab", "--surface", "cs1", "NO-TICKET"]])
+        self.assertEqual(seen, [["cmux", "rename-tab", "--surface", "cs1", "훅 디버깅"]])
 
     def test_run_herdr_label_is_a_noop_outside_herdr_and_cmux(self) -> None:
         seen: list[list[str]] = []
@@ -2776,9 +2780,17 @@ class Team2AgentTests(unittest.TestCase):
             before,
             ("ticket-DEV2-6509", "work-aasm-resource-url-copy", "ticket-DEV2-6509-reviewer", ["ticket-DEV2-6509", "DEV2-6509"], "DEV2-6509"),
         )
-        # tab label 스키마는 기존 탭 식별자(ticket_tab_label)와 정확히 같아야 close 가 탭을 찾는다.
+        # 제목 없는 탭 라벨은 기존 탭 식별자(ticket_tab_label)와 같고, 제목이 붙은 탭도 close/tickets 가 찾는다.
         self.assertEqual(agent.tab_label_for("DEV2-6509"), agent.ticket_tab_label("DEV2-6509"))
         self.assertEqual(agent.tab_label_for("aasm-resource-url-copy"), agent.close_tab_label("aasm-resource-url-copy", "auto"))
+        tabs = json.dumps({"result": {"tabs": [
+            {"tab_id": "t-10", "label": "DEV2-65090 - 다른 티켓", "workspace_id": "w1"},
+            {"tab_id": "t-1", "label": agent.tab_label_for("DEV2-6509", "정산 배치 재처리"), "workspace_id": "w1"},
+        ]}})
+        found = agent.tab_by_label(tabs, agent.close_tab_label("DEV2-6509", "auto"))
+        self.assertIsNotNone(found)
+        self.assertEqual(found.tab_id, "t-1")
+        self.assertIsNone(agent.tab_by_label(tabs, "DEV2-650"))
 
     def test_label_ref_and_agent_splits_role_panes_and_keeps_lead_slot_empty(self) -> None:
         self.assertEqual(agent.label_ref_and_agent("ticket-DEV2-6509-reviewer", "DEV2-6509", kind="ticket"), ("DEV2-6509", "reviewer"))

@@ -30,6 +30,7 @@ CMUX = "cmux"
 NO_TICKET_LABEL = "NO-TICKET"
 LABEL_TEXT_LIMIT = 60
 LABEL_SEPARATOR = " — "
+TAB_TITLE_SEPARATOR = " - "
 ORCHESTRATION_WORKSPACE_LABEL = "team2-orchestration"
 TRIAGE_WORKSPACE_LABEL = "team2-triage"
 ORCHESTRATOR_AGENT_NAME = "global-orchestrator"
@@ -720,8 +721,16 @@ def label_ticket_token(ticket: str) -> str:
     return (ticket or "").strip() or NO_TICKET_LABEL
 
 
-def tab_label_for(ticket: str) -> str:
-    return label_ticket_token(ticket)
+def tab_label_for(ticket: str, summary: str = "") -> str:
+    """탭 제목: 티켓이 있으면 `{티켓} - {제목}`, 없으면 `{제목}`. 둘 다 없을 때만 NO-TICKET.
+
+    탭 제목은 여러 탭 중 무슨 일인지 바로 읽혀야 한다. 탭 검색(`tab_by_label`)은 `{티켓} - ` 접두로도 찾는다.
+    """
+    ticket_id = (ticket or "").strip()
+    title = truncate_label_text(summary)
+    if ticket_id and title:
+        return f"{ticket_id}{TAB_TITLE_SEPARATOR}{title}"
+    return ticket_id or title or NO_TICKET_LABEL
 
 
 def pane_label_for(ticket: str, *, summary: str = "", agent: str = "") -> str:
@@ -1109,8 +1118,16 @@ def herdr_tabs(output: str) -> list[HerdrTab]:
 
 
 def tab_by_label(output: str, label: str) -> HerdrTab | None:
-    for tab in herdr_tabs(output):
+    """정확히 같은 탭을 먼저, 없으면 `herdr label`이 제목을 붙인 `{label} - {제목}` 탭을 찾는다."""
+    tabs = herdr_tabs(output)
+    for tab in tabs:
         if tab.label == label:
+            return tab
+    if not label:
+        return None
+    titled_prefix = f"{label}{TAB_TITLE_SEPARATOR}"
+    for tab in tabs:
+        if tab.label.startswith(titled_prefix):
             return tab
     return None
 
@@ -2079,7 +2096,7 @@ def run_herdr_label(args: argparse.Namespace, config: Config, execute=None) -> i
         execute = lambda cmd, cwd: subprocess.run(list(cmd), cwd=cwd, text=True, check=False, capture_output=True)
     env = dict(os.environ)
     ticket, summary = label_inputs(args)
-    tab_label = tab_label_for(ticket)
+    tab_label = tab_label_for(ticket, summary)
     pane_label = pane_label_for(ticket, summary=summary, agent=args.agent)
 
     applied = False
