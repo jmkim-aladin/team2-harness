@@ -3,17 +3,6 @@
 팀 공통 정책, 스킬, 서비스 카탈로그의 source of truth.
 셋업: [docs/setup-guide.md](./docs/setup-guide.md) | 운영: [docs/harness-guide.md](./docs/harness-guide.md)
 
-## 구조
-
-- `policies/` — 팀 정책. 디렉토리가 SoT — `ls policies/`로 조회
-- `catalog/` — 서비스 프로파일. 디렉토리가 SoT — `ls catalog/`로 조회
-- `catalog/common-services/registry.yaml` — 알라딘 인증, 뉴빌링 등 공통 서비스 영향 확인 registry
-- `templates/` — 서비스 하네스 템플릿, PR/DoD 체크리스트, 티켓 템플릿
-- `.claude/commands/ad/` — 팀 스킬. 디렉토리가 SoT — `ls .claude/commands/ad/`로 조회
-- `scripts/setup.sh` — 원커맨드 셋업
-- `docs/` — 가이드 문서
-- `docs/sprint/` — 스프린트 운영. 디렉토리가 SoT — `ls docs/sprint/`로 조회
-
 ## 핵심 규칙
 
 - 하네스 개선의 방향 판정: [policies/harness-north-star.md](./policies/harness-north-star.md) — 검증 루프 > 지시, 문제 단위 위임, smart zone, 환경=진실, 게이트 기계화, 아티팩트 기억
@@ -41,19 +30,7 @@
 
 ## 서비스
 
-| 서비스 | 유형 | 프로파일 |
-|--------|------|----------|
-| max (만권당) | legacy | [catalog/max.yaml](./catalog/max.yaml) |
-| tobe (투비컨티뉴드) | legacy | [catalog/tobe.yaml](./catalog/tobe.yaml) |
-| naru | new | [catalog/naru.yaml](./catalog/naru.yaml) |
-| bazaar | new | [catalog/bazaar.yaml](./catalog/bazaar.yaml) |
-| aasm | new | [catalog/aasm.yaml](./catalog/aasm.yaml) |
-| storefront (스토어프론트) | new (설계 중) | [catalog/storefront.yaml](./catalog/storefront.yaml) |
-| caravan (가상 대기열) | new | [catalog/caravan.yaml](./catalog/caravan.yaml) |
-| pod | new | [catalog/pod.yaml](./catalog/pod.yaml) |
-| shopping (알라딘 쇼핑) | legacy | [catalog/shopping.yaml](./catalog/shopping.yaml) |
-| blog (블로그/북플) | legacy | [catalog/blog.yaml](./catalog/blog.yaml) |
-| attendance (근태관리) | new | [catalog/attendance.yaml](./catalog/attendance.yaml) |
+서비스 프로파일: `catalog/{id}.yaml` — 한글명·유형(legacy/new)은 각 파일의 `name`·`type`
 
 ## 외부 스킬
 
