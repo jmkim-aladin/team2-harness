@@ -9,7 +9,7 @@
 | 대상 | 규칙 | 예 | 쓰지 않는 것 |
 |---|---|---|---|
 | 들어오는 포트 | `{업무 명사}` + 접미 넷 중 하나(아래 표) | `OrderCancellationIntake`, `OrderQuery` | 행위자 명사(`OrderPlacer`), 접미 없는 복수 명사, `*Monitor`·`*Finder`·`*Reader`·`*Directory` |
-| 저장 포트 | 애그리거트 루트는 `{Root}Repository`. 루트가 아닌 읽기·기록은 `*Directory`(등록부 조회)·`*Catalog`(기준 정보)·`*Log`(추가 전용 기록) | `OrderRepository`, `TenantDirectory` | `*Service`, 접미 없는 복수 명사 |
+| 저장 포트 | 애그리거트 루트는 `{Root}Repository`. 루트가 아닌 읽기·기록은 `*Directory`(등록부 조회)·`*Catalog`(기준 정보)·`*Log`(추가 전용 기록 — 수신 사건 멱등 기록은 본문은 추가 전용이고 처리 표시만 갱신할 수 있다, §3 저장소 차이) | `OrderRepository`, `TenantDirectory` | `*Service`, 접미 없는 복수 명사 |
 | 외부 포트 | `{대상}Port`, `domain.port` 에 둔다. 구현이 여럿이면 `supports(code)` | `PaymentGatewayPort` | |
 | 구현 선택기 | `{포트에서 Port 를 뺀 이름}Registry`, usecase 에 둔다 | `PaymentGatewayRegistry` | 테이블 객체에 `*Registry` |
 | usecase 구현 | `Default{포트 이름}`, 포트 하나에 구현 하나 | `DefaultOrderIntake` | 다른 접두, 포트 이름과 다른 `Default*` |
