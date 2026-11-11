@@ -42,7 +42,7 @@
 - 공통 에러 응답, 인증 필터, trace/correlation 처리 공통화
 - API·admin·batch가 같은 repository에 있더라도 artifact·config·secret·deploy·rollback은 애플리케이션별로 분리하고, 실제 사용하는 capability·DB만 선택해 조립한다
 - Kotlin/Spring 멀티프로젝트의 Clean/Hexagonal 경계, runtime·persistence·migration·security·observability 선택과 검증 기준은 [Kotlin/Spring 멀티프로젝트 애플리케이션 표준](../docs/kotlin-spring-multi-project-application-standard.md)을 따른다
-- BC 4계층 Kotlin 백엔드의 모듈·패키지·이름·의존·TX 경계·DB 계층 규칙과 검사 장치는 [Kotlin 백엔드 구조 표준](../docs/kotlin-backend-structure-standard.md)을 따른다. 포트 위치(`domain.port`)와 통합 테스트 위치(`src/test` + 태그)는 이 문서가 위 멀티프로젝트 표준보다 우선한다 — 두 문서가 반대로 지시하는 자리를 여기서 정한다 (근거: 2026-11-11 사용자 결정 — 주문 서비스·StoreFront 구조 표준 Q-STD-1~8 채택)
+- BC 4계층 Kotlin 백엔드의 모듈·패키지·이름·의존·TX 경계·DB 계층 규칙과 검사 장치는 [Kotlin 백엔드 구조 표준](../docs/kotlin-backend-structure-standard.md)을 따른다. 포트 위치(`domain.port`), 통합 테스트 위치(`src/test` + 태그), usecase 모듈의 Spring 조립 클래스(`*Configuration` 만 Spring 을 쓴다)는 구조 표준이 위 멀티프로젝트 표준보다 우선한다 — 두 문서가 반대로 지시하는 자리를 여기서 정한다 (근거: 2026-11-11 사용자 결정 — 주문 서비스·StoreFront 구조 표준 Q-STD-1~8 채택, 같은 날 교차검증에서 세 번째 충돌을 확인해 더했다)
 
 ### 레거시 서비스
 - SP(Stored Procedure)는 레거시 비즈니스 런타임으로 취급
