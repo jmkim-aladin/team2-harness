@@ -134,7 +134,7 @@ BC 4계층 구조(`contexts/<bc>/{api,domain,usecase,data}`)를 쓰는 개발2�
 
 ### 6.3 DB 계층
 
-- **DB-1 (필수)** 마이그레이션 파일에는 사용자 정의 함수·프로시저·트리거를 만들거나 고치는 문장을 쓰지 않는다 — `CREATE [OR REPLACE] FUNCTION`·`CREATE [OR REPLACE] PROCEDURE`·`CREATE [OR REPLACE] TRIGGER`·`CREATE CONSTRAINT TRIGGER`·`CREATE EVENT TRIGGER`, 그리고 기존 함수·프로시저의 속성을 바꾸거나 쿼리를 다시 쓰는 `ALTER FUNCTION`·`ALTER PROCEDURE`·`CREATE [OR REPLACE] RULE`·`CREATE AGGREGATE`·`CREATE OPERATOR`. `DO` 블록이나 동적 SQL 안에서 만드는 것도 같다. 지우는 문장(`DROP`)은 쓸 수 있다. DB 에 두는 것은 PK·FK·UNIQUE·NOT NULL·CHECK 제약과 권한(`GRANT`·`REVOKE`·열 권한)이다. PostgreSQL 내장 함수, 기본값, identity, DOMAIN 의 CHECK, 뷰는 절차 로직이 아니라 쓸 수 있다.
+- **DB-1 (필수)** 마이그레이션 파일에는 사용자 정의 함수·프로시저·트리거를 만들거나 고치는 문장을 쓰지 않는다 — `CREATE [OR REPLACE] FUNCTION`·`CREATE [OR REPLACE] PROCEDURE`·`CREATE [OR REPLACE] TRIGGER`·`CREATE CONSTRAINT TRIGGER`·`CREATE EVENT TRIGGER`, 그리고 기존 절차 객체를 바꾸거나 끄거나 쿼리를 다시 쓰는 `ALTER FUNCTION|PROCEDURE|ROUTINE|TRIGGER|EVENT TRIGGER|RULE|AGGREGATE|OPERATOR`·`CREATE [OR REPLACE] RULE`·`CREATE AGGREGATE|OPERATOR|CAST`·`ALTER TABLE … ENABLE|DISABLE [ALWAYS|REPLICA] TRIGGER|RULE`(행 보안 `ROW LEVEL SECURITY` 는 해당 없음). 금지 목록 밖의 드문 문장(`CREATE TRANSFORM`·`CREATE LANGUAGE`·외부 표 트리거)은 리뷰로 막는다. `DO` 블록이나 동적 SQL 안에서 만드는 것도 같다. 지우는 문장(`DROP`)은 쓸 수 있다. DB 에 두는 것은 PK·FK·UNIQUE·NOT NULL·CHECK 제약과 권한(`GRANT`·`REVOKE`·열 권한)이다. PostgreSQL 내장 함수, 기본값, identity, DOMAIN 의 CHECK, 뷰는 절차 로직이 아니라 쓸 수 있다.
   - 이미 함수·트리거가 있는 저장소는 채택 시점의 마이그레이션 파일을 **경로와 내용 해시**로 고정한다. 고정된 파일은 고치거나 지우지 못하고, 목록에 없는 파일은 날짜와 상관없이 새 파일로 검사한다.
   - 새 파일은 기존 함수의 본문 수정도 쓰지 못한다 — 기능 변경이 그 로직의 수정을 요구하면 그 검사를 앱으로 옮기는 일을 그 변경과 함께 한다.
   - 적용이 끝난 DB 에 남은 함수·프로시저·트리거는 채택 시점 객체의 부분집합이고 정의가 같아야 한다.
