@@ -41,7 +41,7 @@ cd team2
 
 스크립트가 자동으로:
 1. `TEAM2_HARNESS_PATH`, `YOUTRACK_BASE_URL` 등록
-2. 사용자 레벨 하드 게이트 설치 — `~/.claude/settings.json`에 DB 가드·push/PR 가드·AI 푸터 가드 훅, 되돌릴 수 없는 동작(비밀 파일 읽기·강제 push·미커밋 변경 폐기) deny 규칙 (`tools/install_claude_gates.py`, `setup_harness.py`도 같은 선언으로 수렴)
+2. 사용자 레벨 하드 게이트 설치 — `~/.claude/settings.json`에 DB 가드·push/PR 가드·교정 가드(AI 푸터·subagent 모델) 훅, 되돌릴 수 없는 동작(비밀 파일 읽기·강제 push·미커밋 변경 폐기) deny 규칙 (`tools/install_claude_gates.py`, `setup_harness.py`도 같은 선언으로 수렴)
 3. Claude Code `/ad` command 심볼릭 링크 생성
 4. `~/.codex/skills/*`, `~/.claude/skills/*`에 team2 Skill 심볼릭 링크 생성
 5. YouTrack 토큰 설정 확인

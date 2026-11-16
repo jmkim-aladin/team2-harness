@@ -2,7 +2,7 @@
 """사용자 레벨 Claude Code 하드 게이트 설치 — ~/.claude/settings.json 에 훅·ask 규칙을 멱등 병합한다.
 
 설치 대상 (모든 repo·worktree·Paperclip 실행에 적용):
-  PreToolUse 훅  sqlcmd-readonly(Bash) · block-db-mcp(mcp__.*) · agent-run-guard(Bash·MCP) · ai-footer-guard(Bash)
+  PreToolUse 훅  sqlcmd-readonly(Bash) · block-db-mcp(mcp__.*) · agent-run-guard(Bash·MCP) · correction-guard(Bash·Agent)
   permissions.ask  없음 — gh pr merge 정적 ask 는 은퇴. 사람 세션의 승인·머지는 사전 동의(~/.claude/CLAUDE.md §PR 승인·머지,
                    2026-11-04)라 다시 묻지 않고, 에이전트 실행의 merge 는 agent-run-guard 가 막는다
   permissions.deny  되돌릴 수 없는 것만 — 비밀 파일 읽기(.env·SSH·클라우드·DB 자격증명), 강제 push,
@@ -36,8 +36,10 @@ HOOKS = (
     ("sqlcmd-readonly", "Bash"),
     ("block-db-mcp", "mcp__.*"),
     ("agent-run-guard", "Bash|mcp__.*"),
-    ("ai-footer-guard", "Bash"),
+    ("correction-guard", "Bash|Agent|Task"),
 )
+# 이름을 바꾼 옛 훅 — 설치본에 남아 있으면 지운다 (ai-footer-guard → correction-guard, 2026-11-16)
+RETIRED_HOOKS = ("ai-footer-guard",)
 # rtk PreToolUse 훅이 명령을 `rtk …` 로 바꾼 뒤 권한을 판정한다 — 은퇴 규칙도 두 형태를 함께 지운다
 ASK_RULES = ()
 RETIRED_ASK_RULES = ("Bash(git push:*)", "Bash(gh pr create:*)", "Bash(rtk git push:*)", "Bash(rtk gh pr create:*)",
@@ -61,6 +63,28 @@ def _managed(command, name):
     return isinstance(command, str) and f"/.claude/hooks/{name}.sh" in command.replace("\\", "/")
 
 
+def _drop_retired(pre):
+    """은퇴 훅 항목을 제거하고 제거한 이름 목록을 돌려준다. 비게 된 그룹도 뺀다."""
+    dropped, groups = [], []
+    for group in pre:
+        entries = group.get("hooks") if isinstance(group, dict) else None
+        if not isinstance(entries, list) or not entries:
+            groups.append(group)
+            continue
+        keep = []
+        for h in entries:
+            name = next((n for n in RETIRED_HOOKS if isinstance(h, dict) and _managed(h.get("command"), n)), None)
+            if name:
+                dropped.append(name)
+            else:
+                keep.append(h)
+        if keep:
+            group["hooks"] = keep
+            groups.append(group)
+    pre[:] = groups
+    return dropped
+
+
 def merge_settings(settings, harness):
     """(새 settings, 변경 목록). 입력은 바꾸지 않는다. 형식이 예상과 다르면 ValueError."""
     if not isinstance(settings, dict):
@@ -72,7 +96,7 @@ def merge_settings(settings, harness):
     pre = hooks.setdefault("PreToolUse", [])
     if not isinstance(pre, list) or not all(isinstance(g, dict) for g in pre):
         raise ValueError("settings.json hooks.PreToolUse 가 목록이 아님")
-    changes = []
+    changes = [f"PreToolUse 훅 제거 — {n} (은퇴)" for n in _drop_retired(pre)]
     for name, matcher in HOOKS:
         want = hook_command(harness, name)
         kept_exact, removed, groups = False, 0, []
@@ -138,6 +162,7 @@ def remove_settings(settings):
     hooks = s.get("hooks")
     pre = hooks.get("PreToolUse") if isinstance(hooks, dict) else None
     if isinstance(pre, list):
+        changes += [f"PreToolUse 훅 제거 — {n} (은퇴)" for n in _drop_retired(pre)]
         groups = []
         for group in pre:
             entries = group.get("hooks") if isinstance(group, dict) else None

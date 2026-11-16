@@ -3,7 +3,23 @@
 기준: [policies/skill-authoring-principles.md](../policies/skill-authoring-principles.md) | 갱신: `/ad:harness-optimize 스킬`·`제약`·`스택`
 통계: `python3 tools/skill_usage_report.py` (팀 스킬) | `python3 tools/harness_context_audit.py` (컨텍스트·외부 스택·훅)
 
-최종 감사일: 2026-11-04 (11회차 — 검증 근거·표본·업무 산출물, 범위 제한)
+최종 감사일: 2026-11-16 (12회차 — 교정 규칙 기계화, 제약 모드)
+
+## 12회차 감사 (2026-11-16) — 교정 규칙 기계화 (제약 모드)
+
+범위: AI Engineer 발표 2편(Lydia Hallie "Rethinking Claude Code Best Practices", Lauren Tan "All Code Is Slop")에서 출발했다. 사용자 교정 규칙의 출처는 `~/.claude/CLAUDE.md`, `memory/claude-base.md`, 개인 auto-memory `feedback_*` 7건이다. 이 규칙들을 기계화 가능/불가로 분류했다. 서비스 repo의 정책 lint화는 범위 밖이다. [북극성 1·5]
+
+| 구분 | 판정·실제 근거 | 확인 한계 |
+|---|---|---|
+| 대장 신설 | [교정 규칙 강제 대장](correction-ledger.md) 팀 규칙 14행: 강제 7 · 문서 5 · 후보 1 · 보류 1. 개인 규칙 6행은 팀 훅에 넣지 않고 기록만 함 | 팀원 개인 auto-memory는 보지 않음 |
+| 도구화 | `correction-guard` 훅(Bash·Agent): AI 푸터(팀 정책) + 단순 조사 subagent model 누락. 같은 날 머지한 `ai-footer-guard`(미설치)를 일반화해 툴 호출당 훅 프로세스를 늘리지 않음. 설치기는 옛 이름을 은퇴로 정리 | Codex 세션에는 해당 훅 없음 — 푸터는 CI·리뷰가 보조 |
+| 권한 | deny 15건(비밀 파일·강제 push·reset --hard·clean -f) 선언·적용. `Read(**/.env)`는 세션 cwd 하위만 막아 `//**/.env`로 교체(실측) | sandbox(OS 수준 부수효과 제한)는 미도입 |
+| 보류 | 서브에이전트 커밋 금지 — PreToolUse 입력에서 subagent 호출을 구분하는 필드를 확인하지 못함 | 훅 입력 스키마 재확인 필요 |
+| 문서 유지 | 리뷰 범위·해당없음 표기·남의 티켓 경계·문서 위치·브라우저 기본값 — 판단이 필요해 기계 판정이 불안정 | — |
+
+재제안 방지: pstack은 2026-09-14 B01–B10으로 이미 반영됐다([적용 기록](pstack-harness-implementation.md)). 이번 회차의 새 번안은 이전 검토 대상에 없던 `correct`뿐이다. `blast-radius`·`teach`는 기존 판정(보완·기존 스킬)을 유지한다.
+
+검증: `tools/tests` 가드·설치기 28건 OK, lint 신규 위반 0. 실제 설정에 deny를 적용한 뒤 강제 push 차단, cwd 밖 `.env` 차단, `.env.example` 허용을 관찰했다. CI(macOS)를 신설해 main push마다 secret scan·lint·`tests`·`tools/tests`를 실행한다.
 
 ## 11회차 감사 (2026-11-04) — 검증 근거·표본·업무 산출물
 
@@ -442,6 +458,13 @@ Codex는 cached input이 포함된 input을 사용했고, Claude는 input+cache-
 ## 북극성 원칙별 거리 (회차마다 갱신)
 
 기준: [policies/harness-north-star.md](../policies/harness-north-star.md). 측정 신호가 좁혀지는지 회차 간 추이로 본다.
+
+### 12회차 범위 내 측정 (2026-11-16)
+
+| 원칙 | 확인한 신호 | 미측정·유지 범위 |
+|---|---|---|
+| 1 검증 루프 | CI 신설 — 커밋 경로와 무관하게 전체 회귀 실행 | 서비스 repo CI 미대상 |
+| 5 게이트 | 훅 3→4건(+`correction-guard`), deny 0→15건. 교정 대장 팀 규칙 14건 중 기계 강제 7건(50%) | R1a 유예 55건 유지 |
 
 ### 11회차 범위 내 측정 (2026-11-04)
 
