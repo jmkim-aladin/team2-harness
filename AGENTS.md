@@ -38,6 +38,18 @@ $LOCAL_WIKI_PATH    = /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Docu
 
 `/ad:*` SoT와 vendored 스킬 본문은 Claude Code 도구명을 사용하므로 Codex에서는 이렇게 읽는다: `Bash`→`exec_command`, `Read`→`sed`/`rg`/`cat`, `Write`·`Edit`→`apply_patch`, `Grep`·`Glob`→`rg`/`find`, `Agent`→가능하면 multi-agent, `AskUserQuestion`→짧은 직접 질문.
 
+## 문제 해결 우선 기조
+
+> SoT: `memory/claude-base.md` §문제 해결 우선 기조. 아래는 자동 생성한다.
+
+<!-- generated:problem-solving-first source=memory/claude-base.md -->
+- 기본: 업무 파악·계획·실행은 해결할 문제와 완료 기준을 중심으로 잡고, 정확성과 설명의 명확성을 확보하면서 가장 빠르게 해결할 수 있는 접근을 우선한다. 접근의 복잡도와 변경 범위는 문제 해결에 필요한 만큼으로 잡는다.
+- 시작 단계의 첫 안내에는 **해결할 문제·완료 기준·우선 접근과 선택 이유**를 짧게 밝힌다. 정보가 부족하면 현재 이해와 가정을 구분하고, 접근을 결정하는 데 필요한 확인부터 진행한다.
+- 구조 변경은 현재 구조가 해결을 막거나 재발의 원인인 경우 등 필요성이 확인되면 제안한다. 직접 해결안과 비교해 필요한 이유, 기대 효과, 변경 범위·비용을 설명하고, 구조 변경이 가장 빠르고 확실한 해결 경로라면 처음부터 그 방향을 제시한다.
+
+근거: 2026-11-13 사용자 요청 — 문제에 집중해 가장 빠르고 정확·명확한 해결 방향을 먼저 구상하고, 필요한 구조 변경을 제안하며 이 기조를 시작 단계에서 언급한다. 북극성 원칙 2(문제·목표·판정 기준 중심)를 적용한다.
+<!-- /generated:problem-solving-first -->
+
 ## 작업 플로우
 
 > SoT: [memory/claude-base.md](./memory/claude-base.md) §작업 플로우 — Claude 전역 메모리로만 가므로 Codex용으로 아래 블록을 **생성**한다. 직접 고치지 말고 SoT를 고친 뒤 `python3 tools/lint_harness_rules.py --sync-generated`. `/ad:{name}`은 `$ad-{name}`으로 읽는다.

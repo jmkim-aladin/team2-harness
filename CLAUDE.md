@@ -5,6 +5,7 @@
 
 ## 핵심 규칙
 
+- 문제 해결 우선 기조·시작 안내: [memory/claude-base.md](./memory/claude-base.md) §문제 해결 우선 기조
 - 하네스 개선의 방향 판정: [policies/harness-north-star.md](./policies/harness-north-star.md) — 검증 루프 > 지시, 문제 단위 위임, smart zone, 환경=진실, 게이트 기계화, 아티팩트 기억
 - 지시 강도(invariant/policy/heuristic/example)·충돌 시 우선순위·판단 경계: [policies/instruction-precedence-policy.md](./policies/instruction-precedence-policy.md)
 - 세션 컨텍스트 규율: [memory/claude-base.md](./memory/claude-base.md) §세션 컨텍스트 규율
