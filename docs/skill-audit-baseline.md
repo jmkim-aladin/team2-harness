@@ -17,6 +17,8 @@
 | 보류 | 서브에이전트 커밋 금지 — PreToolUse 입력에서 subagent 호출을 구분하는 필드를 확인하지 못함 | 훅 입력 스키마 재확인 필요 |
 | 문서 유지 | 리뷰 범위·해당없음 표기·남의 티켓 경계·문서 위치·브라우저 기본값 — 판단이 필요해 기계 판정이 불안정 | — |
 
+후속(같은 날): 리뷰 완화 신호에 **우회 주석** 범주를 추가했다(`gate_loosening_scan`). 처음 넣은 한국어 `우회`는 보안 맥락의 bypass와 겹쳐 서비스 repo 8개 이력에서 오탐 54건이 나왔다. 문제를 피해 가는 용법만 잡도록 좁혀 오탐 0, 정탐 1이 됐다. 검증 증거 중심 리뷰는 `code-review-policy` 체크포인트·DoD·PR 템플릿(pstack B03)에 이미 있어 변경하지 않았다.
+
 재제안 방지: pstack은 2026-09-14 B01–B10으로 이미 반영됐다([적용 기록](pstack-harness-implementation.md)). 이번 회차의 새 번안은 이전 검토 대상에 없던 `correct`뿐이다. `blast-radius`·`teach`는 기존 판정(보완·기존 스킬)을 유지한다.
 
 검증: `tools/tests` 가드·설치기 28건 OK, lint 신규 위반 0. 실제 설정에 deny를 적용한 뒤 강제 push 차단, cwd 밖 `.env` 차단, `.env.example` 허용을 관찰했다. CI(macOS)를 신설해 main push마다 secret scan·lint·`tests`·`tools/tests`를 실행한다.
