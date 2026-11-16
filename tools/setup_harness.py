@@ -153,13 +153,13 @@ def converge_env(m, apply):
 
 
 def converge_claude_gates(apply):
-    """사용자 레벨 하드 게이트(훅 3종·ask 규칙) — 선언 SoT 는 tools/install_claude_gates.py."""
+    """사용자 레벨 하드 게이트(훅·ask·deny 규칙) — 선언 SoT 는 tools/install_claude_gates.py."""
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import install_claude_gates as gates
     s, p = read_settings()
     merged, changes = gates.merge_settings(s, REPO)
     if not changes:
-        ok("claude 게이트 훅·ask 규칙")
+        ok("claude 게이트 훅·ask·deny 규칙")
         return
     if apply:
         write_settings(merged, p)

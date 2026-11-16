@@ -1,0 +1,40 @@
+# 하네스 CI — 커밋한 세션(Claude·Codex·사람)과 --no-verify 여부와 무관하게 같은 검사를 돈다.
+# pre-commit 은 staged 경로에 따라 일부만 돌고 tools/tests 는 돌리지 않는다 — CI 가 전체를 맡는다 (북극성 원칙 1·5).
+# macOS 러너: 운영 DB 클라이언트·export 테스트가 macOS 시스콜(rename no-replace)을 쓴다. Linux 에선 18건이 환경 탓으로 깨진다.
+name: harness-ci
+
+on:
+  push:
+    branches: [main, "team2/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      LOCAL_WIKI_PATH: /nonexistent-vault
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 테스트 의존성 (WBS 엑셀 export)
+        run: python3 -m pip install --quiet openpyxl
+      - name: git identity (임시 repo 를 만드는 테스트용)
+        run: |
+          git config --global user.name ci
+          git config --global user.email ci@example.invalid
+          git config --global init.defaultBranch main
+      - name: secret scan
+        run: python3 tools/secret_scan.py .
+      - name: 지시문 규약 ratchet
+        run: python3 tools/lint_harness_rules.py --check
+      - name: 회귀 테스트 (tests)
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: 회귀 테스트 (tools/tests)
+        run: python3 -m unittest discover -s tools/tests -p 'test_*.py'

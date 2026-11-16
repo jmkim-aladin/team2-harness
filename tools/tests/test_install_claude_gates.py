@@ -52,15 +52,27 @@ def managed_commands(settings):
 
 
 class MergeTests(unittest.TestCase):
-    def test_installs_three_hooks_and_ask_rules(self):
+    def test_installs_hooks_ask_and_deny_rules(self):
         merged, changes = gates.merge_settings(user_settings(), HARNESS)
-        groups = {g["matcher"]: g["hooks"][0]["command"] for g in merged["hooks"]["PreToolUse"][2:]}
-        self.assertEqual(set(groups), {m for _, m in gates.HOOKS})
-        for name, matcher in gates.HOOKS:
-            self.assertEqual(shlex.split(groups[matcher]), ["bash", f"{HARNESS}/.claude/hooks/{name}.sh"])
-        self.assertEqual(merged["permissions"]["ask"], ["Bash(gh pr merge:*)", "Bash(rtk gh pr merge:*)"])
-        self.assertTrue(shlex.split(groups["Bash|mcp__.*"])[-1].endswith("/agent-run-guard.sh"))
-        self.assertEqual(len(changes), len(gates.HOOKS) + len(gates.ASK_RULES))
+        groups = [(g["matcher"], g["hooks"][0]["command"]) for g in merged["hooks"]["PreToolUse"][2:]]
+        self.assertEqual([(m, shlex.split(c)) for m, c in groups],
+                         [(m, ["bash", f"{HARNESS}/.claude/hooks/{n}.sh"]) for n, m in gates.HOOKS])
+        self.assertEqual(merged["permissions"]["ask"], [])
+        self.assertEqual(merged["permissions"]["deny"], list(gates.DENY_RULES))
+        self.assertEqual(len(changes), len(gates.HOOKS) + len(gates.ASK_RULES) + len(gates.DENY_RULES))
+
+    def test_deny_rules_cover_irreversible_actions_and_keep_user_rules(self):
+        s = user_settings()
+        s["permissions"]["deny"] = ["Bash(rm -rf /:*)", "Read(~/.ssh/**)"]
+        merged, changes = gates.merge_settings(s, HARNESS)
+        deny = merged["permissions"]["deny"]
+        self.assertEqual(deny[:2], ["Bash(rm -rf /:*)", "Read(~/.ssh/**)"])
+        self.assertEqual(deny.count("Read(~/.ssh/**)"), 1)
+        for rule in ["Read(**/.env)", "Bash(git push --force:*)", "Bash(git reset --hard:*)"]:
+            self.assertIn(rule, deny)
+        self.assertNotIn("permissions.deny 추가 — Read(~/.ssh/**)", changes)
+        removed, _ = gates.remove_settings(merged)
+        self.assertEqual(removed["permissions"]["deny"], ["Bash(rm -rf /:*)"])
 
     def test_converges_previous_install(self):
         """1차 설치본(파일 도구 matcher, push·PR 정적 ask)을 새 선언으로 수렴시킨다."""
@@ -73,10 +85,9 @@ class MergeTests(unittest.TestCase):
         merged, changes = gates.merge_settings(s, HARNESS)
         matchers = [g["matcher"] for g in merged["hooks"]["PreToolUse"] if "agent-run-guard" in str(g)]
         self.assertEqual(matchers, ["Bash|mcp__.*"])
-        self.assertEqual(merged["permissions"]["ask"],
-                         ["Bash(npm publish:*)", "Bash(gh pr merge:*)", "Bash(rtk gh pr merge:*)"])
+        self.assertEqual(merged["permissions"]["ask"], ["Bash(npm publish:*)"])
         self.assertIn("PreToolUse 훅 갱신 — agent-run-guard [Bash|mcp__.*]", changes)
-        self.assertEqual(sum("permissions.ask 제거" in c for c in changes), 4)
+        self.assertEqual(sum("permissions.ask 제거" in c for c in changes), 6)
         self.assertEqual(gates.merge_settings(merged, HARNESS)[1], [])
 
     def test_preserves_existing_hooks_env_and_permissions(self):
@@ -104,7 +115,7 @@ class MergeTests(unittest.TestCase):
             {"type": "command", "command": '"$CLAUDE_PROJECT_DIR/.claude/hooks/sqlcmd-readonly.sh"'}]})
         merged, changes = gates.merge_settings(s, HARNESS)
         self.assertEqual(merged["hooks"]["PreToolUse"][0]["hooks"], [{"type": "command", "command": "rtk hook claude"}])
-        self.assertEqual(len(managed_commands(merged)), 3)
+        self.assertEqual(len(managed_commands(merged)), len(gates.HOOKS))
         self.assertTrue(all(HARNESS in c for c in managed_commands(merged)))
         self.assertTrue(any("갱신 — agent-run-guard" in c for c in changes))
         self.assertTrue(any("갱신 — sqlcmd-readonly" in c for c in changes))
@@ -114,8 +125,8 @@ class MergeTests(unittest.TestCase):
         s["hooks"]["PreToolUse"].append(copy.deepcopy(s["hooks"]["PreToolUse"][-1]))
         s["permissions"]["ask"].insert(0, "Bash(npm publish:*)")
         merged, changes = gates.merge_settings(s, HARNESS)
-        self.assertEqual(len(managed_commands(merged)), 3)
-        self.assertEqual(changes, ["PreToolUse 훅 중복 제거 — agent-run-guard (1건)"])
+        self.assertEqual(len(managed_commands(merged)), len(gates.HOOKS))
+        self.assertEqual(changes, [f"PreToolUse 훅 중복 제거 — {gates.HOOKS[-1][0]} (1건)"])
         self.assertEqual(merged["permissions"]["ask"][0], "Bash(npm publish:*)")
 
     def test_uninstall_restores_pre_install_settings(self):
@@ -125,7 +136,7 @@ class MergeTests(unittest.TestCase):
         expected = user_settings()
         expected["permissions"]["ask"] = ["Bash(npm publish:*)"]
         self.assertEqual(removed, expected)
-        self.assertEqual(len(changes), len(gates.HOOKS) + len(gates.ASK_RULES))
+        self.assertEqual(len(changes), len(gates.HOOKS) + len(gates.ASK_RULES) + len(gates.DENY_RULES))
         self.assertEqual(gates.remove_settings(user_settings()), (user_settings(), []))
 
     def test_uninstall_drops_containers_it_emptied(self):
@@ -134,7 +145,7 @@ class MergeTests(unittest.TestCase):
 
     def test_empty_and_malformed_settings(self):
         merged, _ = gates.merge_settings({}, HARNESS)
-        self.assertEqual(len(merged["hooks"]["PreToolUse"]), 3)
+        self.assertEqual(len(merged["hooks"]["PreToolUse"]), len(gates.HOOKS))
         for bad in [[], {"hooks": []}, {"hooks": {"PreToolUse": {}}}, {"permissions": {"ask": "x"}}]:
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 gates.merge_settings(bad, HARNESS)
@@ -173,7 +184,7 @@ class CliTests(unittest.TestCase):
         preview = self.run_cli("--uninstall", "--check")
         self.assertEqual(preview.returncode, 1)
         self.assertIn("[변경 예정]", preview.stdout)
-        self.assertEqual(len(managed_commands(json.loads(self.path.read_text(encoding="utf-8")))), 3)
+        self.assertEqual(len(managed_commands(json.loads(self.path.read_text(encoding="utf-8")))), len(gates.HOOKS))
         result = self.run_cli("--uninstall")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")), user_settings())
@@ -181,7 +192,7 @@ class CliTests(unittest.TestCase):
 
     def test_missing_file_created_and_invalid_json_untouched(self):
         self.assertEqual(self.run_cli().returncode, 0)
-        self.assertEqual(len(managed_commands(json.loads(self.path.read_text(encoding="utf-8")))), 3)
+        self.assertEqual(len(managed_commands(json.loads(self.path.read_text(encoding="utf-8")))), len(gates.HOOKS))
         self.path.write_text("{not json", encoding="utf-8")
         result = self.run_cli()
         self.assertEqual(result.returncode, 2)
@@ -194,19 +205,24 @@ class CliTests(unittest.TestCase):
         self.path.symlink_to(real)
         self.assertEqual(self.run_cli().returncode, 0)
         self.assertTrue(self.path.is_symlink())
-        self.assertEqual(len(managed_commands(json.loads(real.read_text(encoding="utf-8")))), 3)
+        self.assertEqual(len(managed_commands(json.loads(real.read_text(encoding="utf-8")))), len(gates.HOOKS))
 
     def test_installed_commands_run_from_unrelated_cwd(self):
         merged, _ = gates.merge_settings({}, str(ROOT))
-        commands = {g["matcher"]: g["hooks"][0]["command"] for g in merged["hooks"]["PreToolUse"]}
+        commands = {Path(shlex.split(g["hooks"][0]["command"])[-1]).stem: g["hooks"][0]["command"]
+                    for g in merged["hooks"]["PreToolUse"]}
         sqlcmd = {"tool_name": "Bash", "tool_input": {"command": "sqlcmd -S prod.example -d WebCatalog -Q 'SELECT 1'"}}
         mcp = {"tool_name": "mcp__postgres__query", "tool_input": {}}
         merge = {"tool_name": "Bash", "tool_input": {"command": "gh pr merge 1"}, "cwd": str(self.tmp)}
+        footer = {"tool_name": "Bash", "cwd": str(self.tmp),
+                  "tool_input": {"command": 'git commit -m "x" -m "Co-Authored-By: Claude <noreply@anthropic.com>"'}}
         env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR" and not k.startswith("PAPERCLIP_")}
-        for matcher, event, extra in [("Bash", sqlcmd, {}), ("mcp__.*", mcp, {}),
-                                      (gates.HOOKS[2][1], merge, {"PAPERCLIP_RUN_ID": "run-1"})]:
-            with self.subTest(matcher=matcher):
-                result = subprocess.run(commands[matcher], shell=True, cwd=self.tmp, input=json.dumps(event),
+        cases = [("sqlcmd-readonly", sqlcmd, {}), ("block-db-mcp", mcp, {}),
+                 ("agent-run-guard", merge, {"PAPERCLIP_RUN_ID": "run-1"}), ("ai-footer-guard", footer, {})]
+        self.assertEqual({n for n, _, _ in cases}, {n for n, _ in gates.HOOKS})
+        for name, event, extra in cases:
+            with self.subTest(hook=name):
+                result = subprocess.run(commands[name], shell=True, cwd=self.tmp, input=json.dumps(event),
                                         text=True, capture_output=True, env={**env, **extra}, check=True)
                 self.assertEqual(json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
 
@@ -231,10 +247,10 @@ class SetupHarnessIntegrationTests(unittest.TestCase):
         self.assertTrue(self.sh.warn_list)
         self.assertEqual(self.settings(), user_settings())
         self.sh.converge_claude_gates(apply=True)
-        self.assertEqual(len(managed_commands(self.settings())), 3)
+        self.assertEqual(len(managed_commands(self.settings())), len(gates.HOOKS))
         self.sh.audit_hooks(self.sh.load_manifest(), "reset")
         after = self.settings()
-        self.assertEqual(len(managed_commands(after)), 3)
+        self.assertEqual(len(managed_commands(after)), len(gates.HOOKS))
         self.assertEqual(after["hooks"]["PostToolUse"], user_settings()["hooks"]["PostToolUse"])
 
 
