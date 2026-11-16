@@ -1,0 +1,51 @@
+# 공통 회원 MSA 탐색 프로파일. 운영 배포·owner 승인을 뜻하지 않는다.
+service_id: member-msa
+display_name: 회원 MSA
+domain: member-profile
+status: candidate
+owner_scope: common
+impact_check_required: true
+updated_at: 2026-11-11
+verification:
+  kb_and_source_observed_at: 2026-11-11
+  owner_confirmed: false
+  deployed_runtime_verified: false
+workspace_root: /Users/jm/Documents/workspace/msa/member
+source_repositories:
+  - name: MemberApiServer
+    url: https://github.com/AladinCommunication/MemberApiServer
+    role: 회원 API orchestration·인증 카탈로그 라우팅
+  - name: MemberDomainApiServer
+    url: https://github.com/AladinCommunication/MemberDomainApiServer
+    role: 회원 데이터·자격증명·동의·본인확인·아웃박스
+  - name: MemberBackOffice
+    url: https://github.com/AladinCommunication/MemberBackOffice
+    role: 회원 백오피스 저장소; 현재 연동 범위 별도 확인
+kb_entrypoints:
+  - id: REF-A-4113
+    topic: 회원 MSA 루트·저장소
+  - id: REF-A-4368
+    topic: 회원 제공 기능과 하위 API 명세 51건
+  - id: REF-A-4750
+    topic: 회원 ERD
+  - id: REF-A-5264
+    topic: 인프라 도메인 구성
+  - id: REF-A-5265
+    topic: 전자도서관 회원 dev 인프라 요청; 작성중
+  - id: REF-A-4449
+    topic: 회원·알림 프로필 연동 명세; 현행 계약 재확인
+  - id: DEV2-A-1487
+    topic: 나루·회원 연계 계약 초안
+check_when:
+  - 회원 식별자·profileId·authUserId·회원군 라우팅 변경
+  - 가입·탈퇴·파기·자격증명·본인확인·동의 변경
+  - 회원과 알림 사이의 프로필 동기화·아웃박스 변경
+related_common_services:
+  - aladin-auth
+  - notification-msa
+kb_navigation: catalog/common-services/msa-kb-index.md
+vault_entry: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/services/member-msa/member-msa.md
+open_questions:
+  - owner와 변경 승인 경계
+  - 회원 아웃박스 소비 주체·전달 재시도·알림 미러 재동기화 계약
+  - 인프라 요청의 승인·배포 여부와 현재 서비스별 endpoint

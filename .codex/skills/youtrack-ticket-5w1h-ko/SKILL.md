@@ -17,7 +17,7 @@ description: "Use when drafting or creating DEV2 YouTrack tickets in Korean, esp
 
 ## 고정 규칙
 
-- 프로젝트는 기본 `DEV2`다.
+- 프로젝트는 기본 `DEV2`다. 설정·자원 요청은 command 파일의 §설정·자원 요청 티켓에 따라 현재 담당팀·최초 본인 담당·자유 형식 본문 규칙을 적용한다.
 - YouTrack은 REST API와 `curl`만 사용한다. MCP 도구는 사용하지 않는다 — 토큰과 쓰기 권한을 `curl` 한 경로로 통제하기 위해.
 - `YOUTRACK_TOKEN`이 shell 환경에 없으면 `~/.claude/settings.json`의 `env.YOUTRACK_TOKEN`을 읽되 값을 출력하지 않는다.
 - Feature는 1주 이하, Task는 1일 이하로 유지한다. 초과하면 분할을 제안한다.

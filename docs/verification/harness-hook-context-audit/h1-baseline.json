@@ -1,0 +1,1743 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-20261104-4560e95349bc",
+  "captured_at": "2026-11-04T07:07:46.005417+00:00",
+  "repository": "/Users/jm/Documents/workspace/team2",
+  "base_head": "ff0ca564cea38e1814677a235102d4512ac4cee9",
+  "branch": "team2/harness-hook-context-audit",
+  "versions": {
+    "claude": "2.1.318 (Claude Code)",
+    "codex": "codex-cli 0.166.0"
+  },
+  "python": "3.14.6",
+  "static_audit": {
+    "claude": {
+      "instruction_files": [
+        {
+          "path": "/Users/jm/.claude/CLAUDE.md",
+          "resolved_path": "/Users/jm/.claude/CLAUDE.md",
+          "sha256": "91d8c5054032065719869039996df687fedfdd2096a4397ca9977d4e544a68a9",
+          "bytes": 5979,
+          "chars": 3170,
+          "lines": 70
+        },
+        {
+          "path": "/Users/jm/.claude/team2-base.md",
+          "resolved_path": "/Users/jm/Documents/workspace/team2/memory/claude-base.md",
+          "sha256": "efc2bcd637d14ef66319b46d998a9fda8e9175affdcba0a8c0b1e7b8129d6c66",
+          "bytes": 10078,
+          "chars": 5583,
+          "lines": 100
+        },
+        {
+          "path": "/Users/jm/.claude/RTK.md",
+          "resolved_path": "/Users/jm/.claude/RTK.md",
+          "sha256": "cb136e3379a77380e1118596292cd483d8b257bbd3a30be368924e50878d2cbf",
+          "bytes": 1321,
+          "chars": 748,
+          "lines": 9
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/CLAUDE.md",
+          "resolved_path": "/Users/jm/Documents/workspace/team2/CLAUDE.md",
+          "sha256": "e1de562915046b1646d1bf6419a0171d83bbbb470a72aff78118368aa26ba968",
+          "bytes": 9113,
+          "chars": 6379,
+          "lines": 87
+        }
+      ],
+      "instruction_chars": 15880,
+      "metadata_rows": 72,
+      "total_chars": 32035,
+      "total_tokens_estimate_chars_div_4": 8008,
+      "rows": [
+        {
+          "path": "/Users/jm/.claude/CLAUDE.md",
+          "chars": 3170
+        },
+        {
+          "path": "/Users/jm/.claude/team2-base.md",
+          "chars": 5583
+        },
+        {
+          "path": "/Users/jm/.claude/RTK.md",
+          "chars": 748
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/CLAUDE.md",
+          "chars": 6379
+        },
+        {
+          "path": "/Users/jm/.claude/skills/research/SKILL.md",
+          "chars": 238
+        },
+        {
+          "path": "/Users/jm/.claude/skills/eli5-html/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/domain-modeling/SKILL.md",
+          "chars": 216
+        },
+        {
+          "path": "/Users/jm/.claude/skills/wayfinder/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/wait-what/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/handoff/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/diagnosing-bugs/SKILL.md",
+          "chars": 156
+        },
+        {
+          "path": "/Users/jm/.claude/skills/openrig-skills/SKILL.md",
+          "chars": 373
+        },
+        {
+          "path": "/Users/jm/.claude/skills/synced/faf2851a-f67c-47ce-b5b0-5b06e841bf64_639b2f5c-2fb8-4fd4-a6b9-0dacacf6b88a/morning/SKILL.md",
+          "chars": 341
+        },
+        {
+          "path": "/Users/jm/.claude/skills/synced/faf2851a-f67c-47ce-b5b0-5b06e841bf64_639b2f5c-2fb8-4fd4-a6b9-0dacacf6b88a/xlsx/SKILL.md",
+          "chars": 952
+        },
+        {
+          "path": "/Users/jm/.claude/skills/synced/faf2851a-f67c-47ce-b5b0-5b06e841bf64_639b2f5c-2fb8-4fd4-a6b9-0dacacf6b88a/pdf/SKILL.md",
+          "chars": 437
+        },
+        {
+          "path": "/Users/jm/.claude/skills/synced/faf2851a-f67c-47ce-b5b0-5b06e841bf64_639b2f5c-2fb8-4fd4-a6b9-0dacacf6b88a/import-memory/SKILL.md",
+          "chars": 139
+        },
+        {
+          "path": "/Users/jm/.claude/skills/synced/faf2851a-f67c-47ce-b5b0-5b06e841bf64_639b2f5c-2fb8-4fd4-a6b9-0dacacf6b88a/docs/SKILL.md",
+          "chars": 1007
+        },
+        {
+          "path": "/Users/jm/.claude/skills/synced/faf2851a-f67c-47ce-b5b0-5b06e841bf64_639b2f5c-2fb8-4fd4-a6b9-0dacacf6b88a/skill-creator/SKILL.md",
+          "chars": 319
+        },
+        {
+          "path": "/Users/jm/.claude/skills/synced/faf2851a-f67c-47ce-b5b0-5b06e841bf64_639b2f5c-2fb8-4fd4-a6b9-0dacacf6b88a/pptx/SKILL.md",
+          "chars": 962
+        },
+        {
+          "path": "/Users/jm/.claude/skills/synced/faf2851a-f67c-47ce-b5b0-5b06e841bf64_639b2f5c-2fb8-4fd4-a6b9-0dacacf6b88a/google-workspace/SKILL.md",
+          "chars": 947
+        },
+        {
+          "path": "/Users/jm/.claude/skills/synced/faf2851a-f67c-47ce-b5b0-5b06e841bf64_639b2f5c-2fb8-4fd4-a6b9-0dacacf6b88a/docx/SKILL.md",
+          "chars": 936
+        },
+        {
+          "path": "/Users/jm/.claude/skills/wizard/SKILL.md",
+          "chars": 313
+        },
+        {
+          "path": "/Users/jm/.claude/skills/to-questionnaire/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/humanize-redo/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/humanize-korean/SKILL.md",
+          "chars": 668
+        },
+        {
+          "path": "/Users/jm/.claude/skills/codebase-design/SKILL.md",
+          "chars": 265
+        },
+        {
+          "path": "/Users/jm/.claude/skills/prototype/SKILL.md",
+          "chars": 179
+        },
+        {
+          "path": "/Users/jm/.claude/skills/herdr/SKILL.md",
+          "chars": 260
+        },
+        {
+          "path": "/Users/jm/.claude/skills/eli5/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/orca-cli/SKILL.md",
+          "chars": 1044
+        },
+        {
+          "path": "/Users/jm/.claude/skills/resolving-merge-conflicts/SKILL.md",
+          "chars": 72
+        },
+        {
+          "path": "/Users/jm/.claude/skills/humanize/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/orchestration/SKILL.md",
+          "chars": 1069
+        },
+        {
+          "path": "/Users/jm/.claude/skills/teach/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/computer-use/SKILL.md",
+          "chars": 437
+        },
+        {
+          "path": "/Users/jm/.claude/skills/eli5-onboard/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.claude/skills/aside-browser/SKILL.md",
+          "chars": 190
+        },
+        {
+          "path": "/Users/jm/.claude/skills/tdd/SKILL.md",
+          "chars": 149
+        },
+        {
+          "path": "/Users/jm/.claude/skills/dev2-team-harness-ko/SKILL.md",
+          "chars": 192
+        },
+        {
+          "path": "/Users/jm/.claude/skills/grilling/SKILL.md",
+          "chars": 152
+        },
+        {
+          "path": "/Users/jm/.claude/skills/dev2-ad-commands-ko/SKILL.md",
+          "chars": 209
+        },
+        {
+          "path": "/Users/jm/.claude/skills/youtrack-ticket-5w1h-ko/SKILL.md",
+          "chars": 212
+        },
+        {
+          "path": "/Users/jm/.claude/plugins/cache/caveman/caveman/655b7d9c5431/skills/caveman-help/SKILL.md",
+          "chars": 203
+        },
+        {
+          "path": "/Users/jm/.claude/plugins/cache/caveman/caveman/655b7d9c5431/skills/caveman-review/SKILL.md",
+          "chars": 320
+        },
+        {
+          "path": "/Users/jm/.claude/plugins/cache/caveman/caveman/655b7d9c5431/skills/caveman-compress/SKILL.md",
+          "chars": 344
+        },
+        {
+          "path": "/Users/jm/.claude/plugins/cache/caveman/caveman/655b7d9c5431/skills/cavecrew/SKILL.md",
+          "chars": 570
+        },
+        {
+          "path": "/Users/jm/.claude/plugins/cache/caveman/caveman/655b7d9c5431/skills/caveman-stats/SKILL.md",
+          "chars": 266
+        },
+        {
+          "path": "/Users/jm/.claude/plugins/cache/caveman/caveman/655b7d9c5431/skills/caveman/SKILL.md",
+          "chars": 404
+        },
+        {
+          "path": "/Users/jm/.claude/plugins/cache/caveman/caveman/655b7d9c5431/skills/caveman-commit/SKILL.md",
+          "chars": 356
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/architecture-analysis.md",
+          "chars": 48
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/implement.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/eng-review.md",
+          "chars": 99
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/orchestration.md",
+          "chars": 121
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/wbs.md",
+          "chars": 92
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/new-note.md",
+          "chars": 40
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/explain.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/sprint-close-check.md",
+          "chars": 46
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/ticket-schedule.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/granola-sync.md",
+          "chars": 25
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/weekly-report.md",
+          "chars": 47
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/db-stop.md",
+          "chars": 41
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/ticket.md",
+          "chars": 51
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/code-review.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/work-prep.md",
+          "chars": 53
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/grill.md",
+          "chars": 88
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/plan.md",
+          "chars": 77
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/team2-kb-read.md",
+          "chars": 39
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/harness-optimize.md",
+          "chars": 60
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/capacity-plan.md",
+          "chars": 53
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/data-request.md",
+          "chars": 53
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/okr.md",
+          "chars": 19
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/plan-run.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/kb-publish.md",
+          "chars": 56
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/paperclip-dispatch.md",
+          "chars": 99
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/code-review-self.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/commands/ad/work-close.md",
+          "chars": 51
+        }
+      ]
+    },
+    "codex": {
+      "instruction_files": [
+        {
+          "path": "/Users/jm/.codex/AGENTS.md",
+          "resolved_path": "/Users/jm/.codex/AGENTS.md",
+          "sha256": "ac4e76e170aaa8d099099e89dc4bfb2b1f844ce7af9fbc058b560a123c35ef65",
+          "bytes": 8330,
+          "chars": 4818,
+          "lines": 115
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/AGENTS.md",
+          "resolved_path": "/Users/jm/Documents/workspace/team2/AGENTS.md",
+          "sha256": "2ab6d1317799521b19b09da82b133544d0a45e3c09c7893a1aefceeec5c91bb1",
+          "bytes": 12870,
+          "chars": 7845,
+          "lines": 139
+        }
+      ],
+      "instruction_chars": 12663,
+      "metadata_rows": 67,
+      "total_chars": 27493,
+      "total_tokens_estimate_chars_div_4": 6873,
+      "rows": [
+        {
+          "path": "/Users/jm/.codex/AGENTS.md",
+          "chars": 4818
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/AGENTS.md",
+          "chars": 7845
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-report-writing-ko/SKILL.md",
+          "chars": 166
+        },
+        {
+          "path": "/Users/jm/.codex/skills/research/SKILL.md",
+          "chars": 238
+        },
+        {
+          "path": "/Users/jm/.codex/skills/eli5-html/SKILL.md",
+          "chars": 80
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-code-review/SKILL.md",
+          "chars": 156
+        },
+        {
+          "path": "/Users/jm/.codex/skills/domain-modeling/SKILL.md",
+          "chars": 216
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-orchestration/SKILL.md",
+          "chars": 812
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-work-close/SKILL.md",
+          "chars": 202
+        },
+        {
+          "path": "/Users/jm/.codex/skills/caveman-help/SKILL.md",
+          "chars": 203
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-okr/SKILL.md",
+          "chars": 75
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-capacity-plan/SKILL.md",
+          "chars": 107
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-ticket/SKILL.md",
+          "chars": 87
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-team2-kb-read/SKILL.md",
+          "chars": 104
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-implement/SKILL.md",
+          "chars": 207
+        },
+        {
+          "path": "/Users/jm/.codex/skills/wayfinder/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-wbs/SKILL.md",
+          "chars": 106
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-explain/SKILL.md",
+          "chars": 205
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-data-request/SKILL.md",
+          "chars": 191
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-kb-publish/SKILL.md",
+          "chars": 190
+        },
+        {
+          "path": "/Users/jm/.codex/skills/wait-what/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-grill/SKILL.md",
+          "chars": 112
+        },
+        {
+          "path": "/Users/jm/.codex/skills/caveman-review/SKILL.md",
+          "chars": 320
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-work-prep/SKILL.md",
+          "chars": 180
+        },
+        {
+          "path": "/Users/jm/.codex/skills/handoff/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-eng-review/SKILL.md",
+          "chars": 244
+        },
+        {
+          "path": "/Users/jm/.codex/skills/caveman-compress/SKILL.md",
+          "chars": 344
+        },
+        {
+          "path": "/Users/jm/.codex/skills/diagnosing-bugs/SKILL.md",
+          "chars": 156
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-harness-optimize/SKILL.md",
+          "chars": 99
+        },
+        {
+          "path": "/Users/jm/.codex/skills/wizard/SKILL.md",
+          "chars": 313
+        },
+        {
+          "path": "/Users/jm/.codex/skills/to-questionnaire/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.codex/skills/humanize-korean/SKILL.md",
+          "chars": 289
+        },
+        {
+          "path": "/Users/jm/.codex/skills/codebase-design/SKILL.md",
+          "chars": 265
+        },
+        {
+          "path": "/Users/jm/.codex/skills/prototype/SKILL.md",
+          "chars": 179
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-code-review-self/SKILL.md",
+          "chars": 147
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-architecture-analysis/SKILL.md",
+          "chars": 187
+        },
+        {
+          "path": "/Users/jm/.codex/skills/herdr/SKILL.md",
+          "chars": 260
+        },
+        {
+          "path": "/Users/jm/.codex/skills/eli5/SKILL.md",
+          "chars": 68
+        },
+        {
+          "path": "/Users/jm/.codex/skills/resolving-merge-conflicts/SKILL.md",
+          "chars": 72
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-weekly-report/SKILL.md",
+          "chars": 149
+        },
+        {
+          "path": "/Users/jm/.codex/skills/cavecrew/SKILL.md",
+          "chars": 570
+        },
+        {
+          "path": "/Users/jm/.codex/skills/.system/review-agent/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.codex/skills/.system/skill-creator/SKILL.md",
+          "chars": 106
+        },
+        {
+          "path": "/Users/jm/.codex/skills/.system/skill-installer/SKILL.md",
+          "chars": 225
+        },
+        {
+          "path": "/Users/jm/.codex/skills/.system/openai-docs/SKILL.md",
+          "chars": 461
+        },
+        {
+          "path": "/Users/jm/.codex/skills/.system/imagegen/SKILL.md",
+          "chars": 572
+        },
+        {
+          "path": "/Users/jm/.codex/skills/teach/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-new-note/SKILL.md",
+          "chars": 86
+        },
+        {
+          "path": "/Users/jm/.codex/skills/caveman-stats/SKILL.md",
+          "chars": 266
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-sprint-close-check/SKILL.md",
+          "chars": 91
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-db-stop/SKILL.md",
+          "chars": 196
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-plan/SKILL.md",
+          "chars": 102
+        },
+        {
+          "path": "/Users/jm/.codex/skills/caveman/SKILL.md",
+          "chars": 404
+        },
+        {
+          "path": "/Users/jm/.codex/skills/eli5-onboard/SKILL.md",
+          "chars": 57
+        },
+        {
+          "path": "/Users/jm/.codex/skills/caveman-commit/SKILL.md",
+          "chars": 356
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-granola-sync/SKILL.md",
+          "chars": 137
+        },
+        {
+          "path": "/Users/jm/.codex/skills/aside-browser/SKILL.md",
+          "chars": 190
+        },
+        {
+          "path": "/Users/jm/.codex/skills/tdd/SKILL.md",
+          "chars": 149
+        },
+        {
+          "path": "/Users/jm/.codex/skills/dev2-team-harness-ko/SKILL.md",
+          "chars": 192
+        },
+        {
+          "path": "/Users/jm/.codex/skills/grilling/SKILL.md",
+          "chars": 152
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-ticket-schedule/SKILL.md",
+          "chars": 142
+        },
+        {
+          "path": "/Users/jm/.codex/skills/dev2-ad-commands-ko/SKILL.md",
+          "chars": 209
+        },
+        {
+          "path": "/Users/jm/.codex/skills/ad-plan-run/SKILL.md",
+          "chars": 0
+        },
+        {
+          "path": "/Users/jm/.codex/skills/youtrack-ticket-5w1h-ko/SKILL.md",
+          "chars": 212
+        },
+        {
+          "path": "/Users/jm/.agents/skills/openrig-skills/SKILL.md",
+          "chars": 373
+        },
+        {
+          "path": "/Users/jm/.agents/skills/find-skills/SKILL.md",
+          "chars": 303
+        },
+        {
+          "path": "/Users/jm/.agents/skills/orca-cli/SKILL.md",
+          "chars": 1044
+        },
+        {
+          "path": "/Users/jm/.agents/skills/orchestration/SKILL.md",
+          "chars": 1069
+        },
+        {
+          "path": "/Users/jm/.agents/skills/computer-use/SKILL.md",
+          "chars": 437
+        }
+      ]
+    }
+  },
+  "config_sources": [
+    {
+      "engine": "claude",
+      "path": "/Users/jm/.claude/settings.json",
+      "exists": true,
+      "sha256": "19457b3513ad1a42aad6aa3d2783374cea5437e978eb49f1b551d0f8c9955004"
+    },
+    {
+      "engine": "claude",
+      "path": "/Users/jm/Documents/workspace/team2/.claude/settings.json",
+      "exists": false
+    },
+    {
+      "engine": "claude",
+      "path": "/Users/jm/Documents/workspace/team2/.claude/settings.local.json",
+      "exists": true,
+      "sha256": "bb88ccbf7af3909502fa39456eff111162b18320db0f1d4c112fbebd979400e4"
+    },
+    {
+      "engine": "codex",
+      "path": "/Users/jm/.codex/hooks.json",
+      "exists": true,
+      "sha256": "e8cdf659d9817897a779cd1541d5280ae3432f8a0224f7ae607a94637f6f4669"
+    },
+    {
+      "engine": "codex",
+      "path": "/Users/jm/Documents/workspace/team2/.codex/hooks.json",
+      "exists": true,
+      "sha256": "73e8242d3142cac2043e6e4cad5a869d37092de8738783a68f31a36c7144912a"
+    },
+    {
+      "engine": "codex",
+      "path": "/Users/jm/.codex/config.toml",
+      "exists": true,
+      "sha256": "cccd56df79d2118b46c391f659a501e3dcf6e4ad24c65d6f82b90cfc36574c1e",
+      "scope": "inline hooks only; state omitted"
+    }
+  ],
+  "configured_hooks": [
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "PostToolUse",
+      "group": 0,
+      "handler": 0,
+      "matcher": "*",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "PreToolUse",
+      "group": 0,
+      "handler": 0,
+      "matcher": "Bash",
+      "type": "command",
+      "executable": "rtk",
+      "handler_labels": [],
+      "handler_files": [],
+      "timeout": null,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "PreToolUse",
+      "group": 1,
+      "handler": 0,
+      "matcher": "*",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "PreToolUse",
+      "group": 2,
+      "handler": 0,
+      "matcher": "Bash",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [
+        "sqlcmd-readonly.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/hooks/sqlcmd-readonly.sh",
+          "exists": true
+        }
+      ],
+      "timeout": null,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "PreToolUse",
+      "group": 3,
+      "handler": 0,
+      "matcher": "mcp__.*",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [
+        "block-db-mcp.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/hooks/block-db-mcp.sh",
+          "exists": true
+        }
+      ],
+      "timeout": null,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "PreToolUse",
+      "group": 4,
+      "handler": 0,
+      "matcher": "Bash|mcp__.*",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [
+        "agent-run-guard.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/hooks/agent-run-guard.sh",
+          "exists": true
+        }
+      ],
+      "timeout": null,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "SessionStart",
+      "group": 0,
+      "handler": 0,
+      "matcher": "^(startup|resume|clear|compact|fork)$",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.claude/hooks/herdr-agent-state.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "SessionStart",
+      "group": 1,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "SessionStart",
+      "group": 2,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "python3",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/tools/task_tracing.py",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "UserPromptSubmit",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "UserPromptSubmit",
+      "group": 1,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "python3",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/tools/task_tracing.py",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "Stop",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "Stop",
+      "group": 1,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "python3",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/tools/task_tracing.py",
+          "exists": true
+        }
+      ],
+      "timeout": 30,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "StopFailure",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "SubagentStart",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "SubagentStart",
+      "group": 1,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "python3",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/tools/task_tracing.py",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "SubagentStop",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "TeammateIdle",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "PostToolUseFailure",
+      "group": 0,
+      "handler": 0,
+      "matcher": "*",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "PermissionRequest",
+      "group": 0,
+      "handler": 0,
+      "matcher": "*",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "PostCompact",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "claude-hook.sh"
+      ],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "claude",
+      "source": "/Users/jm/.claude/settings.json",
+      "event": "SessionEnd",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "python3",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/tools/task_tracing.py",
+          "exists": true
+        }
+      ],
+      "timeout": 30,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "Interrupt",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.codex/herdr-agent-state.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "PermissionRequest",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "codex-hook.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "PostToolUse",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "codex-hook.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "PreToolUse",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "codex-hook.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "SessionStart",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "[",
+      "handler_labels": [],
+      "handler_files": [],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "SessionStart",
+      "group": 1,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "codex-hook.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "SessionStart",
+      "group": 2,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.codex/herdr-agent-state.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "Stop",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "[",
+      "handler_labels": [],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "Stop",
+      "group": 1,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "codex-hook.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "Stop",
+      "group": 2,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.codex/herdr-agent-state.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "Stop",
+      "group": 3,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "python3",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/tools/task_tracing.py",
+          "exists": true
+        }
+      ],
+      "timeout": 30,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "SubagentStart",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "codex-hook.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "SubagentStart",
+      "group": 1,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "python3",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/tools/task_tracing.py",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "SubagentStop",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "codex-hook.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "UserPromptSubmit",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "[",
+      "handler_labels": [],
+      "handler_files": [],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "UserPromptSubmit",
+      "group": 1,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "if",
+      "handler_labels": [
+        "codex-hook.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        },
+        {
+          "path": "/Users/jm/.orca/agent-hooks/codex-hook.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "UserPromptSubmit",
+      "group": 2,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/.codex/herdr-agent-state.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 10,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/hooks.json",
+      "event": "UserPromptSubmit",
+      "group": 3,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "python3",
+      "handler_labels": [],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/tools/task_tracing.py",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/Documents/workspace/team2/.codex/hooks.json",
+      "event": "PreToolUse",
+      "group": 0,
+      "handler": 0,
+      "matcher": "^Bash$",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [
+        "sqlcmd-readonly.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/hooks/sqlcmd-readonly.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/Documents/workspace/team2/.codex/hooks.json",
+      "event": "PreToolUse",
+      "group": 1,
+      "handler": 0,
+      "matcher": "^mcp__.*",
+      "type": "command",
+      "executable": "bash",
+      "handler_labels": [
+        "block-db-mcp.sh"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/team2/.claude/hooks/block-db-mcp.sh",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/config.toml",
+      "event": "SessionStart",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "node",
+      "handler_labels": [
+        "activity-relay.cjs"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/sof-openrig-lab-86hmh_qy/runtime/node_modules/@openrig/cli/daemon/assets/plugins/openrig-core/hooks/scripts/activity-relay.cjs",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/config.toml",
+      "event": "UserPromptSubmit",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "node",
+      "handler_labels": [
+        "activity-relay.cjs"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/sof-openrig-lab-86hmh_qy/runtime/node_modules/@openrig/cli/daemon/assets/plugins/openrig-core/hooks/scripts/activity-relay.cjs",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/config.toml",
+      "event": "Stop",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "node",
+      "handler_labels": [
+        "activity-relay.cjs"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/sof-openrig-lab-86hmh_qy/runtime/node_modules/@openrig/cli/daemon/assets/plugins/openrig-core/hooks/scripts/activity-relay.cjs",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    },
+    {
+      "engine": "codex",
+      "source": "/Users/jm/.codex/config.toml",
+      "event": "PermissionRequest",
+      "group": 0,
+      "handler": 0,
+      "matcher": "(all)",
+      "type": "command",
+      "executable": "node",
+      "handler_labels": [
+        "activity-relay.cjs"
+      ],
+      "handler_files": [
+        {
+          "path": "/Users/jm/Documents/workspace/sof-openrig-lab-86hmh_qy/runtime/node_modules/@openrig/cli/daemon/assets/plugins/openrig-core/hooks/scripts/activity-relay.cjs",
+          "exists": true
+        }
+      ],
+      "timeout": 5,
+      "verification": "configured; native firing unverified"
+    }
+  ],
+  "codex_feature_hooks": true,
+  "codex_project_trust": "trusted",
+  "codex_repository_hook_trust_entries": [
+    {
+      "hook_id": "/Users/jm/Documents/workspace/team2/.codex/hooks.json:pre_tool_use:0:0",
+      "persisted_trust_entry_present": true,
+      "current_hash_validated": false
+    },
+    {
+      "hook_id": "/Users/jm/Documents/workspace/team2/.codex/hooks.json:pre_tool_use:1:0",
+      "persisted_trust_entry_present": true,
+      "current_hash_validated": false
+    }
+  ],
+  "native_context_diagnostics": {
+    "claude": {
+      "command": [
+        "claude",
+        "-p",
+        "/context all",
+        "--output-format",
+        "json",
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--mcp-config",
+        "{\"mcpServers\":{}}",
+        "--settings",
+        "{\"disableAllHooks\":true}",
+        "--no-session-persistence",
+        "--max-budget-usd",
+        "0.01"
+      ],
+      "returncode": 0,
+      "is_error": false,
+      "num_turns": 0,
+      "duration_api_ms": 0,
+      "total_cost_usd": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "memory_files": [
+        {
+          "scope": "User",
+          "path": "/Users/jm/.claude/CLAUDE.md",
+          "tokens_display_estimate": "2.8k"
+        },
+        {
+          "scope": "User",
+          "path": "/Users/jm/.claude/team2-base.md",
+          "tokens_display_estimate": "4.5k"
+        },
+        {
+          "scope": "User",
+          "path": "/Users/jm/.claude/RTK.md",
+          "tokens_display_estimate": "624"
+        },
+        {
+          "scope": "Project",
+          "path": "/Users/jm/Documents/workspace/team2/CLAUDE.md",
+          "tokens_display_estimate": "4.3k"
+        }
+      ],
+      "raw_private_stdout_sha256": "f13ad235460a36c74f6351399960ecfadee94231b1bee51115662ca7fe1e2ec8",
+      "profile_limitations": [
+        "hooks disabled",
+        "all MCP servers excluded",
+        "model tools disabled",
+        "display token estimates are not billed input"
+      ]
+    },
+    "codex": {
+      "command": [
+        "codex",
+        "debug",
+        "prompt-input",
+        "--disable",
+        "hooks"
+      ],
+      "returncode": 0,
+      "raw_private_stdout_sha256": "5cce8a3378b480fde804b73beada09f50cf39a4202564a7560c9fb60ccd8a9ce",
+      "instruction_body_matches": [
+        {
+          "path": "/Users/jm/.codex/AGENTS.md",
+          "resolved_path": "/Users/jm/.codex/AGENTS.md",
+          "sha256": "ac4e76e170aaa8d099099e89dc4bfb2b1f844ce7af9fbc058b560a123c35ef65",
+          "bytes": 8330,
+          "chars": 4818,
+          "lines": 115,
+          "exact_body_match": true,
+          "message_indices": [
+            5
+          ]
+        },
+        {
+          "path": "/Users/jm/Documents/workspace/team2/AGENTS.md",
+          "resolved_path": "/Users/jm/Documents/workspace/team2/AGENTS.md",
+          "sha256": "2ab6d1317799521b19b09da82b133544d0a45e3c09c7893a1aefceeec5c91bb1",
+          "bytes": 12870,
+          "chars": 7845,
+          "lines": 139,
+          "exact_body_match": true,
+          "message_indices": [
+            5
+          ]
+        }
+      ],
+      "profile_limitations": [
+        "hooks disabled",
+        "prompt construction only; no model request",
+        "local CLI is separate from the active ChatGPT app session"
+      ]
+    }
+  },
+  "hook_validation": {
+    "json_replay": "not run in H1",
+    "native_policy_firing": "not run in H1",
+    "boundary_support": "official contracts inspected; installed firing reserved for H2"
+  },
+  "limitations": [
+    "Static hook inventory includes inspected JSON and user TOML sources only; enabled plugin and managed hook sources are not exhaustively enumerated.",
+    "Static resident estimates do not include tool schemas, hidden system instructions, automatic memory, or remote skill metadata.",
+    "Private prompt bodies and personal setting values are deliberately absent.",
+    "No DB connection or policy deny experiment was performed in H1."
+  ]
+}

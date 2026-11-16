@@ -1,0 +1,81 @@
+# 공통 알림 MSA 탐색 프로파일. KB 시점별 설계 차이는 위키 분석을 확인한다.
+service_id: notification-msa
+display_name: 알림 MSA
+domain: notification-messaging
+status: candidate
+owner_scope: common
+impact_check_required: true
+updated_at: 2026-11-12
+verification:
+  kb_and_source_observed_at: 2026-11-12
+  owner_confirmed: false
+  deployed_runtime_verified: false
+workspace_root: /Users/jm/Documents/workspace/msa/notification
+source_repositories:
+  - name: NotificationBackOffice
+    url: https://github.com/AladinCommunication/NotificationBackOffice
+    role: 운영자 콘솔; m3-web-ui-components 서브모듈 포함
+  - name: NotificationApiServer
+    url: https://github.com/AladinCommunication/NotificationApiServer
+    role: 콘솔 API·인증 orchestration·Domain 호출
+  - name: NotificationDomainApiServer
+    url: https://github.com/AladinCommunication/NotificationDomainApiServer
+    role: 발송 상태·규칙·프로필 미러·Worker API
+  - name: NotificationBatchServer
+    url: https://github.com/AladinCommunication/NotificationBatchServer
+    role: 스케줄·배치 실행과 SQS publish
+  - name: NotificationMessagingApiServer
+    url: https://github.com/AladinCommunication/NotificationMessagingApiServer
+    role: Wideshot 문자·알림톡 Consumer
+  - name: NotificationEmailApiServer
+    url: https://github.com/AladinCommunication/NotificationEmailApiServer
+    role: 이메일 Consumer
+  - name: NotificationPushApiServer
+    url: https://github.com/AladinCommunication/NotificationPushApiServer
+    role: 앱·웹 푸시 Consumer
+additional_cloned_repositories:
+  status: 관계·현행 사용 여부 미검증; 현행 7개 구성과 구분
+  names:
+    - UNUSED_NotificationSmsApiServer
+    - UNUSED_NotificationBackofficeWeb
+    - UNUSED_NotificationApiServer
+    - notification-idc-backend
+    - notification-backend
+    - lambda-notification-system
+kb_entrypoints:
+  - id: REF-A-4110
+    topic: 알림 MSA 루트·저장소·구조
+  - id: REF-A-4461
+    topic: 현행 7개 저장소별 설명
+  - id: REF-A-5093
+    topic: Domain·Batch·Consumer 책임 분담
+  - id: REF-A-4470
+    topic: SendGroup·SendTarget 상태 관계
+  - id: REF-A-4557
+    topic: 모드별 운영 런북·활성 여부
+  - id: REF-A-4449
+    topic: 회원 프로필 연동
+check_when:
+  - 자동·예약·수동 발송과 상태 전이·재시도·DLQ 변경
+  - 템플릿 변수·연락처·수신동의·에티켓시간 처리 변경
+  - 채널 provider·SQS·스케줄러·배치 실행 변경
+related_common_services:
+  - aladin-auth
+  - member-msa
+kb_navigation: catalog/common-services/msa-kb-index.md
+vault_entry: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/services/notification-msa/notification-msa.md
+handover_analysis: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/services/notification-msa/analysis/architecture-analysis-2026-11-12-695744b6.md
+dev_infrastructure_request_draft: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/services/notification-msa/proposals/dev-infrastructure-handover-request-2026-11-12.md
+runtime_shape_observed:
+  persistent_workload_types: 6
+  batch_image_types: 1
+  batch_modes: 10
+  batch_execution_model: EventBridge -> ECS Fargate; WebApplicationType.NONE; runtime unverified
+  note: workload 종류 수이며 파드·EC2 대수 또는 기관별 복제 수가 아님
+open_questions:
+  - owner와 운영 승인 경계
+  - 콘솔 API DB 소유권·Consumer 직접 쓰기의 현재 이관 상태
+  - 배치 모드별 실제 배포·활성화와 Domain 스케줄러 중복 여부
+  - Worker API 토큰 property 매핑과 미설정 시 통과 경로의 배포 차단
+  - SQS publish 이후 SENT와 업체 결과 callback CAS의 상태 계약
+  - fixture·mock·SNS simulate·주소 암호화 none 기본값의 실연동 전환

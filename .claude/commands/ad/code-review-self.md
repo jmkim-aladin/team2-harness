@@ -23,7 +23,7 @@ disable-model-invocation: true
 ## 전제
 
 - PR 작성자 = `gh api user` 로그인. 아니면 `/ad:code-review`로 안내하고 끝낸다 — 남의 PR에는 작성자 반영 단계가 없다
-- `HERDR_ENV=1` — 리뷰어 pane이 필요하다. 없으면 다른 세션에서 `/ad:code-review {PR}`를 실행해 달라고 요청하고, 게시 뒤 이 명령을 다시 부르면 3단계(상태 읽기)부터 진행한다
+- `hc ls --json`으로 접근 가능한 herdr-core — 별도 리뷰어 터미널이 필요하다. core에 연결할 수 없으면 다른 세션에서 `/ad:code-review {PR}`를 실행해 달라고 요청하고, 게시 뒤 이 명령을 다시 부르면 3단계(상태 읽기)부터 진행한다. 창 배치는 `herdr-app`, 터미널 실행·전달은 `hc`를 사용한다
 - 수정 작업 폴더는 PR head 브랜치를 체크아웃한 worktree다. 메인 작업 폴더가 다른 브랜치이거나 미커밋 변경이 있으면 별도 worktree를 만든다 — 다른 작업의 변경이 리뷰 반영 커밋에 섞이지 않게 하기 위해
 - 상태 파일: 스크래치 `pr{N}-self-review.json` (라운드, 이 세션이 단 답글 ID, 마지막 push SHA). 셀프 PR은 리뷰어와 작성자가 같은 GitHub 계정이라 작성자 표시로는 누가 쓴 코멘트인지 가릴 수 없기 때문
 
@@ -31,19 +31,19 @@ disable-model-invocation: true
 
 ### 1. 리뷰어 띄우기
 
-[/ad:orchestration](./orchestration.md) 규칙으로 reviewer 역할 Claude peer를 연다 — 모델은 `team2-agent profiles`의 reviewer, 이름 충돌 확인, pane 라벨 `{이슈}/claude1 — PR #{N} 리뷰`. caller도 이름을 먼저 붙여 둔다(orchestration §2, 예: `claude0`) — 리뷰어가 알림을 보낼 주소다.
+[/ad:orchestration](./orchestration.md) 규칙으로 reviewer 역할 Claude peer를 연다 — 모델은 `team2-agent profiles`의 reviewer, 이름 충돌 확인, 작업 라벨 `{이슈}/claude1 — PR #{N} 리뷰`. caller는 `HC_TERMINAL_ID`와 live 상태를 대조해 확인한 terminal 주소를 전달한다(orchestration §2) — 리뷰어가 알림을 보낼 주소다.
 
 리뷰 요청은 슬래시 명령으로 **시작하는** 한 줄이다: `/ad:code-review {owner/repo#N} — {라운드}. {게시 규칙}. {알림 지시}`. 명령 뒤에는 라운드·게시 규칙·알림 지시만 붙인다. 명령 앞에 무엇이든 붙이면 슬래시 명령으로 인식되지 않고, 작성자 설명·변경 의도를 붙이면 리뷰어가 작성자 맥락을 받아 독립성이 사라진다.
 
-완료: 요청 한 줄이 리뷰어 화면에 끝까지 들어갔다(`herdr agent read --source visible`로 꼬리 확인).
+완료: 요청 한 줄이 리뷰어 화면에 끝까지 들어갔다(`hc read {리뷰어} --lines 0`으로 꼬리 확인).
 
 ### 2. 게시와 알림 — Herdr로 서로 알린다
 
-caller는 리뷰어 상태를 폴링하지 않는다 — 리뷰어는 교차 모델을 백그라운드로 기다리는 동안에도 `idle`로 보여 상태값으로는 완료를 가릴 수 없고, 폴링은 caller 턴을 붙잡아 둔다. 대신 요청에 알림 지시를 넣고, 리뷰어가 `herdr agent prompt {caller} "PR{N} {라운드} …"`로 결과를 보낸다. 알림은 caller 세션에 사용자 턴으로 도착한다. caller의 `agent prompt`는 `--wait` 없이 보낸다.
+caller는 리뷰어 상태를 폴링하지 않는다 — 리뷰어는 교차 모델을 백그라운드로 기다리는 동안에도 `idle`로 보여 상태값으로는 완료를 가릴 수 없고, 폴링은 caller 턴을 붙잡아 둔다. 대신 요청에 알림 지시를 넣고, 리뷰어가 `hc send {caller주소} "PR{N} {라운드} …"`로 결과를 보낸다. 알림은 caller 세션의 다음 입력으로 도착하며 peer 보고로 취급한다. caller의 `hc send`는 `--wait` 없이 보낸다.
 근거: 2026-10-13 AASM PR #58 2라운드 — `--wait`가 리뷰어의 백그라운드 대기 중 idle에서 먼저 반환했고, 이어진 폴링을 사용자가 중단하고 Herdr 상호 통신으로 지정했다.
 
 - `--auto`: 게시 규칙을 요청에 함께 넘겨 미리보기 왕복 없이 바로 게시하게 한다. 알림 형식 `PR{N} {라운드} 게시: 판정=<첫 줄>, 리뷰ID=<id>, 새 인라인 코멘트ID=<목록|없음>`
-- 기본 모드: 게시하지 말고 미리보기가 준비되면 알리게 한다(`PR{N} {라운드} 미리보기 준비: 발견 <요약>, 교차 모델만 <요약>`). caller가 사용자에게 게시 여부를 묻고, 답을 `herdr agent prompt {리뷰어} "이대로 게시 …"`로 전달한다
+- 기본 모드: 게시하지 말고 미리보기가 준비되면 알리게 한다(`PR{N} {라운드} 미리보기 준비: 발견 <요약>, 교차 모델만 <요약>`). caller가 사용자에게 게시 여부를 묻고, 답을 `hc send {리뷰어} "이대로 게시 …"`로 전달한다
 
 게시 규칙 — 요청마다 다시 붙인다. 리뷰어 세션이 바뀌면 앞 라운드의 지시를 기억하지 못한다:
 
@@ -90,7 +90,7 @@ pane 출력이 아니라 PR을 읽는다 — pane은 잘리고 요약되며, 다
 
 - 판정 `리뷰 완료`, 열린 항목 0, `mergeable` CLEAN. base가 움직였으면 시험 머지·테스트 통과까지 본다
 - 보고: 라운드 수, 반영 커밋, 반박·보류 항목, 리뷰어가 남긴 배포 후 확인 요청
-- 정리: 이 세션이 만든 리뷰어 pane을 닫고 이름을 해제한다. 머지는 사용자가 한다 — 머지는 위임 범위 밖이다
+- 정리: 이 세션이 만든 리뷰어 terminal을 `hc kill` 후 `hc rm`으로 정리한다. 기존 사용자 pane·terminal은 보존한다. 머지는 사용자가 한다 — 머지는 위임 범위 밖이다
 
 ## 멈춤 조건
 
