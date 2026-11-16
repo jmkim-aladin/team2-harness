@@ -23,7 +23,7 @@
 | 스킬은 Claude·Codex 양쪽에 같이 | 2026-07-16 "대전제" | 테스트 | `tests/test_codex_skills.py` alias 패리티 | 강제 |
 | 작업마다 공통 task_id | [task-tracing-policy](../policies/task-tracing-policy.md) | 훅 | UserPromptSubmit `task_tracing` 주입 | 강제 |
 | Feature SP는 0 | 2026-07 Velocity 중복 집계 | 문서 | [/ad:ticket](../.claude/commands/ad/ticket.md) | 후보 — 티켓 생성이 curl 문자열이라 훅 판정이 불안정. 생성 도구로 모으면 검사 가능 |
-| 서브에이전트는 커밋·푸시·티켓 상태 변경 안 함 | [claude-base](../memory/claude-base.md) §위임 프롬프트 계약 | 훅 | — | 보류 — PreToolUse 입력에서 subagent 호출을 구분하는 필드를 확인하지 못함 |
+| 서브에이전트는 커밋·푸시·PR·티켓 상태 변경 안 함 | [claude-base](../memory/claude-base.md) §위임 프롬프트 계약 | 훅 | `correction-guard:subagent-gate` — 훅 입력 `agent_id`로 판별(subagent 호출에만 있음, 2026-11-16 실측) | 강제 |
 | DB 스크립트·SP PR 리뷰는 분기·계산·경계값만, 배포 산출물 제외 | 2026-10-12 PR #7 리뷰 | 문서 | [code-review personas](code-review/personas.md) | 문서 — 지적 범위 판단 |
 | 서비스 하네스 없는 서비스는 레거시 경계를 `해당없음` | 2026-08-06 Tobe PR #153 | 문서 | [/ad:code-review](../.claude/commands/ad/code-review.md) §통과 근거 | 문서 — 판정 표기 |
 | 남의 티켓·PR은 리뷰·승인·머지까지 | 2026-08-06 Tobe PR #152 | 문서 | 개인 auto-memory | 문서 — 작성자 판별·문맥 판단 |

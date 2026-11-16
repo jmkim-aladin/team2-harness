@@ -11,10 +11,10 @@
 
 | 구분 | 판정·실제 근거 | 확인 한계 |
 |---|---|---|
-| 대장 신설 | [교정 규칙 강제 대장](correction-ledger.md) 팀 규칙 14행: 강제 7 · 문서 5 · 후보 1 · 보류 1. 개인 규칙 6행은 팀 훅에 넣지 않고 기록만 함 | 팀원 개인 auto-memory는 보지 않음 |
+| 대장 신설 | [교정 규칙 강제 대장](correction-ledger.md) 팀 규칙 14행: 강제 8 · 문서 5 · 후보 1. 개인 규칙 6행은 팀 훅에 넣지 않고 기록만 함 | 팀원 개인 auto-memory는 보지 않음 |
 | 도구화 | `correction-guard` 훅(Bash·Agent): AI 푸터(팀 정책) + 단순 조사 subagent model 누락. 같은 날 머지한 `ai-footer-guard`(미설치)를 일반화해 툴 호출당 훅 프로세스를 늘리지 않음. 설치기는 옛 이름을 은퇴로 정리 | Codex 세션에는 해당 훅 없음 — 푸터는 CI·리뷰가 보조 |
 | 권한 | deny 15건(비밀 파일·강제 push·reset --hard·clean -f) 선언·적용. `Read(**/.env)`는 세션 cwd 하위만 막아 `//**/.env`로 교체(실측) | sandbox(OS 수준 부수효과 제한)는 미도입 |
-| 보류 | 서브에이전트 커밋 금지 — PreToolUse 입력에서 subagent 호출을 구분하는 필드를 확인하지 못함 | 훅 입력 스키마 재확인 필요 |
+| 보류→강제 | 서브에이전트 커밋 금지 — 공식 문서(hooks)와 실측 결과, subagent 안 툴 호출에만 `agent_id`·`agent_type`이 있고 메인 호출엔 없다. `correction-guard:subagent-gate`로 강제(git commit·push·merge, gh pr 쓰기, YouTrack 쓰기는 `agent_run_guard` 판정 재사용) | 팀 규칙 14건 중 기계 강제 7→8 |
 | 문서 유지 | 리뷰 범위·해당없음 표기·남의 티켓 경계·문서 위치·브라우저 기본값 — 판단이 필요해 기계 판정이 불안정 | — |
 
 후속(같은 날): 리뷰 완화 신호에 **우회 주석** 범주를 추가했다(`gate_loosening_scan`). 처음 넣은 한국어 `우회`는 보안 맥락의 bypass와 겹쳐 서비스 repo 8개 이력에서 오탐 54건이 나왔다. 문제를 피해 가는 용법만 잡도록 좁혀 오탐 0, 정탐 1이 됐다. 검증 증거 중심 리뷰는 `code-review-policy` 체크포인트·DoD·PR 템플릿(pstack B03)에 이미 있어 변경하지 않았다.
@@ -466,7 +466,7 @@ Codex는 cached input이 포함된 input을 사용했고, Claude는 input+cache-
 | 원칙 | 확인한 신호 | 미측정·유지 범위 |
 |---|---|---|
 | 1 검증 루프 | CI 신설 — 커밋 경로와 무관하게 전체 회귀 실행 | 서비스 repo CI 미대상 |
-| 5 게이트 | 훅 3→4건(+`correction-guard`), deny 0→15건. 교정 대장 팀 규칙 14건 중 기계 강제 7건(50%) | R1a 유예 55건 유지 |
+| 5 게이트 | 훅 3→4건(+`correction-guard`), deny 0→15건. 교정 대장 팀 규칙 14건 중 기계 강제 8건(57%) | R1a 유예 55건 유지 |
 
 ### 11회차 범위 내 측정 (2026-11-04)
 
