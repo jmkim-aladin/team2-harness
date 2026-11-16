@@ -754,6 +754,7 @@ gh pr diff 123 --repo o/r | python3 tools/gate_loosening_scan.py         # stdin
 | 테스트 약화 | `@Disabled`·`@Ignore`(FQN 포함)·`[Ignore]`·`[Explicit]`·`[Fact(Skip=)]`·TestNG `@Test(enabled = false)`·`.skip`·`xit`·`.only`·`-x test`, 테스트 파일 삭제, 남은 테스트 파일의 assert/verify 순감(`Assert.Throws<Foo>(` 같은 제네릭 포함) |
 | 체커 침묵 | `@Suppress`·`ktlint-disable`·`#pragma warning disable`·`<NoWarn>`·`eslint-disable`·`@ts-ignore`·`nosemgrep`·`gitleaks:allow`·`istanbul ignore` 등 |
 | 미완성 | `TODO(`·`NotImplementedError`·`NotImplementedException`·빈 catch/except |
+| 우회 주석 | 새 주석의 `workaround`·`hack`·`quick fix`·`for now`·`FIXME`·`XXX`·임시 조치·문제를 우회·우회책·`우회:` 라벨·땜빵·편법. 보안 맥락의 bypass("가드를 우회한")·임시저장 같은 도메인어는 제외 — 2026-11-16 서비스 repo 8개 이력에서 오탐 54→0, 정탐 1 |
 | 예외 추가 | baseline·allowlist·suppression·`*ignore` 파일에 추가된 항목 |
 
 - 종료 코드: 0 스캔 완료(발견 유무 무관) / 2 입력 오류(빈 diff·git 실패·diff 형식 아님). 빈 diff를 0건으로 보고하지 않는다 — rtk가 본문을 버린 diff 위에서 "완화 0건"이 나오면 안 본 것과 구분되지 않는다(2026-08-10 PR #27 diff 본문 유실 사고). 리뷰 미리보기는 exit 2를 `완화 신호: 스캔 실패 — {stderr 요지}`로 적는다

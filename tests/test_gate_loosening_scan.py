@@ -229,6 +229,46 @@ class SilenceTests(unittest.TestCase):
         self.assertEqual(hits(file_diff("README.md", [], ["`@ts-ignore`를 쓰지 않는다"])), [])
 
 
+class WorkaroundCommentTests(unittest.TestCase):
+    """에이전트가 근본 원인 대신 우회를 고르고 주석으로 정당화하는 패턴 (2026-11 Lauren Tan 발표 — 타이머 우회 주석 확산)."""
+
+    def test_justifying_comments_are_reported(self) -> None:
+        for path, line in (
+            ("web/editor.ts", "  // workaround: VS Code emits change before React commits, so defer one frame"),
+            ("web/editor.ts", "  setTimeout(sync, 0) // hack until the store is async"),
+            ("src/main/kotlin/Order.kt", "    // 임시 조치 — 정산 배치가 늦게 돌아서 재조회한다"),
+            ("Legacy/OrderDao.cs", "            // 우회: SP가 NULL을 돌려줘서 빈 문자열로 바꾼다"),
+            ("lib/s3/operations.ts", "  // 이벤트를 누락해 컴파일 캐시가 갱신되지 않는 문제를 우회한다."),
+            ("scripts/sync.py", "    time.sleep(2)  # for now, wait for replication"),
+            ("Legacy/Cart.cs", "            // FIXME 재고 동시성"),
+            ("web/list.tsx", "    /* XXX quick fix for flicker */"),
+        ):
+            with self.subTest(line=line):
+                self.assertEqual(categories(file_diff(path, [], [line])), ["workaround"])
+
+    def test_code_identifiers_urls_and_domain_terms_are_silent(self) -> None:
+        for path, line in (
+            ("src/main/kotlin/Flags.kt", "    val workaroundEnabled = props.workaround_enabled"),
+            ("web/links.ts", '  const url = "https://example.com/hack/for/now"'),
+            ("src/main/kotlin/Cart.kt", "    // 임시저장 장바구니를 복원한다"),
+            ("src/main/kotlin/Route.kt", "    // 일단 주문을 조회한 뒤 상태를 본다"),
+            ("Legacy/Event.cs", "            // hackathon 이벤트 배너"),
+            ("lib/s3/client.ts", "   * API 레이어 게이트(requireProdWrite) 가 우회되어도 정책이 막는다"),
+            ("src/test/kotlin/LedgerTest.kt", "     * 위반 대상은 소유자 우회(트리거·FK 끔)로 심는다"),
+            ("build/verify.sh", "# 판정이 떨어지면 우회를 놓칠 위험이 커진다."),
+        ):
+            with self.subTest(line=line):
+                self.assertEqual(hits(file_diff(path, [], [line])), [])
+
+    def test_suppression_with_reason_counts_once_as_silence(self) -> None:
+        diff = file_diff("web/order.ts", [], ["// eslint-disable-next-line no-any -- workaround for legacy types"])
+        self.assertEqual(categories(diff), ["silence"])
+
+    def test_docs_and_removed_comments_are_ignored(self) -> None:
+        self.assertEqual(hits(file_diff("docs/guide.md", [], ["// workaround 예시"])), [])
+        self.assertEqual(hits(file_diff("web/editor.ts", ["  // workaround: old"], ["  sync()"])), [])
+
+
 class UnfinishedTests(unittest.TestCase):
     def test_stubs_and_empty_catch_are_reported(self) -> None:
         for path, added in (

@@ -13,6 +13,8 @@
                남은 테스트 파일의 assert/verify 줄 순감
   체커 침묵    @Suppress·ktlint-disable·#pragma warning disable·eslint-disable·@ts-ignore·nosemgrep·gitleaks:allow 등
   미완성       TODO(·NotImplementedError·NotImplementedException·빈 catch/except
+  우회 주석    새 주석의 workaround·hack·quick fix·for now·FIXME·XXX·임시 조치·우회·땜빵·편법 — 근본 원인 대신
+               우회를 고르고 주석으로 정당화하는 패턴. 주석에 적힌 사유는 넘길 근거가 아니다
   예외 추가    baseline·allowlist·suppression·*ignore 파일에 추가된 항목
 
 사용법:
@@ -37,6 +39,7 @@ CATEGORIES = [
     ("test", "테스트 약화"),
     ("silence", "체커 침묵"),
     ("unfinished", "미완성"),
+    ("workaround", "우회 주석"),
     ("exception", "예외 추가"),
 ]
 
@@ -150,6 +153,17 @@ SILENCE = re.compile(
     r"|istanbul\s+ignore|c8\s+ignore|v8\s+ignore|Stryker\s+disable"
 )
 
+# 주석 시작: 줄 머리 주석 또는 공백 뒤 인라인 주석. `//` 뒤 공백을 요구해 URL(`https://x`)을 피한다
+COMMENT_PART = re.compile(r"(?:^\s*(?://|#|/\*|\*|<!--|<%--|@\*|--)|\s(?://\s|#\s|--\s|/\*))(.*)$")
+# `임시`는 도메인어(임시저장)와, `우회`는 보안·게이트 맥락의 bypass(가드를 우회한 적재)와 겹친다 —
+# 문제를 피해 가는 용법(문제를 우회, 우회책, `우회:` 라벨)만 본다. 2026-11-16 서비스 repo 6개 이력 실측으로 좁힘
+WORKAROUND = re.compile(
+    r"\b(?:work-?around|hack(?:y|ish)?|kludge|band-?aid|quick[\s-]*fix|temp(?:orary)?[\s-]*fix|for\s+now|FIXME|XXX)\b"
+    r"|임시\s*(?:조치|방편|처리|대응|수정)|임시로"
+    r"|(?:문제|버그|이슈|오류|에러|제약|한계|결함)[을를이가]?\s*우회|우회\s*(?:책|방편|처리|조치)|^\s*우회\s*[:：—]"
+    r"|땜빵|편법|어쩔\s*수\s*없이",
+    re.I,
+)
 UNFINISHED = re.compile(r"\bTODO\s*\(|\bNotImplementedError\b|\bNotImplementedException\b")
 EMPTY_CATCH_INLINE = re.compile(
     r"\bcatch\b\s*(?:\([^)]*\))?\s*\{\s*(?://.*|/\*.*?\*/)?\s*\}"
@@ -446,6 +460,11 @@ def _is_assertion(text: str) -> bool:
     return bool(ASSERTION.search(text)) and not DECLARATION.match(text) and not COMMENT_ONLY.match(text)
 
 
+def _workaround_comment(text: str) -> bool:
+    m = COMMENT_PART.search(text)
+    return bool(m and WORKAROUND.search(m.group(1)))
+
+
 def scan_added_patterns(fd: FileDiff) -> list[Hit]:
     hits = []
     for hunk in fd.hunks:
@@ -454,6 +473,8 @@ def scan_added_patterns(fd: FileDiff) -> list[Hit]:
                 continue
             if SILENCE.search(ln.text):
                 hits.append(Hit("silence", fd.path, ln.new_no, ln.text))
+            elif _workaround_comment(ln.text):
+                hits.append(Hit("workaround", fd.path, ln.new_no, ln.text))
             if UNFINISHED.search(ln.text):
                 hits.append(Hit("unfinished", fd.path, ln.new_no, ln.text))
             elif EMPTY_CATCH_INLINE.search(ln.text):
@@ -519,7 +540,7 @@ def _clip(text: str, width: int = 100) -> str:
 
 def render(hits: list[Hit], max_per_category: int = 10) -> str:
     if not hits:
-        return "완화 신호: 0건 — 임계값 하향·테스트 약화·체커 침묵·미완성·예외 추가 해당 없음"
+        return "완화 신호: 0건 — 임계값 하향·테스트 약화·체커 침묵·미완성·우회 주석·예외 추가 해당 없음"
     out = [f"**완화 신호 {len(hits)}건** — 판정 아님. 사유(diff·PR 본문·티켓)가 있으면 넘긴다"]
     for key, label in CATEGORIES:
         group = [h for h in hits if h.category == key]
