@@ -143,6 +143,7 @@ python3 tools/lint_harness_rules.py --check    # 베이스라인 대비 증가�
 - **공통 서비스 영향**: 로그인·결제·정산·구독 등이 걸리면 [policies/common-service-policy.md](./policies/common-service-policy.md) + [catalog/common-services/registry.yaml](./catalog/common-services/registry.yaml) 확인
 - **검색 서비스 명칭**: 공식 표기는 `ALICE(알리스)`. 검색 API·색인·OpenSearch 경계는 [catalog/common-services/alice.yaml](./catalog/common-services/alice.yaml) 확인
 - **운영 SQL 실행 승인**: 매 실행마다 SQL 전문·대상·결과 범위·최대 60초 이내 실행 시간을 제시하고 사용자의 명시 승인을 받는다. 승인 없이는 조회하지 않는다. 모든 에이전트가 전역 동시 1개 슬롯과 중단 상태를 공유한다 — 사용자 승인과 실행 SQL을 일치시키고 동시 부하를 막는다
+- **DB 승인 입력**: [운영 DB 접근 정책](./policies/production-db-access-policy.md) §Codex·Claude 공통 승인 입력에 따라 `1 승인 / 2 수정 요청 / 3 취소`를 미리 제시한다. 세션이 허용하는 승인용 선택 UI 또는 실제 사용자 숫자 응답을 사용한다 — 기본 선택과 사용자 제출을 구분한다
 
 ## GBrain 공유 brain
 

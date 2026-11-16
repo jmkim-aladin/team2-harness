@@ -684,13 +684,15 @@ python3 tools/db_query_control.py --state /관리영역/query-control.sqlite3 st
 
 | v1 명령 | 동작 |
 |---|---|
-| `resume` | `emergency-stop` 또는 종료 미확인·오류·재시작 차단을 사용자 터미널의 `RESUME` 확인 후 해제. 사용자가 직접 요청할 때만 쓰는 대체 경로 |
+| `resume` | `emergency-stop` 또는 종료 미확인·오류·재시작 차단을 사용자 터미널의 승인 메뉴 확정 후 해제. 사용자가 직접 요청할 때만 쓰는 대체 경로 |
 | `prepare --target lego-prod --database <DB> --timeout 60 --max-rows 100 --max-bytes 102400` | stdin SQL과 대상·내부 제어 SQL·한도를 묶어 검토 요청 생성. 비밀번호 조회와 DB 접속 없음. 차단 중 거부 |
 | `review <요청ID>` | 승인할 SQL 전문과 조건 표시 |
-| `approve <요청ID>` | 전문 표시 후 사용자 터미널에서 digest 확인 입력 |
+| `approve <요청ID>` | 전문 표시 후 사용자 터미널에서 승인 메뉴 확정 |
 | `execute <요청ID>` | 승인 1회 소비 후 접속·실행·서버 세션 종료 확인·결과 전달 |
 
 채팅에서 사용자가 표시된 전문을 명시 승인한 경우에만 에이전트가 응답을 전달한다(v2 `run <요청ID> --from-chat-digest <전체approval_digest>`, v1은 `approve`). 이 옵션 자체가 사용자의 승인을 증명하지는 않으며 에이전트의 자가 승인에 사용할 수 없다. SQL·대상·프로파일·한도 변경, 실패·재시도에는 새 승인이 필요하다. 준비 요청은 30분 유효하고 실행은 최대 60초, 모든 대상 합계 동시 1개다.
+
+2026-11-13 사용자 승인으로 공통 터미널 메뉴(`db_prod_prompt.py`) 운영판 적용·재시작 완료: `1 승인 / 2 수정 요청 / 3 취소`, 기본 승인에서 Enter 또는 ↑↓·숫자 선택 후 Enter로 확정한다. `approve`·`run`·`recovery-approve`·독립 `resume`에 적용하며, 수정·취소는 승인/실행을 보내지 않는다. stdin·stdout이 TTY인 경우만 허용한다. Codex·Claude 채팅은 [운영 DB 접근 정책](../policies/production-db-access-policy.md) §Codex·Claude 공통 승인 입력을 따른다. 설치된 운영판에 메뉴 변경만 덧씌워 다른 미배포 DB 변경을 제외했으며, SQL 실행 없이 manifest·실행 지문 일치와 halted idle을 확인했다. 검증: [배포 기록](../docs/verification/db-approval-menu-2026-11-13.json).
 
 새 단일 승인 흐름은 v2 `preview` → 사용자 검토·명시 승인 → `run <요청ID> --from-chat-digest <전체approval_digest>`다. 전문은 사용자·준비·조건부 종료 확인 SQL 모두를 포함하며, 긴급 중단 해제가 필요하면 action에도 표시한다. 에이전트는 실제 명시 응답을 받은 뒤에만 `run`으로 전달한다. 검토 내용·동작·중단 세대 변경은 재검토 대상이다. 도구 출력이 잘려 전문을 확인할 수 없으면 승인 요청 전에 완전한 검토 자료를 제공한다.
 

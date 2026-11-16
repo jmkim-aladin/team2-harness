@@ -13,6 +13,7 @@ import time
 
 INSTALL = Path(__file__).resolve().parent
 sys.path.insert(0, str(INSTALL))
+from db_prod_prompt import confirm_operator
 STATE = Path.home() / "Library/Application Support/team2-db"
 SOCKET = str(Path("/tmp") / ("team2-db-" + str(os.getuid())) / "query.sock")
 STOP_MARKERS = STATE / "stop.d"
@@ -344,18 +345,14 @@ def main():
             display_review(review)
             if args.action == "review":
                 return 0
-            expected = "APPROVE " + review["digest"][:12]
             source = "human-terminal"
             if args.from_chat_digest:
                 if args.from_chat_digest != review["digest"]:
                     raise RuntimeError("approved_digest_mismatch")
                 source = "explicit-user-chat"
             else:
-                if not sys.stdin.isatty():
-                    raise RuntimeError("operator_terminal_required")
-                print("\n위 사용자 SQL과 제어 SQL을 이 조건으로 1회 실행합니다.")
-                if input("승인하려면 " + expected + " 입력: ") != expected:
-                    print("승인하지 않았습니다. DB 연결 없음."); return 1
+                if not confirm_operator('위 사용자 SQL과 제어 SQL을 이 조건으로 1회 실행합니다.'):
+                    return 1
             result = rpc(dict(action="approve", request_id=args.request_id, digest=review["digest"], approval_source=source))
         elif args.action in ("recovery-approve", "recovery-review"):
             result = rpc(dict(action="recovery_review", recovery_request_id=args.request_id))
@@ -365,18 +362,14 @@ def main():
             display_recovery_review(review)
             if args.action == "recovery-review":
                 return 0
-            expected = "APPROVE " + review["digest"][:12]
             source = "human-terminal"
             if args.from_chat_digest:
                 if args.from_chat_digest != review["digest"]:
                     raise RuntimeError("approved_digest_mismatch")
                 source = "explicit-user-chat"
             else:
-                if not sys.stdin.isatty():
-                    raise RuntimeError("operator_terminal_required")
-                print("\n위 운영 세션 종료 확인 SQL 전문을 이 조건으로 1회 실행합니다.")
-                if input("승인하려면 " + expected + " 입력: ") != expected:
-                    print("승인하지 않았습니다. DB 연결 없음."); return 1
+                if not confirm_operator('위 운영 세션 종료 확인 SQL을 이 조건으로 1회 실행합니다.'):
+                    return 1
             result = rpc(dict(action="recovery_approve", recovery_request_id=args.request_id,
                               digest=review["digest"], approval_source=source))
         elif args.action == "recovery-prepare":
@@ -396,7 +389,7 @@ def main():
                     or not isinstance(expected_markers, list)):
                 raise RuntimeError("resume_confirmation_unavailable")
             print("확인할 stop marker nonce: " + json.dumps(expected_markers, ensure_ascii=False))
-            if input("종료 확인된 idle 상태입니다. 이 nonce만 삭제하려면 RESUME 입력: ") != "RESUME":
+            if not confirm_operator('종료 확인된 idle 상태입니다. 표시한 nonce의 중단만 해제합니다.'):
                 return 1
             # The gateway rechecks the same epoch and exact marker list.  A
             # marker created after this prompt remains and re-latches the store.
@@ -434,10 +427,7 @@ def main():
                     raise RuntimeError('approved_digest_mismatch')
                 source = 'explicit-user-chat'
             else:
-                if not sys.stdin.isatty():
-                    raise RuntimeError('operator_terminal_required')
-                expected = 'APPROVE ' + review['approval_digest'][:12]
-                if input('표시된 모든 동작과 SQL을 1회 승인하려면 '+expected+' 입력: ') != expected:
+                if not confirm_operator('표시된 모든 동작과 SQL을 이 조건으로 1회 승인합니다.'):
                     return 1
             try:
                 result = rpc(dict(action='approve_submit', request_id=args.request_id,

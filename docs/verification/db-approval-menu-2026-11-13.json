@@ -1,0 +1,37 @@
+{
+  "task_id": "TASK-20261113-de353cdb4f03",
+  "date": "2026-11-13",
+  "user_authorization": "1 — 설치·재시작 진행",
+  "scope": "Codex·Claude 공통 DB 승인 입력",
+  "previous_bundle": "f391a2e0a2a6677161546bf63689cc1781a4c8ae26809b513e370aa21fdd3fe4",
+  "installed_bundle": "91842d64d2076419fe18c0b67466af1fd0bfaf0719070cb77f3f8214ee2e4c7a",
+  "runtime_fingerprint": "bb182ee8772b5e82dd2c69dc6b94bd29a5566620c96696146f1b686579f3bb37",
+  "changed_existing_runtime_files": ["db_prod_client.py"],
+  "new_runtime_files": ["db_prod_prompt.py"],
+  "excluded_unrelated_repository_changes": ["db_prod_transport.py", "db_query_control.py"],
+  "tests": {
+    "real_pty_and_client_gates": 10,
+    "approval_regressions": 28,
+    "immutable_runtime": 5,
+    "client_export": 5,
+    "total_passed": 48,
+    "candidate_baseline": "installed runtime plus only client/menu changes",
+    "independent_review": "no remaining must-fix findings"
+  },
+  "deployment": {
+    "procedure": ["verify and build immutable bundle", "launchctl bootout", "activate with stopped halted idle gate", "launchctl bootstrap", "verify manifest and matching client/gateway fingerprint"],
+    "launchd_state": "running",
+    "pid_at_verification": 80416,
+    "manifest_verified": true,
+    "client_gateway_match": true,
+    "menu_installed": true,
+    "halted": true,
+    "active": null,
+    "phase": "idle",
+    "reason": "service_started_requires_operator_resume",
+    "epoch": 7197,
+    "sql_queries_executed": 0,
+    "standalone_resume_executed": false
+  },
+  "limits": ["Claude AskUserQuestion UI was not exercised end to end; both agent entrypoints reference the shared input policy", "Chat approval UI and key handling depend on the host; actual numeric user response is the fallback", "Git changes remain uncommitted"]
+}
