@@ -1,0 +1,10 @@
+plugins {
+    id 'lamp.standalone-contract'
+    id 'lamp.injected-denied'
+}
+
+standaloneApp {
+    mode = 'strict'
+    allowedProjectDependencies = [] as Set
+    allowedRuntimeCoordinates = [] as Set
+}

@@ -1,0 +1,13 @@
+plugins {
+    id 'lamp.standalone-contract'
+}
+
+standaloneApp {
+    mode = 'strict'
+    allowedProjectDependencies = [] as Set
+    allowedRuntimeCoordinates = ['com.example:included-runtime:1.0'] as Set
+}
+
+dependencies {
+    implementation 'com.example:included-runtime:1.0'
+}

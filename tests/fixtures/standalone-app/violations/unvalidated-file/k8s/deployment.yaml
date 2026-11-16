@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lamp-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lamp-worker
+  template:
+    metadata:
+      labels:
+        app: lamp-worker
+    spec:
+      serviceAccountName: lamp-worker
+      securityContext:
+        fsGroup: 2000
+      containers:
+        - name: worker
+          image: example/lamp-worker:fixture
+          volumeMounts:
+            - name: broker-ca
+              mountPath: /var/run/lamp
+              readOnly: true
+      volumes:
+        - name: broker-ca
+          configMap:
+            name: lamp-broker-ca
+            defaultMode: 0444

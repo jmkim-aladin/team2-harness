@@ -1,0 +1,14 @@
+plugins {
+    id 'lamp.standalone-contract'
+}
+
+standaloneApp {
+    mode = 'strict'
+    allowedProjectDependencies = [':allowed-project'] as Set
+    allowedRuntimeCoordinates = [] as Set
+}
+
+dependencies {
+    implementation project(':allowed-project')
+    runtimeOnly files("$rootDir/fixture-allowed-runtime/build/libs/fixture-allowed-runtime-1.0.jar")
+}

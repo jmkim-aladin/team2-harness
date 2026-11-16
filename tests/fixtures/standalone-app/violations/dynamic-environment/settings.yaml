@@ -1,0 +1,25 @@
+mode: strict
+expected_error: ENVIRONMENT_DYNAMIC_NAME
+classpath:
+  projects:
+    - ":adapters:worker-runtime"
+  runtime:
+    - "com.squareup.okhttp3:okhttp:4.12.0"
+  denied_families:
+    - "org.springframework"
+    - "org.hibernate"
+    - "jakarta.persistence"
+    - "org.postgresql"
+    - "software.amazon.awssdk:secretsmanager"
+    - "org.springframework.ai"
+    - "com.anthropic"
+    - "com.openai"
+environment:
+  allowlist:
+    - name: LAMP_BROKER_ENDPOINT
+      source: env
+      required: true
+evidence:
+  build: build.gradle.kts
+  source: src/main/kotlin/ExampleEnvironment.kt
+  settings: settings.yaml

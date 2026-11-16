@@ -1,0 +1,10 @@
+allprojects {
+    group = 'com.example.standalone.contract'
+    version = '1.0'
+}
+
+subprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.release = 25
+    }
+}

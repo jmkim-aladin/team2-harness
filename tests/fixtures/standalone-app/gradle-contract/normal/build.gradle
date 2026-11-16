@@ -1,0 +1,30 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '2.3.21'
+    id 'lamp.standalone-contract'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+}
+
+tasks.register('runSecurityProbe', JavaExec) {
+    dependsOn('compileKotlin')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'SecurityProbeKt'
+    args System.getenv('LAMP_BROKER_CA_CASES') ?: ''
+}
+
+standaloneApp {
+    mode = 'strict'
+    allowedProjectDependencies = [':allowed-project'] as Set
+    allowedRuntimeCoordinates = [
+        'com.example:fixture-allowed-runtime:1.0',
+        'org.jetbrains.kotlin:kotlin-stdlib:2.3.21',
+        'org.jetbrains:annotations:13.0',
+    ] as Set
+}
+
+dependencies {
+    implementation project(':allowed-project')
+    implementation 'com.example:fixture-allowed-runtime:1.0'
+}

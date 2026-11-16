@@ -31,7 +31,7 @@
 
 | 규칙 | 검사 내용 | 방식 | 시점 |
 |---|---|---|---|
-| M-1·M-3·M-4 | 모듈 경로 종류와 규약 플러그인의 대응([표준 §4 의 모듈 표](./kotlin-backend-structure-standard.md#4-모듈-구성), 실행 앱·공용 앱 라이브러리·프로세스 api/usecase 구분), 모듈 이름 형식 | Gradle 모델·텍스트 | 즉시 |
+| M-1·M-3·M-4 | 모듈 경로 종류와 규약 플러그인의 대응([표준 §4 의 모듈 표](./kotlin-backend-structure-standard.md#4-모듈-구성), 실행 앱·공용 앱 라이브러리·프로세스 api/usecase 구분), `apps/<app>`의 `spring-boot-app`·`standalone-app` 상호 배타, standalone의 per-app classpath allowlist와 기본 거부 목록, 모듈 이름 형식 | Gradle 모델·해석 classpath·텍스트 | 즉시 |
 | M-2 | `contexts.txt` 와 `contexts/` 디렉터리가 같다 | settings·테스트 | 즉시 |
 | M-6 | main 의 `api()` 는 kernel·common 에만. 규약 플러그인이 넣는 의존 포함 | Gradle 모델 | 즉시 |
 | P-1 | 패키지 선언 기준으로 패키지당 main 파일 15개 이하(api·고정 패키지 포함) | Konsist | 기준선 |
@@ -51,7 +51,7 @@
 | N-12·N-13 | 파일 이름과 같은 선언이 있거나 허용 묶음 접미다. 파일 하나에 포트 인터페이스가 둘 이상 없다 | Konsist + ktlint | 기준선 |
 | N-14 | 테스트 클래스 이름 `*Test`. HTTP 테스트 클라이언트 타입을 쓰는 apps 테스트는 `*HttpTest` 이고 그 이름의 테스트는 그 타입을 쓴다(이름이 아니라 쓰는 타입으로 가린다). 메서드 이름이 백틱 문장. `@Tag("integration")` 은 `@IntegrationTest` 정의에만. 테스트 대역 이름에 금지 접두(`InMemory*`·`Memory*`·`Mock*`·`Stub*`) 없음. 대역이 접두의 뜻대로 동작하는지와 `*Fixture`·`*Samples` 의 뜻은 검토가 본다 | Konsist | 기준선 |
 | N-15 | 같은 BC 의 main 에서 최상위 타입 선언의 단순 이름 중복 없음(테스트·함수·프로퍼티 제외) | Konsist | 기준선 |
-| D-1 | main 의 project 의존이 [표준 §4 의 모듈 표](./kotlin-backend-structure-standard.md#4-모듈-구성) 안이다(integrations 의 같은 system `core`·shared messaging, 앱의 process api 포함). 앱이 BC usecase·data·process usecase 에서 참조하는 타입은 `*Configuration` 뿐이다. domain·api·kernel·common 에 프레임워크 의존 없음. usecase 에서 Spring 을 쓰는 클래스는 `*Configuration` 뿐이다 | Gradle 모델 + ArchUnit | 즉시(기존 검사)·기준선(앱의 참조·usecase Spring) |
+| D-1 | main 의 project 의존이 [표준 §4 의 모듈 표](./kotlin-backend-structure-standard.md#4-모듈-구성) 안이다(integrations 의 같은 system `core`·shared messaging, 앱의 process api 포함). Spring 앱이 BC usecase·data·process usecase 에서 참조하는 타입은 `*Configuration` 뿐이고, standalone 앱은 프레임워크 없는 공개 조립 타입만 참조한다. standalone의 project/runtime classpath allowlist와 해석 classpath에 Spring·JPA·DB driver·Secrets Manager·AI provider SDK가 들어오지 않는다. domain·api·kernel·common 에 프레임워크 의존 없음. usecase 에서 Spring 을 쓰는 클래스는 `*Configuration` 뿐이다 | Gradle 모델 + ArchUnit | 즉시(기존 검사)·기준선(앱의 참조·usecase Spring) |
 | D-2·D-3 | main 의존으로 만든 BC 그래프에 `:api` 밖 의존과 순환 없음. 컴파일된 클래스의 BC 조각에도 순환 없음 | Gradle 모델 + ArchUnit | 기준선 |
 | D-4 | contexts 밖의 domain 의존 허용 목록과 낡은 항목 | 텍스트(build 파일) | 즉시 |
 | D-5·T-2 | TX 람다와 거기서 닿는 협력 메서드 안에 외부 연동 호출·마커 메서드 호출 없음(§5.2 의 범위). usecase → integration 의존 없음 | ArchUnit + 고정 테스트 | 즉시(직접 호출)·안전망(전이·마커) |
@@ -67,7 +67,7 @@
 | DB-4 | 원장 점검이 앱 쿼리로 돌고 위반을 찾는다(테스트). 매일 실행과 경보 전달은 운영 확인 | 저장소 테스트 + 운영 확인 | DB 이관 |
 | DB-5 | 예외 번역이 한 곳이다. SQLSTATE 별 번역(제약·권한·경합·연결)이 맞다 | ArchUnit + 단위 테스트 | 즉시 |
 | S-1~S-4 | 파일 줄 수(생성 코드 제외), Kotlin 파서로 센 타입 선언 수(중첩 포함), 기준선(§2) | Konsist·텍스트 | 기준선 |
-| C-1·C-2 | `@ConfigurationProperties` 의 prefix 와 서비스가 만든 `application.yml` 키가 서비스 접두다(프레임워크 키 제외). `Environment.getProperty`·`@Value` 없음, contexts 모듈이 Spring `Environment` 를 모른다 | Konsist·ArchUnit | 즉시·기준선 |
+| C-1·C-2 | `@ConfigurationProperties` 의 prefix 와 서비스가 만든 `application.yml` 키가 서비스 접두다(프레임워크 키 제외). Spring 앱에는 `Environment.getProperty`·`@Value` 없음. `standalone-app`은 앱 루트의 단일 `*Environment` 디코더가 고정 allowlist의 `System.getenv("LITERAL_NAME")`만 읽고 순수 `*Settings`로 바꾸는 예외만 허용한다. `source: file` 항목(예: `LAMP_BROKER_CA_FILE`)은 허용 root·최대 크기·regular file·권한·symlink 정책을 검사한 뒤 읽으며, contexts 모듈은 Spring `Environment`를 모른다 | Konsist·ArchUnit·텍스트·YAML 파싱 | 즉시·기준선 |
 | C-3 | 필수 설정이 없으면 기동이 거절된다 | 저장소 기동 테스트 | 즉시 |
 | C-4 | 설정 키 표와 `application.yml` 대조. 동적 키는 이름 패턴 대조 | 저장소 테스트 | 즉시 |
 | X-2 | 소스가 있는 Gradle 모듈 디렉터리(BC 는 `contexts/<bc>`)에 `CLAUDE.md` 가 있고 BC 계층 디렉터리에는 없다 | 텍스트 | 즉시 |
@@ -106,6 +106,22 @@
 ### 5.4 DB-3 — 권한
 
 배포 단위마다 런타임 로그인 계정, 그 계정이 상속하는 권한 그룹, 마이그레이션 소유자를 허용 주체로 적는다. 검사는 업무 표마다 역할의 유효 권한(상속 포함, `INSERT`·`UPDATE`·`DELETE`·`TRUNCATE`·열 권한)을 읽어 허용 주체 밖에 쓰기 권한이 없는지 본다. 운영자 역할로 쓰기를 시도해 권한 거부가 나는 사례도 둔다. 계정이 하나라는 사실이 앱 코드만 쓴다는 증명은 아니다 — 소유자 계정의 사용 경계는 운영 통제다.
+
+### 5.5 M-1·M-4·C-2 — standalone-app
+
+`standalone-app`은 Spring 앱을 표준에서 빼기 위한 저장소별 우회가 아니라, Spring 없는 실행 artifact를 같은 경계 검사 아래 두기 위한 정식 모듈 계약이다. 작은 이미지와 제한된 자원만 주는 실행 주체가 Spring·DB·provider 자격증명을 실수로 끌어오지 않게 하는 것이 목적이다. 일반 standalone과 보안 격리 standalone은 같은 plugin을 쓰되 `mode`와 per-app classpath allowlist로 구분한다. `strict`는 untrusted input·단기 grant·격리 worker/runner처럼 실행 경계가 필요한 앱에만 쓰며, allowlist가 없으면 통과하지 않는다.
+
+검사는 다음 세 가지를 함께 본다.
+
+1. **Gradle 계약(M-1·M-4)**: `apps/<app>` 모듈은 `standalone-app` 또는 `spring-boot-app` 하나만 적용한다. standalone 모듈은 고정 main/실행 JAR를 만들고 Spring Boot plugin·starter·runtime을 가져오지 않으며, per-app project/runtime classpath allowlist와 해석 classpath를 함께 검사한다. Spring·JPA·DB driver·Secrets Manager·AI provider SDK 계열은 기본 거부하며 명시 allowlist로도 재허용하지 않는다. `strict` 앱은 untrusted input·grant·격리 worker/runner에 필요한 최소 integration만 허용하고, `runtime-boundary`와 같은 D-8 검사를 통과해야 한다. `apps/common`은 실행 artifact가 아니므로 standalone plugin 대상이 아니다.
+2. **bootstrap 디코더(C-2)**: standalone 앱 루트(`app.<app>`)에는 환경을 읽는 단일 `*Environment` 디코더만 둔다. 저장소의 모든 `src/main` Kotlin 소스를 스캔해 이 디코더 밖의 `System.getenv`·직접 파일 읽기와 contexts/usecase/integration의 우회를 실패시킨다. `Files`의 알려진 읽기 API뿐 아니라 `Files.newInputStream`, `File`/`FileInputStream`/`FileChannel`, `Path`·`Paths`, Kotlin stream 확장, `Channels`·`URL` 등 직접 파일 I/O 호출은 secure reader 밖에서 fail-closed로 거절하고, 가능하면 컴파일된 callsite/AST 규칙도 함께 실행한다. 디코더의 `System.getenv("LITERAL_NAME")` 호출은 저장소 설정표에 적힌 고정 allowlist와 일치해야 하며, `System.getenv()` 전체 맵·동적 이름·임의 파일 fallback·환경변수 탐색은 실패한다. 설정표가 `source: file`로 등록한 `LAMP_BROKER_CA_FILE` 같은 값은 허용 root 아래의 절대 경로·regular file을 확인하고 root·최종·중간 경로 구성요소의 symlink를 모두 거절한 뒤, 상한을 넘지 않는 bounded stream으로 읽는다. POSIX 권한을 확인하지 못하면 실패시키며 group/world writable은 기본 거절하고, 읽기 권한은 배포 주체 기준 allowlist 정책으로 명시한다(Kubernetes Secret/ConfigMap의 0444 또는 `fsGroup` 읽기도 해당 배포 정책에 등록할 수 있다). `material: public-ca`는 실제 Deployment/Pod manifest의 serviceAccount·fsGroup·readOnly volume·0444 매핑과 선언을 함께 검증한다. 디코더는 즉시 프레임워크 없는 `*Settings`로 변환하고, contexts·usecase·integrations의 다른 소스는 환경변수·파일을 직접 읽지 않는다. 필수 값 누락은 명시적으로 거절하고 비밀값 기본값을 두지 않는다.
+3. **Spring 앱 보존**: `spring-boot-app` fixture는 기존처럼 `@ConfigurationProperties`·`*Properties`만 통과한다. standalone 예외가 Spring 앱의 `Environment.getProperty`·`@Value` 또는 contexts의 Spring API 사용을 허용하지 않는다.
+
+fixture 계약은 각 저장소 `architecture-test`의 `resources/structure`와 컴파일 fixture에 함께 둔다. 이 표준 저장소의 `tests/fixtures/standalone-app/gradle-contract`가 복사 가능한 기준 구현이다. fixture의 settings YAML은 실제로 파싱하고, allowlist·denied family·환경변수 source·file validation metadata를 구조적으로 대조한다. Gradle contract fixture는 실제 `runtimeClasspath.incoming.resolutionResult.allComponents`의 모든 `ModuleComponentIdentifier`와 `ProjectComponentIdentifier`를 immutable denied family·per-app allowlist와 대조하고, resolved artifact의 origin도 검사한다. file/flatDir/local JAR·unknown component·included build identity는 기본 거부한다. `runtimeOnly`·전이 의존·project transitive·version catalog·convention/plugin 주입을 각각 별도 fixture로 둔다. 테스트는 정상 fixture의 Kotlin `ExampleSettings`/`readValidatedFile`도 실제 컴파일하고, SecurityProbe가 정상 파일 읽기와 최종·중간 symlink·root 밖·크기 초과·group/world writable 거부를 실행한다. 전체 main Kotlin 소스의 알려진 직접 파일 I/O API를 secure reader 밖에서 fail-closed로 검사하며, 결과는 fixture 경로와 evidence 경로를 함께 출력하거나 보존해 문자열 존재만으로 통과시키지 않는다. `public-ca` file fixture는 실제 Deployment와 Pod manifest의 serviceAccount·fsGroup·readOnly·0444 선언을 YAML 파싱해 설정표와 대조한다.
+
+- **정상 fixture**: `apps/standalone/build.gradle.kts`가 `standalone-app`만 적용하고 `mode`와 per-app project/runtime allowlist, 고정 main을 선언한다. 앱 루트의 `ExampleEnvironment`가 allowlist의 리터럴 환경변수만 읽어 `ExampleSettings`를 만들며, `readValidatedFile` 구현을 포함한 모든 정상 Kotlin 소스가 컴파일된다. `source: file` 항목은 `material: public-ca`와 serviceAccount·fsGroup·readOnly volume·0444 매핑, root·크기·권한·symlink 검증 metadata와 검증 reader를 갖는다. `apps/web`의 `spring-boot-app`·`ExampleProperties`는 기존 규칙을 통과한다.
+- **위반 fixture**: Gradle contract의 `runtime-only`, `transitive-runtime`, `project-transitive`, `version-catalog`, `plugin-injection`을 각각 하나의 classpath 규칙으로 실패시킨다. standalone 모듈의 `spring-boot-app` 동시 적용, `apps` 밖의 `standalone-app`, Spring Boot/JPA/DB driver/Secrets Manager/AI provider SDK·다른 서비스 artifact 유입, allowlist 밖 project/runtime, main 밖의 `System.getenv`·직접 파일 읽기·`System.getenv()` 전체 맵·동적 이름, allowlist 밖 리터럴, file-backed 값의 root·크기·권한·symlink 검증 누락, `*Environment`가 raw map/비밀 기본값을 반환, contexts/usecase/integration에서 환경변수 또는 파일을 읽는 우회를 각각 exact error code로 실패시킨다.
+- fixture 테스트는 정상·위반 양쪽을 **실행**하고, 각 위반 fixture의 `expected_error` 하나만 일치하는지, settings YAML 파싱·evidence 경로 확인을 보장한다. 실제 저장소가 standalone 앱을 갖지 않더라도 이 계약 fixture는 유지해 규칙이 사라지지 않게 한다.
 
 ## 6. 기존 저장소에 적용하기
 

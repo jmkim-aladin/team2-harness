@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: lamp-worker-probe
+spec:
+  serviceAccountName: lamp-worker
+  securityContext:
+    fsGroup: 2000
+  containers:
+    - name: worker
+      image: example/lamp-worker:fixture
+      volumeMounts:
+        - name: broker-ca
+          mountPath: /var/run/lamp
+          readOnly: true
+  volumes:
+    - name: broker-ca
+      configMap:
+        name: lamp-broker-ca
+        defaultMode: 0444
