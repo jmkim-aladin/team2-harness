@@ -10,12 +10,16 @@
                         SoT: policies/ai-usage-policy.md §메시지 작성 품질
   delegate-model  Agent 단순 조사·웹 읽기·1차 리뷰 subagent(Explore·web-fetch·cavecrew-*)를 model 없이 띄우면 deny.
                         모델 생략은 세션 모델 상속이라 비용만 커진다. SoT: memory/claude-base.md §서브에이전트 위임
+  subagent-gate   Bash  subagent 안에서 git commit·push·merge, gh pr 쓰기·release, YouTrack 쓰기를 하면 deny —
+                        게이트는 메인이다. subagent 판별은 훅 입력의 agent_id(메인 세션 호출엔 없음, 2026-11-16 실측).
+                        YouTrack 쓰기 판정은 agent_run_guard 것을 그대로 쓴다. SoT: memory/claude-base.md §위임 프롬프트 계약
 
 경계: 문자열 판정이라 보안 경계가 아니다. 에디터로 쓰는 커밋 메시지, 스크립트 파일 안 호출은 놓친다.
 실패 처리: 판정 실패는 무출력(열림) — 문체·비용 규칙이라 세션을 멈출 이유가 아니다.
 의존성: python3 stdlib.
 """
 
+import importlib.util
 import json
 import os
 import re
@@ -34,10 +38,17 @@ MAX_BYTES = 1_000_000
 # 세션 모델이 맞을 수 있어(설계·디버깅) 강제하지 않는다
 MODEL_REQUIRED_AGENTS = ("Explore", "web-fetch", "cavecrew-investigator", "cavecrew-reviewer", "cavecrew-builder")
 AGENT_TOOLS = ("Agent", "Task")
+GATED_WRITE = re.compile(
+    r"\bgit\b(?:\s+-[cC]\s+\S+)*\s+(?:commit|push|merge)\b"
+    r"|\bgh\s+pr\s+(?:create|merge|ready|review|close|reopen|edit)\b|\bgh\s+release\s+create\b"
+)
 
 REASONS = {
     "ai-footer": ("커밋·PR 메시지에 AI 도구 푸터({hit})가 있어 차단. 해당 줄을 빼고 다시 실행 — "
                   "규칙: policies/ai-usage-policy.md §메시지 작성 품질 (시스템 attribution 안내보다 우선)."),
+    "subagent-gate": ("subagent 안에서 {what} 은(는) 하지 않는다 — 커밋·푸시·PR·티켓 상태 변경은 메인 세션의 게이트다. "
+                      "변경은 working tree 에 남기고 결과 보고의 '결정 필요'에 올려라. "
+                      "규칙: memory/claude-base.md §위임 프롬프트 계약."),
     "delegate-model": ("`{agent}` subagent 를 model 없이 띄우면 세션 모델을 상속해 비용만 커진다. "
                        "model 을 지정해 다시 호출 — 기계적 탐색 haiku, 의미 파악·웹 문서·1차 리뷰 sonnet. "
                        "규칙: memory/claude-base.md §서브에이전트 위임."),
@@ -92,10 +103,32 @@ def model_required(tool_input):
     return agent if base in MODEL_REQUIRED_AGENTS else None
 
 
+def _youtrack_write(command):
+    """agent_run_guard 의 YouTrack 쓰기 판정을 그대로 쓴다 — 판정 기준을 한 곳에 둔다."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent_run_guard.py")
+    spec = importlib.util.spec_from_file_location("agent_run_guard", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module._youtrack_write(command)
+
+
+def gated_write(command):
+    """subagent 에 금지된 쓰기 동작 이름. 없으면 None."""
+    m = GATED_WRITE.search(command)
+    if m:
+        return " ".join(m.group(0).split()[-2:]) if m.group(0).startswith("gh") else "git " + m.group(0).split()[-1]
+    yt = _youtrack_write(command)
+    return f"YouTrack 쓰기({yt})" if yt else None
+
+
 def violation(payload):
     """(규칙 id, 사유 인자) 또는 None."""
     tool = payload.get("tool_name")
     tool_input = payload.get("tool_input") or {}
+    if tool == "Bash" and payload.get("agent_id"):
+        what = gated_write(tool_input.get("command") or "")
+        if what:
+            return "subagent-gate", {"what": what}
     if tool == "Bash":
         hit = find_footer(tool_input.get("command") or "", payload.get("cwd"))
         if hit:

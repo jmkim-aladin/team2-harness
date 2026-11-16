@@ -80,13 +80,49 @@ class DelegateModelTests(unittest.TestCase):
                 self.assertIsNone(guard.violation(payload))
 
 
+def sub(payload, agent_type="general-purpose"):
+    """서브에이전트 안의 툴 호출 — Claude Code 는 이때만 agent_id·agent_type 을 넣는다 (2026-11-16 실측)."""
+    return {**payload, "agent_id": "a1", "agent_type": agent_type}
+
+
+class SubagentGateTests(unittest.TestCase):
+    WRITES = ['git commit -m "[DEV2-1] x"', "git -C /repo push origin feature/DEV2-1", "git merge --no-ff feature/x",
+              "rtk git commit -am x", "gh pr create --title t --body b", "gh pr merge 3 --squash", "gh pr review 3 --approve",
+              "gh release create v1",
+              'curl -s -X POST -H "$AUTH" "$YOUTRACK_BASE_URL/api/issues/DEV2-1?fields=id" -d \'{"customFields":[]}\'',
+              "cd /repo && npm test && git commit -m x"]
+
+    def test_subagent_commit_push_pr_and_ticket_writes_are_denied(self):
+        for cmd in self.WRITES:
+            with self.subTest(cmd=cmd[:40]):
+                found = guard.violation(sub(bash(cmd)))
+                self.assertEqual(found[0], "subagent-gate")
+
+    def test_main_session_same_commands_pass(self):
+        for cmd in self.WRITES:
+            with self.subTest(cmd=cmd[:40]):
+                self.assertIsNone(guard.violation(bash(cmd)))
+
+    def test_subagent_reads_and_local_work_pass(self):
+        for cmd in ["git status", "git diff HEAD~1", "git log --oneline -5", "gh pr view 3 --json body", "gh pr diff 3",
+                    "python3 -m unittest discover -s tests", "git add -A",
+                    'curl -s -G -H "$AUTH" "$YOUTRACK_BASE_URL/api/issues" --data-urlencode "query=x"']:
+            with self.subTest(cmd=cmd[:30]):
+                self.assertIsNone(guard.violation(sub(bash(cmd))))
+
+    def test_footer_rule_still_wins_inside_subagent(self):
+        cmd = 'git commit -m "x" -m "Co-Authored-By: Claude <noreply@anthropic.com>"'
+        self.assertEqual(guard.violation(sub(bash(cmd)))[0], "subagent-gate")
+
+
 class HookTests(unittest.TestCase):
     def run_hook(self, raw):
         return subprocess.run(["bash", str(HOOK)], input=raw, capture_output=True, text=True, cwd="/", timeout=10)
 
     def test_hook_denies_each_rule_with_its_sot(self):
         for payload, sot in [(bash(f'git commit -m "x\n\n{CLAUDE_COAUTHOR}"'), "ai-usage-policy.md"),
-                             (agent("Explore"), "claude-base.md")]:
+                             (agent("Explore"), "claude-base.md"),
+                             (sub(bash("git push origin feature/x")), "위임 프롬프트 계약")]:
             with self.subTest(sot=sot):
                 r = self.run_hook(json.dumps(payload))
                 self.assertEqual(r.returncode, 0)
