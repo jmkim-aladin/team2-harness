@@ -3,6 +3,7 @@
 
 service_id: naru
 name: naru
+aliases: [나루]
 type: new
 description: "멀티프로토콜 SSO 게이트웨이 — 파트너 인증 연동, KMS 봉투 암호화 기반 사용자 매핑, ID 페더레이션"
 

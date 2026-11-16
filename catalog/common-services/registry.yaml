@@ -5,7 +5,7 @@
 
 registry_kind: common-services
 policy: policies/common-service-policy.md
-updated_at: 2026-09-03
+updated_at: 2026-11-11
 
 defaults:
   impact_check_required: true
@@ -62,6 +62,7 @@ common_services:
     display_name: 알라딘 인증
     domain: identity-access
     status: candidate
+    profile: aladin-auth.yaml
     owner_scope: common
     impact_check_required: true
     description: 로그인, SSO, 세션, 권한, 회원 식별, partner user mapping에 영향을 주는 공통 인증 경계.
@@ -84,7 +85,45 @@ common_services:
       - session-policy
       - incident-runbook
     notes:
-      - owner/API/repo/KB는 아직 후보 상태다. 확인 전 confirmed로 쓰지 않는다.
+      - 2026-11-11 KB·로컬 소스 탐색 경로를 프로파일에 보강했다. owner·배포는 미확인이므로 candidate를 유지한다.
+
+  - service_id: member-msa
+    display_name: 회원 MSA
+    domain: member-profile
+    status: candidate
+    profile: member-msa.yaml
+    owner_scope: common
+    impact_check_required: true
+    description: 회원·프로필·자격증명·동의·본인확인·회원군 라우팅의 공통 영향 경계.
+    check_when:
+      - 회원 식별자·회원군·가입·탈퇴·파기 변경
+      - 회원과 알림 사이의 프로필 동기화·아웃박스 변경
+    evidence_required:
+      - owner-confirmation
+      - api-contract
+      - profile-sync-contract
+      - incident-runbook
+    notes:
+      - 2026-11-11 KB와 클론 소스를 확인했다. owner·실제 배포·active consumer는 별도 확인한다.
+
+  - service_id: notification-msa
+    display_name: 알림 MSA
+    domain: notification-messaging
+    status: candidate
+    profile: notification-msa.yaml
+    owner_scope: common
+    impact_check_required: true
+    description: 템플릿·프로필 미러·수신동의·예약/자동 발송·채널 Consumer·발송 결과의 공통 영향 경계.
+    check_when:
+      - 공통 알림 API·발송 상태·재시도·스케줄러·채널 연동 변경
+      - 수신동의·탈퇴·연락처·템플릿 변수 처리 변경
+    evidence_required:
+      - owner-confirmation
+      - api-contract
+      - state-contract
+      - delivery-runbook
+    notes:
+      - 2026-11-11 KB와 클론 소스를 확인했다. 시점별 설계 차이를 위키에 기록했으며 현재 배포는 검증하지 않았다.
 
   - service_id: new-billing
     display_name: 뉴빌링

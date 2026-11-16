@@ -57,7 +57,11 @@ Hermes, Codex, Claude Code, GBrain은 공통 서비스 후보를 찾고 위키 d
 |---|---|---|
 | `alice` | ALICE(알리스) | 검색 API, 색인, 필터, 랭킹, OpenSearch |
 | `aladin-auth` | 알라딘 인증 | 로그인, SSO, 세션, 권한, 회원 식별 |
+| `member-msa` | 회원 MSA | 회원·프로필·자격증명·동의·본인확인·아웃박스 |
+| `notification-msa` | 알림 MSA | 템플릿·수신동의·발송 상태·배치·채널 Consumer |
 | `new-billing` | 뉴빌링 | 결제, 청구, 환불, 정산, 구독 |
+
+회원·알림·인증의 저장소와 KB 읽기 순서는 `catalog/common-services/msa-kb-index.md`에서 확인한다. 세 프로파일은 KB·소스 탐색 경로를 확인했지만 owner·현재 배포는 미검증이므로 `candidate`로 관리한다.
 
 ALICE는 AI팀이 운영하는 검색 서비스군의 공식 표기다. 기반 검색엔진 제품은 OpenSearch이고, 실제 구성요소는 `mall-search`, `aladin-search-pipe`, `search-admin-api`, `search-admin-front`다. `ALIS`·`Alis`를 새 문서 표기로 사용하지 않는다. 상세는 `catalog/common-services/alice.yaml`을 따른다.
 

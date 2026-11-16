@@ -75,10 +75,14 @@ DB·외부 인프라·브라우저가 필요한 검증(통합 테스트, E2E, �
 | 공통 서비스 | 영역 | 확인 기준 |
 |---|---|---|
 | [ALICE (`alice`)](common-services/alice.yaml) | 검색 API, 색인, 필터, 랭킹, OpenSearch | 공식 표기는 `ALICE(알리스)`. 검색 계약·색인·OpenSearch 변경 시 공통 서비스 영향 확인 |
-| 알라딘 인증 (`aladin-auth`) | 로그인, SSO, 세션, 권한, 회원 식별 | 로그인/권한/회원 식별 변경 시 공통 서비스 영향 확인 |
+| [알라딘 인증 (`aladin-auth`)](common-services/aladin-auth.yaml) | 로그인, SSO, 세션, 권한, 회원 식별 | KB·소스 탐색 경로 확인, owner·배포 미확인 |
+| [회원 MSA (`member-msa`)](common-services/member-msa.yaml) | 회원·프로필·동의·본인확인·아웃박스 | KB·소스 탐색 경로 확인, owner·배포 미확인 |
+| [알림 MSA (`notification-msa`)](common-services/notification-msa.yaml) | 템플릿·발송·수신동의·채널·스케줄러 | KB·소스 탐색 경로 확인, owner·배포 미확인 |
 | [뉴빌링 (`new-billing`)](common-services/new-billing.yaml) | 결제, 청구, 환불, 정산, 구독, 빌링키 | 소스 확인됨, 개발 중, 현재 팀 서비스 active 연동 없음. 신규 빌링성 기능은 뉴빌링 API 우선 확인 |
 
 자세한 기준: [`catalog/common-services/registry.yaml`](common-services/registry.yaml), [`policies/common-service-policy.md`](../policies/common-service-policy.md)
+
+회원·알림·인증의 KB 읽기 순서와 위키 자료 목록: [MSA KB 탐색 인덱스](common-services/msa-kb-index.md).
 
 ## 현대화 트랙 분포
 
