@@ -2,8 +2,12 @@
 """사용자 레벨 Claude Code 하드 게이트 설치 — ~/.claude/settings.json 에 훅·ask 규칙을 멱등 병합한다.
 
 설치 대상 (모든 repo·worktree·Paperclip 실행에 적용):
-  PreToolUse 훅  sqlcmd-readonly(Bash) · block-db-mcp(mcp__.*) · agent-run-guard(Bash·MCP)
-  permissions.ask  gh pr merge (+ rtk 훅이 재작성한 형태) — 사람 세션은 확인, 에이전트 실행은 거부라 둘 다 의도와 맞다
+  PreToolUse 훅  sqlcmd-readonly(Bash) · block-db-mcp(mcp__.*) · agent-run-guard(Bash·MCP) · ai-footer-guard(Bash)
+  permissions.ask  없음 — gh pr merge 정적 ask 는 은퇴. 사람 세션의 승인·머지는 사전 동의(~/.claude/CLAUDE.md §PR 승인·머지,
+                   2026-11-04)라 다시 묻지 않고, 에이전트 실행의 merge 는 agent-run-guard 가 막는다
+  permissions.deny  되돌릴 수 없는 것만 — 비밀 파일 읽기(.env·SSH·클라우드·DB 자격증명), 강제 push,
+                    미커밋 변경 폐기(reset --hard·clean -f). deny 는 auto mode 분류기보다 먼저 판정돼 모델 판단에 기대지 않는다.
+                    기준: "Claude 가 한 번 틀리면 되돌릴 수 있나" — 되돌릴 수 있는 실수는 모델·리뷰에 맡긴다.
 git push·gh pr create 는 정적 ask 에 두지 않고 agent-run-guard 가 판정한다. 훅 allow 는 ask 규칙을 넘지 못해
 승인된 에이전트 push 까지 막히기 때문이다. 이전에 설치한 해당 ask 규칙은 제거해 수렴시킨다.
 훅 명령은 하네스 절대 경로다 — 사용자 레벨에서 $CLAUDE_PROJECT_DIR 는 하네스가 아니기 때문이다.
@@ -12,7 +16,7 @@ git push·gh pr create 는 정적 ask 에 두지 않고 agent-run-guard 가 판�
     python3 tools/install_claude_gates.py                       # ~/.claude/settings.json 에 설치
     python3 tools/install_claude_gates.py --check               # 보고만 (설치 필요 시 exit 1)
     python3 tools/install_claude_gates.py --settings PATH --harness DIR
-    python3 tools/install_claude_gates.py --uninstall           # 관리 훅·ask 규칙만 제거 (--check 와 함께면 미리보기)
+    python3 tools/install_claude_gates.py --uninstall           # 관리 훅·ask·deny 규칙만 제거 (--check 와 함께면 미리보기)
 제거 후 setup.sh·setup_harness.py 를 다시 돌리면 게이트가 재설치된다.
 의존성: python3 stdlib.
 """
@@ -32,10 +36,19 @@ HOOKS = (
     ("sqlcmd-readonly", "Bash"),
     ("block-db-mcp", "mcp__.*"),
     ("agent-run-guard", "Bash|mcp__.*"),
+    ("ai-footer-guard", "Bash"),
 )
-# rtk PreToolUse 훅이 `gh pr merge` 를 `rtk gh pr merge` 로 바꾼 뒤 권한을 판정한다
-ASK_RULES = ("Bash(gh pr merge:*)", "Bash(rtk gh pr merge:*)")
-RETIRED_ASK_RULES = ("Bash(git push:*)", "Bash(gh pr create:*)", "Bash(rtk git push:*)", "Bash(rtk gh pr create:*)")
+# rtk PreToolUse 훅이 명령을 `rtk …` 로 바꾼 뒤 권한을 판정한다 — 은퇴 규칙도 두 형태를 함께 지운다
+ASK_RULES = ()
+RETIRED_ASK_RULES = ("Bash(git push:*)", "Bash(gh pr create:*)", "Bash(rtk git push:*)", "Bash(rtk gh pr create:*)",
+                     "Bash(gh pr merge:*)", "Bash(rtk gh pr merge:*)")
+# 자격증명 위치는 policies/local-credentials-policy.md 와 맞춘다. .env.example 같은 템플릿은 막지 않는다
+DENY_RULES = (
+    "Read(**/.env)", "Read(**/.env.local)", "Read(~/.ssh/**)", "Read(~/.aws/credentials)",
+    "Read(~/.netrc)", "Read(~/.pgpass)", "Read(~/.my.cnf)",
+    "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(rtk git push --force:*)", "Bash(rtk git push -f:*)",
+    "Bash(git reset --hard:*)", "Bash(rtk git reset --hard:*)", "Bash(git clean -f:*)", "Bash(rtk git clean -f:*)",
+)
 
 
 def hook_command(harness, name):
@@ -100,11 +113,18 @@ def merge_settings(settings, harness):
         if rule not in ask:
             ask.append(rule)
             changes.append(f"permissions.ask 추가 — {rule}")
+    deny = perms.setdefault("deny", [])
+    if not isinstance(deny, list):
+        raise ValueError("settings.json permissions.deny 가 목록이 아님")
+    for rule in DENY_RULES:
+        if rule not in deny:
+            deny.append(rule)
+            changes.append(f"permissions.deny 추가 — {rule}")
     return s, changes
 
 
 def remove_settings(settings):
-    """(새 settings, 변경 목록). 관리 훅(경로 무관)과 관리 ask 규칙만 뺀다. 다른 항목은 그대로 둔다."""
+    """(새 settings, 변경 목록). 관리 훅(경로 무관)과 관리 ask·deny 규칙만 뺀다. 다른 항목은 그대로 둔다."""
     if not isinstance(settings, dict):
         raise ValueError("settings.json 최상위가 객체가 아님")
     s = copy.deepcopy(settings)
@@ -140,6 +160,14 @@ def remove_settings(settings):
                 changes.append(f"permissions.ask 제거 — {rule}")
         if not ask:
             del perms["ask"]
+    deny = perms.get("deny") if isinstance(perms, dict) else None
+    if isinstance(deny, list):
+        for rule in DENY_RULES:
+            if rule in deny:
+                deny[:] = [r for r in deny if r != rule]
+                changes.append(f"permissions.deny 제거 — {rule}")
+        if not deny:
+            del perms["deny"]
     return s, changes
 
 
@@ -178,7 +206,7 @@ def main(argv=None):
     ap.add_argument("--settings", default=os.path.join(os.path.expanduser("~"), ".claude", "settings.json"))
     ap.add_argument("--harness", default=REPO, help="훅 스크립트가 있는 하네스 절대 경로")
     ap.add_argument("--check", action="store_true", help="보고만, 변경 없음 (설치 필요 시 exit 1)")
-    ap.add_argument("--uninstall", action="store_true", help="관리 훅·ask 규칙 제거")
+    ap.add_argument("--uninstall", action="store_true", help="관리 훅·ask·deny 규칙 제거")
     a = ap.parse_args(argv)
     harness = os.path.abspath(a.harness)
     try:
@@ -188,7 +216,7 @@ def main(argv=None):
         print(f"  ⚠ {a.settings} 를 읽거나 병합할 수 없어 중단 — {e}")
         return 2
     if not changes:
-        print("  제거할 게이트 없음" if a.uninstall else "  이미 설치됨 — 게이트 훅 3종·ask 규칙")
+        print("  제거할 게이트 없음" if a.uninstall else f"  이미 설치됨 — 게이트 훅 {len(HOOKS)}종·ask·deny 규칙")
         return 0
     for c in changes:
         print(("  [변경 예정] " if a.check else "  ✓ ") + c)

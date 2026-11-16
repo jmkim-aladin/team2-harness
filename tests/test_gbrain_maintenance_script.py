@@ -7,6 +7,7 @@ from pathlib import Path
 SCRIPT = Path("/Users/jm/.hermes-team2/scripts/gbrain-maintenance.sh")
 
 
+@unittest.skipUnless(SCRIPT.exists(), "개인 Hermes 설치(~/.hermes-team2) 전용 — CI·다른 PC 에는 없다")
 class GBrainMaintenanceScriptTests(unittest.TestCase):
     def test_maintenance_runs_full_reinforcement_steps(self) -> None:
         script = SCRIPT.read_text(encoding="utf-8")
