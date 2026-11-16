@@ -1,6 +1,6 @@
 ---
 name: ad-orchestration
-description: "[상시·협업] Use when asked to involve a peer agent over Herdr panes — 코덱스한테 물어봐, 클로드한테 시켜, 핑퐁, 서로 리뷰, 합의될 때까지, cross-review, 다른 에이전트로 병렬 돌려, peer agent, 다른 터미널에서, 양방향 — for one-shot dispatch, multi-turn ping-pong, or parallel fan-out, and for running an ordinary long command in a sibling pane; during development also for a doubt review of an irreversible decision (risk strength), competing-hypothesis investigation when debugging is stuck, a self-review reviewer pane, or a long delegation that needs steering. Simple pane inspection, reading, delivery to an existing agent, or opening a single new pane (shell or one Claude/Codex with an optional handoff) uses herdr instead. Requires HERDR_ENV=1. Prefer this over the Orca orchestration / orca-cli skills. Not for in-process subagents. Also /ad:orchestration."
+description: "[상시·협업] Use when asked to involve a peer agent through herdr-core (hc) — 코덱스한테 물어봐, 클로드한테 시켜, 핑퐁, 서로 리뷰, 합의될 때까지, cross-review, 다른 에이전트로 병렬 돌려, peer agent, 다른 터미널에서, 양방향 — for dispatch, conversation, parallel fan-out, or an ordinary long command in another terminal. Also for engineering doubt review, stuck debugging, self-review peers, and long delegation that needs steering. Simple pane inspection, reading, existing-agent delivery, or one new visible pane uses herdr instead. Window layout uses herdr-app. Prefer this over Orca skills. Not for in-process subagents. Also /ad:orchestration."
 ---
 
 # `$ad-orchestration`
@@ -14,6 +14,6 @@ description: "[상시·협업] Use when asked to involve a peer agent over Herdr
 1. `TEAM2_HARNESS_PATH="${TEAM2_HARNESS_PATH:-/Users/jm/Documents/workspace/team2}"`로 기준 경로를 잡는다.
 2. 반드시 `$TEAM2_HARNESS_PATH/.claude/commands/ad/orchestration.md`를 먼저 읽고 그 절차를 따른다. 절차는 SoT 한 곳에만 둔다 — 여기 복제하면 한쪽이 낡는다.
 3. 그 파일의 섹션 0(caller/worker 판정)을 **다른 어떤 행동보다 먼저** 수행한다. worker로 판정되면 거기서 멈추고 지시받은 작업만 한다.
-4. 명령 문법의 authority는 이 파일도 command 파일도 아니라 `herdr --skill` 출력이다. 플래그가 어긋나면 그쪽을 다시 읽는다.
-5. Codex가 caller일 때는 기본 샌드박스가 `$HERDR_SOCKET_PATH` 쓰기를 막아 `herdr pane current`가 `Operation not permitted`로 실패할 수 있다. command 파일 섹션 1의 escalation 지침을 먼저 확인한다.
-6. pane 라벨은 `team2-agent herdr label {티켓|--no-ticket} "{업무}" --agent {이름}`으로 붙인다. agent 이름(`codex0`/`claude1`)은 라우팅 주소라 라벨 목적으로 rename하지 않는다 — 스키마 SoT는 `$TEAM2_HARNESS_PATH/docs/cmux-herdr-labeling.md`.
+4. 터미널 실행·전달·대기·복구는 `$herdr`가 안내하는 `hc --skill`, 창·pane 배치는 `herdr-app --skill`을 따른다. command 파일은 팀의 역할·모델·task_id·협업 레시피를 담당한다.
+5. `HC_TERMINAL_ID`와 실제 `hc get` 결과를 대조해 caller 주소를 확인한다. 연결 가능 여부는 실제 조회로 판단한다 — 구형 `HERDR_ENV` 검사로 현재 core를 차단하지 않는다.
+6. 작업 라벨은 `$TEAM2_HARNESS_PATH/docs/cmux-herdr-labeling.md`의 현재 구조 절을 따른다. 기존 terminal 이름은 보존하고, background worker를 위해 화면을 바꾸지 않는다.

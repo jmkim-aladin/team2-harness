@@ -154,16 +154,14 @@ Daily 노트가 없으면 vault 템플릿 형식대로 생성한다 (vault `wiki
 
 **자동 생성/체크아웃하지 않는다**. 사용자 확인 후에만 실행한다 — 브랜치는 작업자의 컨텍스트를 바꾸는 행동이라 제안까지만이다.
 
-### 9. cmux/herdr 작업 라벨 변경 (선택, 감지된 환경에서만)
+### 9. Herdr 작업 라벨 변경 (선택, 확인된 대상만)
 
 절차 SoT: [docs/cmux-herdr-labeling.md](../../../docs/cmux-herdr-labeling.md) — 스키마·감지·갱신 시점 전체.
 
-```bash
-team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-ticket "{제목}"
-```
-
-명령 한 줄로 끝낸다 — 환경 감지·60자 컷·실패 경고·외부 환경 no-op이 모두 코드에 있어 수동 rename보다 어긋날 여지가 없다.
-`herdr agent rename`은 호출하지 않는다 — agent 이름은 route/ask/collect/close의 라우팅 주소라 덮어쓰면 대상을 잃는다.
+현재 Herdr는 `hc label <확인한-terminal주소> where="{티켓}/{역할} — {업무}"`로 작업 표시를 붙인다.
+탭 이름 갱신은 `herdr-app ls`에서 대상 ID를 확인한 뒤 `herdr-app do tab.rename`으로 한다.
+터미널 이름은 메시지 주소이므로 유지한다. background worker는 앱 표시용 라벨 없이 실행한다.
+구형 `team2-agent herdr label`은 현재 core를 대상으로 하지 않으므로 현재 구조 절의 명령을 따른다.
 
 ### 10. 출력 형식
 
@@ -177,7 +175,7 @@ team2-agent herdr label DEV2-{NNNN} "{제목}"     # 자유글 모드: --no-tick
 | 담당자 | {fullName ({login})} |
 | 위키 노트 | $LOCAL_WIKI_PATH/wiki/processes/tickets/dev2-{nnnn}.md (생성/갱신) |
 | Daily 아젠다 | $LOCAL_WIKI_PATH/wiki/processes/daily/{YYYY-MM-DD}.md (추가/스킵) |
-| cmux/herdr 라벨 | DEV2-{NNNN} - {제목} (변경/스킵 — 외부 환경이면 스킵, §9) |
+| Herdr 라벨 | DEV2-{NNNN} - {제목} (변경/스킵 — 대상 미확인이면 스킵, §9) |
 | 제안 브랜치 | feature/DEV2-{NNNN} (미생성) |
 | 제안 커밋 prefix | [DEV2-{NNNN}] |
 | 강도 | {가벼움/보통/무거움/위험} — {판정 단서} |
@@ -244,7 +242,7 @@ work-prep은 개발 그룹의 허브다 — 출력이 다음 동사를 지목해
 - 위키 노트 **갱신**: frontmatter 변경 내역을 출력한 뒤 바로 작성 (본문은 보존)
 - 위키 노트 **종료 반영**: 사용자가 티켓 종료/완료/마감/닫힘을 요청하거나 완료 사실을 보고하면 §12 기준으로 `ticket_status: done`과 종료 기록을 바로 반영
 - Daily 아젠다 **추가**: 추가할 한 줄을 출력한 뒤 바로 추가 (idempotent — 중복 시 스킵)
-- **cmux/herdr 작업 라벨 변경**: `team2-agent herdr label`을 그대로 실행 (§9). 외부 환경 판정·스킵은 명령이 알아서 하므로 사전 확인이 필요 없다
+- **Herdr 작업 라벨 변경**: 확인한 terminal·tab을 대상으로 `hc label`·`herdr-app do tab.rename`을 사용 (§9). 대상 미확인이면 라벨 갱신을 생략하고 본 작업을 계속한다
 - **개발 DB 조회·DML**: §11과 로컬 자격증명 정책의 사전 동의 범위에서 진행한다 — 테스트 데이터 준비·수정·정리의 반복 확인 비용을 줄인다
 
 **확인 필수 항목**:

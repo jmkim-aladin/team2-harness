@@ -1,70 +1,66 @@
 ---
 name: herdr
-description: "Herdr 창·pane 목록과 좌우 배치 확인, 기존 Claude/Codex 창 읽기, 기존 창으로 짧은 메시지나 인계문 전달, 새 창(pane) 하나를 띄워 셸·명령·Claude/Codex를 시작하고 인계문을 넘기는 데 사용한다. \"새 창 띄워줘\", \"옆에 클로드/코덱스 하나 열어줘\", \"새 창으로 넘겨줘\" 류도 이 스킬이다. 역할 배정·반복 리뷰·병렬 작업 조율은 ad-orchestration으로 넘긴다. Requires HERDR_ENV=1."
+description: "Herdr 앱의 창·pane 목록과 좌우 배치 확인, 기존 Claude/Codex 터미널 읽기·전달·인계, 새 창 하나 열기에 사용한다. 현재 구조는 herdr-app(창)과 herdr-core의 hc(터미널)다. 역할 배정·반복 리뷰·병렬 조율은 ad-orchestration을 사용한다."
 ---
 
-# Herdr 창 다루기
+# Herdr — 앱과 core 분리
 
-Codex와 Claude가 같은 원본을 사용한다. 이 스킬은 창 조작만 담당한다 —
-확인·읽기, 기존 창 전달, 새 창 하나 띄우기.
+Codex와 Claude가 같은 원본을 사용한다. 현재 Herdr는 창을 관리하는
+`herdr-app`과 터미널·프로그램을 관리하는 `hc`(`herdr-core`의 CLI)로 나뉜다.
+설치 버전의 지침을 읽어 문법과 동작을 확인하고, 여기에는 팀 설정만 둔다.
 
-## 필요한 만큼만 확인
+## 설치 지침과 조회
 
-1. `HERDR_ENV=1`인지 확인하고, 처음 사용할 때 `herdr --skill`을 읽는다.
-   명령 문법은 설치된 CLI 출력이 기준이다. 필요한 경우 `herdr agent`,
-   `herdr pane` 도움말만 추가로 확인한다. 그룹 도움말은 `herdr agent`처럼 그룹 이름까지 붙여 연다 — bare `herdr`는 TUI를 띄우기 때문이다.
-2. 창 조회는 `herdr agent list`부터 한다. 사용자 요청에 필요한 workspace/tab만
-   살핀다. 기존 agent 이름이나 발견한 pane ID로 주소를 지정한다.
-3. 좌우 위치가 필요하면 `herdr pane layout --pane <발견한-ID>`의 rect를 비교한다.
-   제목·작업 경로·agent 종류도 함께 확인한다. 자기 창은 `herdr pane current --current`로 확인한다 — focused pane은 사용자나 다른 클라이언트 창일 수 있다.
-   `--current`가 pane_not_found이면 환경변수 ID를 재사용하지 말고 목록에서 확인한다.
-4. 상태는 `herdr agent get <대상>`, 내용은
-   `herdr agent read <대상> --source recent-unwrapped --lines 80`으로 좁게 읽는다.
-   창 확인 요청만 있으면 여기서 끝낸다. 읽기만을 위해 이름·포커스·배치를 바꾸지 않는다.
+터미널을 다루기 전에 `hc --skill`을 읽는다(`herdr-core --skill`도 같은 지침).
+창·pane 배치가 필요하면 `herdr-app --skill`도 읽는다. 추가 인자는 해당 명령의
+`--help`와 `herdr-app commands`로 확인한다.
 
-## 기존 창에 전달
+기본 조회:
 
-- 사용자가 전달·인계를 요청한 경우에만 해당 창으로 보낸다. 작업 중이면 현재 상태를
-  확인하고 방해하지 않는 인계 범위로 제한한다. 기존 작업이나 세션을 지우지 않는다.
-- 인계는 목표·현재 상태·결정·검증 근거·다음 행동이 담긴 짧은 파일을 우선 전달한다.
-  기존 task_id가 있으면 유지한다. 다른 업무의 세션 바인딩을 임의로 덮어쓰지 않는다.
-- `herdr agent prompt <대상> "<전달문>"`으로 한 번 보내고 상태·응답을 확인한다.
-  기다릴 때는 설치된 CLI의 wait 문법을 따른다. timeout은 미전달의 증거가 아니므로
-  먼저 읽어보고 재전송 여부를 판단한다. 승인 질문은 임의로 답하지 않는다.
-- 기존 창은 이름·프로세스를 그대로 둔다 — rename하면 이름으로 찾는 `ask`·`route`가 깨진다. 모델·effort는 확인한 값만 보고하고 모르면 `unknown`으로 적는다.
+```bash
+hc ls --json
+herdr-app ls
+herdr-app status
+```
 
-## 새 창 하나 띄우기
+`hc ls`는 터미널 주소·이름·agent·상태·경로, 앱의 `ls`는
+space → tab → pane과 terminal 연결, `status`는 현재 화면의 포커스를 보여 준다.
+터미널만 조회할 때는 앱이 열려 있을 필요가 없다. 앱 조회 실패와 core 조회 실패는 구분한다.
 
-사용자가 새 창(pane)을 요청했을 때만 만든다. 창 하나 + 선택적 첫 전달까지가 이 스킬
-범위다. 둘 이상을 띄워 나눠 맡기거나 결과를 회수·반복 조율하면 `ad-orchestration`.
+현재 구조에서는 `HERDR_ENV` 검사나 구형 `herdr` CLI를 사용하지 않는다.
+환경변수가 없다는 이유로 조회를 중단하지 말고 실제 조회 결과로 연결 가능 여부를 판단한다.
+근거: 2026-11-10 사용자 요청 — 구형 Herdr CLI를 사용하지 않는 현재 구조로 전환.
 
-1. **위치** — 기본은 현재 탭의 형제 pane, 현재 작업 경로, 포커스 유지다. 사용자가 방향·
-   탭·workspace·경로를 말했으면 그대로 따른다. 방향 지정이 없으면
-   `herdr pane layout --pane "$HERDR_PANE_ID"`로 보고 넓으면 `right`, 좁거나 길면 `down`:
-   `herdr pane split --current --direction right --cwd "$PWD" --no-focus`.
-   새 pane ID는 응답의 `.result.pane.pane_id`에서 읽는다(예측하지 않는다).
-2. **셸·명령만** — 빈 셸이면 여기서 끝낸다. 명령은 `herdr pane run <pane> "<명령>"` 후
-   `pane wait-output`·`pane read`로 확인한다.
-3. **Claude/Codex 시작** — kind 기본은 **호출한 AI와 같은 쪽**이다(Claude 세션이면 `claude`,
-   Codex 세션이면 `codex`. `CLAUDECODE=1`이면 Claude, `CODEX_THREAD_ID`가 있으면 Codex).
-   사용자가 kind를 말했으면 그쪽을 쓴다. 상대 AI를 교차로 부르는 것은 `ad-orchestration` 기본값이다. 이름은 `agent list`와 겹치지 않게
-   `<kind>N`(예: `claude1`, `codex2`) 관례를 따른다. 실행 플래그(권한 bypass, 모델·effort)는
-   `$TEAM2_HARNESS_PATH/.claude/commands/ad/orchestration.md` §3 "Open the peer"·"Model routing"을 따르고 역할은 `worker` 기본값
-   (`team2-agent profiles`로 확인)이다. 사용자가 모델·effort를 정했으면 그 값을 쓴다.
-   - `pane split` 직후 `agent start`가 `agent_pane_busy`면 셸 준비 전 경합이다 — 같은 명령을 다시 보낸다.
-   - 시작이 `agent_not_ready`(blocked)면 화면을 읽고 사용자에게 묻는다. 승인 UI에 임의로 답하지 않는다.
-4. **첫 전달(인계 포함)** — 위 "기존 창에 전달" 규칙을 그대로 따른다. 추가로:
-   - 공통 `task_id`를 전달문에 넣어 같은 업무로 묶는다.
-   - 새로 뜬 agent의 첫 prompt는 bracketed paste가 아직 안 켜져 첫 줄만 들어갈 수 있다.
-     인계문은 파일로 저장하고 **한 줄**(`<인계 파일 경로> 읽고 이어서 진행해줘. task_id=…`)로 보낸 뒤,
-     `agent read`로 끝부분까지 들어갔는지 확인한다. 잘렸으면 같은 줄을 한 번 다시 보낸다.
-   - 기다릴 필요가 없으면 `--wait` 없이 보내고 제출 여부만 확인한다.
-5. **보고** — 새 pane ID·agent 이름·kind와 실제로 넘긴 모델·effort 플래그만 적는다.
-   확인하지 못한 값은 `unknown`.
+## 대상 식별과 읽기
 
-## 조율이 필요한 경우
+- 터미널 주소는 `HC_TERMINAL_ID`가 단서다. 상속된 값은 낡을 수 있으므로
+  `hc get <주소>`의 경로·foreground와 현재 세션을 대조한다. 불일치하면 live 목록에서
+  확인하며, 앱의 focused pane을 자기 pane으로 간주하지 않는다.
+- pane ID와 terminal 주소는 별개다. 앱에서 확인한 `terminal` 값을 `hc`에 넘긴다.
+  원격 주소는 `machine/t7`처럼 전체 값을 유지한다.
+- "좌측" 등 방향은 목록 순서만으로 단정하지 않는다. 앱의 목록·상태로 탭과 대상을 좁히고,
+  현재 화면이면 `herdr-app shot /tmp/herdr-panes.png`로 위치를 확인한다.
+  표시 중이 아닌 탭은 `hc schema`의 `doc.get`을 확인하고 `hc connect`에 JSON-RPC로
+  `doc.get`·`{"name":"herdr-app"}`을 보내 저장된 tab의 `root` 분할 트리를 읽을 수 있다.
+  조회를 위해 포커스·탭·배치를 바꾸지 않는다. 문서 갱신은 조회 범위 밖이다.
+- 상태는 `hc get <주소>`, 현재 화면은 `hc read <주소> --lines 0`,
+  최근 내용은 `hc read <주소> --lines 80`으로 읽는다. history 제한·미완전 표시는 core 지침을 따른다.
+- 결과는 space/tab·pane ID·terminal 주소·agent·상태와 확인한 모델·effort를 보고한다.
+  확인하지 못한 값은 `unknown`으로 적는다.
 
-역할 배정, 여러 agent 병렬 분배, 반복 리뷰·합의, 진행 감독이 필요할 때만
-`ad-orchestration`을 읽는다. 그 스킬은 이 스킬을 창 조작 계층으로 사용한다.
-단순 조회·기존 창 전달·새 창 하나 띄우기를 이유로 전체 오케스트레이션 절차를 불러오지 않는다
-(3단계 플래그 확인용으로 `orchestration.md` §3만 읽는 것은 해당 없음).
+## 전달과 새 창
+
+- 전달·인계는 사용자가 요청한 대상·범위로 `hc send <주소> "<전달문>"`을 사용한다.
+  목표·현재 상태·결정·검증 근거·다음 행동과 공통 `task_id`를 담고,
+  기존 세션의 다른 업무 바인딩은 유지한다. timeout 뒤에는 읽어본 후 재전송 여부를 판단한다.
+- 새 pane·tab은 사용자가 요청했을 때 앱 명령으로 만든다. 기본은 현재 탭·현재 작업 경로이며,
+  대상 pane을 명시하고 방향을 따른다. 정확한 인자는 `herdr-app commands`에서 확인한다.
+  생성 응답의 pane과 terminal 주소를 읽고, 실행 상태는 `hc get`으로 확인한다.
+- 새 agent의 kind 기본값은 호출한 AI와 같은 쪽이다. 사용자가 지정하면 그쪽을 쓴다.
+  모델·effort·시작 로그는 `$TEAM2_HARNESS_PATH/.claude/commands/ad/orchestration.md`
+  §3 Model routing을 따른다. Codex는 core 지침에 따라 `--no-daemon`을 포함한다.
+- 화면 변경이 필요 없는 worker는 `hc run --bg`를 사용한다. 역할 배정·병렬 분배·반복 리뷰는
+  `ad-orchestration`의 범위다. startup·첫 전달·대기·오류 복구는 core 지침을 따른다.
+- 기존 터미널 이름·프로세스는 유지한다. 작업 표시용 라벨은
+  `$TEAM2_HARNESS_PATH/docs/cmux-herdr-labeling.md`를 따른다.
+  승인 UI는 사용자에게 넘기며, 정리는 자신이 만든 터미널·pane만 대상으로 한다.

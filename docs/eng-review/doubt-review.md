@@ -15,9 +15,9 @@
 | 산출물 — 티켓 노트 `구현 계획`(완료 조건·슬라이스, 같은 벤더 검토자면 경계 포함), 관련 코드 경로, 스키마·SP 이름 | 작성자의 주장·추론·대안 비교 과정 |
 | 계약 — 결정 한 줄 + 깨지면 생길 피해 | 섹션 리뷰 판정·추천안, 대화 이력 |
 
-검토자 — 기본: `HERDR_ENV=1`이면 [`/ad:orchestration`](../../.claude/commands/ad/orchestration.md)으로 다른 벤더 peer(Codex)의 fresh context, 아니면 새 컨텍스트 서브에이전트(Agent) 또는 eng-review §5의 교차 모델 CLI. 다른 벤더를 먼저 고르는 이유는 같은 모델의 맹점까지 피하기 위해서다.
+검토자 — 기본: 실제 `hc` 연결이 가능하면 [`/ad:orchestration`](../../.claude/commands/ad/orchestration.md)으로 다른 벤더 peer(Codex)의 fresh context, 아니면 새 컨텍스트 서브에이전트(Agent) 또는 eng-review §5의 교차 모델 CLI. 위임은 현재 세션의 승인 범위를 따른다. 다른 벤더를 먼저 고르는 이유는 같은 모델의 맹점까지 피하기 위해서다.
 
-Codex 호스트가 caller면 다른 벤더는 Claude Code다 — `HERDR_ENV=1`이면 `/ad:orchestration`의 Claude peer, 아니면 eng-review §5의 `claude -p --allowedTools Read Grep Glob`(읽기 전용), 둘 다 안 되면 새 컨텍스트 Codex 서브에이전트. 아래 데이터 경계는 방향과 무관하게 같다.
+Codex 호스트가 caller면 다른 벤더는 Claude Code다 — 실제 `hc` 연결이 가능하면 `/ad:orchestration`의 Claude peer, 아니면 eng-review §5의 `claude -p --allowedTools Read Grep Glob`(읽기 전용), 둘 다 안 되면 허용된 범위의 새 컨텍스트 Codex 서브에이전트. 아래 데이터 경계는 방향과 무관하게 같다.
 
 다른 벤더 검토자(Codex·Claude peer, 교차 모델 CLI)에게는 [교차 모델 리뷰 데이터 경계](../code-review/cross-model.md) §프롬프트를 그대로 적용한다 — 완료 조건·슬라이스·관련 코드만 보내고 노트 경계 절·티켓 본문·팀 정책은 보내지 않는다. 대상 repo가 팀 소유가 아니면 eng-review §5 외부 의견 게이트대로 실행 전 사용자에게 확인한다. 근거: 반증에는 산출물만 있으면 되고, 업무 맥락·하네스 구조를 다른 벤더로 보낼 이유가 없다.
 

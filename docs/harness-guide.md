@@ -146,25 +146,19 @@ team2-agent board
 team2-agent cockpit
 ```
 
-herdr를 사용하는 로컬 작업실에서는 `team2-agent`가 Hermes/wiki 상태와 herdr 실행 표면을 연결한다. `herdr open`은 `team2-orchestration` space가 없으면 새로 만들어 `global-orchestrator`를 띄우고, 이미 있으면 빈 slot에 맞춰 새 tab으로 추가 instance(`global-orchestrator-2`/`-3`, 최대 3개)를 띄운 뒤 herdr session에 attach한다. 3개가 모두 떠 있으면 첫 instance를 focus한다. `worker`/`ask`/`route`/`refresh-global` 등 이름 기반 명령은 첫 instance(`global-orchestrator`)를 대상으로 한다. 기본 agent engine은 codex이며, Claude Code로 시작하려면 `--engine claude`를 붙인다. `open` 때 선택한 engine은 orchestrator prompt의 후속 `worker`/`tickets`/`work`/`role` 명령 예시에 반영된다. 서비스 작업은 서비스별 space, 티켓/작업별 tab, 임시 role agent pane으로 나눈다. Hermes board와 desktop cockpit은 상시 패널이 아니라 orchestrator가 필요할 때 조회하는 내부 상태 도구다. 이미 herdr 안에서 실행 중이거나 attach가 필요 없으면 `--no-attach`를 붙인다. herdr는 원장이 아니므로 상태 판단은 Hermes Board와 vault note를 기준으로 한다.
+현재 로컬 작업실은 `herdr-app`이 창·space·tab·pane을, herdr-core의 `hc`가 terminal·agent를 관리한다. 설치 지침은 `hc --skill`과 `herdr-app --skill`이다. 단순 조회는 공유 `herdr` 스킬, 역할 배정·반복 협업은 `/ad:orchestration`을 따른다. `HERDR_ENV` 검사 없이 실제 조회 결과로 연결을 판단한다. 상속된 `HC_TERMINAL_ID`는 현재 세션과 대조하고, pane ID와 terminal 주소를 구분한다. Hermes board와 vault note는 업무 상태의 원장으로 유지한다.
 
 ```bash
-team2-agent herdr doctor
-team2-agent herdr install-hooks
-team2-agent herdr open
-team2-agent herdr open --engine claude
-team2-agent herdr sync
-team2-agent herdr tickets --engine claude --service max --concurrency 4 DEV2-6509 DEV2-6510
-team2-agent herdr route --engine claude --service max DEV2-6509 "후속 지시"
-team2-agent herdr collect DEV2-6509
-team2-agent herdr close --service max DEV2-6509
-team2-agent herdr worker --engine claude orch-worker-3 "추가 분석 작업"
-team2-agent herdr role --engine claude --service max DEV2-6509 analyst "요구사항과 코드 진입점 분석"
+hc ls --json
+herdr-app ls
+herdr-app status
 ```
+
+터미널의 실행·전달·대기는 `hc run --bg`·`hc send`·`hc wait`·`hc read`, 보이는 창 배치는 `herdr-app do`를 사용한다. 화면 변경이 필요 없는 worker는 앱 라벨 없이 실행한다. 기존 `team2-agent herdr` 창·agent wrapper는 구형 CLI 대상 구현이므로 현재 실행 경로로 사용하지 않는다. 상세: [공유 Herdr 스킬](../.codex/skills/herdr/SKILL.md), [협업 절차](../.claude/commands/ad/orchestration.md).
 
 ### agent 모델 라우팅
 
-herdr가 agent를 시작하면 prompt의 역할명만 쓰지 않고 launch role별 모델을 CLI 인자로 지정한다. Codex는 model과 reasoning effort를, Claude는 native `--model`과 `--effort`를 지정한다. 각 agent는 새 작업의 첫 응답 첫 줄에 `[model] role=<role> model=<model> effort=<effort>`를 출력한다.
+`hc`로 agent를 시작하면 prompt의 역할명만 쓰지 않고 launch role별 모델을 CLI 인자로 지정한다. Codex는 `--no-daemon`과 model·reasoning effort를, Claude는 native `--model`과 `--effort`를 지정한다. 각 agent는 새 작업의 첫 응답 첫 줄에 `[model] role=<role> model=<model> effort=<effort>`를 출력한다.
 
 | 실행 대상 | launch role |
 |---|---|
@@ -175,11 +169,11 @@ herdr가 agent를 시작하면 prompt의 역할명만 쓰지 않고 launch role�
 
 role별 모델 값은 `tools/team2_agent.py`의 `MODEL_TIERS`(모델 id)·`ROLE_LAUNCH_DEFAULTS`(role→tier·effort)가 SoT다. 문서에 복제하지 않으므로 현재 값은 `team2-agent profiles`로 조회한다.
 
-기본값을 쓰되 업무 난이도가 기본과 다를 때만 `herdr worker`·`herdr role`에 `--tier {fast|workhorse|frontier}`·`--effort`·`--why "사유"`를 붙여 바꾸고, 엔진 중립 tier는 CLI가 `MODEL_TIERS` 표로 엔진별 모델 id로 푼다(tier 표와 규칙도 `team2-agent profiles`가 출력). CLI는 herdr 호출 전에 사유 누락, orchestrator override, reviewer·verifier의 tier 변경·effort 하한 미달, 모델별 effort 상한 초과를 거부하고(exit 2), 통과하면 시작 로그 끝에 `override="<사유>"`를 남긴다. tier는 모델과 effort를 함께 선택하며, 명시 `--effort`가 우선한다. 동일 tier를 지정한 reviewer·verifier는 역할 기본 effort를 유지한다. Claude도 역할 기본값부터 native `--effort`를 받으며, 최상위 모델은 사용자 지정 Opus 5.5로 제한한다.
+기본값을 쓰되 업무 난이도가 기본과 다를 때만 `team2-agent profiles`의 tier·effort 규칙에 맞춰 모델을 선택하고 이유를 전달문에 남긴다. 직접 `hc run`은 팀 wrapper의 검증을 거치지 않으므로 `/ad:orchestration` §3의 역할 제약과 실제 CLI 플래그를 맞춘다. tier는 모델과 effort를 함께 선택하며, 명시 effort가 우선한다. orchestrator는 기본값, reviewer·verifier는 기본 tier와 effort 하한을 유지하고 모델별 effort 상한을 지킨다. Claude에는 native `--effort`를 전달하며, 최상위 모델은 사용자 지정 Opus 5.5로 제한한다.
 
 이 launch role은 새 최상위 thread의 역할이다. Codex thread가 다시 Codex subagent를 생성하면 개인 `~/.codex/config.toml`과 custom agent 설정이 적용된다. Claude engine에는 Codex 전용 `model_reasoning_effort`를 전달하지 않는다.
 
-사용자는 `global-orchestrator` pane에 자연어로 지시한다. 오래 걸리거나 병렬 처리할 비서비스 작업은 orchestrator가 `team2-agent herdr worker --engine {codex|claude} orch-worker-N "작업"`으로 작업 단위 worker를 동적으로 띄운다. instruction이 있는 worker는 결과를 읽은 뒤 자동으로 pane을 닫는다. DEV2 티켓 묶음은 orchestrator가 서비스 판정에 필요한 최소 정보만 확인한 뒤 `team2-agent herdr tickets --engine {codex|claude} --service {service}`로 서비스 space 안에 ticket tab을 만든다. 티켓 상세 정리, 분석, 상태 판단은 각 tab의 `ticket-lead`가 담당하며, `/ad:work-prep` 기준으로 필요한 role agent만 `team2-agent herdr role --engine {codex|claude} --service {service}`로 띄운다. 이미 생성된 티켓/작업에 후속 지시를 보낼 때는 `team2-agent herdr route --engine {codex|claude} --service {service} {DEV2-1234|work-id} "후속 지시"`를 사용하고, 결과 확인은 `team2-agent herdr collect {DEV2-1234|work-id}`로 한다. 종료할 때는 `team2-agent herdr close --service {service} {DEV2-1234|work-id}`로 tab 안의 lead/role pane을 함께 닫는다. 기본은 working/blocked pane이 있으면 닫지 않고, 강제 종료는 `--force`를 명시한다. `team2-agent board`, `cockpit`, `brief`, `ask`, `delegate`, `decide`, `done` 등은 orchestrator/worker/ticket-lead가 내부 도구로 사용한다.
+사용자는 현재 작업의 agent에 자연어로 지시한다. 위임이 승인된 업무는 `/ad:orchestration`에 따라 작업 범위·모델·공통 task_id를 명시해 `hc run --bg`로 실행한다. 후속 지시는 확인한 terminal 주소로 `hc send`, 결과는 `hc wait`와 `hc read`로 확인한다. 보이는 ticket tab·pane은 사용자가 요청할 때 `herdr-app`으로 만들고, 업무 상태 판단은 Hermes Board와 vault note를 따른다. 결과 수용 뒤에는 자신이 만든 terminal만 정리한다. 기존 `team2-agent herdr worker|tickets|role|route|collect|close`의 구형 실행·수집 흐름을 현재 core에 그대로 적용하지 않는다.
 
 board projection과 dispatch request만 갱신할 때는 아래 runner를 사용한다. 기존 ack를 읽어 중복 전송을 막은 pending batch를 만든다.
 
@@ -360,7 +354,7 @@ git hook은 Graphify full pipeline을 직접 실행하지 않는다. hook을 붙
 | 이해 | 낯선 저장소에 처음 투입 | `/eli5-onboard` — 30분 안에 1분 설명 가능 → 업무→용어→흐름→구조 순 단계별 커리큘럼 | — |
 | 이해 | 방금 설명이 이해 안 될 때 재설명 | `/wait-what` — 팀 용어집 어휘로 재피치 | — |
 | 이해 | 새 기술·개념 다세션 학습 | `/teach` — 현재 디렉토리를 학습 워크스페이스로 | — |
-| 협업 | 다른 에이전트와 협업 (Herdr) | `/ad:orchestration` | 개발 — `HERDR_ENV=1`이면 필요할 때 자동 사용, 아니면 서브에이전트로 대체: 설계 검증(위험) 반증 검토를 다른 벤더 peer(Codex)의 fresh context로(완료 조건·슬라이스·코드만 전송 — 교차 모델 리뷰와 같은 데이터 경계) / 디버깅 `diagnosing-bugs`가 막히면 경쟁 가설 조사를 가설별 peer 병렬로 / 리뷰 `/ad:code-review-self` 리뷰어 pane / 구현 중 오래 걸리고 중간 조향이 필요한 위임. 슬라이스 구현은 하나씩 — 병렬 슬라이스는 사용자 지시가 있을 때만 |
+| 협업 | 다른 에이전트와 협업 (Herdr) | `/ad:orchestration` | 개발 — 실제 `hc` 연결을 확인해 사용하고, 보이는 창 배치는 `herdr-app`으로 관리: 설계 검증(위험) 반증 검토를 다른 벤더 peer(Codex)의 fresh context로(완료 조건·슬라이스·코드만 전송 — 교차 모델 리뷰와 같은 데이터 경계) / 디버깅 `diagnosing-bugs`가 막히면 경쟁 가설 조사 / 리뷰 `/ad:code-review-self` 리뷰어 terminal / 구현 중 오래 걸리고 중간 조향이 필요한 위임. 위임·병렬화는 현재 세션의 승인 범위를 따르고, 슬라이스 구현은 하나씩 — 병렬 슬라이스는 사용자 지시가 있을 때만 |
 | 협업 | DEV2 티켓을 로컬 Paperclip 에이전트에 맡김 (파일럿) | `/ad:paperclip-dispatch` — Inbox 등록(`{ID…}`·`--inbox`), 프로젝트·격리·리뷰→승인 정책 분류(`--project`). 결정적 층 `tools/paperclip_import_ticket.py`, 구성 [templates/paperclip/README.md](../templates/paperclip/README.md) | 개발·착수 준비 — 쇼핑 데이터 추출 요청이면 work-prep 다음 단계로 `--project` 분류 |
 | 협업 | 새 하네스·디렉토리·동료에게 인계 | `/handoff` | 단계 경계 — 세션·사람 이동 |
 | 협업 | 사람만 할 수 있는 절차 (자격증명·대시보드) | `wizard` (모델 호출) | — |
