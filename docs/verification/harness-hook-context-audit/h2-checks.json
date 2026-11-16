@@ -1,0 +1,82 @@
+{
+  "checked_at": "2026-11-04T07:36:05.501336+00:00",
+  "unit_suites": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "tests": 478,
+      "skipped": 0,
+      "returncode": 0,
+      "log": "h2-suite-1.txt"
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/tests"
+      ],
+      "tests": 279,
+      "skipped": 1,
+      "returncode": 0,
+      "log": "h2-suite-2.txt"
+    }
+  ],
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "tools/lint_harness_rules.py",
+        "--check"
+      ],
+      "returncode": 0,
+      "log": "h2-final-1.txt"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/lint_vault.py",
+        "--vault",
+        "/Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2",
+        "--files",
+        "wiki/projects/harness-hook-context-audit/plan.md",
+        "wiki/projects/production-query-usability/plan.md",
+        "wiki/processes/daily/2026-11-04.md"
+      ],
+      "returncode": 0,
+      "log": "h2-final-2.txt"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/secret_scan.py",
+        "docs/verification/harness-hook-context-audit",
+        "tests/test_harness_hook_probe_fixture.py"
+      ],
+      "returncode": 0,
+      "log": "h2-final-3.txt"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "returncode": 0,
+      "log": "h2-final-4.txt"
+    }
+  ],
+  "native_case_matrix": {
+    "normal_passed": 6,
+    "fault_protection_failed": 4,
+    "evidence": "h2-results.json"
+  }
+}
