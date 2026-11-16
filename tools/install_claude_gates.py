@@ -43,12 +43,14 @@ ASK_RULES = ()
 RETIRED_ASK_RULES = ("Bash(git push:*)", "Bash(gh pr create:*)", "Bash(rtk git push:*)", "Bash(rtk gh pr create:*)",
                      "Bash(gh pr merge:*)", "Bash(rtk gh pr merge:*)")
 # 자격증명 위치는 policies/local-credentials-policy.md 와 맞춘다. .env.example 같은 템플릿은 막지 않는다
+# `//` 는 절대 경로 기준 — `**/.env` 는 세션 cwd 하위만 막아 다른 repo 의 .env 가 열린다 (2026-11-16 실측)
 DENY_RULES = (
-    "Read(**/.env)", "Read(**/.env.local)", "Read(~/.ssh/**)", "Read(~/.aws/credentials)",
+    "Read(//**/.env)", "Read(//**/.env.local)", "Read(~/.ssh/**)", "Read(~/.aws/credentials)",
     "Read(~/.netrc)", "Read(~/.pgpass)", "Read(~/.my.cnf)",
     "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(rtk git push --force:*)", "Bash(rtk git push -f:*)",
     "Bash(git reset --hard:*)", "Bash(rtk git reset --hard:*)", "Bash(git clean -f:*)", "Bash(rtk git clean -f:*)",
 )
+RETIRED_DENY_RULES = ("Read(**/.env)", "Read(**/.env.local)")
 
 
 def hook_command(harness, name):
@@ -116,6 +118,10 @@ def merge_settings(settings, harness):
     deny = perms.setdefault("deny", [])
     if not isinstance(deny, list):
         raise ValueError("settings.json permissions.deny 가 목록이 아님")
+    for rule in RETIRED_DENY_RULES:
+        if rule in deny:
+            deny[:] = [r for r in deny if r != rule]
+            changes.append(f"permissions.deny 제거 — {rule} (절대 경로 패턴으로 대체)")
     for rule in DENY_RULES:
         if rule not in deny:
             deny.append(rule)
@@ -162,7 +168,7 @@ def remove_settings(settings):
             del perms["ask"]
     deny = perms.get("deny") if isinstance(perms, dict) else None
     if isinstance(deny, list):
-        for rule in DENY_RULES:
+        for rule in DENY_RULES + RETIRED_DENY_RULES:
             if rule in deny:
                 deny[:] = [r for r in deny if r != rule]
                 changes.append(f"permissions.deny 제거 — {rule}")

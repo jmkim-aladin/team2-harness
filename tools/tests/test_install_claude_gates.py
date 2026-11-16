@@ -68,11 +68,21 @@ class MergeTests(unittest.TestCase):
         deny = merged["permissions"]["deny"]
         self.assertEqual(deny[:2], ["Bash(rm -rf /:*)", "Read(~/.ssh/**)"])
         self.assertEqual(deny.count("Read(~/.ssh/**)"), 1)
-        for rule in ["Read(**/.env)", "Bash(git push --force:*)", "Bash(git reset --hard:*)"]:
+        for rule in ["Read(//**/.env)", "Bash(git push --force:*)", "Bash(git reset --hard:*)"]:
             self.assertIn(rule, deny)
         self.assertNotIn("permissions.deny 추가 — Read(~/.ssh/**)", changes)
         removed, _ = gates.remove_settings(merged)
         self.assertEqual(removed["permissions"]["deny"], ["Bash(rm -rf /:*)"])
+
+    def test_cwd_relative_env_rules_converge_to_absolute(self):
+        s = user_settings()
+        s["permissions"]["deny"] = ["Read(**/.env)", "Read(**/.env.local)"]
+        merged, changes = gates.merge_settings(s, HARNESS)
+        deny = merged["permissions"]["deny"]
+        self.assertNotIn("Read(**/.env)", deny)
+        self.assertIn("Read(//**/.env)", deny)
+        self.assertEqual(sum("절대 경로 패턴으로 대체" in c for c in changes), 2)
+        self.assertEqual(gates.merge_settings(merged, HARNESS)[1], [])
 
     def test_converges_previous_install(self):
         """1차 설치본(파일 도구 matcher, push·PR 정적 ask)을 새 선언으로 수렴시킨다."""
