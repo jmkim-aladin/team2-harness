@@ -74,6 +74,19 @@ class MergeTests(unittest.TestCase):
         removed, _ = gates.remove_settings(merged)
         self.assertEqual(removed["permissions"]["deny"], ["Bash(rm -rf /:*)"])
 
+    def test_retired_footer_hook_replaced_by_correction_guard(self):
+        s = user_settings()
+        s["hooks"]["PreToolUse"].append({"matcher": "Bash", "hooks": [
+            {"type": "command", "command": gates.hook_command(HARNESS, "ai-footer-guard")}]})
+        merged, changes = gates.merge_settings(s, HARNESS)
+        self.assertNotIn("ai-footer-guard", json.dumps(merged))
+        self.assertIn("PreToolUse 훅 제거 — ai-footer-guard (은퇴)", changes)
+        self.assertEqual(len(managed_commands(merged)), len(gates.HOOKS))
+        self.assertEqual(gates.merge_settings(merged, HARNESS)[1], [])
+        removed, rchanges = gates.remove_settings(s)
+        self.assertNotIn("ai-footer-guard", json.dumps(removed))
+        self.assertIn("PreToolUse 훅 제거 — ai-footer-guard (은퇴)", rchanges)
+
     def test_cwd_relative_env_rules_converge_to_absolute(self):
         s = user_settings()
         s["permissions"]["deny"] = ["Read(**/.env)", "Read(**/.env.local)"]
@@ -228,7 +241,7 @@ class CliTests(unittest.TestCase):
                   "tool_input": {"command": 'git commit -m "x" -m "Co-Authored-By: Claude <noreply@anthropic.com>"'}}
         env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR" and not k.startswith("PAPERCLIP_")}
         cases = [("sqlcmd-readonly", sqlcmd, {}), ("block-db-mcp", mcp, {}),
-                 ("agent-run-guard", merge, {"PAPERCLIP_RUN_ID": "run-1"}), ("ai-footer-guard", footer, {})]
+                 ("agent-run-guard", merge, {"PAPERCLIP_RUN_ID": "run-1"}), ("correction-guard", footer, {})]
         self.assertEqual({n for n, _, _ in cases}, {n for n, _ in gates.HOOKS})
         for name, event, extra in cases:
             with self.subTest(hook=name):
