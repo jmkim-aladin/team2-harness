@@ -1,0 +1,15 @@
+plugins {
+    id 'lamp.standalone-contract'
+}
+
+standaloneApp {
+    mode = 'strict'
+    allowedProjectDependencies = [':allowed-project'] as Set
+    allowedRuntimeCoordinates = ['com.example:fixture-allowed-runtime:1.0'] as Set
+}
+
+dependencies {
+    implementation project(':allowed-project')
+    implementation 'com.example:fixture-allowed-runtime:1.0'
+    runtimeOnly 'org.springframework:fixture-denied:1.0'
+}

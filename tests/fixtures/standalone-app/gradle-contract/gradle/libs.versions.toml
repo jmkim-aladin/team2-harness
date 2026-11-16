@@ -1,0 +1,5 @@
+[versions]
+fixture = "1.0"
+
+[libraries]
+spring-fixture = { module = "org.springframework:fixture-denied", version.ref = "fixture" }

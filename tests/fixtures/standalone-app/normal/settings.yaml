@@ -1,0 +1,56 @@
+mode: strict
+classpath:
+  projects:
+    - ":adapters:worker-runtime"
+  runtime:
+    - "com.squareup.okhttp3:okhttp:4.12.0"
+    - "tools.jackson.core:jackson-databind:3.1.7"
+  denied_families:
+    - "org.springframework"
+    - "org.hibernate"
+    - "jakarta.persistence"
+    - "org.postgresql"
+    - "software.amazon.awssdk:secretsmanager"
+    - "org.springframework.ai"
+    - "com.anthropic"
+    - "com.openai"
+environment:
+  allowlist:
+    - name: LAMP_BROKER_ENDPOINT
+      source: env
+      required: true
+    - name: LAMP_BROKER_CA_ROOT
+      source: env
+      required: true
+    - name: LAMP_BROKER_CA_FILE
+      source: file
+      required: false
+      root_env: LAMP_BROKER_CA_ROOT
+      root: /var/run/lamp
+      max_bytes: 16384
+      no_symlink: true
+      no_group_world_write: true
+      material: public-ca
+      read_permission:
+        mode: deployment-identity-allowlist
+        subjects:
+          - serviceAccount:lamp-worker
+          - fsGroup:2000
+      kubernetes:
+        manifests:
+          - k8s/deployment.yaml
+          - k8s/pod.yaml
+        security_context:
+          service_account: lamp-worker
+          fs_group: 2000
+        volume:
+          name: broker-ca
+          read_only: true
+          default_mode: "0444"
+evidence:
+  build: build.gradle.kts
+  source: src/main/kotlin/ExampleEnvironment.kt
+  settings: settings.yaml
+  manifests:
+    - k8s/deployment.yaml
+    - k8s/pod.yaml

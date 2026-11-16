@@ -84,14 +84,15 @@ BC 4계층 구조(`contexts/<bc>/{api,domain,usecase,data}`)를 쓰는 개발2�
 | 프로세스 usecase(선택) | `processes/<p>/usecase` | `spring-library` | 흐름 구현. TX 를 열지 않는다 | 자기 process api, 참여 BC `:api`, common |
 | 조회(선택) | `query/<surface>` | `query` | 조회 전용 읽기 모델 | kernel |
 | 외부 어댑터 | `integrations/<system>/<capability>`(+ `core`) | `kotlin-library` 또는 `spring-library` | 외부 포트 구현, `core` 는 공용 클라이언트 | 대상 BC domain(허용 목록, D-4), common, 같은 system 의 `core`. 봉투를 번역하는 사건 어댑터는 shared messaging |
-| 실행 앱 | `apps/<app>` | `spring-boot-app` | 들어오는 어댑터(HTTP·워커)와 조립 | BC `:api`·process api(호출), BC usecase·data·process usecase(조립 — `*Configuration` 만 참조), integrations(빈 등록), shared, 공용 앱 라이브러리 |
+| Spring 실행 앱 | `apps/<app>` | `spring-boot-app` | 들어오는 어댑터(HTTP·워커)와 Spring 조립 | BC `:api`·process api(호출), BC usecase·data·process usecase(조립 — `*Configuration` 만 참조), integrations(빈 등록), shared, 공용 앱 라이브러리 |
+| Spring-free 실행 앱 | `apps/<app>` | `standalone-app` | Spring 없이 고정된 main·입력 어댑터·순수 조립으로 실행 artifact 생성 | BC `:api`·process api(호출), 프레임워크 없는 usecase·data·process 조립 타입, 명시된 classpath allowlist의 integrations·shared. `spring-boot-app`·Spring runtime은 함께 쓰지 않는다 |
 | 공용 앱 라이브러리(선택) | `apps/common` | `spring-library` | 여러 실행 앱이 함께 쓰는 인바운드 공통(필터·오류 응답). 실행 artifact 가 아니다 | BC `:api`, common |
 | 구조 검사 | `architecture-test` | — | Konsist·ArchUnit 규칙과 위반 fixture | 전 모듈(테스트 의존) |
 
-- **M-1 (필수)** 모듈 종류는 위 표가 전부다. 새 종류는 이 표준을 먼저 고친다 — 종류가 늘면 의존 규칙과 검사가 따라가지 못한다.
+- **M-1 (필수)** 모듈 종류는 위 표가 전부다. `apps/<app>` 실행 모듈은 `spring-boot-app` 또는 `standalone-app` 중 하나를 선택한다. 새 종류는 이 표준을 먼저 고친다 — 종류가 늘면 의존 규칙과 검사가 따라가지 못한다.
 - **M-2 (필수)** BC 목록은 `gradle/contexts.txt` 하나가 정한다. BC 이름은 소문자 영문 한 단어(`[a-z]+`)이고 `contexts/` 디렉터리와 같다.
 - **M-3 (필수)** 모듈 이름은 소문자 영문·하이픈이다. `integrations` 는 `<system>/<capability>` 두 단계다. **기본:** `core` 는 능력이 둘 이상 같은 클라이언트를 쓸 때만 둔다.
-- **M-4 (필수)** 규약 플러그인은 `<service>.{kotlin-library, domain, spring-library, data, spring-boot-app, runtime-boundary, migrations}` 일곱이 공통이고 `query` 는 선택이다. 모듈은 위 표의 플러그인만 쓴다. `runtime-boundary` 는 D-8 을, `migrations` 는 DB-1 을 검사한다.
+- **M-4 (필수)** 규약 플러그인은 `<service>.{kotlin-library, domain, spring-library, data, spring-boot-app, standalone-app, runtime-boundary, migrations}` 여덟이 공통이고 `query` 는 선택이다. 모듈은 위 표의 플러그인만 쓴다. `standalone-app`은 Spring Boot 의존성 없이 고정된 main을 가진 Kotlin/JVM 실행 artifact를 만들며 `runtime-boundary`의 D-8 검사를 포함한다. 각 standalone 앱은 `mode`(`general` 또는 `strict`)와 **per-app classpath allowlist**(project/runtime)를 반드시 선언한다 — 선언하지 않은 project·coordinate는 거절하고 기본 classpath를 넓혀 주지 않는다. Spring·JPA·DB driver·Secrets Manager·AI provider SDK 계열은 기본 거부 목록이며 앱 allowlist로 다시 허용할 수 없다. `spring-boot-app`과 `standalone-app`은 한 모듈에 함께 적용하지 않는다. `runtime-boundary`는 D-8을, `migrations`는 DB-1을 검사한다.
 - **M-6 (필수)** main 의 의존은 `implementation()` 이다. main 의 `api()` 는 kernel·common 재노출에만 쓴다 — 전이 노출이 늘면 BC 의 얼굴(`:api`) 밖 타입이 새어 나간다. `testFixturesApi` 는 픽스처가 공개 타입으로 내놓는 테스트 라이브러리에 쓸 수 있다.
 
 ## 5. 패키지 배치
@@ -103,7 +104,7 @@ BC 4계층 구조(`contexts/<bc>/{api,domain,usecase,data}`)를 쓰는 개발2�
 - **P-3 (필수)** 역할 패키지를 만들지 않는다 — `command`·`handler`·`assembler`·`codec`·`policy`·`model`·`service`·`error`·`repository`·`table`·`configuration`. 파일이 하나뿐인 패키지도 만들지 않는다(계층 루트와 P-4 의 고정 패키지는 예외). `query` 는 예외로 허용한다 — `*Query` 포트 구현과 그 `internal` 협력 클래스만 담는 패키지 하나. 조회는 여러 기능의 사실을 한 읽기 모델로 합쳐서 기능 하나에 속하지 않는다.
 - **P-4 (필수)** 고정 패키지는 둘이다. `domain.port`(와 그 하위)에는 그 BC 의 나가는 포트 인터페이스(저장 포트·외부 포트)를 전부 둔다. `api.spi`(와 그 하위)에는 다른 BC 가 구현하는 필요 포트를 둔다(D-3). 이 둘은 기능이 아니라 모듈의 경계라서 검사가 패키지 하위 전체를 기준으로 삼는다.
 - **P-5 (필수)** 조립 클래스(`*Configuration`)는 계층 루트 패키지에 둔다.
-- **P-6 (필수)** apps 는 들어오는 어댑터의 종류로 나눈다: `http`(핸들러·라우트·오류 응답), `worker`(주기 실행 진입점과 그 조립), `access`(인증·호출자·스코프 결정), 루트(Application·health·공통 조립). 어댑터 종류가 곧 변경 이유다. 파일이 15개 이하인 앱은 평면으로 둔다.
+- **P-6 (필수)** apps 는 들어오는 어댑터의 종류로 나눈다: `http`(핸들러·라우트·오류 응답), `worker`(주기 실행 진입점과 그 조립), `access`(인증·호출자·스코프 결정), 루트(Application·health·공통 조립). 어댑터 종류가 곧 변경 이유다. 파일이 15개 이하인 앱은 평면으로 둔다. `standalone-app`의 bootstrap 환경 디코더는 역할 패키지를 새로 만들지 않고 앱 루트에 둔다.
 - **P-7 (기본)** integrations 와 shared 는 평면으로 두고, 15개를 넘으면 P-1 을 따른다.
 - **P-8 (필수)** 한 클래스를 검사하는 테스트(`{대상}Test`)의 패키지는 대상 클래스의 패키지와 같다. 대상 클래스가 하나가 아닌 테스트는 자리가 정해져 있다 — HTTP 시나리오 테스트는 앱의 `http` 패키지(평면 앱은 앱 루트), 조립·통합 테스트는 그 모듈의 루트 패키지, 구조 검사는 `architecture-test` 의 `architecture` 패키지.
 - **P-9 (필수)** `testFixtures` 의 패키지는 모듈 루트 패키지 + `.test` 다.
@@ -112,7 +113,7 @@ BC 4계층 구조(`contexts/<bc>/{api,domain,usecase,data}`)를 쓰는 개발2�
 
 ### 6.1 모듈 의존
 
-- **D-1 (필수)** main 의 모듈 의존은 §4 표의 마지막 열이 전부다. domain·api·kernel·common 은 Spring·영속 프레임워크·Reactor 를 모른다. usecase 모듈에서 Spring 을 쓰는 것은 조립 클래스(`*Configuration`)뿐이고, 업무 구현 클래스는 Spring 을 모른다(§2 의 우선 항목).
+- **D-1 (필수)** main 의 모듈 의존은 §4 표의 마지막 열이 전부다. domain·api·kernel·common 은 Spring·영속 프레임워크·Reactor 를 모른다. usecase 모듈에서 Spring 을 쓰는 것은 조립 클래스(`*Configuration`)뿐이고, 업무 구현 클래스는 Spring 을 모른다(§2 의 우선 항목). `standalone-app`은 Spring `*Configuration`을 참조하지 않고, usecase·data·process usecase가 공개한 프레임워크 없는 조립 타입만 참조한다. 앱별 project/runtime classpath allowlist와 해석된 classpath를 함께 검사하며 기본 거부 목록(Spring·JPA·DB driver·Secrets Manager·AI provider SDK)을 우회할 수 없다 — 작은 실행 artifact에 불필요한 런타임과 자격증명이 함께 들어가면 격리 경계가 약해지기 때문이다.
 - **D-2 (필수)** 다른 BC 는 `:api` 만 본다. domain·api 모듈은 다른 컨텍스트 모듈에 의존하지 않는다.
 - **D-3 (필수)** BC 의존 그래프(usecase → 다른 BC api)에는 순환이 없다. 역방향으로 알리거나 물어야 하면, 부르는 쪽 BC 가 자기 `api.spi` 에 필요 포트를 선언하고 상대 BC 의 usecase 가 구현한다. 필요 포트의 접미도 이름 규칙의 넷이다. 호출은 같은 프로세스 안의 동기 호출이라 한 TX 합류와 잠금 순서는 달라지지 않는다. 구현하는 BC 는 `api.spi` 의 타입을 자기 사건의 payload 로 그대로 쓰지 않고 자기 payload 타입에 옮겨 담는다 — 남의 계약 타입이 자기 사건 계약이 되면 소유가 뒤섞인다.
 - **D-4 (필수)** contexts 밖 모듈(apps·integrations·shared·processes·query)의 컨텍스트 domain 의존은 허용 목록에 이유와 함께 있는 것만 된다. 이유는 둘뿐이다 — 어댑터가 그 BC 의 domain 포트를 구현한다, 앱이 그 포트 타입을 빈으로 등록한다. 쓰지 않는 허용 항목도 실패한다. 앱이 응답·화면에 쓰는 값은 api 타입으로 받는다.
@@ -159,9 +160,9 @@ DB-1 의 새 절차 로직 금지는 채택한 날부터 건다. DB-3·DB-4 의 
 ## 8. 설정·환경변수
 
 - **C-1 (필수)** 서비스가 만든 설정 키의 접두는 서비스 kebab 이름 하나다. 그 아래는 주제로 나눈다. `spring`·`server`·`management` 같은 프레임워크 키는 이 규칙의 대상이 아니다.
-- **C-2 (필수)** 설정은 `@ConfigurationProperties` + `*Properties` 로만 읽는다. `Environment.getProperty` 와 `@Value` 는 쓰지 않는다 — 타입·필수 검사가 빠진다. contexts 의 모듈은 Spring 설정 API 를 읽지 않고 앱이 만든 `*Settings` 를 받는다.
+- **C-2 (필수)** Spring 실행 앱의 설정은 `@ConfigurationProperties` + `*Properties` 로만 읽는다. `Environment.getProperty` 와 `@Value` 는 쓰지 않는다 — 타입·필수 검사가 빠진다. contexts 의 모듈은 Spring 설정 API 를 읽지 않고 앱이 만든 `*Settings` 를 받는다. `standalone-app`에는 보안 경계를 보존하는 제한된 예외를 둔다: 앱 루트의 단일 bootstrap 환경 디코더(`*Environment`)만 고정된 allowlist의 이름으로 `System.getenv("LITERAL_NAME")`을 읽고, 즉시 순수 `*Settings`로 변환한다. `System.getenv()` 전체 맵·동적 이름·임의 fallback·탐색은 허용하지 않으며, contexts·usecase·integration의 다른 클래스에서 환경변수나 직접 파일 읽기를 하지 않는다. 설정표가 `source: file`로 선언한 file-backed 값(예: `LAMP_BROKER_CA_FILE`)은 허용된 root 아래의 절대 경로·regular file을 확인하고, root 자신과 최종·중간 경로 구성요소의 symlink를 모두 거절한 뒤에만 읽는다. `NOFOLLOW_LINKS` 속성·파일 크기 상한·상한을 넘지 않는 bounded `Files.newInputStream` 읽기와 POSIX 권한 검사를 함께 수행하며, 권한을 확인할 수 없는 파일시스템도 실패시킨다. 기본 파일 정책은 group/world writable을 거절하고, 읽기 권한은 배포 주체를 기준으로 한 명시적 allowlist 정책을 따른다(Kubernetes Secret/ConfigMap처럼 0444 또는 `fsGroup` 읽기가 필요한 배포도 정책에 등록할 수 있다). 공개 CA처럼 비밀이 아닌 파일은 `material: public-ca`로 분류하고, 선언된 serviceAccount·fsGroup·readOnly volume·0444 매핑이 실제 Deployment/Pod manifest와 일치해야 한다. 경로가 없거나 root 밖·symlink·크기 초과·group/world writable이면 거절한다. 필수 값 누락은 디코더가 기동 전에 거절하고 비밀값 기본값을 두지 않는다.
 - **C-3 (필수)** 필수 설정이 없으면 기동을 거절하고, 기본 DB·계정·비밀을 소스에 두지 않는다. 멀티프로젝트 표준의 `MUST` 를 잇는다. 검사는 저장소의 기동 테스트다.
-- **C-4 (필수)** 설정 키 표를 저장소 한 곳에 두고 테스트가 대조한다. 값이 하나인 키는 `application.yml` 에 `${환경변수}` 로 명시한다. 목록·맵처럼 환경변수 이름이 실행 때 정해지는 키는 표에 이름 패턴으로 적고 테스트가 패턴을 대조한다.
+- **C-4 (필수)** 설정 키 표를 저장소 한 곳에 두고 테스트가 대조한다. 값이 하나인 키는 `application.yml` 에 `${환경변수}` 로 명시한다. 목록·맵처럼 환경변수 이름이 실행 때 정해지는 키는 표에 이름 패턴으로 적고 테스트가 패턴을 대조한다. `standalone-app`은 같은 표에 bootstrap allowlist의 환경변수 이름·필수 여부·source(`env` 또는 `file`)를 적고, file-backed 항목에는 허용 root·최대 크기·group/world writable 금지·symlink 정책·배포 주체 기준 읽기 권한 allowlist를 적어 디코더의 고정 목록·검증과 대조한다. `public-ca` file 항목은 Kubernetes securityContext·volume의 serviceAccount/fsGroup/readOnly/0444 선언도 함께 대조한다.
 - **C-5 (기본)** 환경변수 접두는 서비스마다 하나(`<SERVICE>_`)로 둔다. 이미 배포 계약이 된 접두는 바꾸지 않고 저장소 차이로 남긴다.
 
 ## 9. 문서 관례

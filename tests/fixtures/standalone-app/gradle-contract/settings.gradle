@@ -1,0 +1,41 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'standalone-app-contract'
+
+dependencyResolutionManagement {
+    repositoriesMode.set(org.gradle.api.initialization.resolve.RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        maven {
+            name = 'fixtureRepository'
+            url = uri("$rootDir/repository")
+        }
+        flatDir {
+            dirs "$rootDir/fixture-allowed-runtime/build/libs"
+        }
+        mavenCentral()
+    }
+}
+
+include(
+    ':normal',
+    ':runtime-only',
+    ':transitive-runtime',
+    ':project-transitive-app',
+    ':version-catalog',
+    ':plugin-injection',
+    ':file-origin',
+    ':flatdir-origin',
+    ':included-build-app',
+    ':allowed-project',
+    ':project-denied',
+    ':project-transitive',
+    ':fixture-allowed-runtime',
+    ':fixture-denied-runtime',
+    ':fixture-transitive-runtime',
+)
+
+includeBuild('included-build')
