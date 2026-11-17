@@ -50,6 +50,20 @@
 - SP 호출은 legacy adapter repo/service에서만 허용
 - 신규 서비스가 레거시 DB를 직접 조회/수정 금지 — adapter/facade 뒤로 숨김
 
+## 공통 라이브러리 배포
+
+여러 서비스가 함께 쓰는 코드의 공유 경로를 정한다 — 사용처가 늘수록 버전 추적·충돌 해결 비용이 공유 방식에 따라 갈린다.
+
+- 기본: 두 개 이상 서비스가 쓰는 JVM 라이브러리(Kotlin·Java)는 GitHub Packages(Maven)에 jar로 배포하고 Gradle 좌표(`group:artifact:version`)로 참조한다 — 쓰는 버전이 빌드 파일 diff에 남고, 버전 충돌은 Gradle이 해석한다
+- 기본: 빌드 산출물이 없는 자산(UI 컴포넌트 소스, proto·OpenAPI 스펙, SQL 스크립트)과 사용처가 하나뿐인 초기 공동 개발 코드는 git submodule로 공유한다. 사용처가 둘로 늘면 jar 배포로 옮긴다
+- 버전은 semver로 매기고, 호환성이 깨지는 변경은 메이저 버전을 올린다 — 소비 서비스가 버전만 보고 업그레이드 영향을 판단한다
+- 배포는 태그 push(`v1.4.2`)에 반응하는 GitHub Actions publish workflow로 한다. 기본: 정식 버전만 배포한다 — SNAPSHOT은 같은 버전 이름의 내용이 바뀌어 빌드 재현이 깨진다
+- 배포한 버전의 삭제·덮어쓰기 금지 — 수정은 새 버전으로 낸다. 이미 그 버전을 받은 서비스의 빌드를 지킨다
+- 기본: 라이브러리와 서비스를 함께 고칠 때는 Gradle composite build(`./gradlew build --include-build ../{lib}`)로 로컬 소스를 붙여 확인한다 — 배포 대기 없이 개발하고, repo에는 배포 좌표만 남긴다
+- 인증: 로컬은 `~/.gradle/gradle.properties`의 `gpr.user`·`gpr.key`(PAT `read:packages`, 배포 담당은 `write:packages`), CI는 `GITHUB_TOKEN`과 패키지 설정의 repository 접근 권한을 쓴다. 토큰은 repo에 두지 않는다 — [로컬 자격증명 정책](./local-credentials-policy.md)
+
+근거: 2026-11-17 사용자 결정 — 공통 라이브러리 공유 방식(GitHub Packages jar vs git submodule) 비교 후 JVM 라이브러리는 jar 배포를 기본으로 채택
+
 ## PostgreSQL 구현 원칙
 
 - PostgreSQL 사용자 정의 함수와 트리거를 새로 만들거나 도입하지 않는다. 신규 마이그레이션의 `CREATE FUNCTION`, `CREATE OR REPLACE FUNCTION`, `CREATE TRIGGER`, `CREATE CONSTRAINT TRIGGER`, `CREATE EVENT TRIGGER`도 이 규칙을 따른다 — 설정 변경에 숨은 DB 실행 절차가 개입하지 않도록 한다
