@@ -5,9 +5,9 @@ domain: notification-messaging
 status: candidate
 owner_scope: common
 impact_check_required: true
-updated_at: 2026-11-12
+updated_at: 2026-11-16
 verification:
-  kb_and_source_observed_at: 2026-11-12
+  kb_and_source_observed_at: 2026-11-16
   owner_confirmed: false
   deployed_runtime_verified: false
 workspace_root: /Users/jm/Documents/workspace/msa/notification
@@ -65,6 +65,14 @@ related_common_services:
 kb_navigation: catalog/common-services/msa-kb-index.md
 vault_entry: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/services/notification-msa/notification-msa.md
 handover_analysis: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/services/notification-msa/analysis/architecture-analysis-2026-11-12-695744b6.md
+full_static_audit: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/services/notification-msa/analysis/architecture-analysis-2026-11-16-695744b6.md
+product_acceptance_checklist: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/services/notification-msa/analysis/full-audit-acceptance-2026-11-16.md
+audit_scope_observed:
+  current_repository_count: 7
+  tracked_file_count: 3013
+  text_files_scanned: 2959
+  method: 파일 전수 정적 스캔·주요 호출 경계 수작업 대조; 전 파일 수작업 검증 아님
+  runtime_product_acceptance_verified: false
 dev_infrastructure_request_draft: /Users/jm/Library/Mobile Documents/iCloud~md~obsidian/Documents/team2/wiki/services/notification-msa/proposals/dev-infrastructure-handover-request-2026-11-12.md
 runtime_shape_observed:
   persistent_workload_types: 6
@@ -79,3 +87,6 @@ open_questions:
   - Worker API 토큰 property 매핑과 미설정 시 통과 경로의 배포 차단
   - SQS publish 이후 SENT와 업체 결과 callback CAS의 상태 계약
   - fixture·mock·SNS simulate·주소 암호화 none 기본값의 실연동 전환
+  - 신규 템플릿 schema와 worker 승인 snapshot 조회의 호환 계약
+  - dev buildspec CI/CD 결합·prod 빈 정의·Batch EKS restart와 Fargate 실행 차이
+  - 요청 멱등성·이메일 불명확 결과 대조·reconcile 선점 세대 검증
