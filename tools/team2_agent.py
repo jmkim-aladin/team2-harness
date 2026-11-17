@@ -120,8 +120,8 @@ NO_OVERRIDE = LaunchOverride()
 # Codex는 모델과 effort를 함께 올린다. Claude는 사용자 지정 상한 Opus 5.5 안에서
 # Sonnet/Opus와 effort로 구분한다 (2026-10-30: Fable 미사용).
 MODEL_TIERS = {
-    "fast": ModelTier("fast", "gpt-6-luna", "claude-sonnet-5", "medium", "기계적 탐색·위치 찾기·단순 편집·포맷 변환"),
-    "workhorse": ModelTier("workhorse", "gpt-6-sol", "claude-opus-5-5", "high", "일반 코딩·버그 수정·테스트 작성·구조 파악"),
+    "fast": ModelTier("fast", "gpt-5.6-sol", "claude-sonnet-5", "medium", "기계적 탐색·위치 찾기·단순 편집·포맷 변환"),
+    "workhorse": ModelTier("workhorse", "gpt-6.1-sol", "claude-opus-5-5", "high", "일반 코딩·버그 수정·테스트 작성·구조 파악"),
     "frontier": ModelTier("frontier", "gpt-6-astra", "claude-opus-5-5", "xhigh", "설계 판단·까다로운 디버깅·장시간 자율 작업"),
 }
 
@@ -130,6 +130,8 @@ EFFORT_LEVELS = ("low", "medium", "high", "xhigh", "max", "ultra")
 # 모델별 허용 effort 상한. luna catalog에는 ultra가 없다(실측).
 MODEL_MAX_EFFORT = {
     "gpt-6-astra": "ultra",
+    "gpt-6.1-sol": "ultra",
+    "gpt-5.6-sol": "xhigh",
     "gpt-6-sol": "ultra",
     "gpt-6-luna": "max",
     "claude-sonnet-5": "max",
@@ -138,16 +140,16 @@ MODEL_MAX_EFFORT = {
 
 # 리뷰·검증은 품질 게이트라 조용히 약해지면 안 된다 — tier는 기본값 고정, effort는 하한 이상.
 GATE_ROLES = frozenset({"reviewer", "verifier"})
-GATE_MIN_EFFORT = "xhigh"
+GATE_MIN_EFFORT = {"codex": "high", "claude": "xhigh"}
 # orchestrator는 자기 모델을 스스로 고르지 않는다 — 기준값 고정.
 FIXED_LAUNCH_ROLES = frozenset({"orchestrator"})
 
 # 역할별 launch 기본값의 SoT(tier 이름으로 적는다). 스킬·가이드는 값을 복제하지 않고 `team2-agent profiles`로 조회한다.
 ROLE_LAUNCH_DEFAULTS = {
-    "orchestrator": RoleLaunchDefault("workhorse", "xhigh", "workhorse", "xhigh"),
-    "worker": RoleLaunchDefault("fast", "high", "workhorse", "high"),
-    "reviewer": RoleLaunchDefault("workhorse", "xhigh", "workhorse", "xhigh"),
-    "verifier": RoleLaunchDefault("workhorse", "xhigh", "workhorse", "xhigh"),
+    "orchestrator": RoleLaunchDefault("workhorse", "high", "workhorse", "xhigh"),
+    "worker": RoleLaunchDefault("fast", "medium", "workhorse", "high"),
+    "reviewer": RoleLaunchDefault("workhorse", "high", "workhorse", "xhigh"),
+    "verifier": RoleLaunchDefault("workhorse", "high", "workhorse", "xhigh"),
 }
 
 CODEX_LAUNCH_PROFILES = {
@@ -259,8 +261,9 @@ def launch_override_error(engine: str, role: str, override: LaunchOverride) -> s
         base_tier = default_tier(engine, role)
         if override.tier and override.tier != base_tier:
             return f"launch role={role}: 품질 게이트라 tier를 {base_tier}에서 바꿀 수 없다"
-        if override.effort and effort_rank(override.effort) < effort_rank(GATE_MIN_EFFORT):
-            return f"launch role={role}: 품질 게이트라 effort가 {GATE_MIN_EFFORT} 이상이어야 한다"
+        minimum_effort = GATE_MIN_EFFORT[engine]
+        if override.effort and effort_rank(override.effort) < effort_rank(minimum_effort):
+            return f"launch role={role}: 품질 게이트라 effort가 {minimum_effort} 이상이어야 한다"
     if engine == "claude":
         model, effort = claude_override_model(role, override), launch_effort("claude", role, override)
     else:
@@ -302,7 +305,8 @@ def launch_profiles_text() -> str:
         'override: herdr worker|role --tier TIER --effort LEVEL --why "사유" — 기본값을 쓰고 업무 난이도가 다를 때만. --tier/--effort에는 --why 필수',
         "tier는 model+effort preset; --effort를 함께 주면 그 값 우선. 동일 tier의 reviewer/verifier는 역할 effort 유지. Claude 최상위는 Opus 5.5 (Fable 미사용)",
         f"effort: {' < '.join(EFFORT_LEVELS)} — 모델 상한 초과는 거부 ({cap_text})",
-        f"gate: {'·'.join(sorted(GATE_ROLES))}는 기본 tier 고정, effort {GATE_MIN_EFFORT} 이상",
+        f"gate: {'·'.join(sorted(GATE_ROLES))}는 기본 tier 고정, "
+        f"Codex effort {GATE_MIN_EFFORT['codex']} 이상, Claude effort {GATE_MIN_EFFORT['claude']} 이상",
         f"fixed: {'·'.join(sorted(FIXED_LAUNCH_ROLES))}(planner·architect 포함)는 기본값 고정, override 거부",
     ]
     return "\n".join(["\t".join(row) for row in rows] + notes)

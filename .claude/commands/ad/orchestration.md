@@ -104,6 +104,12 @@ team2-agent profiles    # TSV: role  codex_model  codex_effort  claude_model  cl
                         # then: tier  codex_model  claude_model  effort  use, and override rules
 ```
 
+When an orchestrator decomposes work, it chooses each child task's role, tier, and effort
+from the full task context. Routine exploration, implementation, and tests use the worker
+default. A child task that independently needs complex design support or difficult debugging
+uses the workhorse tier with the reason recorded. Reviewer and verifier keep their fixed gate
+profile. The main agent retains final architecture decisions and accountability.
+
 Use the role default. Deviate only when the work is clearly easier or harder than that
 default: choose a `tier` and/or `effort` from the tier table and rules `profiles` prints,
 and take the engine's model id from that table. A tier selects both model and effort;
